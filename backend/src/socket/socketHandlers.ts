@@ -121,7 +121,7 @@ export const setupSocketHandlers = (io: Server) => {
         conversation.messages.push(aiMessage);
 
         // Emit AI message start
-        socket.emit('stream_start', {
+        io.to(conversation.id).emit('stream_start', {
           messageId: aiMessageId,
           conversationId: conversation.id
         });
@@ -192,7 +192,7 @@ export const setupSocketHandlers = (io: Server) => {
                 };
 
                 console.log(`📡 Sending chunk ${chunkCount}: "${content.substring(0, 20)}..."`);
-                socket.emit('stream_chunk', streamChunk);
+                io.to(conversation.id).emit('stream_chunk', streamChunk);
               }
             }
 
@@ -207,7 +207,7 @@ export const setupSocketHandlers = (io: Server) => {
               isComplete: true
             };
 
-            socket.emit('stream_chunk', finalChunk);
+            io.to(conversation.id).emit('stream_chunk', finalChunk);
 
             // Update the message content
             aiMessage.content = fullContent || 'I apologize, but I could not generate a response.';
@@ -223,7 +223,7 @@ export const setupSocketHandlers = (io: Server) => {
               isComplete: true
             };
 
-            socket.emit('stream_chunk', errorChunk);
+            io.to(conversation.id).emit('stream_chunk', errorChunk);
             aiMessage.content = errorContent;
           }
         }
@@ -232,7 +232,7 @@ export const setupSocketHandlers = (io: Server) => {
         conversation.updatedAt = new Date();
 
         // Emit stream complete
-        socket.emit('stream_complete', {
+        io.to(conversation.id).emit('stream_complete', {
           messageId: aiMessageId,
           conversationId: conversation.id,
           conversation: conversation

@@ -80,14 +80,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       }, 1000); // Short delay to ensure final content is seen
     };
 
+    const handleProactiveMessage = (data: { message: Message; actionType: string; agentUsed: string; confidence: number }) => {
+      console.log('Proactive message received:', data);
+      // The proactive message will be handled by the parent component that updates the conversation
+      // We can add visual indicators here if needed
+    };
+
+    const handleProactiveError = (data: { message: string; actionType: string; error: string }) => {
+      console.error('Proactive action error:', data);
+      // Could show a toast notification or error indicator
+    };
+
     socketService.onStreamStart(handleStreamStart);
     socketService.onStreamChunk(handleStreamChunk);
     socketService.onStreamComplete(handleStreamComplete);
+    socketService.onProactiveMessage(handleProactiveMessage);
+    socketService.onProactiveError(handleProactiveError);
 
     return () => {
       socketService.removeListener('stream_start');
       socketService.removeListener('stream_chunk');
       socketService.removeListener('stream_complete');
+      socketService.removeListener('proactive_message');
+      socketService.removeListener('proactive_error');
     };
   }, []);
 
@@ -155,6 +170,55 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 }),
               }}
             >
+              {/* Agent indicator for assistant messages */}
+              {!isUser && message.agentUsed && (
+                <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip
+                    size="small"
+                    label={
+                      message.agentUsed === 'technical' ? '⚙️ Technical Agent' :
+                      message.agentUsed === 'dad_joke' ? '😄 Dad Joke Master' :
+                      message.agentUsed === 'trivia' ? '🧠 Trivia Master' :
+                      '💬 General Agent'
+                    }
+                    color={
+                      message.agentUsed === 'technical' ? 'info' :
+                      message.agentUsed === 'dad_joke' ? 'warning' :
+                      message.agentUsed === 'trivia' ? 'secondary' :
+                      'success'
+                    }
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.7rem',
+                      height: 20,
+                      '& .MuiChip-label': { px: 1 }
+                    }}
+                  />
+                  {message.isProactive && (
+                    <Chip
+                      size="small"
+                      label="🎯 Proactive"
+                      color="primary"
+                      variant="filled"
+                      sx={{
+                        fontSize: '0.6rem',
+                        height: 18,
+                        '& .MuiChip-label': { px: 1 }
+                      }}
+                    />
+                  )}
+                  {message.confidence && (
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary"
+                      sx={{ fontSize: '0.7rem' }}
+                    >
+                      {Math.round(message.confidence * 100)}% confidence
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              
               {isUser ? (
                 <Typography variant="body1">{message.content}</Typography>
               ) : isStreamingMessage ? (

@@ -108,6 +108,19 @@ class SocketService {
     }
   }
 
+  // Goal-seeking system proactive messages
+  onProactiveMessage(callback: (data: { message: Message; actionType: string; agentUsed: string; confidence: number }) => void): void {
+    if (this.socket) {
+      this.socket.on('proactive_message', callback);
+    }
+  }
+
+  onProactiveError(callback: (data: { message: string; actionType: string; error: string }) => void): void {
+    if (this.socket) {
+      this.socket.on('proactive_error', callback);
+    }
+  }
+
   // Typing indicators
   startTyping(conversationId: string, userName?: string): void {
     if (this.socket) {

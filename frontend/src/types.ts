@@ -4,6 +4,9 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
+  agentUsed?: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  confidence?: number;
+  isProactive?: boolean;
 }
 
 export interface Conversation {
@@ -25,11 +28,14 @@ export interface ChatRequest {
   message: string;
   conversationId?: string;
   stream?: boolean;
+  forceAgent?: 'technical' | 'general' | 'dad_joke' | 'trivia';
 }
 
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
+  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  confidence: number;
 }
 
 export interface StreamChunk {
@@ -54,4 +60,10 @@ export interface AppSettings {
   theme: Theme;
   autoSave: boolean;
   modelPreference: string;
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  description: string;
 }

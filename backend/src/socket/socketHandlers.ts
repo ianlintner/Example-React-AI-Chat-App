@@ -1,8 +1,9 @@
 import { Server } from 'socket.io';
-import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
+import { agentService } from '../agents/agentService';
+import { GoalAction } from '../agents/goalSeekingSystem';
 
 // Helper function to generate conversation title
 const generateConversationTitle = (message: string): string => {
@@ -10,13 +11,62 @@ const generateConversationTitle = (message: string): string => {
   return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
 };
 
+// Helper function to execute proactive actions
+const executeProactiveAction = async (
+  action: GoalAction,
+  conversation: Conversation,
+  socket: any,
+  io: Server
+) => {
+  try {
+    console.log(`🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`);
+    
+    // Execute the proactive action using the agent service
+    const proactiveResponse = await agentService.executeProactiveAction(
+      socket.id,
+      action,
+      conversation.messages
+    );
+
+    // Create a new AI message for the proactive response
+    const proactiveMessageId = uuidv4();
+    const proactiveMessage: Message = {
+      id: proactiveMessageId,
+      content: proactiveResponse.content,
+      role: 'assistant',
+      timestamp: new Date(),
+      conversationId: conversation.id,
+      agentUsed: proactiveResponse.agentUsed,
+      confidence: proactiveResponse.confidence,
+      isProactive: true // Mark as proactive message
+    };
+
+    // Add the proactive message to the conversation
+    conversation.messages.push(proactiveMessage);
+    conversation.updatedAt = new Date();
+
+    // Emit the proactive message to the conversation room
+    io.to(conversation.id).emit('proactive_message', {
+      message: proactiveMessage,
+      actionType: action.type,
+      agentUsed: proactiveResponse.agentUsed,
+      confidence: proactiveResponse.confidence
+    });
+
+    console.log(`✅ Proactive action completed: ${action.type}`);
+  } catch (error) {
+    console.error('Error executing proactive action:', error);
+    // Emit error to the specific user
+    socket.emit('proactive_error', {
+      message: 'Failed to execute proactive action',
+      actionType: action.type,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
 export const setupSocketHandlers = (io: Server) => {
-  // Initialize OpenAI client (only if API key is provided)
   console.log('OpenAI API Key status:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-  const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  }) : null;
-  console.log('OpenAI client initialized:', openai ? 'Yes' : 'No');
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
@@ -60,9 +110,9 @@ export const setupSocketHandlers = (io: Server) => {
 
     // Handle streaming chat messages
     socket.on('stream_chat', async (data: ChatRequest) => {
-      console.log('🔄 Received stream_chat request:', { message: data.message, conversationId: data.conversationId });
+      console.log('🔄 Received stream_chat request:', { message: data.message, conversationId: data.conversationId, forceAgent: data.forceAgent });
       try {
-        const { message, conversationId } = data;
+        const { message, conversationId, forceAgent } = data;
 
         if (!message || message.trim() === '') {
           socket.emit('stream_error', {
@@ -94,6 +144,10 @@ export const setupSocketHandlers = (io: Server) => {
             updatedAt: new Date()
           };
           storage.addConversation(conversation);
+          
+          // Automatically join the socket to the new conversation room
+          socket.join(conversation.id);
+          console.log(`Socket ${socket.id} joined conversation ${conversation.id}`);
         }
 
         // Add user message
@@ -126,117 +180,84 @@ export const setupSocketHandlers = (io: Server) => {
           conversationId: conversation.id
         });
 
-        // Prepare messages for OpenAI
-        const openAIMessages = conversation.messages
-          .filter(msg => msg.content.trim() !== '') // Filter out empty messages
-          .map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }));
+        // Initialize user in goal-seeking system if not already done
+        agentService.initializeUserGoals(socket.id);
 
-        // Stream response from OpenAI
-        if (!process.env.OPENAI_API_KEY || !openai) {
-          // Demo streaming response when no API key is provided
-          const demoResponse = `This is a demo streaming response to: "${message}". To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
+        // Process message with goal-seeking system
+        console.log('🤖 Processing message with goal-seeking system...');
+        const agentResponse = await agentService.processMessageWithGoalSeeking(
+          socket.id,
+          message,
+          conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
+          forceAgent
+        );
+
+        console.log(`✅ Goal-seeking system completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`);
+
+        // Simulate streaming by sending the response in chunks
+        const words = agentResponse.content.split(' ');
+        let currentContent = '';
+        
+        for (let i = 0; i < words.length; i++) {
+          currentContent += (i > 0 ? ' ' : '') + words[i];
           
-          // Simulate streaming by sending chunks
-          const words = demoResponse.split(' ');
-          let currentContent = '';
+          const chunk: StreamChunk = {
+            id: uuidv4(),
+            content: currentContent,
+            conversationId: conversation.id,
+            messageId: aiMessageId,
+            isComplete: i === words.length - 1
+          };
+
+          io.to(conversation.id).emit('stream_chunk', chunk);
           
-          for (let i = 0; i < words.length; i++) {
-            currentContent += (i > 0 ? ' ' : '') + words[i];
-            
-            const chunk: StreamChunk = {
-              id: uuidv4(),
-              content: currentContent,
-              conversationId: conversation.id,
-              messageId: aiMessageId,
-              isComplete: i === words.length - 1
-            };
-
-            io.to(conversation.id).emit('stream_chunk', chunk);
-            
-            // Add small delay to simulate streaming
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-
-          // Update the message content
-          aiMessage.content = currentContent;
-        } else {
-          try {
-            console.log('🤖 Starting OpenAI streaming request...');
-            const stream = await openai.chat.completions.create({
-              model: 'gpt-3.5-turbo',
-              messages: openAIMessages,
-              max_tokens: 1000,
-              temperature: 0.7,
-              stream: true,
-            });
-
-            console.log('✅ OpenAI stream created successfully');
-            let fullContent = '';
-            let chunkCount = 0;
-
-            for await (const chunk of stream) {
-              chunkCount++;
-              const content = chunk.choices[0]?.delta?.content || '';
-              if (content) {
-                fullContent += content;
-                
-                const streamChunk: StreamChunk = {
-                  id: uuidv4(),
-                  content: fullContent,
-                  conversationId: conversation.id,
-                  messageId: aiMessageId,
-                  isComplete: false
-                };
-
-                console.log(`📡 Sending chunk ${chunkCount}: "${content.substring(0, 20)}..."`);
-                io.to(conversation.id).emit('stream_chunk', streamChunk);
-              }
-            }
-
-            console.log(`🏁 OpenAI streaming completed. Total chunks: ${chunkCount}, Full content length: ${fullContent.length}`);
-
-            // Send final chunk
-            const finalChunk: StreamChunk = {
-              id: uuidv4(),
-              content: fullContent,
-              conversationId: conversation.id,
-              messageId: aiMessageId,
-              isComplete: true
-            };
-
-            io.to(conversation.id).emit('stream_chunk', finalChunk);
-
-            // Update the message content
-            aiMessage.content = fullContent || 'I apologize, but I could not generate a response.';
-          } catch (error) {
-            console.error('❌ OpenAI streaming error:', error);
-            const errorContent = 'I apologize, but I encountered an error while processing your request. Please try again.';
-            
-            const errorChunk: StreamChunk = {
-              id: uuidv4(),
-              content: errorContent,
-              conversationId: conversation.id,
-              messageId: aiMessageId,
-              isComplete: true
-            };
-
-            io.to(conversation.id).emit('stream_chunk', errorChunk);
-            aiMessage.content = errorContent;
-          }
+          // Add small delay to simulate streaming
+          await new Promise(resolve => setTimeout(resolve, 30));
         }
+
+        // Update the message content and agent info
+        aiMessage.content = agentResponse.content;
+        aiMessage.agentUsed = agentResponse.agentUsed;
+        aiMessage.confidence = agentResponse.confidence;
 
         // Update conversation timestamp
         conversation.updatedAt = new Date();
 
-        // Emit stream complete
+        // Emit stream complete with agent info
         io.to(conversation.id).emit('stream_complete', {
           messageId: aiMessageId,
           conversationId: conversation.id,
-          conversation: conversation
+          conversation: conversation,
+          agentUsed: agentResponse.agentUsed,
+          confidence: agentResponse.confidence
         });
+
+        // Handle proactive actions from goal-seeking system
+        if (agentResponse.proactiveActions && agentResponse.proactiveActions.length > 0) {
+          console.log(`🎯 Processing ${agentResponse.proactiveActions.length} proactive actions...`);
+          
+          for (const action of agentResponse.proactiveActions) {
+            // Execute proactive action based on timing
+            if (action.timing === 'immediate') {
+              await executeProactiveAction(action, conversation, socket, io);
+            } else if (action.timing === 'delayed' && action.delayMs) {
+              // Schedule delayed action
+              setTimeout(async () => {
+                await executeProactiveAction(action, conversation, socket, io);
+              }, action.delayMs);
+            }
+          }
+        }
+
+        // Get user's current goal state for debugging
+        const userGoalState = agentService.getUserGoalState(socket.id);
+        if (userGoalState) {
+          console.log(`🎯 User ${socket.id} state: ${userGoalState.currentState}, engagement: ${userGoalState.engagementLevel}, satisfaction: ${userGoalState.satisfactionLevel}`);
+          const activeGoals = userGoalState.goals.filter(g => g.active);
+          if (activeGoals.length > 0) {
+            console.log(`🎯 Active goals: ${activeGoals.map(g => g.type).join(', ')}`);
+          }
+        }
 
       } catch (error) {
         console.error('Stream chat error:', error);

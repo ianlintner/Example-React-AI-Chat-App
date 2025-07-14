@@ -1,10 +1,18 @@
-# AI Chat Application
+# AI Chat Application with Goal-Seeking System
 
-A full-featured AI chat application built with React and Node.js, featuring a modern Material-UI interface and OpenAI integration.
+A full-featured AI chat application built with React and Node.js, featuring a modern Material-UI interface, OpenAI integration, and an intelligent goal-seeking system that proactively entertains users and provides technical support.
 
 ## Features
 
 - 💬 Real-time chat interface with AI
+- 🎯 **Goal-Seeking System**: Proactive AI that entertains users while on hold and provides technical support
+- 🤖 **Multi-Agent System**: Intelligent agent selection based on message content
+  - Technical Agent: Specialized in programming and development
+  - General Agent: Handles casual conversation and general questions
+  - Dad Joke Master: Provides humor and entertainment
+  - Trivia Master: Shares fascinating facts and educational content
+- 📊 **Smart User State Tracking**: Monitors engagement, satisfaction, and user preferences
+- ⚡ **Proactive Actions**: System-initiated messages based on user needs and context
 - 🗂️ Multiple conversation management
 - 🎨 Material-UI design with dark/light theme
 - 📱 Responsive design

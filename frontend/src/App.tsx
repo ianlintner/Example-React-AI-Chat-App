@@ -3,6 +3,7 @@ import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { lightTheme, darkTheme } from './theme/theme';
 import ChatInterface from './components/ChatInterface';
 import { conversationsApi } from './services/api';
+import { socketService } from './services/socket';
 import type { Conversation } from './types';
 
 function App() {
@@ -12,10 +13,40 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load conversations on app start
+  // Initialize socket connection and load conversations on app start
   useEffect(() => {
-    loadConversations();
+    const initializeApp = async () => {
+      try {
+        // Connect to socket server
+        await socketService.connect();
+        console.log('Socket connected successfully');
+      } catch (error) {
+        console.error('Failed to connect to socket server:', error);
+        // Continue without socket connection - fallback to regular API
+      }
+      
+      // Load conversations
+      await loadConversations();
+    };
+
+    initializeApp();
+
+    // Cleanup on unmount
+    return () => {
+      socketService.disconnect();
+    };
   }, []);
+
+  // Handle active conversation changes for socket room management
+  useEffect(() => {
+    if (activeConversation && socketService.isSocketConnected()) {
+      socketService.joinConversation(activeConversation.id);
+      
+      return () => {
+        socketService.leaveConversation(activeConversation.id);
+      };
+    }
+  }, [activeConversation]);
 
   const loadConversations = async () => {
     try {

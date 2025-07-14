@@ -56,7 +56,7 @@ ai-chat-app/
    OPENAI_API_KEY=your_openai_api_key_here
    MONGODB_URI=mongodb://localhost:27017/ai-chat
    JWT_SECRET=your_jwt_secret_here
-   PORT=5000
+   PORT=5525
    ```
 
 5. **Run the application:**

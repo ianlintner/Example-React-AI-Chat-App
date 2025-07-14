@@ -24,11 +24,20 @@ export interface User {
 export interface ChatRequest {
   message: string;
   conversationId?: string;
+  stream?: boolean;
 }
 
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
+}
+
+export interface StreamChunk {
+  id: string;
+  content: string;
+  conversationId: string;
+  messageId: string;
+  isComplete: boolean;
 }
 
 export interface ApiError {

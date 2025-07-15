@@ -4,9 +4,10 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
-  agentUsed?: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  agentUsed?: string;
   confidence?: number;
   isProactive?: boolean;
+  status?: 'pending' | 'streaming' | 'complete';
 }
 
 export interface Conversation {
@@ -28,13 +29,13 @@ export interface ChatRequest {
   message: string;
   conversationId?: string;
   stream?: boolean;
-  forceAgent?: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  forceAgent?: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
 }
 
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
-  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
   confidence: number;
 }
 

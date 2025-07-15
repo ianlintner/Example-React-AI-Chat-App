@@ -45,13 +45,16 @@ const executeProactiveAction = async (
     conversation.messages.push(proactiveMessage);
     conversation.updatedAt = new Date();
 
-    // Emit the proactive message to the conversation room
-    io.to(conversation.id).emit('proactive_message', {
+    // Emit the proactive message directly to the user's socket
+    const proactiveData = {
       message: proactiveMessage,
       actionType: action.type,
       agentUsed: proactiveResponse.agentUsed,
       confidence: proactiveResponse.confidence
-    });
+    };
+    
+    console.log(`📤 Emitting proactive_message to socket ${socket.id}:`, JSON.stringify(proactiveData, null, 2));
+    socket.emit('proactive_message', proactiveData);
 
     console.log(`✅ Proactive action completed: ${action.type}`);
   } catch (error) {
@@ -70,6 +73,33 @@ export const setupSocketHandlers = (io: Server) => {
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
+
+    // Initialize user in goal-seeking system immediately
+    agentService.initializeUserGoals(socket.id);
+
+    // Initialize user state for goal-seeking system
+    setTimeout(async () => {
+      try {
+        console.log(`🎯 Initializing user state for ${socket.id}`);
+        
+        // Set user state to on_hold and activate entertainment goal
+        const userState = agentService.getUserGoalState(socket.id);
+        if (userState) {
+          userState.currentState = 'on_hold';
+          userState.entertainmentPreference = 'mixed';
+          
+          // Activate entertainment goal
+          const entertainmentGoal = userState.goals.find(g => g.type === 'entertainment');
+          if (entertainmentGoal) {
+            entertainmentGoal.active = true;
+            entertainmentGoal.lastUpdated = new Date();
+          }
+        }
+
+      } catch (error) {
+        console.error('Error initializing user state:', error);
+      }
+    }, 500); // Initialize state quickly
 
     // Join a conversation room
     socket.on('join_conversation', (conversationId: string) => {

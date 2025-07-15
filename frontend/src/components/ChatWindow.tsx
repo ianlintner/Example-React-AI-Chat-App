@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -12,8 +12,7 @@ import {
   SmartToy as BotIcon,
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
-import { socketService } from '../services/socket';
-import type { Conversation, Message, StreamChunk } from '../types';
+import type { Conversation, Message } from '../types';
 
 // Pulsing animation for streaming messages
 const pulse = keyframes`
@@ -24,17 +23,12 @@ const pulse = keyframes`
 
 interface ChatWindowProps {
   conversation: Conversation | null;
-  isNewChatMode: boolean;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
-  isNewChatMode,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [streamingMessages, setStreamingMessages] = useState<Map<string, string>>(new Map());
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingConversationId, setStreamingConversationId] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,69 +36,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation?.messages, streamingMessages]);
-
-  useEffect(() => {
-    // Set up socket event listeners for streaming
-    const handleStreamStart = (data: { messageId: string; conversationId: string }) => {
-      console.log('Stream start:', data);
-      setIsStreaming(true);
-      setStreamingConversationId(data.conversationId);
-      setStreamingMessages(prev => new Map(prev.set(data.messageId, '')));
-    };
-
-    const handleStreamChunk = (chunk: StreamChunk) => {
-      console.log('Stream chunk:', chunk.content.slice(-20), 'isComplete:', chunk.isComplete);
-      
-      // Store the full content from the chunk - display immediately
-      setStreamingMessages(prev => new Map(prev.set(chunk.messageId, chunk.content)));
-      
-      if (chunk.isComplete) {
-        setIsStreaming(false);
-        setStreamingConversationId(null);
-      }
-    };
-
-    const handleStreamComplete = (data: { messageId: string; conversationId: string }) => {
-      console.log('Stream complete:', data);
-      setIsStreaming(false);
-      setStreamingConversationId(null);
-      
-      // Clean up streaming state
-      setTimeout(() => {
-        setStreamingMessages(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(data.messageId);
-          return newMap;
-        });
-      }, 1000); // Short delay to ensure final content is seen
-    };
-
-    const handleProactiveMessage = (data: { message: Message; actionType: string; agentUsed: string; confidence: number }) => {
-      console.log('Proactive message received:', data);
-      // The proactive message will be handled by the parent component that updates the conversation
-      // We can add visual indicators here if needed
-    };
-
-    const handleProactiveError = (data: { message: string; actionType: string; error: string }) => {
-      console.error('Proactive action error:', data);
-      // Could show a toast notification or error indicator
-    };
-
-    socketService.onStreamStart(handleStreamStart);
-    socketService.onStreamChunk(handleStreamChunk);
-    socketService.onStreamComplete(handleStreamComplete);
-    socketService.onProactiveMessage(handleProactiveMessage);
-    socketService.onProactiveError(handleProactiveError);
-
-    return () => {
-      socketService.removeListener('stream_start');
-      socketService.removeListener('stream_chunk');
-      socketService.removeListener('stream_complete');
-      socketService.removeListener('proactive_message');
-      socketService.removeListener('proactive_error');
-    };
-  }, []);
+  }, [conversation?.messages]);
 
 
   const formatTimestamp = (timestamp: Date) => {
@@ -179,12 +111,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       message.agentUsed === 'technical' ? '⚙️ Technical Agent' :
                       message.agentUsed === 'dad_joke' ? '😄 Dad Joke Master' :
                       message.agentUsed === 'trivia' ? '🧠 Trivia Master' :
+                      message.agentUsed === 'gif' ? '🎭 GIF Master' :
                       '💬 General Agent'
                     }
                     color={
                       message.agentUsed === 'technical' ? 'info' :
                       message.agentUsed === 'dad_joke' ? 'warning' :
                       message.agentUsed === 'trivia' ? 'secondary' :
+                      message.agentUsed === 'gif' ? 'primary' :
                       'success'
                     }
                     variant="outlined"
@@ -248,7 +182,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     );
   };
 
-  if (isNewChatMode || !conversation) {
+  if (!conversation) {
     return (
       <Box
         sx={{
@@ -297,46 +231,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {/* Messages */}
       <Box sx={{ flexGrow: 1, py: 2 }}>
+        {/* Render all messages with their appropriate status-based styling */}
         {conversation.messages.map((message) => {
-          // Check if this message is being streamed
-          const isStreamingThisMessage = streamingMessages.has(message.id);
-          if (isStreamingThisMessage) {
-            // Display content directly from streamingMessages
-            const streamingContent = streamingMessages.get(message.id) || '';
-            const streamingMessage = { ...message, content: streamingContent };
-            return (
-              <MessageBubble 
-                key={message.id} 
-                message={streamingMessage} 
-                isStreamingMessage={true}
-              />
-            );
-          }
-          return <MessageBubble key={message.id} message={message} />;
+          const isStreaming = message.status === 'streaming';
+          const isPending = message.status === 'pending';
+          
+          return (
+            <MessageBubble 
+              key={message.id} 
+              message={message} 
+              isStreamingMessage={isStreaming || isPending}
+            />
+          );
         })}
-        
-        {/* Show streaming messages for new conversations or messages not yet in conversation */}
-        {isStreaming && streamingConversationId && (
-          Array.from(streamingMessages.entries())
-            .filter(([messageId]) => !conversation.messages.some(msg => msg.id === messageId))
-            .map(([messageId]) => {
-              const streamingContent = streamingMessages.get(messageId) || '';
-              const streamingMessage: Message = {
-                id: messageId,
-                content: streamingContent || 'AI is thinking...',
-                role: 'assistant',
-                timestamp: new Date(),
-                conversationId: streamingConversationId
-              };
-              return (
-                <MessageBubble 
-                  key={messageId} 
-                  message={streamingMessage} 
-                  isStreamingMessage={true}
-                />
-              );
-            })
-        )}
         
         <div ref={messagesEndRef} />
       </Box>

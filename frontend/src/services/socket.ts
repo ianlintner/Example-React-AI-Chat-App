@@ -111,7 +111,10 @@ class SocketService {
   // Goal-seeking system proactive messages
   onProactiveMessage(callback: (data: { message: Message; actionType: string; agentUsed: string; confidence: number }) => void): void {
     if (this.socket) {
-      this.socket.on('proactive_message', callback);
+      this.socket.on('proactive_message', (data) => {
+        console.log('🎁 Proactive message received in socket service:', JSON.stringify(data, null, 2));
+        callback(data);
+      });
     }
   }
 

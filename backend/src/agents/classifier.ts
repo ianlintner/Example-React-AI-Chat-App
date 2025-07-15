@@ -73,6 +73,15 @@ export async function classifyMessage(message: string): Promise<MessageClassific
       'share knowledge', 'tell me something', 'educate me', 'information'
     ];
 
+    const gifKeywords = [
+      'gif', 'gifs', 'animated', 'animation', 'funny gif', 'reaction gif',
+      'meme', 'memes', 'funny image', 'visual', 'show me', 'picture',
+      'image', 'cute gif', 'cat gif', 'dog gif', 'excited gif', 'happy gif',
+      'sad gif', 'surprised gif', 'celebration gif', 'party gif', 'dance gif',
+      'thumbs up', 'applause', 'clapping', 'facepalm', 'eye roll', 'shrug',
+      'giphy', 'tenor', 'reaction', 'emotion', 'feeling', 'mood', 'vibe'
+    ];
+
     const lowerMessage = message.toLowerCase();
     
     const technicalScore = technicalKeywords.reduce((score, keyword) => {
@@ -87,7 +96,20 @@ export async function classifyMessage(message: string): Promise<MessageClassific
       return score + (lowerMessage.includes(keyword) ? 1 : 0);
     }, 0);
 
-    // Dad joke has priority if detected
+    const gifScore = gifKeywords.reduce((score, keyword) => {
+      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+    }, 0);
+
+    // GIF has highest priority if detected
+    if (gifScore > 0) {
+      return {
+        agentType: 'gif',
+        confidence: Math.min(0.95, 0.7 + (gifScore * 0.15)),
+        reasoning: `Detected ${gifScore} GIF/visual content keywords in the message`
+      };
+    }
+
+    // Dad joke has second priority if detected
     if (dadJokeScore > 0) {
       return {
         agentType: 'dad_joke',

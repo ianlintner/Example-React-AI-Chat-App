@@ -4,7 +4,7 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
-  agentUsed?: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  agentUsed?: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
   confidence?: number;
   isProactive?: boolean;
 }
@@ -34,7 +34,7 @@ export interface ChatRequest {
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
-  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia';
+  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
   confidence: number;
 }
 

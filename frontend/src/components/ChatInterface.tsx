@@ -55,21 +55,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isNewChatMode, setIsNewChatMode] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const handleNewChat = () => {
-    setIsNewChatMode(true);
     if (isMobile) {
       setMobileOpen(false);
     }
   };
 
   const handleConversationSelect = (conversation: Conversation) => {
-    setIsNewChatMode(false);
     onConversationSelect(conversation);
     if (isMobile) {
       setMobileOpen(false);
@@ -77,7 +74,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const handleMessageSent = (conversation: Conversation) => {
-    setIsNewChatMode(false);
     onConversationUpdate(conversation);
   };
 
@@ -203,10 +199,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <>
             {/* Chat Window */}
             <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-              <ChatWindow
-                conversation={activeConversation}
-                isNewChatMode={isNewChatMode}
-              />
+          <ChatWindow 
+            conversation={activeConversation} 
+          />
             </Box>
 
             {/* Message Input */}

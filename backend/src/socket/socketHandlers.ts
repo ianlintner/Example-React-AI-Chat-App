@@ -28,6 +28,23 @@ const executeProactiveAction = async (
       conversation.messages
     );
 
+    // Validate the proactive response
+    const validationResult = await import('../validation/responseValidator').then(module => 
+      module.responseValidator.validateResponse(
+        proactiveResponse.agentUsed,
+        action.message,
+        proactiveResponse.content,
+        conversation.id,
+        socket.id,
+        true // This is a proactive message
+      )
+    );
+
+    // Log validation for proactive messages
+    if (validationResult.issues.length > 0) {
+      console.warn(`⚠️ Proactive validation issues for ${proactiveResponse.agentUsed}:`, validationResult.issues);
+    }
+
     // Create a new AI message for the proactive response
     const proactiveMessageId = uuidv4();
     const proactiveMessage: Message = {
@@ -219,7 +236,8 @@ export const setupSocketHandlers = (io: Server) => {
           socket.id,
           message,
           conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
-          forceAgent
+          forceAgent,
+          conversation.id // Pass conversation ID for validation
         );
 
         console.log(`✅ Goal-seeking system completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`);

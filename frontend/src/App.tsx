@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ThemeProvider, CssBaseline, Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material';
-import { Brightness4, Brightness7 } from '@mui/icons-material';
+import { ThemeProvider, CssBaseline, Box, AppBar, Toolbar, Typography, IconButton, Button } from '@mui/material';
+import { Brightness4, Brightness7, Dashboard, Chat } from '@mui/icons-material';
 import { lightTheme, darkTheme } from './theme/theme';
 import ChatWindow from './components/ChatWindow';
 import MessageInput from './components/MessageInput';
+import ValidationDashboard from './components/ValidationDashboard';
 import { socketService } from './services/socket';
 import type { Conversation, Message } from './types';
 
@@ -13,6 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const [currentView, setCurrentView] = useState<'chat' | 'dashboard'>('chat');
 
   // Initialize socket connection on app start
   useEffect(() => {
@@ -27,7 +29,7 @@ function App() {
         setTimeout(() => {
           console.log('Sending automatic support request...');
           socketService.sendStreamingMessage({
-            message: 'Hello, I need technical support. I\'m experiencing some issues and would like assistance from a support agent.',
+            message: 'Hello, I need technical support. I\'m experiencing some issues and would like assistance from a support agent. Please let me know if I\'ll be on hold and if you can help keep me entertained while I wait.',
             conversationId: undefined,
             forceAgent: undefined
           });
@@ -331,28 +333,56 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               🎯 AI Assistant with Goal-Seeking System
             </Typography>
+            <Button 
+              color="inherit" 
+              startIcon={<Chat />}
+              onClick={() => setCurrentView('chat')}
+              variant={currentView === 'chat' ? 'outlined' : 'text'}
+              sx={{ mr: 1 }}
+            >
+              Chat
+            </Button>
+            <Button 
+              color="inherit" 
+              startIcon={<Dashboard />}
+              onClick={() => setCurrentView('dashboard')}
+              variant={currentView === 'dashboard' ? 'outlined' : 'text'}
+              sx={{ mr: 1 }}
+            >
+              Dashboard
+            </Button>
             <IconButton color="inherit" onClick={toggleTheme}>
               {isDarkMode ? <Brightness7 /> : <Brightness4 />}
             </IconButton>
           </Toolbar>
         </AppBar>
 
-        {/* Chat Window */}
-        <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-          <ChatWindow conversation={conversation} key={lastUpdateTime.getTime()} />
-        </Box>
+        {/* Main Content Area */}
+        {currentView === 'chat' ? (
+          <>
+            {/* Chat Window */}
+            <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+              <ChatWindow conversation={conversation} key={lastUpdateTime.getTime()} />
+            </Box>
 
-        {/* Message Input */}
-        <Box sx={{ 
-          borderTop: 1, 
-          borderColor: 'divider',
-          p: 2
-        }}>
-          <MessageInput
-            conversationId={conversation?.id}
-            onMessageSent={handleMessageSent}
-          />
-        </Box>
+            {/* Message Input */}
+            <Box sx={{ 
+              borderTop: 1, 
+              borderColor: 'divider',
+              p: 2
+            }}>
+              <MessageInput
+                conversationId={conversation?.id}
+                onMessageSent={handleMessageSent}
+              />
+            </Box>
+          </>
+        ) : (
+          /* Validation Dashboard */
+          <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+            <ValidationDashboard />
+          </Box>
+        )}
       </Box>
     </ThemeProvider>
   );

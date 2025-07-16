@@ -4,6 +4,7 @@ import { getAgent } from './config';
 import { AgentResponse, AgentType } from './types';
 import { Message } from '../types';
 import { GoalSeekingSystem, GoalAction } from './goalSeekingSystem';
+import { responseValidator } from '../validation/responseValidator';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -15,7 +16,9 @@ export class AgentService {
   async processMessage(
     message: string, 
     conversationHistory: Message[] = [],
-    forcedAgentType?: AgentType
+    forcedAgentType?: AgentType,
+    conversationId?: string,
+    userId?: string
   ): Promise<AgentResponse> {
     // Classify the message to determine which agent to use
     let agentType: AgentType;
@@ -86,6 +89,30 @@ export class AgentService {
       responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
     }
 
+    // Validate the response if conversationId and userId are provided
+    if (conversationId && userId) {
+      const validationResult = responseValidator.validateResponse(
+        agentType,
+        message,
+        responseContent,
+        conversationId,
+        userId,
+        false // Not a proactive message
+      );
+      
+      // Log validation issues if any
+      if (validationResult.issues.length > 0) {
+        console.warn(`⚠️ Validation issues for ${agentType} response:`, validationResult.issues);
+      }
+      
+      // For high-severity issues, you might want to regenerate the response
+      // or provide a fallback response
+      if (validationResult.issues.some(issue => issue.severity === 'high')) {
+        console.error(`❌ High severity validation issues detected for ${agentType} response`);
+        // Could implement fallback logic here
+      }
+    }
+
     return {
       content: responseContent,
       agentUsed: agentType,
@@ -108,7 +135,23 @@ Since this is demo mode, here's what I would typically do:
 
 To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     } else if (agentName === 'Dad Joke Master') {
-      return `**Dad Joke Master Response** (Demo Mode)
+      // Handle direct joke requests
+      if (message.toLowerCase().includes('tell me a dad joke') || message.toLowerCase().includes('dad joke right now')) {
+        const jokes = [
+          "Why don't scientists trust atoms? Because they make up everything! 😄",
+          "What do you call a fake noodle? An impasta! 🍝",
+          "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾",
+          "What do you call a bear with no teeth? A gummy bear! 🐻",
+          "Why don't skeletons fight each other? They don't have the guts! 💀"
+        ];
+        const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+        return `${randomJoke}
+
+*slaps knee* Gets me every time! Want to hear another one?
+
+(This is demo mode - to get fresh AI-generated dad jokes, please set your OPENAI_API_KEY environment variable)`;
+      } else {
+        return `**Dad Joke Master Response** (Demo Mode)
 
 Oh, you want some dad jokes? I've got plenty! Here's a classic for you:
 
@@ -124,6 +167,38 @@ In demo mode, I would normally:
 - Turn everyday situations into joke opportunities
 
 To get real AI responses with fresh dad jokes, please set your OPENAI_API_KEY environment variable.`;
+      }
+    } else if (agentName === 'Trivia Master') {
+      // Handle direct trivia requests
+      if (message.toLowerCase().includes('share a fascinating') || message.toLowerCase().includes('trivia fact') || message.toLowerCase().includes('right now')) {
+        const facts = [
+          "Did you know that octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body! 🐙",
+          "Here's a mind-blowing fact: Honey never spoils! Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible! 🍯",
+          "Amazing fact: A single cloud can weigh over a million pounds! That's equivalent to about 100 elephants floating in the sky! ☁️",
+          "Fascinating: Bananas are berries, but strawberries aren't! Botanically speaking, a berry must have seeds inside its flesh. 🍌",
+          "Cool fact: The human brain uses about 20% of the body's total energy, despite being only 2% of body weight! 🧠"
+        ];
+        const randomFact = facts[Math.floor(Math.random() * facts.length)];
+        return `${randomFact}
+
+Isn't that incredible? Want to hear another fascinating fact?
+
+(This is demo mode - to get fresh AI-generated trivia, please set your OPENAI_API_KEY environment variable)`;
+      } else {
+        return `**Trivia Master Response** (Demo Mode)
+
+I'd love to share a fascinating fact with you! Here's one:
+
+Did you know that octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body! 🐙
+
+In demo mode, I would normally:
+- Share amazing facts from science, history, nature, and more
+- Make facts engaging and memorable
+- Encourage curiosity and learning
+- Cover topics from space to culture to human achievements
+
+To get real AI responses with fresh trivia, please set your OPENAI_API_KEY environment variable.`;
+      }
     } else {
       return `**General Assistant Response** (Demo Mode)
 
@@ -165,7 +240,8 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     userId: string,
     message: string,
     conversationHistory: Message[] = [],
-    forcedAgentType?: AgentType
+    forcedAgentType?: AgentType,
+    conversationId?: string
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
     // Update user state based on their message
     this.goalSeekingSystem.updateUserState(userId, message);
@@ -173,8 +249,14 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     // Activate goals based on current user state
     const activatedGoals = this.goalSeekingSystem.activateGoals(userId);
     
-    // Process the message normally
-    const response = await this.processMessage(message, conversationHistory, forcedAgentType);
+    // Process the message normally with validation
+    const response = await this.processMessage(
+      message, 
+      conversationHistory, 
+      forcedAgentType, 
+      conversationId, 
+      userId
+    );
 
     // Update goal progress based on the response
     this.goalSeekingSystem.updateGoalProgress(userId, message, response.content);
@@ -194,16 +276,9 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     action: GoalAction,
     conversationHistory: Message[] = []
   ): Promise<AgentResponse> {
-    let proactiveMessage: string;
-
-    // Generate appropriate proactive content based on agent type
-    if (action.agentType === 'dad_joke') {
-      proactiveMessage = "I thought I'd share a dad joke to brighten your wait! Here's one of my favorites:";
-    } else if (action.agentType === 'trivia') {
-      proactiveMessage = "While you're waiting, here's a fascinating fact I'd love to share with you:";
-    } else {
-      proactiveMessage = action.message;
-    }
+    // Use the message from the goal-seeking system directly
+    // The goal-seeking system already creates the right prompts to get agents to respond with content
+    const proactiveMessage = action.message;
 
     // Process the proactive message using the specified agent
     return await this.processMessage(

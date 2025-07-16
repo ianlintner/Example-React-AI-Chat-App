@@ -25,7 +25,7 @@ export interface UserState {
 }
 
 export interface GoalAction {
-  type: 'proactive_message' | 'agent_switch' | 'entertainment_offer' | 'technical_check';
+  type: 'proactive_message' | 'agent_switch' | 'entertainment_offer' | 'technical_check' | 'status_update';
   agentType: AgentType;
   message: string;
   timing: 'immediate' | 'delayed';
@@ -226,17 +226,28 @@ export class GoalSeekingSystem {
     const preference = userState.entertainmentPreference || 'mixed';
     let agentType: AgentType;
     let message: string;
+    
+    // Calculate appropriate delay based on how long user has been waiting
+    const timeSinceLastInteraction = Date.now() - userState.lastInteractionTime.getTime();
+    let delayMs = 15000; // Default 15 seconds
+    
+    // If user has been waiting longer, reduce delay
+    if (timeSinceLastInteraction > 60000) { // 1 minute
+      delayMs = 5000; // 5 seconds
+    } else if (timeSinceLastInteraction > 30000) { // 30 seconds
+      delayMs = 10000; // 10 seconds
+    }
 
     switch (preference) {
       case 'jokes':
         agentType = 'dad_joke';
-        // Generate a random dad joke proactively
-        message = "Tell me a dad joke to brighten my wait!";
+        // Direct command to the dad joke agent to tell a joke
+        message = "Tell me a dad joke right now. I want to hear one of your best ones!";
         break;
       case 'trivia':
         agentType = 'trivia';
-        // Generate random trivia proactively
-        message = "Share an interesting fact with me while I wait!";
+        // Direct command to the trivia agent to share a fact
+        message = "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
         break;
       case 'general_chat':
         agentType = 'general';
@@ -249,9 +260,9 @@ export class GoalSeekingSystem {
         agentType = randomType;
         
         if (randomType === 'dad_joke') {
-          message = "Tell me a dad joke to brighten my wait!";
+          message = "Tell me a dad joke right now. I want to hear one of your best ones!";
         } else {
-          message = "Share an interesting fact with me while I wait!";
+          message = "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
         }
     }
 
@@ -259,7 +270,8 @@ export class GoalSeekingSystem {
       type: 'proactive_message',
       agentType,
       message,
-      timing: 'immediate'
+      timing: 'delayed',
+      delayMs
     };
   }
 
@@ -283,12 +295,28 @@ export class GoalSeekingSystem {
   private async generateEngagementAction(userState: UserState): Promise<GoalAction> {
     const timeSinceLastInteraction = Date.now() - userState.lastInteractionTime.getTime();
     
+    // Send status updates for users on hold
+    if (userState.currentState === 'on_hold') {
+      const waitTimeMinutes = Math.floor(timeSinceLastInteraction / 60000);
+      
+      if (waitTimeMinutes >= 2) {
+        return {
+          type: 'status_update',
+          agentType: 'general',
+          message: `You've been waiting for ${waitTimeMinutes} minutes. A technical support agent will be with you soon. In the meantime, I'm here to keep you company!`,
+          timing: 'delayed',
+          delayMs: 45000 // 45 seconds delay for status updates
+        };
+      }
+    }
+    
     if (timeSinceLastInteraction > 60000) { // 1 minute
       return {
         type: 'proactive_message',
         agentType: 'general',
         message: "I'm still here if you need anything! How can I help you today?",
-        timing: 'immediate'
+        timing: 'delayed',
+        delayMs: 10000 // 10 seconds delay
       };
     }
 

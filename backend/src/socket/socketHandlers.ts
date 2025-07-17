@@ -4,6 +4,15 @@ import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
 import { GoalAction } from '../agents/goalSeekingSystem';
+import {
+  createConversationSpan,
+  createAgentSpan,
+  createGoalSeekingSpan,
+  addSpanEvent,
+  setSpanStatus,
+  endSpan,
+  context
+} from '../tracing/tracer';
 
 // Helper function to generate conversation title
 const generateConversationTitle = (message: string): string => {
@@ -158,10 +167,24 @@ export const setupSocketHandlers = (io: Server) => {
     // Handle streaming chat messages
     socket.on('stream_chat', async (data: ChatRequest) => {
       console.log('🔄 Received stream_chat request:', { message: data.message, conversationId: data.conversationId, forceAgent: data.forceAgent });
+      
+      // Create conversation span for tracing
+      const conversationSpan = createConversationSpan(data.conversationId || 'new', 'stream_chat');
+      addSpanEvent(conversationSpan, 'chat_request_received', {
+        'user.socket_id': socket.id,
+        'message.length': data.message?.length || 0,
+        'conversation.has_id': !!data.conversationId,
+        'agent.forced': data.forceAgent || 'none'
+      });
+
       try {
         const { message, conversationId, forceAgent } = data;
 
         if (!message || message.trim() === '') {
+          addSpanEvent(conversationSpan, 'validation_failed', { reason: 'empty_message' });
+          setSpanStatus(conversationSpan, false, 'Empty message provided');
+          endSpan(conversationSpan);
+          
           socket.emit('stream_error', {
             message: 'Message is required',
             code: 'INVALID_REQUEST'
@@ -230,6 +253,16 @@ export const setupSocketHandlers = (io: Server) => {
         // Initialize user in goal-seeking system if not already done
         agentService.initializeUserGoals(socket.id);
 
+        // Create goal-seeking span
+        const userState = agentService.getUserGoalState(socket.id);
+        const goalSeekingSpan = createGoalSeekingSpan(conversation.id, userState);
+        addSpanEvent(goalSeekingSpan, 'goal_seeking_started', {
+          'user.socket_id': socket.id,
+          'message.content': message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+          'conversation.message_count': conversation.messages.length - 2,
+          'agent.forced': forceAgent || 'none'
+        });
+
         // Process message with goal-seeking system
         console.log('🤖 Processing message with goal-seeking system...');
         const agentResponse = await agentService.processMessageWithGoalSeeking(
@@ -239,6 +272,15 @@ export const setupSocketHandlers = (io: Server) => {
           forceAgent,
           conversation.id // Pass conversation ID for validation
         );
+
+        addSpanEvent(goalSeekingSpan, 'goal_seeking_completed', {
+          'agent.selected': agentResponse.agentUsed,
+          'agent.confidence': agentResponse.confidence,
+          'response.length': agentResponse.content.length,
+          'proactive_actions.count': agentResponse.proactiveActions?.length || 0
+        });
+        setSpanStatus(goalSeekingSpan, true);
+        endSpan(goalSeekingSpan);
 
         console.log(`✅ Goal-seeking system completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`);
 
@@ -284,6 +326,11 @@ export const setupSocketHandlers = (io: Server) => {
         if (agentResponse.proactiveActions && agentResponse.proactiveActions.length > 0) {
           console.log(`🎯 Processing ${agentResponse.proactiveActions.length} proactive actions...`);
           
+          addSpanEvent(conversationSpan, 'proactive_actions_started', {
+            'actions.count': agentResponse.proactiveActions.length,
+            'actions.types': agentResponse.proactiveActions.map(a => a.type)
+          });
+          
           for (const action of agentResponse.proactiveActions) {
             // Execute proactive action based on timing
             if (action.timing === 'immediate') {
@@ -307,8 +354,29 @@ export const setupSocketHandlers = (io: Server) => {
           }
         }
 
+        // Complete conversation span successfully
+        addSpanEvent(conversationSpan, 'conversation_completed', {
+          'final.agent': agentResponse.agentUsed,
+          'final.confidence': agentResponse.confidence,
+          'final.response_length': agentResponse.content.length,
+          'user.state': userGoalState?.currentState || 'unknown',
+          'user.engagement': userGoalState?.engagementLevel || 0,
+          'user.satisfaction': userGoalState?.satisfactionLevel || 0
+        });
+        setSpanStatus(conversationSpan, true);
+        endSpan(conversationSpan);
+
       } catch (error) {
         console.error('Stream chat error:', error);
+        
+        // Log error to tracing span
+        addSpanEvent(conversationSpan, 'conversation_error', {
+          'error.message': error instanceof Error ? error.message : 'Unknown error',
+          'error.stack': error instanceof Error ? error.stack : undefined
+        });
+        setSpanStatus(conversationSpan, false, error instanceof Error ? error.message : 'Unknown error');
+        endSpan(conversationSpan);
+        
         socket.emit('stream_error', {
           message: 'Internal server error',
           code: 'INTERNAL_ERROR'

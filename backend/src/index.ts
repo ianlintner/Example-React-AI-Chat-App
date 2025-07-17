@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { initializeTracing } from './tracing/tracer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import chatRoutes from './routes/chat';
@@ -9,6 +10,9 @@ import validationRoutes from './routes/validation';
 import { setupSocketHandlers } from './socket/socketHandlers';
 
 dotenv.config();
+
+// Initialize OpenTelemetry tracing
+initializeTracing();
 
 const app = express();
 const server = createServer(app);

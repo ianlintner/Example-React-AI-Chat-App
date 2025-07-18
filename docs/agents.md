@@ -130,9 +130,43 @@ When no OpenAI API key is provided, the system operates in demo mode:
 - Provides simulated responses showing agent functionality
 - Maintains all UI features and agent selection
 
+## Single-Agent Control System
+
+The system now implements single-agent control to ensure only one agent is active and talking at a time per user:
+
+### How It Works
+
+1. **Agent Activity Tracking**: Each user has their active agent tracked with timestamps
+2. **Proactive Action Filtering**: Only one proactive action is executed at a time
+3. **Action Queuing**: Additional proactive actions are queued when an agent is already active
+4. **Sequential Processing**: Queued actions are processed after the current action completes
+
+### Benefits
+
+- **Prevents Agent Conflicts**: No multiple agents responding simultaneously
+- **Maintains Conversation Flow**: Ensures coherent, single-threaded conversations
+- **Reduces Confusion**: Users receive responses from one agent at a time
+- **Preserves Context**: Maintains conversation context without interruption
+
+### Implementation Details
+
+- **30-Second Activity Window**: Agents are considered active for 30 seconds after their last response
+- **Priority-Based Selection**: Higher priority actions (technical > entertainment > engagement) are processed first
+- **Automatic Queuing**: Conflicting actions are automatically queued for later processing
+- **Error Handling**: Graceful handling of agent conflicts with automatic retry
+
+### Logging
+
+The system provides detailed logging for debugging:
+- `🎯` - Goal-seeking system actions
+- `🚫` - Agent conflicts and filtering
+- `⏳` - Queued actions
+- `✅` - Successfully completed actions
+
 ## Future Enhancements
 
 - Additional specialized agents (e.g., creative writing, data analysis)
 - Dynamic agent selection based on conversation context
 - Agent performance metrics and optimization
 - Multi-agent collaboration for complex queries
+- Enhanced priority-based action scheduling

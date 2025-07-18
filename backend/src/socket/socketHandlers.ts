@@ -20,7 +20,7 @@ const generateConversationTitle = (message: string): string => {
   return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
 };
 
-// Helper function to execute proactive actions
+// Helper function to execute proactive actions with single-agent control
 const executeProactiveAction = async (
   action: GoalAction,
   conversation: Conversation,
@@ -30,7 +30,7 @@ const executeProactiveAction = async (
   try {
     console.log(`🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`);
     
-    // Execute the proactive action using the agent service
+    // Execute the proactive action using the agent service with single-agent control
     const proactiveResponse = await agentService.executeProactiveAction(
       socket.id,
       action,
@@ -83,9 +83,33 @@ const executeProactiveAction = async (
     socket.emit('proactive_message', proactiveData);
 
     console.log(`✅ Proactive action completed: ${action.type}`);
+    
+    // Process any queued actions after a delay
+    setTimeout(async () => {
+      try {
+        const queuedActions = await agentService.getQueuedActions(socket.id);
+        if (queuedActions.length > 0) {
+          console.log(`🎯 Processing ${queuedActions.length} queued actions for user ${socket.id}`);
+          for (const queuedAction of queuedActions) {
+            await executeProactiveAction(queuedAction, conversation, socket, io);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing queued actions:', error);
+      }
+    }, 2000); // 2 second delay to ensure current action is fully processed
+    
   } catch (error) {
     console.error('Error executing proactive action:', error);
-    // Emit error to the specific user
+    
+    // Handle agent already active error
+    if (error instanceof Error && error.message === 'Agent already active') {
+      console.log(`⏳ Agent busy - action queued: ${action.type}`);
+      // Action is already queued by the agent service, no need to emit error
+      return;
+    }
+    
+    // Emit error to the specific user for other errors
     socket.emit('proactive_error', {
       message: 'Failed to execute proactive action',
       actionType: action.type,

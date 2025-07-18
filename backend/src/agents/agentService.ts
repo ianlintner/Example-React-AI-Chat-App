@@ -8,9 +8,65 @@ import { responseValidator } from '../validation/responseValidator';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
+  private activeAgents: Map<string, { agentType: AgentType; timestamp: Date }> = new Map();
+  private actionQueue: Map<string, GoalAction[]> = new Map();
+  private processingQueue: Set<string> = new Set();
 
   constructor() {
     this.goalSeekingSystem = new GoalSeekingSystem(this);
+  }
+
+  // Check if an agent is currently active for a user
+  private isAgentActive(userId: string): boolean {
+    const activeAgent = this.activeAgents.get(userId);
+    if (!activeAgent) return false;
+    
+    // Consider an agent inactive after 30 seconds of no activity
+    const thirtySecondsAgo = Date.now() - 30000;
+    return activeAgent.timestamp.getTime() > thirtySecondsAgo;
+  }
+
+  // Set an agent as active for a user
+  private setAgentActive(userId: string, agentType: AgentType): void {
+    this.activeAgents.set(userId, {
+      agentType,
+      timestamp: new Date()
+    });
+  }
+
+  // Clear active agent for a user
+  private clearActiveAgent(userId: string): void {
+    this.activeAgents.delete(userId);
+  }
+
+  // Add action to queue for later processing
+  private queueAction(userId: string, action: GoalAction): void {
+    if (!this.actionQueue.has(userId)) {
+      this.actionQueue.set(userId, []);
+    }
+    this.actionQueue.get(userId)!.push(action);
+  }
+
+  // Process queued actions for a user
+  private async processQueuedActions(userId: string): Promise<GoalAction[]> {
+    if (this.processingQueue.has(userId)) {
+      return []; // Already processing queue for this user
+    }
+
+    const queue = this.actionQueue.get(userId) || [];
+    if (queue.length === 0) {
+      return [];
+    }
+
+    this.processingQueue.add(userId);
+    this.actionQueue.set(userId, []); // Clear queue
+
+    try {
+      // Only return the first action to ensure sequential processing
+      return queue.slice(0, 1);
+    } finally {
+      this.processingQueue.delete(userId);
+    }
   }
 
   async processMessage(
@@ -243,6 +299,10 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     forcedAgentType?: AgentType,
     conversationId?: string
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
+    // Set current agent as active for this user
+    const agentType = forcedAgentType || (await classifyMessage(message)).agentType;
+    this.setAgentActive(userId, agentType);
+
     // Update user state based on their message
     this.goalSeekingSystem.updateUserState(userId, message);
 
@@ -262,7 +322,13 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     this.goalSeekingSystem.updateGoalProgress(userId, message, response.content);
 
     // Generate proactive actions if goals are active
-    const proactiveActions = await this.goalSeekingSystem.generateProactiveActions(userId);
+    const rawProactiveActions = await this.goalSeekingSystem.generateProactiveActions(userId);
+
+    // Filter proactive actions to ensure single agent control
+    const proactiveActions = this.filterProactiveActions(userId, rawProactiveActions);
+
+    // Clear active agent after processing
+    this.clearActiveAgent(userId);
 
     return {
       ...response,
@@ -270,22 +336,94 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     };
   }
 
-  // Execute a proactive action
+  // Execute a proactive action with single-agent control
   async executeProactiveAction(
     userId: string,
     action: GoalAction,
     conversationHistory: Message[] = []
   ): Promise<AgentResponse> {
-    // Use the message from the goal-seeking system directly
-    // The goal-seeking system already creates the right prompts to get agents to respond with content
-    const proactiveMessage = action.message;
+    // Check if an agent is already active for this user
+    if (this.isAgentActive(userId)) {
+      console.log(`🚫 Agent ${this.activeAgents.get(userId)?.agentType} is already active for user ${userId}. Queueing action: ${action.type}`);
+      this.queueAction(userId, action);
+      throw new Error('Agent already active');
+    }
 
-    // Process the proactive message using the specified agent
-    return await this.processMessage(
-      proactiveMessage,
-      conversationHistory,
-      action.agentType
-    );
+    // Set this agent as active
+    this.setAgentActive(userId, action.agentType);
+
+    try {
+      // Use the message from the goal-seeking system directly
+      const proactiveMessage = action.message;
+
+      // Process the proactive message using the specified agent
+      const response = await this.processMessage(
+        proactiveMessage,
+        conversationHistory,
+        action.agentType
+      );
+
+      console.log(`✅ Proactive action executed successfully for user ${userId} with agent ${action.agentType}`);
+      return response;
+    } finally {
+      // Clear active agent after processing
+      this.clearActiveAgent(userId);
+      
+      // Process any queued actions
+      setTimeout(async () => {
+        const queuedActions = await this.processQueuedActions(userId);
+        if (queuedActions.length > 0) {
+          console.log(`🎯 Processing ${queuedActions.length} queued actions for user ${userId}`);
+          // Note: The actual execution of queued actions should be handled by the socket handler
+        }
+      }, 1000); // Small delay to ensure current action is fully processed
+    }
+  }
+
+  // Filter proactive actions to ensure single agent control
+  private filterProactiveActions(userId: string, actions: GoalAction[]): GoalAction[] {
+    if (actions.length === 0) return actions;
+
+    // Sort actions by priority (immediate first, then by type priority)
+    const sortedActions = actions.sort((a, b) => {
+      if (a.timing === 'immediate' && b.timing !== 'immediate') return -1;
+      if (a.timing !== 'immediate' && b.timing === 'immediate') return 1;
+      
+      // Priority order: technical_support > entertainment > engagement
+      const priorityOrder: Record<string, number> = { 
+        'technical_check': 3, 
+        'entertainment_offer': 2, 
+        'proactive_message': 1, 
+        'agent_switch': 1,
+        'status_update': 0 
+      };
+      return (priorityOrder[b.type] || 0) - (priorityOrder[a.type] || 0);
+    });
+
+    // Only return the highest priority action to ensure single agent control
+    const selectedAction = sortedActions[0];
+    console.log(`🎯 Selected single proactive action for user ${userId}: ${selectedAction.type} (${selectedAction.agentType})`);
+    
+    if (sortedActions.length > 1) {
+      console.log(`🚫 Filtered out ${sortedActions.length - 1} additional proactive actions to maintain single agent control`);
+    }
+
+    return [selectedAction];
+  }
+
+  // Get queued actions for a user (for socket handler to process)
+  async getQueuedActions(userId: string): Promise<GoalAction[]> {
+    return this.processQueuedActions(userId);
+  }
+
+  // Check if agent is active for a user (public method)
+  isUserAgentActive(userId: string): boolean {
+    return this.isAgentActive(userId);
+  }
+
+  // Get active agent info for a user
+  getActiveAgentInfo(userId: string): { agentType: AgentType; timestamp: Date } | null {
+    return this.activeAgents.get(userId) || null;
   }
 
   // Get user's current state and goals

@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import chatRoutes from './routes/chat';
 import conversationRoutes from './routes/conversations';
+import reactionRoutes from './routes/reactions';
 import validationRoutes from './routes/validation';
 import { setupSocketHandlers } from './socket/socketHandlers';
 
@@ -37,6 +38,7 @@ app.use(express.json());
 // Routes
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
+app.use('/api/reactions', reactionRoutes);
 app.use('/api/validation', validationRoutes);
 
 // Health check endpoint

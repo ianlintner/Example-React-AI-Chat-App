@@ -1,4 +1,4 @@
-export type AgentType = 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
+export type AgentType = 'technical' | 'general' | 'joke' | 'trivia' | 'gif';
 
 export interface Agent {
   id: string;

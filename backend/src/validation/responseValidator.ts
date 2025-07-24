@@ -221,7 +221,7 @@ export class ResponseValidator {
 
   private validateLength(response: string, agentType: AgentType, issues: ValidationIssue[]): void {
     const expectedLengths: Record<AgentType, { min: number; max: number }> = {
-      'dad_joke': { min: 20, max: 200 },
+      'joke': { min: 20, max: 200 },
       'trivia': { min: 50, max: 300 },
       'technical': { min: 100, max: 1000 },
       'general': { min: 30, max: 500 },

@@ -12,6 +12,7 @@ import {
   SmartToy as BotIcon,
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
+import ReactionButtons from './ReactionButtons';
 import type { Conversation, Message } from '../types';
 
 // Pulsing animation for streaming messages
@@ -120,14 +121,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     size="small"
                     label={
                       message.agentUsed === 'technical' ? '⚙️ Technical Agent' :
-                      message.agentUsed === 'dad_joke' ? '😄 Dad Joke Master' :
+                      message.agentUsed === 'joke' ? '🎭 Adaptive Joke Master' :
                       message.agentUsed === 'trivia' ? '🧠 Trivia Master' :
                       message.agentUsed === 'gif' ? '🎭 GIF Master' :
                       '💬 General Agent'
                     }
                     color={
                       message.agentUsed === 'technical' ? 'info' :
-                      message.agentUsed === 'dad_joke' ? 'warning' :
+                      message.agentUsed === 'joke' ? 'warning' :
                       message.agentUsed === 'trivia' ? 'secondary' :
                       message.agentUsed === 'gif' ? 'primary' :
                       'success'
@@ -176,6 +177,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                 </Box>
               )}
             </Paper>
+            
+            {/* Show reaction buttons for joke messages from the assistant */}
+            {!isUser && message.agentUsed === 'joke' && !isStreamingMessage && (
+              <ReactionButtons
+                messageId={message.id}
+                onReaction={(reactionType) => {
+                  // TODO: Send reaction to backend
+                  console.log(`User reacted with ${reactionType} to joke message ${message.id}`);
+                }}
+              />
+            )}
+            
             <Typography
               variant="caption"
               color="text.secondary"

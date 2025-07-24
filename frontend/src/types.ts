@@ -29,13 +29,13 @@ export interface ChatRequest {
   message: string;
   conversationId?: string;
   stream?: boolean;
-  forceAgent?: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
+  forceAgent?: 'technical' | 'general' | 'joke' | 'trivia' | 'gif';
 }
 
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
-  agentUsed: 'technical' | 'general' | 'dad_joke' | 'trivia' | 'gif';
+  agentUsed: 'technical' | 'general' | 'joke' | 'trivia' | 'gif';
   confidence: number;
 }
 

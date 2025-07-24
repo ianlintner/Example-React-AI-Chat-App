@@ -240,9 +240,9 @@ export class GoalSeekingSystem {
 
     switch (preference) {
       case 'jokes':
-        agentType = 'dad_joke';
-        // Direct command to the dad joke agent to tell a joke
-        message = "Tell me a dad joke right now. I want to hear one of your best ones!";
+        agentType = 'joke';
+        // Direct command to the joke agent to tell a joke
+        message = "Tell me a joke right now. I want to hear one of your best ones!";
         break;
       case 'trivia':
         agentType = 'trivia';
@@ -255,12 +255,12 @@ export class GoalSeekingSystem {
         break;
       default:
         // Mixed approach - rotate between entertainment types
-        const entertainmentTypes = ['dad_joke', 'trivia'] as const;
+        const entertainmentTypes = ['joke', 'trivia'] as const;
         const randomType = entertainmentTypes[Math.floor(Math.random() * entertainmentTypes.length)];
         agentType = randomType;
         
-        if (randomType === 'dad_joke') {
-          message = "Tell me a dad joke right now. I want to hear one of your best ones!";
+        if (randomType === 'joke') {
+          message = "Tell me a joke right now. I want to hear one of your best ones!";
         } else {
           message = "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
         }

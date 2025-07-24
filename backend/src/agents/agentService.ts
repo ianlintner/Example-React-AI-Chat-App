@@ -5,6 +5,7 @@ import { AgentResponse, AgentType } from './types';
 import { Message } from '../types';
 import { GoalSeekingSystem, GoalAction } from './goalSeekingSystem';
 import { responseValidator } from '../validation/responseValidator';
+import { jokeLearningSystem } from './jokeLearningSystem';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -94,11 +95,17 @@ export class AgentService {
     // Get the appropriate agent
     const agent = getAgent(agentType);
 
+    // For joke agent, use adaptive prompt based on user learning data
+    let systemPrompt = agent.systemPrompt;
+    if (agentType === 'joke' && userId) {
+      systemPrompt = jokeLearningSystem.generateAdaptivePrompt(userId, agent.systemPrompt);
+    }
+
     // Prepare the conversation history for the agent
     const messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = [
       {
         role: 'system',
-        content: agent.systemPrompt
+        content: systemPrompt
       }
     ];
 
@@ -190,39 +197,43 @@ Since this is demo mode, here's what I would typically do:
 - Suggest relevant documentation
 
 To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
-    } else if (agentName === 'Dad Joke Master') {
+    } else if (agentName === 'Adaptive Joke Master') {
       // Handle direct joke requests
-      if (message.toLowerCase().includes('tell me a dad joke') || message.toLowerCase().includes('dad joke right now')) {
+      if (message.toLowerCase().includes('tell me a joke') || message.toLowerCase().includes('joke right now')) {
         const jokes = [
           "Why don't scientists trust atoms? Because they make up everything! 😄",
           "What do you call a fake noodle? An impasta! 🍝",
           "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾",
           "What do you call a bear with no teeth? A gummy bear! 🐻",
-          "Why don't skeletons fight each other? They don't have the guts! 💀"
+          "Why don't skeletons fight each other? They don't have the guts! 💀",
+          "I told my wife she was drawing her eyebrows too high. She looked surprised! 😮",
+          "Why do programmers prefer dark mode? Because light attracts bugs! 🐛",
+          "A man walks into a library and asks for books on paranoia. The librarian whispers, 'They're right behind you!' 📚"
         ];
         const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
         return `${randomJoke}
 
-*slaps knee* Gets me every time! Want to hear another one?
+🎭 *Learning from your reaction...* Want to hear another one? I'm adapting my humor based on what makes you laugh!
 
-(This is demo mode - to get fresh AI-generated dad jokes, please set your OPENAI_API_KEY environment variable)`;
+(This is demo mode - to get fresh AI-generated adaptive jokes, please set your OPENAI_API_KEY environment variable)`;
       } else {
-        return `**Dad Joke Master Response** (Demo Mode)
+        return `**Adaptive Joke Master Response** (Demo Mode)
 
-Oh, you want some dad jokes? I've got plenty! Here's a classic for you:
+I'm your intelligent comedy companion! I learn from your reactions and tailor my humor just for you. Here's a joke to get started:
 
 Why don't scientists trust atoms?
 Because they make up everything! 😄
 
-*slaps knee* Gets me every time! 
+🎯 *I'm watching for your reaction to learn what makes you laugh!*
 
 In demo mode, I would normally:
-- Share groan-worthy dad jokes and puns
-- Make terrible wordplay about anything
-- Bring that classic dad energy to every conversation
-- Turn everyday situations into joke opportunities
+- Learn from your reactions (laughs, groans, etc.)
+- Adapt my joke style based on your preferences
+- Remember what works and avoid what doesn't
+- Continuously improve to maximize your entertainment
+- Use different joke categories: dad jokes, wordplay, observational, tech humor, etc.
 
-To get real AI responses with fresh dad jokes, please set your OPENAI_API_KEY environment variable.`;
+To get real AI responses with adaptive learning, please set your OPENAI_API_KEY environment variable.`;
       }
     } else if (agentName === 'Trivia Master') {
       // Handle direct trivia requests
@@ -284,9 +295,14 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         description: 'Helpful for casual conversation, general questions, creative tasks, and everyday assistance'
       },
       {
-        id: 'dad_joke',
-        name: 'Dad Joke Master',
-        description: 'Your go-to source for groan-worthy dad jokes and puns that will make you laugh (or cringe)'
+        id: 'joke',
+        name: 'Adaptive Joke Master',
+        description: 'An intelligent joke agent that learns from your reactions and tailors humor to your preferences'
+      },
+      {
+        id: 'trivia',
+        name: 'Trivia Master',
+        description: 'Your source for fascinating random facts, trivia, and interesting knowledge from around the world'
       }
     ];
   }

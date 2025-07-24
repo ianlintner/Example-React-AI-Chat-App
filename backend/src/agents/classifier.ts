@@ -9,25 +9,25 @@ const CLASSIFICATION_PROMPT = `You are a message classifier that determines whic
 
 You must classify messages into one of four categories:
 1. "technical" - for programming, coding, software development, debugging, technical documentation, system administration, databases, APIs, frameworks, libraries, algorithms, data structures, etc.
-2. "dad_joke" - for dad jokes, puns, groan-worthy humor, family-friendly jokes, or explicit requests for dad jokes
+2. "joke" - for jokes, puns, humor, funny content, comedy requests, or any request for entertainment through jokes
 3. "trivia" - for trivia questions, random facts, interesting knowledge, "did you know" requests, historical facts, science facts, fun facts, etc.
 4. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
 
 Respond with a JSON object containing:
-- agentType: "technical", "dad_joke", "trivia", or "general"
+- agentType: "technical", "joke", "trivia", or "general"
 - confidence: a number between 0 and 1 indicating how confident you are
 - reasoning: a brief explanation of your classification
 
 Examples:
 - "How do I fix this React component?" → technical
-- "Tell me a dad joke" → dad_joke
+- "Tell me a dad joke" → joke
 - "Tell me a random fact" → trivia
 - "What's the weather like today?" → general
 - "Can you help me debug this Python code?" → technical
-- "I need a good pun" → dad_joke
+- "I need a good pun" → joke
 - "Did you know that..." → trivia
 - "What should I have for lunch?" → general
-- "Make me laugh with a cheesy joke" → dad_joke
+- "Make me laugh with a cheesy joke" → joke
 - "What's the best way to handle state in React?" → technical
 - "Share some interesting trivia" → trivia
 - "Fun facts about space" → trivia
@@ -109,12 +109,12 @@ export async function classifyMessage(message: string): Promise<MessageClassific
       };
     }
 
-    // Dad joke has second priority if detected
+    // Joke has second priority if detected
     if (dadJokeScore > 0) {
       return {
-        agentType: 'dad_joke',
+        agentType: 'joke',
         confidence: Math.min(0.9, 0.6 + (dadJokeScore * 0.15)),
-        reasoning: `Detected ${dadJokeScore} dad joke keywords in the message`
+        reasoning: `Detected ${dadJokeScore} joke keywords in the message`
       };
     }
 

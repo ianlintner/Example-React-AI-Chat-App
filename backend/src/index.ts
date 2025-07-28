@@ -8,6 +8,8 @@ import chatRoutes from './routes/chat';
 import conversationRoutes from './routes/conversations';
 import reactionRoutes from './routes/reactions';
 import validationRoutes from './routes/validation';
+import agentTestBenchRoutes from './routes/agentTestBench';
+import swaggerDocsRoutes from './routes/swaggerDocs';
 import { setupSocketHandlers } from './socket/socketHandlers';
 
 dotenv.config();
@@ -40,6 +42,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/reactions', reactionRoutes);
 app.use('/api/validation', validationRoutes);
+app.use('/api/test-bench', agentTestBenchRoutes);
+app.use('/docs', swaggerDocsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

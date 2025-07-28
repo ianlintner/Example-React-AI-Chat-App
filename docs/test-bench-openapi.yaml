@@ -1,0 +1,893 @@
+openapi: 3.0.3
+info:
+  title: AI Chat App Test Bench API
+  description: |
+    Comprehensive test bench API for testing all AI agents and system features.
+    
+    This API provides endpoints to test individual agents, bulk test multiple agents,
+    validate system components, and monitor system health.
+    
+    ## Agent Types
+    The system supports 14 different agent types:
+    - **Support Agents**: account_support, billing_support, website_support, operator_support
+    - **Entertainment Agents**: joke, story_teller, riddle_master, quote_master, game_host, music_guru
+    - **Utility Agents**: general, trivia, gif, hold_agent
+    
+  version: 1.0.0
+  contact:
+    name: Development Team
+    url: https://github.com/ianlintner/Example-React-AI-Chat-App
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5001/api/test-bench
+    description: Development server
+
+tags:
+  - name: Agent Testing
+    description: Test individual and multiple AI agents
+  - name: System Components
+    description: Test system components like classifier, RAG, validation
+  - name: Learning Systems
+    description: Test adaptive learning and goal-seeking systems
+  - name: System Health
+    description: Health checks and system information
+
+paths:
+  /agent/{agentType}/test:
+    post:
+      tags:
+        - Agent Testing
+      summary: Test individual agent
+      description: Test a specific agent with a custom message and conversation history
+      parameters:
+        - name: agentType
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AgentType'
+          description: The type of agent to test
+          example: joke
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentTestRequest'
+            examples:
+              joke_test:
+                summary: Test joke agent
+                value:
+                  message: "Tell me a funny joke!"
+                  conversationHistory: []
+                  userId: "test-user"
+              support_test:
+                summary: Test support agent
+                value:
+                  message: "I need help with my billing account"
+                  conversationHistory: []
+                  userId: "test-user"
+      responses:
+        '200':
+          description: Agent test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /bulk-test:
+    post:
+      tags:
+        - Agent Testing
+      summary: Bulk test multiple agents
+      description: Test multiple agents with the same message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkTestRequest'
+            examples:
+              test_all:
+                summary: Test all agents
+                value:
+                  message: "Hello, how can you help me?"
+                  agentTypes: []
+                  userId: "test-user"
+              test_selected:
+                summary: Test selected agents
+                value:
+                  message: "Tell me something interesting"
+                  agentTypes: ["joke", "trivia", "story_teller"]
+                  userId: "test-user"
+      responses:
+        '200':
+          description: Bulk test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /classifier/test:
+    post:
+      tags:
+        - System Components
+      summary: Test message classification
+      description: Test the message classification system to see which agent would be selected
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifierTestRequest'
+            examples:
+              billing_message:
+                summary: Billing support message
+                value:
+                  message: "I need help with my billing account"
+              entertainment_message:
+                summary: Entertainment request
+                value:
+                  message: "Tell me a joke please"
+      responses:
+        '200':
+          description: Classification test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifierTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rag/test:
+    post:
+      tags:
+        - System Components
+      summary: Test RAG service
+      description: Test the Retrieval-Augmented Generation service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RAGTestRequest'
+            examples:
+              joke_search:
+                summary: Search for joke content
+                value:
+                  agentType: "joke"
+                  query: "dad jokes"
+                  useFullSearch: false
+      responses:
+        '200':
+          description: RAG test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RAGTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /validator/test:
+    post:
+      tags:
+        - System Components
+      summary: Test response validation
+      description: Test the response validation system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidatorTestRequest'
+            examples:
+              joke_validation:
+                summary: Validate joke response
+                value:
+                  agentType: "joke"
+                  userMessage: "Tell me a joke"
+                  agentResponse: "Why did the chicken cross the road? To get to the other side!"
+                  conversationId: "test-conversation"
+                  userId: "test-user"
+                  isProactive: false
+      responses:
+        '200':
+          description: Validation test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidatorTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /joke-learning/test:
+    post:
+      tags:
+        - Learning Systems
+      summary: Test joke learning system
+      description: Test the adaptive joke learning system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JokeLearningTestRequest'
+            examples:
+              get_profile:
+                summary: Get user joke profile
+                value:
+                  userId: "test-user"
+                  action: "get-profile"
+              record_reaction:
+                summary: Record joke reaction
+                value:
+                  userId: "test-user"
+                  action: "record-reaction"
+                  jokeId: "joke-123"
+                  reactionType: "laugh"
+                  jokeCategory: "dad_jokes"
+                  jokeType: "pun"
+      responses:
+        '200':
+          description: Joke learning test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JokeLearningTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /goal-seeking/test:
+    post:
+      tags:
+        - Learning Systems
+      summary: Test goal-seeking system
+      description: Test the proactive goal-seeking behavior system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalSeekingTestRequest'
+            examples:
+              get_state:
+                summary: Get user goal state
+                value:
+                  userId: "test-user"
+                  action: "get-state"
+              update_state:
+                summary: Update state with message
+                value:
+                  userId: "test-user"
+                  action: "update-state"
+                  message: "I'm having billing issues"
+      responses:
+        '200':
+          description: Goal-seeking test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalSeekingTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversation-manager/test:
+    post:
+      tags:
+        - Learning Systems
+      summary: Test conversation manager
+      description: Test conversation flow and agent handoffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationManagerTestRequest'
+            examples:
+              process_message:
+                summary: Process message with conversation context
+                value:
+                  userId: "test-user"
+                  action: "process-message"
+                  message: "Hello there!"
+      responses:
+        '200':
+          description: Conversation manager test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationManagerTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comprehensive/test:
+    post:
+      tags:
+        - Learning Systems
+      summary: Test comprehensive system
+      description: Test full system integration (goal-seeking + conversation management)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComprehensiveTestRequest'
+            examples:
+              full_system:
+                summary: Test full system integration
+                value:
+                  userId: "test-user"
+                  message: "I need entertainment while I wait"
+                  conversationHistory: []
+                  forcedAgentType: "joke"
+      responses:
+        '200':
+          description: Comprehensive test completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComprehensiveTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /agents/list:
+    get:
+      tags:
+        - System Health
+      summary: Get available agents
+      description: Retrieve list of all available agents with their metadata
+      responses:
+        '200':
+          description: Agent list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsListResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /health:
+    get:
+      tags:
+        - System Health
+      summary: System health check
+      description: Check health status of all system components
+      responses:
+        '200':
+          description: Health check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    AgentType:
+      type: string
+      enum:
+        - general
+        - joke
+        - trivia
+        - gif
+        - account_support
+        - billing_support
+        - website_support
+        - operator_support
+        - hold_agent
+        - story_teller
+        - riddle_master
+        - quote_master
+        - game_host
+        - music_guru
+      description: Available agent types in the system
+
+    AgentTestRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The message to send to the agent
+          example: "Tell me a funny joke!"
+        conversationHistory:
+          type: array
+          items:
+            type: object
+          description: Previous conversation history
+          default: []
+        userId:
+          type: string
+          description: User identifier for testing
+          default: "test-user"
+          example: "test-user"
+
+    AgentTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        message:
+          type: string
+          example: "Tell me a funny joke!"
+        response:
+          type: object
+          description: Agent's response object
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00.000Z"
+        testMetadata:
+          type: object
+          properties:
+            userId:
+              type: string
+              example: "test-user"
+            forced:
+              type: boolean
+              example: true
+            environment:
+              type: string
+              example: "test"
+
+    BulkTestRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The message to send to all agents
+          example: "Hello, how can you help me?"
+        agentTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentType'
+          description: Specific agent types to test (empty array tests all)
+          default: []
+        userId:
+          type: string
+          description: User identifier for testing
+          default: "test-user"
+          example: "test-user"
+
+    BulkTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Hello, how can you help me?"
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              agentType:
+                $ref: '#/components/schemas/AgentType'
+              success:
+                type: boolean
+              response:
+                type: object
+              error:
+                type: string
+              executionTime:
+                type: number
+        totalTested:
+          type: number
+          example: 14
+        successCount:
+          type: number
+          example: 13
+        failureCount:
+          type: number
+          example: 1
+        timestamp:
+          type: string
+          format: date-time
+
+    ClassifierTestRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Message to classify
+          example: "I need billing support"
+
+    ClassifierTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "I need billing support"
+        classification:
+          type: object
+          description: Classification result with agent type and confidence
+        timestamp:
+          type: string
+          format: date-time
+
+    RAGTestRequest:
+      type: object
+      required:
+        - agentType
+        - query
+      properties:
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        query:
+          type: string
+          description: Search query for RAG
+          example: "dad jokes"
+        useFullSearch:
+          type: boolean
+          description: Whether to use full search or quick search
+          default: false
+
+    RAGTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        query:
+          type: string
+          example: "dad jokes"
+        useFullSearch:
+          type: boolean
+          example: false
+        result:
+          type: object
+          description: RAG search result
+        hasResult:
+          type: boolean
+          description: Whether any result was found
+        timestamp:
+          type: string
+          format: date-time
+
+    ValidatorTestRequest:
+      type: object
+      required:
+        - agentType
+        - userMessage
+        - agentResponse
+      properties:
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        userMessage:
+          type: string
+          example: "Tell me a joke"
+        agentResponse:
+          type: string
+          example: "Why did the chicken cross the road?"
+        conversationId:
+          type: string
+          default: "test-conversation"
+        userId:
+          type: string
+          default: "test-user"
+        isProactive:
+          type: boolean
+          default: false
+
+    ValidatorTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        input:
+          type: object
+          description: Input parameters used for validation
+        validation:
+          type: object
+          description: Validation result with scores and feedback
+        timestamp:
+          type: string
+          format: date-time
+
+    JokeLearningTestRequest:
+      type: object
+      required:
+        - action
+      properties:
+        userId:
+          type: string
+          default: "test-user"
+        action:
+          type: string
+          enum: [get-profile, record-reaction, generate-prompt]
+          description: Action to perform
+        jokeId:
+          type: string
+          description: Required for record-reaction action
+        reactionType:
+          type: string
+          description: Required for record-reaction action
+          example: "laugh"
+        messageId:
+          type: string
+          description: Optional message ID
+        jokeCategory:
+          type: string
+          example: "dad_jokes"
+        jokeType:
+          type: string
+          example: "pun"
+
+    JokeLearningTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        action:
+          type: string
+        userId:
+          type: string
+        result:
+          type: object
+          description: Action-specific result data
+        timestamp:
+          type: string
+          format: date-time
+
+    GoalSeekingTestRequest:
+      type: object
+      required:
+        - action
+      properties:
+        userId:
+          type: string
+          default: "test-user"
+        action:
+          type: string
+          enum: [get-state, initialize, update-state]
+          description: Action to perform
+        message:
+          type: string
+          description: Required for update-state action
+
+    GoalSeekingTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        action:
+          type: string
+        userId:
+          type: string
+        result:
+          type: object
+          description: Action-specific result data
+        timestamp:
+          type: string
+          format: date-time
+
+    ConversationManagerTestRequest:
+      type: object
+      required:
+        - action
+      properties:
+        userId:
+          type: string
+          default: "test-user"
+        action:
+          type: string
+          enum: [get-context, initialize, process-message]
+          description: Action to perform
+        message:
+          type: string
+          description: Required for process-message action
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+          default: "general"
+
+    ConversationManagerTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        action:
+          type: string
+        userId:
+          type: string
+        result:
+          type: object
+          description: Action-specific result data
+        timestamp:
+          type: string
+          format: date-time
+
+    ComprehensiveTestRequest:
+      type: object
+      required:
+        - message
+      properties:
+        userId:
+          type: string
+          default: "test-user"
+        message:
+          type: string
+          example: "I need entertainment while I wait"
+        conversationHistory:
+          type: array
+          items:
+            type: object
+          default: []
+        forcedAgentType:
+          $ref: '#/components/schemas/AgentType'
+          description: Optional agent type to force
+
+    ComprehensiveTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        response:
+          type: object
+          description: System response
+        userState:
+          type: object
+          description: Comprehensive user state
+        timestamp:
+          type: string
+          format: date-time
+
+    AgentsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        agents:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                $ref: '#/components/schemas/AgentType'
+              name:
+                type: string
+              description:
+                type: string
+        totalCount:
+          type: number
+          example: 14
+        timestamp:
+          type: string
+          format: date-time
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        health:
+          type: object
+          properties:
+            agentService:
+              type: string
+              example: "operational"
+            classifier:
+              type: string
+              example: "operational"
+            ragService:
+              type: string
+              example: "operational"
+            responseValidator:
+              type: string
+              example: "operational"
+            jokeLearningSystem:
+              type: string
+              example: "operational"
+            goalSeekingSystem:
+              type: string
+              example: "operational"
+            conversationManager:
+              type: string
+              example: "operational"
+            openaiApiKey:
+              type: string
+              enum: [configured, missing]
+              example: "configured"
+            timestamp:
+              type: string
+              format: date-time
+        status:
+          type: string
+          example: "healthy"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: string
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Message is required"
+            details: "The message parameter is required for this endpoint"
+            timestamp: "2024-01-01T12:00:00.000Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Failed to test agent"
+            details: "OpenAI API key not configured"
+            timestamp: "2024-01-01T12:00:00.000Z"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (if required)
+
+security: []
+
+externalDocs:
+  description: Full Test Bench Documentation
+  url: ./test-bench-system.md

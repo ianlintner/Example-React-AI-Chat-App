@@ -44,17 +44,17 @@ describe('Chat Flow Integration Tests', () => {
     vi.clearAllMocks();
     
     // Setup default mock implementations
-    (conversationsApi.getAll as any).mockResolvedValue([]);
-    (conversationsApi.create as any).mockResolvedValue({
+    (conversationsApi.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (conversationsApi.create as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'conv-123',
       title: 'New Conversation',
       createdAt: new Date().toISOString()
     });
-    (conversationsApi.getById as any).mockResolvedValue({ messages: [] });
-    (socketService.connect as any).mockResolvedValue(undefined);
-    (socketService.onNewMessage as any).mockReturnValue(vi.fn());
-    (socketService.onStreamStart as any).mockReturnValue(vi.fn());
-    (socketService.removeListener as any).mockReturnValue(vi.fn());
+    (conversationsApi.getById as ReturnType<typeof vi.fn>).mockResolvedValue({ messages: [] });
+    (socketService.connect as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (socketService.onNewMessage as ReturnType<typeof vi.fn>).mockReturnValue(vi.fn());
+    (socketService.onStreamStart as ReturnType<typeof vi.fn>).mockReturnValue(vi.fn());
+    (socketService.removeListener as ReturnType<typeof vi.fn>).mockReturnValue(vi.fn());
   });
 
   afterEach(() => {
@@ -115,7 +115,7 @@ describe('Chat Flow Integration Tests', () => {
         agentType: 'general' as const
       };
 
-      (chatApi.sendMessage as any).mockResolvedValue(mockResponse);
+      (chatApi.sendMessage as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       render(<App />);
 
@@ -147,7 +147,7 @@ describe('Chat Flow Integration Tests', () => {
   describe('Error Handling', () => {
     test('should render app even when API calls fail', async () => {
       // Mock API to throw error
-      (chatApi.sendMessage as any).mockRejectedValue(new Error('Network error'));
+      (chatApi.sendMessage as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
 
       render(<App />);
 
@@ -163,7 +163,7 @@ describe('Chat Flow Integration Tests', () => {
 
     test('should handle socket connection gracefully', async () => {
       // Mock socket connection to succeed but other methods to potentially fail
-      (socketService.connect as any).mockResolvedValue(undefined);
+      (socketService.connect as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
       render(<App />);
 
@@ -179,7 +179,7 @@ describe('Chat Flow Integration Tests', () => {
 
     test('should handle missing socket methods gracefully', async () => {
       // Mock some socket methods to be undefined
-      (socketService.onNewMessage as any).mockReturnValue(undefined);
+      (socketService.onNewMessage as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
 
       render(<App />);
 
@@ -269,7 +269,7 @@ describe('Chat Flow Integration Tests', () => {
         conversationId: 'conv-123'
       };
 
-      (chatApi.sendMessage as any).mockResolvedValue(testMessage);
+      (chatApi.sendMessage as ReturnType<typeof vi.fn>).mockResolvedValue(testMessage);
 
       render(<App />);
 

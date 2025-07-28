@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
 interface ValidationStats {
@@ -85,7 +85,7 @@ const ValidationDashboard: React.FC = () => {
   };
 
   // Fetch filtered logs
-  const fetchFilteredLogs = async () => {
+  const fetchFilteredLogs = useCallback(async () => {
     try {
       let endpoint = '/api/validation/logs?limit=50';
       
@@ -100,7 +100,7 @@ const ValidationDashboard: React.FC = () => {
     } catch (err) {
       console.error('Error fetching filtered logs:', err);
     }
-  };
+  }, [selectedAgent, showFailedOnly]);
 
   // Clear validation logs
   const clearLogs = async () => {
@@ -122,7 +122,7 @@ const ValidationDashboard: React.FC = () => {
     if (!loading) {
       fetchFilteredLogs();
     }
-  }, [selectedAgent, showFailedOnly, loading]);
+  }, [selectedAgent, showFailedOnly, loading, fetchFilteredLogs]);
 
   const getScoreColor = (score: number): string => {
     if (score >= 0.8) return '#22c55e'; // Green

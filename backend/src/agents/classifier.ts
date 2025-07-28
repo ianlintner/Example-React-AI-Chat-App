@@ -7,30 +7,44 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 
 const CLASSIFICATION_PROMPT = `You are a message classifier that determines which type of AI agent should handle a user's message.
 
-You must classify messages into one of four categories:
+You must classify messages into one of these categories:
 1. "technical" - for programming, coding, software development, debugging, technical documentation, system administration, databases, APIs, frameworks, libraries, algorithms, data structures, etc.
 2. "joke" - for jokes, puns, humor, funny content, comedy requests, or any request for entertainment through jokes
 3. "trivia" - for trivia questions, random facts, interesting knowledge, "did you know" requests, historical facts, science facts, fun facts, etc.
-4. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
+4. "gif" - for requests for GIFs, animated images, memes, visual entertainment, reaction images, funny pictures, visual content
+5. "account_support" - for account-related issues like login problems, profile management, password resets, account security, user authentication
+6. "billing_support" - for billing, payment, subscription, refund, pricing, invoice, or financial account matters
+7. "website_support" - for website functionality issues, browser problems, page loading issues, performance problems, technical web support
+8. "operator_support" - for general customer service, complex multi-department issues, routing, or unknown problem types
+9. "hold_agent" - for hold management, wait time updates, entertainment coordination during waiting periods
+10. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
 
 Respond with a JSON object containing:
-- agentType: "technical", "joke", "trivia", or "general"
+- agentType: one of the above categories
 - confidence: a number between 0 and 1 indicating how confident you are
 - reasoning: a brief explanation of your classification
 
 Examples:
 - "How do I fix this React component?" → technical
-- "Tell me a dad joke" → joke
+- "Tell me a dad joke" → joke  
 - "Tell me a random fact" → trivia
+- "Show me a funny gif" → gif
+- "I can't log into my account" → account_support
+- "My payment failed" → billing_support
+- "The website won't load" → website_support
+- "I have multiple issues to resolve" → operator_support
+- "How long is the wait time?" → hold_agent
 - "What's the weather like today?" → general
+- "Send me a reaction gif" → gif
+- "I need a meme" → gif
 - "Can you help me debug this Python code?" → technical
 - "I need a good pun" → joke
 - "Did you know that..." → trivia
 - "What should I have for lunch?" → general
 - "Make me laugh with a cheesy joke" → joke
-- "What's the best way to handle state in React?" → technical
-- "Share some interesting trivia" → trivia
-- "Fun facts about space" → trivia
+- "Show me an animated image" → gif
+- "I forgot my password" → account_support
+- "Cancel my subscription" → billing_support
 
 Message to classify: "{message}"`;
 

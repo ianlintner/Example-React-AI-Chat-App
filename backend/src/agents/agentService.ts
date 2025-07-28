@@ -6,15 +6,19 @@ import { Message } from '../types';
 import { GoalSeekingSystem, GoalAction } from './goalSeekingSystem';
 import { responseValidator } from '../validation/responseValidator';
 import { jokeLearningSystem } from './jokeLearningSystem';
+import { ConversationManager, ConversationContext } from './conversationManager';
+import { ragService } from './ragService';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
+  private conversationManager: ConversationManager;
   private activeAgents: Map<string, { agentType: AgentType; timestamp: Date }> = new Map();
   private actionQueue: Map<string, GoalAction[]> = new Map();
   private processingQueue: Set<string> = new Set();
 
   constructor() {
     this.goalSeekingSystem = new GoalSeekingSystem(this);
+    this.conversationManager = new ConversationManager();
   }
 
   // Check if an agent is currently active for a user
@@ -198,73 +202,89 @@ Since this is demo mode, here's what I would typically do:
 
 To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     } else if (agentName === 'Adaptive Joke Master') {
-      // Handle direct joke requests
-      if (message.toLowerCase().includes('tell me a joke') || message.toLowerCase().includes('joke right now')) {
-        const jokes = [
-          "Why don't scientists trust atoms? Because they make up everything! 😄",
-          "What do you call a fake noodle? An impasta! 🍝",
-          "Why did the scarecrow win an award? Because he was outstanding in his field! 🌾",
-          "What do you call a bear with no teeth? A gummy bear! 🐻",
-          "Why don't skeletons fight each other? They don't have the guts! 💀",
-          "I told my wife she was drawing her eyebrows too high. She looked surprised! 😮",
-          "Why do programmers prefer dark mode? Because light attracts bugs! 🐛",
-          "A man walks into a library and asks for books on paranoia. The librarian whispers, 'They're right behind you!' 📚"
-        ];
-        const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
-        return `${randomJoke}
+      // Use RAG service for curated jokes
+      const ragContent = ragService.searchForAgent('joke', message, true);
+      if (ragContent) {
+        return `${ragContent.content} 😄
 
 🎭 *Learning from your reaction...* Want to hear another one? I'm adapting my humor based on what makes you laugh!
 
-(This is demo mode - to get fresh AI-generated adaptive jokes, please set your OPENAI_API_KEY environment variable)`;
+📚 *From curated joke collection* - I have access to quality-rated jokes that are consistently entertaining!
+
+(This is demo mode with RAG - to get fresh AI-generated adaptive jokes, please set your OPENAI_API_KEY environment variable)`;
       } else {
         return `**Adaptive Joke Master Response** (Demo Mode)
 
-I'm your intelligent comedy companion! I learn from your reactions and tailor my humor just for you. Here's a joke to get started:
-
-Why don't scientists trust atoms?
-Because they make up everything! 😄
+I'm your intelligent comedy companion with access to a curated joke database! I learn from your reactions and tailor my humor just for you.
 
 🎯 *I'm watching for your reaction to learn what makes you laugh!*
 
-In demo mode, I would normally:
+In demo mode with RAG, I:
+- Use curated, quality-rated jokes from my database
 - Learn from your reactions (laughs, groans, etc.)
 - Adapt my joke style based on your preferences
 - Remember what works and avoid what doesn't
-- Continuously improve to maximize your entertainment
-- Use different joke categories: dad jokes, wordplay, observational, tech humor, etc.
+- Access different joke categories: dad jokes, wordplay, tech humor, etc.
 
 To get real AI responses with adaptive learning, please set your OPENAI_API_KEY environment variable.`;
       }
     } else if (agentName === 'Trivia Master') {
-      // Handle direct trivia requests
-      if (message.toLowerCase().includes('share a fascinating') || message.toLowerCase().includes('trivia fact') || message.toLowerCase().includes('right now')) {
-        const facts = [
-          "Did you know that octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body! 🐙",
-          "Here's a mind-blowing fact: Honey never spoils! Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible! 🍯",
-          "Amazing fact: A single cloud can weigh over a million pounds! That's equivalent to about 100 elephants floating in the sky! ☁️",
-          "Fascinating: Bananas are berries, but strawberries aren't! Botanically speaking, a berry must have seeds inside its flesh. 🍌",
-          "Cool fact: The human brain uses about 20% of the body's total energy, despite being only 2% of body weight! 🧠"
-        ];
-        const randomFact = facts[Math.floor(Math.random() * facts.length)];
-        return `${randomFact}
+      // Use RAG service for curated trivia
+      const ragContent = ragService.searchForAgent('trivia', message, true);
+      if (ragContent) {
+        return `${ragContent.content}
 
 Isn't that incredible? Want to hear another fascinating fact?
 
-(This is demo mode - to get fresh AI-generated trivia, please set your OPENAI_API_KEY environment variable)`;
+📚 *From curated trivia collection* - I have access to quality-rated facts that are consistently mind-blowing!
+
+(This is demo mode with RAG - to get fresh AI-generated trivia, please set your OPENAI_API_KEY environment variable)`;
       } else {
         return `**Trivia Master Response** (Demo Mode)
 
-I'd love to share a fascinating fact with you! Here's one:
+I'm your source for amazing facts with access to a curated trivia database! I love sharing knowledge that will blow your mind.
 
-Did you know that octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body! 🐙
+📚 *From curated collection* - I have fascinating facts about science, history, nature, and more!
 
-In demo mode, I would normally:
-- Share amazing facts from science, history, nature, and more
-- Make facts engaging and memorable
-- Encourage curiosity and learning
+In demo mode with RAG, I:
+- Share quality-rated facts from my curated database
 - Cover topics from space to culture to human achievements
+- Make facts engaging and memorable  
+- Encourage curiosity and learning
+- Access different categories: animals, science, history, space, etc.
 
 To get real AI responses with fresh trivia, please set your OPENAI_API_KEY environment variable.`;
+      }
+    } else if (agentName === 'GIF Master') {
+      // Use RAG service for curated GIFs
+      const ragContent = ragService.searchForAgent('gif', message, true);
+      if (ragContent) {
+        return `Here's a perfect GIF for you! 🎬
+
+![${ragContent.metadata?.alt || 'Animated GIF'}](${ragContent.content})
+
+*${ragContent.metadata?.description || 'Entertaining animated content'}*
+
+📚 *From curated GIF collection* - I have access to quality, entertaining GIFs that are consistently delightful!
+
+Want another one? I have GIFs for every mood and situation!
+
+(This is demo mode with RAG - to get fresh AI-selected GIFs, please set your OPENAI_API_KEY environment variable)`;
+      } else {
+        return `**GIF Master Response** (Demo Mode)
+
+I'm your source for entertaining GIFs with access to a curated visual database! I brighten your day with perfect animated reactions.
+
+🎬 *From curated collection* - I have quality GIFs for every mood and situation!
+
+In demo mode with RAG, I:
+- Share quality-curated GIFs from my database
+- Provide perfect visual reactions for any situation
+- Cover different categories: funny, cute, excited, surprised, etc.
+- Make conversations more engaging with visual entertainment
+- Access GIFs for celebrations, reactions, emotions, and more
+
+To get real AI responses with fresh GIF selections, please set your OPENAI_API_KEY environment variable.`;
       }
     } else {
       return `**General Assistant Response** (Demo Mode)
@@ -303,6 +323,36 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         id: 'trivia',
         name: 'Trivia Master',
         description: 'Your source for fascinating random facts, trivia, and interesting knowledge from around the world'
+      },
+      {
+        id: 'gif',
+        name: 'GIF Master',
+        description: 'Provides entertaining GIFs and animated reactions to brighten your day'
+      },
+      {
+        id: 'account_support',
+        name: 'Account Support Specialist',
+        description: 'Specialized in account-related issues, user authentication, profile management, and account security'
+      },
+      {
+        id: 'billing_support',
+        name: 'Billing Support Specialist',
+        description: 'Expert in billing, payments, subscriptions, refunds, and all financial account matters'
+      },
+      {
+        id: 'website_support',
+        name: 'Website Issues Specialist',
+        description: 'Specialized in website functionality, browser issues, performance problems, and technical web support'
+      },
+      {
+        id: 'operator_support',
+        name: 'Customer Service Operator',
+        description: 'General customer service operator for unknown issues, routing, and comprehensive support coordination'
+      },
+      {
+        id: 'hold_agent',
+        name: 'Hold Agent',
+        description: 'Manages customer hold experiences with wait time updates and entertainment coordination'
       }
     ];
   }
@@ -460,6 +510,169 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   // Clean up inactive users
   cleanupInactiveUsers(maxInactiveTime?: number) {
     this.goalSeekingSystem.cleanupInactiveUsers(maxInactiveTime);
+    this.conversationManager.cleanup(maxInactiveTime);
+  }
+
+  // ===== CONVERSATION MANAGEMENT METHODS =====
+
+  // Enhanced message processing with conversation continuity and intelligent handoffs
+  async processMessageWithConversation(
+    userId: string,
+    message: string,
+    conversationHistory: Message[] = [],
+    conversationId?: string
+  ): Promise<AgentResponse & { handoffInfo?: { target: AgentType; reason: string; message: string } }> {
+    // Get or initialize conversation context
+    let context = this.conversationManager.getContext(userId);
+    if (!context) {
+      // Start with general agent if no context exists
+      context = this.conversationManager.initializeContext(userId, 'general');
+    }
+
+    // Current agent from conversation context
+    let currentAgent = context.currentAgent;
+    
+    // Check if we need to handoff before processing
+    const handoffInfo = this.conversationManager.getHandoffInfo(userId);
+    if (handoffInfo) {
+      console.log(`🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`);
+      
+      // Complete the handoff
+      context = this.conversationManager.completeHandoff(userId, handoffInfo.target);
+      currentAgent = handoffInfo.target;
+      
+      // Return handoff message first
+      return {
+        content: handoffInfo.message,
+        agentUsed: 'general', // Handoff messages come from general agent
+        confidence: 1.0,
+        handoffInfo
+      };
+    }
+
+    // Process message with current agent
+    const response = await this.processMessage(
+      message,
+      conversationHistory,
+      currentAgent,
+      conversationId,
+      userId
+    );
+
+    // Update conversation context with the interaction
+    this.conversationManager.updateContext(userId, message, response.content, currentAgent);
+
+    // Check if handoff is now needed after this interaction
+    const newHandoffInfo = this.conversationManager.getHandoffInfo(userId);
+    
+    return {
+      ...response,
+      handoffInfo: newHandoffInfo || undefined
+    };
+  }
+
+  // Get conversation context for a user
+  getConversationContext(userId: string): ConversationContext | null {
+    return this.conversationManager.getContext(userId);
+  }
+
+  // Force agent handoff (manual override)
+  forceAgentHandoff(userId: string, targetAgent: AgentType, reason: string = 'Manual override'): void {
+    const context = this.conversationManager.getContext(userId);
+    if (context) {
+      context.shouldHandoff = true;
+      context.handoffTarget = targetAgent;
+      context.handoffReason = reason;
+    }
+  }
+
+  // Get current agent for a user based on conversation context
+  getCurrentAgent(userId: string): AgentType {
+    const context = this.conversationManager.getContext(userId);
+    return context?.currentAgent || 'general';
+  }
+
+  // Initialize conversation for a user with specific agent
+  initializeConversation(userId: string, initialAgent: AgentType = 'general'): ConversationContext {
+    return this.conversationManager.initializeContext(userId, initialAgent);
+  }
+
+  // Combined method that handles both goal-seeking and conversation management
+  async processMessageWithBothSystems(
+    userId: string,
+    message: string,
+    conversationHistory: Message[] = [],
+    conversationId?: string,
+    forcedAgentType?: AgentType
+  ): Promise<AgentResponse & { 
+    proactiveActions?: GoalAction[];
+    handoffInfo?: { target: AgentType; reason: string; message: string };
+    conversationContext?: ConversationContext;
+  }> {
+    // If agent is forced, use goal-seeking system primarily
+    if (forcedAgentType) {
+      const goalSeekingResponse = await this.processMessageWithGoalSeeking(
+        userId, 
+        message, 
+        conversationHistory, 
+        forcedAgentType, 
+        conversationId
+      );
+      
+      // Still update conversation context
+      const context = this.conversationManager.updateContext(
+        userId, 
+        message, 
+        goalSeekingResponse.content, 
+        forcedAgentType
+      );
+      
+      return {
+        ...goalSeekingResponse,
+        conversationContext: context
+      };
+    }
+
+    // Use conversation management for natural flow
+    const conversationResponse = await this.processMessageWithConversation(
+      userId,
+      message,
+      conversationHistory,
+      conversationId
+    );
+
+    // If no handoff is happening, also process with goal-seeking for proactive actions
+    if (!conversationResponse.handoffInfo) {
+      // Update goal-seeking system
+      this.goalSeekingSystem.updateUserState(userId, message);
+      this.goalSeekingSystem.activateGoals(userId);
+      this.goalSeekingSystem.updateGoalProgress(userId, message, conversationResponse.content);
+      
+      // Generate proactive actions
+      const rawProactiveActions = await this.goalSeekingSystem.generateProactiveActions(userId);
+      const proactiveActions = this.filterProactiveActions(userId, rawProactiveActions);
+      
+      return {
+        ...conversationResponse,
+        proactiveActions: proactiveActions.length > 0 ? proactiveActions : undefined,
+        conversationContext: this.conversationManager.getContext(userId) || undefined
+      };
+    }
+
+    return {
+      ...conversationResponse,
+      conversationContext: this.conversationManager.getContext(userId) || undefined
+    };
+  }
+
+  // Get comprehensive user state (both systems)
+  getComprehensiveUserState(userId: string) {
+    return {
+      conversationContext: this.conversationManager.getContext(userId),
+      goalState: this.goalSeekingSystem.getUserState(userId),
+      activeGoals: this.goalSeekingSystem.getActiveGoals(userId),
+      activeAgent: this.getActiveAgentInfo(userId)
+    };
   }
 }
 

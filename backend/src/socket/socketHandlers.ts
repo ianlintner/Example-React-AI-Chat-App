@@ -127,10 +127,13 @@ export const setupSocketHandlers = (io: Server) => {
     // Initialize user in goal-seeking system immediately
     agentService.initializeUserGoals(socket.id);
 
-    // Initialize user state for goal-seeking system
+    // Initialize user state for goal-seeking system and hold agent
     setTimeout(async () => {
       try {
         console.log(`🎯 Initializing user state for ${socket.id}`);
+        
+        // Initialize conversation with hold agent as the starting agent
+        agentService.initializeConversation(socket.id, 'hold_agent');
         
         // Set user state to on_hold and activate entertainment goal
         const userState = agentService.getUserGoalState(socket.id);
@@ -145,6 +148,49 @@ export const setupSocketHandlers = (io: Server) => {
             entertainmentGoal.lastUpdated = new Date();
           }
         }
+
+        // Set up 10-minute hold updates
+        const holdUpdateInterval = setInterval(async () => {
+          try {
+            const currentAgent = agentService.getCurrentAgent(socket.id);
+            if (currentAgent === 'hold_agent') {
+              // Send hold update message
+              const holdUpdateMessage = "Hi there! I wanted to give you a quick update on your wait time. Thank you for your patience - we're still working to connect you with a specialist. Would you like to continue with the entertainment options while you wait?";
+              
+              // Create a proactive hold update message
+              const holdUpdateData = {
+                message: {
+                  id: require('uuid').v4(),
+                  content: holdUpdateMessage,
+                  role: 'assistant',
+                  timestamp: new Date(),
+                  conversationId: 'hold',
+                  agentUsed: 'hold_agent',
+                  confidence: 1.0,
+                  isProactive: true
+                },
+                actionType: 'hold_update',
+                agentUsed: 'hold_agent',
+                confidence: 1.0
+              };
+              
+              console.log(`⏰ Sending 10-minute hold update to ${socket.id}`);
+              socket.emit('proactive_message', holdUpdateData);
+            } else {
+              // User is no longer with hold agent, clear interval
+              clearInterval(holdUpdateInterval);
+              console.log(`⏰ Clearing hold update interval for ${socket.id} - no longer with hold agent`);
+            }
+          } catch (error) {
+            console.error('Error sending hold update:', error);
+          }
+        }, 10 * 60 * 1000); // 10 minutes
+
+        // Clear interval when user disconnects
+        socket.on('disconnect', () => {
+          clearInterval(holdUpdateInterval);
+          console.log(`⏰ Cleared hold update interval for disconnected user ${socket.id}`);
+        });
 
       } catch (error) {
         console.error('Error initializing user state:', error);
@@ -287,26 +333,39 @@ export const setupSocketHandlers = (io: Server) => {
           'agent.forced': forceAgent || 'none'
         });
 
-        // Process message with goal-seeking system
-        console.log('🤖 Processing message with goal-seeking system...');
-        const agentResponse = await agentService.processMessageWithGoalSeeking(
+        // Process message with both conversation management and goal-seeking systems
+        console.log('🤖 Processing message with conversation management and goal-seeking systems...');
+        const agentResponse = await agentService.processMessageWithBothSystems(
           socket.id,
           message,
           conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
-          forceAgent,
-          conversation.id // Pass conversation ID for validation
+          conversation.id, // Pass conversation ID for validation
+          forceAgent
         );
 
-        addSpanEvent(goalSeekingSpan, 'goal_seeking_completed', {
+        addSpanEvent(goalSeekingSpan, 'dual_system_completed', {
           'agent.selected': agentResponse.agentUsed,
           'agent.confidence': agentResponse.confidence,
           'response.length': agentResponse.content.length,
-          'proactive_actions.count': agentResponse.proactiveActions?.length || 0
+          'proactive_actions.count': agentResponse.proactiveActions?.length || 0,
+          'handoff_pending': !!agentResponse.handoffInfo,
+          'handoff_target': agentResponse.handoffInfo?.target,
+          'handoff_reason': agentResponse.handoffInfo?.reason
         });
         setSpanStatus(goalSeekingSpan, true);
         endSpan(goalSeekingSpan);
 
-        console.log(`✅ Goal-seeking system completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`);
+        console.log(`✅ Dual system processing completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`);
+        
+        // Log conversation context if available
+        if (agentResponse.conversationContext) {
+          const ctx = agentResponse.conversationContext;
+          console.log(`💬 Conversation context - Agent: ${ctx.currentAgent}, Topic: ${ctx.conversationTopic}, Depth: ${ctx.conversationDepth}, Satisfaction: ${ctx.userSatisfaction.toFixed(2)}, Performance: ${ctx.agentPerformance.toFixed(2)}`);
+          
+          if (ctx.shouldHandoff) {
+            console.log(`🔄 Handoff needed: ${ctx.currentAgent} → ${ctx.handoffTarget} (${ctx.handoffReason})`);
+          }
+        }
 
         // Simulate streaming by sending the response in chunks
         const words = agentResponse.content.split(' ');

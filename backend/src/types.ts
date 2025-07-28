@@ -1,10 +1,12 @@
+import { AgentType } from './agents/types';
+
 export interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
-  agentUsed?: 'technical' | 'general' | 'joke' | 'trivia' | 'gif';
+  agentUsed?: AgentType;
   confidence?: number;
   isProactive?: boolean;
 }
@@ -28,13 +30,13 @@ export interface ChatRequest {
   message: string;
   conversationId?: string;
   stream?: boolean;
-  forceAgent?: 'technical' | 'general' | 'joke' | 'trivia';
+  forceAgent?: AgentType;
 }
 
 export interface ChatResponse {
   message: Message;
   conversation: Conversation;
-  agentUsed: 'technical' | 'general' | 'joke' | 'trivia' | 'gif';
+  agentUsed: AgentType;
   confidence: number;
 }
 

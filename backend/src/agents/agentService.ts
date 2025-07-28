@@ -188,20 +188,7 @@ export class AgentService {
   }
 
   private generateDemoResponse(agentName: string, message: string): string {
-    if (agentName === 'Technical Assistant') {
-      return `**Technical Assistant Response** (Demo Mode)
-
-I would help you with your technical question: "${message}"
-
-Since this is demo mode, here's what I would typically do:
-- Analyze your technical problem
-- Provide code examples and solutions
-- Explain best practices
-- Offer debugging assistance
-- Suggest relevant documentation
-
-To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
-    } else if (agentName === 'Adaptive Joke Master') {
+    if (agentName === 'Adaptive Joke Master') {
       // Use RAG service for curated jokes
       const ragContent = ragService.searchForAgent('joke', message, true);
       if (ragContent) {
@@ -304,11 +291,6 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   // Method to get available agents info
   getAvailableAgents() {
     return [
-      {
-        id: 'technical',
-        name: 'Technical Assistant',
-        description: 'Specialized in programming, software development, debugging, and technical questions'
-      },
       {
         id: 'general',
         name: 'General Assistant',

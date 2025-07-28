@@ -121,12 +121,12 @@ export class ConversationManager {
       };
     }
 
-    if ((lowerMessage.includes('technical') || lowerMessage.includes('code') || lowerMessage.includes('programming')) && currentAgent !== 'technical') {
+    if ((lowerMessage.includes('technical') || lowerMessage.includes('code') || lowerMessage.includes('programming')) && currentAgent !== 'website_support') {
       return {
         type: 'explicit_request',
-        confidence: 0.9,
-        targetAgent: 'technical',
-        reason: 'User requested technical assistance'
+        confidence: 0.8,
+        targetAgent: 'website_support',
+        reason: 'User requested technical assistance - routing to website support for web-related issues'
       };
     }
 
@@ -180,7 +180,7 @@ export class ConversationManager {
   // Detect if current topic doesn't match current agent's expertise
   private detectTopicMismatch(context: ConversationContext, currentAgent: AgentType): HandoffTrigger | null {
     const topicAgentMap: Record<string, AgentType> = {
-      'technical': 'technical',
+      'technical': 'website_support',
       'humor': 'joke',
       'educational': 'trivia',
       'visual_entertainment': 'gif'
@@ -202,7 +202,7 @@ export class ConversationManager {
   // Suggest a better agent based on context
   private suggestBetterAgent(context: ConversationContext, currentAgent: AgentType): AgentType {
     // Based on conversation topic
-    if (context.conversationTopic === 'technical') return 'technical';
+    if (context.conversationTopic === 'technical') return 'website_support';
     if (context.conversationTopic === 'humor') return 'joke';
     if (context.conversationTopic === 'educational') return 'trivia';
     if (context.conversationTopic === 'visual_entertainment') return 'gif';
@@ -215,15 +215,19 @@ export class ConversationManager {
   private suggestRefreshAgent(currentAgent: AgentType): AgentType {
     const refreshOptions: Record<AgentType, AgentType> = {
       'general': 'joke',
-      'technical': 'general',
       'joke': 'trivia',
       'trivia': 'gif',
       'gif': 'general',
       'account_support': 'general',
       'billing_support': 'general',
-      'website_support': 'technical',
+      'website_support': 'general',
       'operator_support': 'general',
-      'hold_agent': 'joke'
+      'hold_agent': 'joke',
+      'story_teller': 'riddle_master',
+      'riddle_master': 'quote_master',
+      'quote_master': 'game_host',
+      'game_host': 'music_guru',
+      'music_guru': 'story_teller'
     };
     
     return refreshOptions[currentAgent] || 'general';
@@ -235,19 +239,22 @@ export class ConversationManager {
 
     const handoffMessages: Record<string, Record<AgentType, string>> = {
       'explicit_request': {
-        'technical': "I can see you need technical help! Let me connect you with our Technical Assistant who specializes in programming and development. They'll be much better equipped to help you with this.",
+        'website_support': "I can see you're having technical or website issues! Let me connect you with our Website Issues Specialist who can help with browser and functionality problems.",
         'joke': "I can tell you're looking for some laughs! Let me bring in our Adaptive Joke Master - they learn your sense of humor and get better at making you laugh over time.",
         'trivia': "You're curious about fascinating facts! Our Trivia Master has an amazing collection of knowledge to share with you.",
         'gif': "For visual entertainment and fun GIFs, our GIF Master is perfect for that!",
         'general': "Let me connect you with our General Assistant who can help with a wide range of topics.",
         'account_support': "I can see you have an account-related question! Let me connect you with our Account Support Specialist who handles login, profile, and security issues.",
         'billing_support': "This looks like a billing or payment question! Our Billing Support Specialist is the expert for subscription, payment, and refund matters.",
-        'website_support': "I can see you're having website issues! Let me connect you with our Website Issues Specialist who can help with browser and functionality problems.",
         'operator_support': "Let me connect you with our Customer Service Operator who can coordinate multiple departments and handle complex issues.",
-        'hold_agent': "Let me connect you with our Hold Agent who will keep you updated on wait times and coordinate entertainment while you wait for specialist assistance."
+        'hold_agent': "Let me connect you with our Hold Agent who will keep you updated on wait times and coordinate entertainment while you wait for specialist assistance.",
+        'story_teller': "Let me bring in our Story Teller who can craft engaging short stories to entertain you!",
+        'riddle_master': "Our Riddle Master has fascinating brain teasers and puzzles to challenge your mind!",
+        'quote_master': "Our Quote Master has inspirational and entertaining quotes to share with you!",
+        'game_host': "Let me connect you with our Game Host who can start fun interactive games to pass the time!",
+        'music_guru': "Our Music Guru can provide personalized music recommendations and discuss your favorite artists!"
       },
       'expertise_mismatch': {
-        'technical': "This seems like a technical question that would be better handled by our Technical Assistant. Let me connect you with them!",
         'joke': "I think our Adaptive Joke Master would be perfect for bringing some humor to this conversation!",
         'trivia': "Our Trivia Master would love to share some fascinating knowledge with you about this topic!",
         'gif': "Let me bring in our GIF Master to add some visual fun to this conversation!",
@@ -256,10 +263,14 @@ export class ConversationManager {
         'billing_support': "This sounds like a billing matter. Our Billing Support Specialist has the expertise and access needed for financial inquiries.",
         'website_support': "This seems to be a website functionality issue. Our Website Issues Specialist can provide targeted technical troubleshooting.",
         'operator_support': "This looks like a complex issue that would benefit from our Customer Service Operator's coordination expertise.",
-        'hold_agent': "Let me connect you with our Hold Agent who specializes in managing wait times and coordinating appropriate entertainment while you wait."
+        'hold_agent': "Let me connect you with our Hold Agent who specializes in managing wait times and coordinating appropriate entertainment while you wait.",
+        'story_teller': "This seems perfect for our Story Teller who can craft engaging narratives on this topic!",
+        'riddle_master': "Our Riddle Master would love to create mind-bending puzzles around this theme!",
+        'quote_master': "Our Quote Master has relevant wisdom and quotes that would perfectly address this topic!",
+        'game_host': "Our Game Host could turn this into an interactive and engaging experience!",
+        'music_guru': "Our Music Guru has perfect musical knowledge and recommendations for this topic!"
       },
       'performance_decline': {
-        'technical': "Let me connect you with our Technical Assistant who might be able to help you better with this technical matter.",
         'joke': "How about we lighten the mood? Our Adaptive Joke Master is great at turning things around with some personalized humor!",
         'trivia': "Maybe our Trivia Master can share something interesting that might be more helpful?",
         'gif': "Let's try something different! Our GIF Master can add some visual entertainment to brighten things up.",
@@ -268,10 +279,14 @@ export class ConversationManager {
         'billing_support': "Our Billing Support Specialist might be able to provide better assistance with your financial inquiry.",
         'website_support': "Let me bring in our Website Issues Specialist who might have different troubleshooting approaches for your technical issue.",
         'operator_support': "Our Customer Service Operator might be able to coordinate a better solution for your complex inquiry.",
-        'hold_agent': "Let me connect you with our Hold Agent who can provide better hold management and entertainment coordination while you wait."
+        'hold_agent': "Let me connect you with our Hold Agent who can provide better hold management and entertainment coordination while you wait.",
+        'story_teller': "How about a fresh story approach? Our Story Teller might have exactly what you need!",
+        'riddle_master': "Let's try some brain teasers! Our Riddle Master could help engage your mind differently!",
+        'quote_master': "Our Quote Master might have the perfect inspirational words to help!",
+        'game_host': "Let's make this more interactive! Our Game Host can turn this into an engaging experience!",
+        'music_guru': "Our Music Guru might have the perfect musical perspective to help brighten things up!"
       },
       'conversation_stagnation': {
-        'technical': "Let's try a different approach. Our Technical Assistant might have some new ideas for you!",
         'joke': "How about we shake things up with some humor? Our Adaptive Joke Master is great at refreshing conversations!",
         'trivia': "Maybe our Trivia Master can share something fascinating to spark new ideas?",
         'gif': "Let's add some visual fun! Our GIF Master can definitely liven up our conversation.",
@@ -280,7 +295,12 @@ export class ConversationManager {
         'billing_support': "Our Billing Support Specialist might have different options to explore for your billing inquiry.",
         'website_support': "Let's try our Website Issues Specialist - they might have alternative solutions for your technical problem.",
         'operator_support': "Our Customer Service Operator can bring fresh coordination and multiple-department expertise to help resolve this.",
-        'hold_agent': "Let me connect you with our Hold Agent who can provide fresh updates on your wait status and coordinate different entertainment options."
+        'hold_agent': "Let me connect you with our Hold Agent who can provide fresh updates on your wait status and coordinate different entertainment options.",
+        'story_teller': "Let's shake things up with some storytelling! Our Story Teller can bring fresh narrative energy to our conversation!",
+        'riddle_master': "How about we challenge your mind differently? Our Riddle Master has fresh puzzles to reinvigorate our chat!",
+        'quote_master': "Our Quote Master has inspiring words that might spark new directions for our conversation!",
+        'game_host': "Let's try something completely different! Our Game Host can bring interactive fun to refresh our discussion!",
+        'music_guru': "Our Music Guru can bring a whole new vibe with music recommendations and discussions to liven things up!"
       }
     };
 

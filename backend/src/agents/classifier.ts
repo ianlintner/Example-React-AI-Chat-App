@@ -8,16 +8,15 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 const CLASSIFICATION_PROMPT = `You are a message classifier that determines which type of AI agent should handle a user's message.
 
 You must classify messages into one of these categories:
-1. "technical" - for programming, coding, software development, debugging, technical documentation, system administration, databases, APIs, frameworks, libraries, algorithms, data structures, etc.
+1. "website_support" - for programming, coding, software development, debugging, technical documentation, website functionality issues, browser problems, page loading issues, performance problems, technical web support
 2. "joke" - for jokes, puns, humor, funny content, comedy requests, or any request for entertainment through jokes
 3. "trivia" - for trivia questions, random facts, interesting knowledge, "did you know" requests, historical facts, science facts, fun facts, etc.
 4. "gif" - for requests for GIFs, animated images, memes, visual entertainment, reaction images, funny pictures, visual content
 5. "account_support" - for account-related issues like login problems, profile management, password resets, account security, user authentication
 6. "billing_support" - for billing, payment, subscription, refund, pricing, invoice, or financial account matters
-7. "website_support" - for website functionality issues, browser problems, page loading issues, performance problems, technical web support
-8. "operator_support" - for general customer service, complex multi-department issues, routing, or unknown problem types
-9. "hold_agent" - for hold management, wait time updates, entertainment coordination during waiting periods
-10. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
+7. "operator_support" - for general customer service, complex multi-department issues, routing, or unknown problem types
+8. "hold_agent" - for hold management, wait time updates, entertainment coordination during waiting periods
+9. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
 
 Respond with a JSON object containing:
 - agentType: one of the above categories
@@ -25,7 +24,7 @@ Respond with a JSON object containing:
 - reasoning: a brief explanation of your classification
 
 Examples:
-- "How do I fix this React component?" → technical
+- "How do I fix this React component?" → website_support
 - "Tell me a dad joke" → joke  
 - "Tell me a random fact" → trivia
 - "Show me a funny gif" → gif
@@ -37,7 +36,7 @@ Examples:
 - "What's the weather like today?" → general
 - "Send me a reaction gif" → gif
 - "I need a meme" → gif
-- "Can you help me debug this Python code?" → technical
+- "Can you help me debug this Python code?" → website_support
 - "I need a good pun" → joke
 - "Did you know that..." → trivia
 - "What should I have for lunch?" → general
@@ -141,12 +140,12 @@ export async function classifyMessage(message: string): Promise<MessageClassific
       };
     }
 
-    // Technical third priority
+    // Technical third priority - route to website support
     if (technicalScore > 0) {
       return {
-        agentType: 'technical',
+        agentType: 'website_support',
         confidence: Math.min(0.8, 0.5 + (technicalScore * 0.1)),
-        reasoning: `Detected ${technicalScore} technical keywords in the message`
+        reasoning: `Detected ${technicalScore} technical keywords in the message - routing to website support`
       };
     }
 

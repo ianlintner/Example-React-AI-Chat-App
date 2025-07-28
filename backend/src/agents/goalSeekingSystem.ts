@@ -286,7 +286,7 @@ export class GoalSeekingSystem {
 
     return {
       type: 'technical_check',
-      agentType: 'technical',
+      agentType: 'website_support',
       message,
       timing: 'immediate'
     };
@@ -303,7 +303,7 @@ export class GoalSeekingSystem {
         return {
           type: 'status_update',
           agentType: 'general',
-          message: `You've been waiting for ${waitTimeMinutes} minutes. A technical support agent will be with you soon. In the meantime, I'm here to keep you company!`,
+          message: `You've been waiting for ${waitTimeMinutes} minutes. A support specialist will be with you soon. In the meantime, I'm here to keep you company!`,
           timing: 'delayed',
           delayMs: 45000 // 45 seconds delay for status updates
         };

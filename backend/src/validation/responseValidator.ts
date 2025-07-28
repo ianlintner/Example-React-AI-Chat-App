@@ -155,7 +155,7 @@ export class ResponseValidator {
       aiResponse.toLowerCase().includes(keyword)
     );
 
-    if (hasTechnicalContent && agentType !== 'technical') {
+    if (hasTechnicalContent && agentType !== 'website_support') {
       // Check if non-technical agent is attempting technical support
       const technicalClaims = [
         'here\'s the code', 'try this solution', 'the bug is',
@@ -223,14 +223,18 @@ export class ResponseValidator {
     const expectedLengths: Record<AgentType, { min: number; max: number }> = {
       'joke': { min: 20, max: 200 },
       'trivia': { min: 50, max: 300 },
-      'technical': { min: 100, max: 1000 },
       'general': { min: 30, max: 500 },
       'gif': { min: 10, max: 100 },
       'account_support': { min: 50, max: 600 },
       'billing_support': { min: 50, max: 600 },
       'website_support': { min: 75, max: 800 },
       'operator_support': { min: 40, max: 500 },
-      'hold_agent': { min: 100, max: 400 }
+      'hold_agent': { min: 100, max: 400 },
+      'story_teller': { min: 200, max: 600 },
+      'riddle_master': { min: 50, max: 300 },
+      'quote_master': { min: 30, max: 250 },
+      'game_host': { min: 40, max: 300 },
+      'music_guru': { min: 60, max: 400 }
     };
 
     const expected = expectedLengths[agentType];

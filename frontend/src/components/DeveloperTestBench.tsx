@@ -31,7 +31,7 @@ const DeveloperTestBench: React.FC = () => {
   const [systemHealth, setSystemHealth] = useState<Record<string, unknown> | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
   const validAgentTypes: AgentType[] = [
     'general', 'joke', 'trivia', 'gif', 'account_support', 'billing_support',

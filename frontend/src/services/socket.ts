@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { io, Socket } from 'socket.io-client';
 import type { Message, Conversation, StreamChunk, ChatRequest } from '../types';
 

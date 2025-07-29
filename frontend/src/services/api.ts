@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 import type { ChatRequest, ChatResponse, Conversation } from '../types';
 

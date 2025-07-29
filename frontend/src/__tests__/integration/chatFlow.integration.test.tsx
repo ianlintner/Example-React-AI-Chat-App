@@ -278,7 +278,10 @@ describe('Chat Flow Integration Tests', () => {
       });
 
       // Test that we can call the mocked API
-      const response = await chatApi.sendMessage('test', 'conv-123');
+      const response = await chatApi.sendMessage({ 
+        message: 'test', 
+        conversationId: 'conv-123' 
+      });
       expect(response).toEqual(testMessage);
     });
   });

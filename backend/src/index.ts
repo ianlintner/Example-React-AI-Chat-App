@@ -11,6 +11,7 @@ import validationRoutes from './routes/validation';
 import agentTestBenchRoutes from './routes/agentTestBench';
 import swaggerDocsRoutes from './routes/swaggerDocs';
 import { setupSocketHandlers } from './socket/socketHandlers';
+import { httpMetricsMiddleware, register } from './metrics/prometheus';
 
 dotenv.config();
 
@@ -37,6 +38,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Prometheus metrics middleware
+app.use(httpMetricsMiddleware);
+
 // Routes
 app.use('/api/chat', chatRoutes);
 app.use('/api/conversations', conversationRoutes);
@@ -48,6 +52,16 @@ app.use('/docs', swaggerDocsRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
 });
 
 // Socket.IO setup

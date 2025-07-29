@@ -4,6 +4,7 @@ import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
 import { GoalAction } from '../agents/goalSeekingSystem';
+import { metrics } from '../metrics/prometheus';
 import {
   createConversationSpan,
   createAgentSpan,
@@ -123,6 +124,9 @@ export const setupSocketHandlers = (io: Server) => {
 
   io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
+    
+    // Track WebSocket connection metrics
+    metrics.activeConnections.inc();
 
     // Initialize user in goal-seeking system immediately
     agentService.initializeUserGoals(socket.id);
@@ -335,6 +339,11 @@ export const setupSocketHandlers = (io: Server) => {
 
         // Process message with both conversation management and goal-seeking systems
         console.log('🤖 Processing message with conversation management and goal-seeking systems...');
+        
+        // Track chat message and agent response time
+        const responseStart = Date.now();
+        metrics.chatMessagesTotal.inc({ type: 'user', agent_type: 'incoming' });
+        
         const agentResponse = await agentService.processMessageWithBothSystems(
           socket.id,
           message,
@@ -342,6 +351,14 @@ export const setupSocketHandlers = (io: Server) => {
           conversation.id, // Pass conversation ID for validation
           forceAgent
         );
+        
+        // Track agent response time and success
+        const responseTime = (Date.now() - responseStart) / 1000;
+        metrics.agentResponseTime.observe(
+          { agent_type: agentResponse.agentUsed, success: 'true' }, 
+          responseTime
+        );
+        metrics.chatMessagesTotal.inc({ type: 'assistant', agent_type: agentResponse.agentUsed });
 
         addSpanEvent(goalSeekingSpan, 'dual_system_completed', {
           'agent.selected': agentResponse.agentUsed,
@@ -470,6 +487,9 @@ export const setupSocketHandlers = (io: Server) => {
     // Handle disconnection
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
+      
+      // Track WebSocket disconnection metrics
+      metrics.activeConnections.dec();
     });
 
     // Handle errors

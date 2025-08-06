@@ -155,9 +155,14 @@ export class GoalSeekingSystem {
   }
 
   // Activate goals based on user state
+  // Entertainment goals should primarily activate when user is on hold with hold agent
   activateGoals(userId: string): Goal[] {
     const userState = this.userStates.get(userId);
     if (!userState) return [];
+
+    // Check if user is currently with the hold agent
+    const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(userId);
+    const isWithHoldAgent = activeAgentInfo?.agentType === 'hold_agent';
 
     const activatedGoals: Goal[] = [];
 
@@ -166,16 +171,22 @@ export class GoalSeekingSystem {
 
       switch (goal.type) {
         case 'entertainment':
-          shouldActivate = userState.currentState === 'on_hold' || 
-                          userState.engagementLevel < 0.6;
+          // Entertainment goals should only activate when user is with hold agent and on hold
+          shouldActivate = isWithHoldAgent && (
+            userState.currentState === 'on_hold' || 
+            userState.engagementLevel < 0.6
+          );
           break;
         case 'technical_support':
           shouldActivate = userState.currentState === 'waiting_for_help' || 
                           userState.technicalContext !== undefined;
           break;
         case 'engagement':
-          shouldActivate = userState.engagementLevel < 0.5 || 
-                          (Date.now() - userState.lastInteractionTime.getTime()) > 30000;
+          // Engagement goals should only activate when user is with hold agent
+          shouldActivate = isWithHoldAgent && (
+            userState.engagementLevel < 0.5 || 
+            (Date.now() - userState.lastInteractionTime.getTime()) > 30000
+          );
           break;
       }
 
@@ -183,6 +194,7 @@ export class GoalSeekingSystem {
         goal.active = true;
         goal.lastUpdated = new Date();
         activatedGoals.push(goal);
+        console.log(`🎯 Goal activated for user ${userId}: ${goal.type} (with hold agent: ${isWithHoldAgent})`);
       }
     });
 
@@ -190,9 +202,22 @@ export class GoalSeekingSystem {
   }
 
   // Generate proactive actions based on active goals
+  // ONLY generate proactive actions when user is with the hold agent
   async generateProactiveActions(userId: string): Promise<GoalAction[]> {
     const userState = this.userStates.get(userId);
     if (!userState) return [];
+
+    // Check if user is currently with the hold agent
+    const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(userId);
+    const isWithHoldAgent = activeAgentInfo?.agentType === 'hold_agent';
+    
+    // If not with hold agent, don't generate any proactive actions
+    if (!isWithHoldAgent) {
+      console.log(`🚫 Proactive actions skipped for user ${userId} - not with hold agent (current: ${activeAgentInfo?.agentType || 'none'})`);
+      return [];
+    }
+
+    console.log(`✅ User ${userId} is with hold agent - generating proactive actions`);
 
     const actions: GoalAction[] = [];
     const activeGoals = userState.goals.filter(g => g.active);

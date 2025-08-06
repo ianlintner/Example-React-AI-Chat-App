@@ -49,18 +49,19 @@ echo.
 echo Waiting 3 seconds before starting frontend...
 timeout /t 3 /nobreak >nul
 
-echo Starting frontend server in new window...
+echo Starting frontend (mobile app) server in new window...
 cd ..\frontend
-start "Frontend Server - AI Chat App" cmd /k "npm run dev"
+start "Frontend (Mobile App) Server - AI Chat App" cmd /k "npm start"
 
 echo.
 echo ========================================
 echo Setup complete!
 echo.
 echo Backend server: http://localhost:5000
-echo Frontend app: http://localhost:5173
+echo Frontend (Mobile App): Expo development server starting
 echo.
 echo Both servers are starting in separate windows.
+echo Use Expo Go app to scan QR code and test on mobile device.
 echo Close this window when you're done.
 echo ========================================
 pause

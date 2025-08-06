@@ -2,7 +2,7 @@
 
 A full-featured AI chat application with native mobile interface built using Expo/React Native, featuring OpenAI integration, and an intelligent goal-seeking system that proactively entertains users and provides technical support.
 
-> **📱 Mobile-First**: The mobile app is now the primary interface. The web frontend is deprecated.
+> **📱 Mobile-First**: Native React Native/Expo application with mobile-first design and cross-platform support.
 
 ## Features
 
@@ -30,11 +30,10 @@ A full-featured AI chat application with native mobile interface built using Exp
 
 ```
 ai-chat-app/
-├── mobile-app/        # 📱 PRIMARY: React Native/Expo mobile app
-├── backend/           # Node.js backend server
-├── frontend/          # ⚠️ DEPRECATED: React web frontend 
+├── frontend/          # 📱 React Native/Expo mobile application
+├── backend/           # Node.js backend server with Express & Socket.io
 ├── shared/            # Shared types and utilities
-└── README.md         # This file
+└── README.md          # This file
 ```
 
 ## Setup Instructions
@@ -62,9 +61,9 @@ ai-chat-app/
    npm install
    ```
 
-3. **Install mobile app dependencies:**
+3. **Install frontend dependencies:**
    ```bash
-   cd ../mobile-app
+   cd ../frontend
    npm install
    ```
 
@@ -78,7 +77,7 @@ ai-chat-app/
    PORT=3001
    ```
 
-   **Mobile App (.env file in mobile-app directory):**
+   **Frontend (.env file in frontend directory):**
    ```
    EXPO_PUBLIC_API_URL=http://localhost:3001
    ```
@@ -91,9 +90,9 @@ ai-chat-app/
    npm run dev
    ```
 
-   **Start the mobile app (in a new terminal):**
+   **Start the frontend (in a new terminal):**
    ```bash
-   cd mobile-app
+   cd frontend
    npm start
    ```
 
@@ -121,30 +120,25 @@ ai-chat-app/
 
 ## Technologies Used
 
-### Mobile App (Primary Interface)
+### Frontend (Mobile Application)
 - React Native with Expo
 - TypeScript
 - Expo Router for navigation
 - Socket.io-client for real-time communication
-- Native components and styling
-- Pull-to-refresh and native interactions
+- React Native Paper for UI components
+- Native gestures and interactions
 - Automatic theme detection (light/dark)
+- Cross-platform support (iOS, Android, Web)
 
 ### Backend
-- Node.js
-- Express
+- Node.js with Express
 - TypeScript
-- Socket.io
-- OpenAI API
-- Validation system for AI responses
+- Socket.io for real-time communication
+- OpenAI API integration
+- Response validation system
 - Goal-seeking and proactive messaging
-- Multi-agent architecture
-
-### Web Frontend (Deprecated)
-- React 18
-- Material-UI v5
-- Socket.io-client
-- **⚠️ No longer maintained**
+- Multi-agent architecture with intelligent routing
+- Prometheus metrics and observability
 
 ## Contributing
 

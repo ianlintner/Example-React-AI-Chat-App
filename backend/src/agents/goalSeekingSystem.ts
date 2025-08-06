@@ -17,6 +17,7 @@ export interface UserState {
   userId: string;
   currentState: 'on_hold' | 'active_conversation' | 'idle' | 'waiting_for_help';
   lastInteractionTime: Date;
+  lastUpdated?: Date;
   entertainmentPreference?: 'jokes' | 'trivia' | 'general_chat' | 'mixed';
   technicalContext?: string;
   satisfactionLevel: number; // 0-1

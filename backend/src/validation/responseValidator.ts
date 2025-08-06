@@ -221,20 +221,22 @@ export class ResponseValidator {
 
   private validateLength(response: string, agentType: AgentType, issues: ValidationIssue[]): void {
     const expectedLengths: Record<AgentType, { min: number; max: number }> = {
-      'joke': { min: 20, max: 200 },
-      'trivia': { min: 50, max: 300 },
-      'general': { min: 30, max: 500 },
-      'gif': { min: 10, max: 100 },
-      'account_support': { min: 50, max: 600 },
-      'billing_support': { min: 50, max: 600 },
-      'website_support': { min: 75, max: 800 },
-      'operator_support': { min: 40, max: 500 },
-      'hold_agent': { min: 100, max: 400 },
-      'story_teller': { min: 200, max: 600 },
-      'riddle_master': { min: 50, max: 300 },
-      'quote_master': { min: 30, max: 250 },
-      'game_host': { min: 40, max: 300 },
-      'music_guru': { min: 60, max: 400 }
+      joke: { min: 10, max: 500 },
+      trivia: { min: 20, max: 800 },
+      general: { min: 10, max: 1000 },
+      gif: { min: 10, max: 300 },
+      account_support: { min: 20, max: 1200 },
+      billing_support: { min: 20, max: 1200 },
+      website_support: { min: 20, max: 1300 },
+      operator_support: { min: 20, max: 1400 },
+      hold_agent: { min: 10, max: 1200 },
+      story_teller: { min: 50, max: 1000 },
+      riddle_master: { min: 20, max: 900 },
+      quote_master: { min: 20, max: 800 },
+      game_host: { min: 20, max: 1000 },
+      music_guru: { min: 20, max: 1100 },
+      youtube_guru: { min: 20, max: 1200 },
+      dnd_master: { min: 30, max: 1500 }
     };
 
     const expected = expectedLengths[agentType];

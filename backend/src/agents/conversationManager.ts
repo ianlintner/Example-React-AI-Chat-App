@@ -226,11 +226,11 @@ export class ConversationManager {
       'general': 'joke',
       'joke': 'trivia',
       'trivia': 'gif',
-      'gif': 'general',
-      'account_support': 'general',
-      'billing_support': 'general',
-      'website_support': 'general',
-      'operator_support': 'general',
+      'gif': 'riddle_master',
+      'account_support': 'hold_agent',
+      'billing_support': 'hold_agent',
+      'website_support': 'hold_agent',
+      'operator_support': 'hold_agent',
       'hold_agent': 'joke',
       'story_teller': 'riddle_master',
       'riddle_master': 'quote_master',
@@ -239,7 +239,7 @@ export class ConversationManager {
       'music_guru': 'story_teller'
     };
     
-    return refreshOptions[currentAgent] || 'general';
+    return refreshOptions[currentAgent] || 'hold_agent';
   }
 
   // Generate handoff message for smooth transition

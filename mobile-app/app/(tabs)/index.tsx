@@ -5,10 +5,13 @@ import {
   AppState,
   ActivityIndicator,
   Text,
+  StatusBar,
 } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
 import MessageInput from '../../components/MessageInput';
+import AgentStatusBar from '../../components/AgentStatusBar';
 import type { Conversation, Message } from '../../types';
 
 export default function HomeScreen() {
@@ -135,6 +138,29 @@ export default function HomeScreen() {
             updatedAt: new Date()
           };
           return newConversation;
+        }
+        
+        // Check if we need to update conversation ID (from temp to real)
+        const isTemporaryConversation = prev.id.startsWith('temp-');
+        if (isTemporaryConversation && prev.id !== data.conversationId) {
+          // Update conversation to use the real ID from backend
+          console.log(`🔄 Updating conversation ID from ${prev.id} to ${data.conversationId}`);
+          return {
+            ...prev,
+            id: data.conversationId,
+            messages: [
+              ...prev.messages.map(m => ({ ...m, conversationId: data.conversationId })),
+              {
+                id: data.messageId,
+                content: '',
+                role: 'assistant',
+                timestamp: new Date(),
+                conversationId: data.conversationId,
+                status: 'pending'
+              }
+            ],
+            updatedAt: new Date()
+          };
         }
         
         // Check if this conversation is different from current one
@@ -344,6 +370,9 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Agent Status Bar */}
+      <AgentStatusBar isVisible={isConnected} />
+
       {/* Chat Area */}
       <View style={styles.chatContainer}>
         <ChatScreen conversation={conversation} />

@@ -52,11 +52,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       // Create user message for immediate UI update
       const userMessage = {
-        id: `user-${Date.now()}`,
+        id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         content: messageToSend,
         role: 'user' as const,
         timestamp: new Date(),
-        conversationId: conversationId || `new-${Date.now()}`,
+        conversationId: conversationId || `temp-${Date.now()}`,
         status: 'complete' as const,
       };
 

@@ -72,3 +72,35 @@ export interface Agent {
   name: string;
   description: string;
 }
+
+export interface AgentStatus {
+  currentAgent: AgentType;
+  isActive: boolean;
+  activeAgentInfo: {
+    agentType: AgentType;
+    timestamp: Date;
+  } | null;
+  conversationContext: {
+    currentAgent: AgentType;
+    conversationTopic: string;
+    conversationDepth: number;
+    userSatisfaction: number;
+    agentPerformance: number;
+    shouldHandoff: boolean;
+    handoffTarget?: AgentType;
+    handoffReason?: string;
+  } | null;
+  goalState: {
+    currentState: string;
+    engagementLevel: number;
+    satisfactionLevel: number;
+    entertainmentPreference: string;
+    activeGoals: {
+      type: string;
+      priority: number;
+      progress: number;
+    }[];
+  } | null;
+  timestamp: Date;
+  availableAgents: Agent[];
+}

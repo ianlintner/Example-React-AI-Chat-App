@@ -131,6 +131,59 @@ export const setupSocketHandlers = (io: Server) => {
     // Initialize user in goal-seeking system immediately
     agentService.initializeUserGoals(socket.id);
 
+    // Send initial agent status
+    const sendAgentStatus = () => {
+      const activeAgent = agentService.getActiveAgentInfo(socket.id);
+      const conversationContext = agentService.getConversationContext(socket.id);
+      const goalState = agentService.getUserGoalState(socket.id);
+      
+      const agentStatus = {
+        currentAgent: conversationContext?.currentAgent || 'general',
+        isActive: !!activeAgent,
+        activeAgentInfo: activeAgent,
+        conversationContext: conversationContext ? {
+          currentAgent: conversationContext.currentAgent,
+          conversationTopic: conversationContext.conversationTopic,
+          conversationDepth: conversationContext.conversationDepth,
+          userSatisfaction: conversationContext.userSatisfaction,
+          agentPerformance: conversationContext.agentPerformance,
+          shouldHandoff: conversationContext.shouldHandoff,
+          handoffTarget: conversationContext.handoffTarget,
+          handoffReason: conversationContext.handoffReason
+        } : null,
+        goalState: goalState ? {
+          currentState: goalState.currentState,
+          engagementLevel: goalState.engagementLevel,
+          satisfactionLevel: goalState.satisfactionLevel,
+          entertainmentPreference: goalState.entertainmentPreference,
+          activeGoals: goalState.goals.filter(g => g.active).map(g => ({
+            type: g.type,
+            priority: g.priority,
+            progress: g.progress
+          }))
+        } : null,
+        timestamp: new Date(),
+        availableAgents: agentService.getAvailableAgents()
+      };
+      
+      socket.emit('agent_status_update', agentStatus);
+    };
+
+    // Send initial status after connection
+    setTimeout(() => {
+      sendAgentStatus();
+    }, 500);
+
+    // Set up periodic agent status updates (every 5 seconds)
+    const statusInterval = setInterval(() => {
+      sendAgentStatus();
+    }, 5000);
+
+    // Clear interval on disconnect
+    socket.on('disconnect', () => {
+      clearInterval(statusInterval);
+    });
+
     // Initialize user state for goal-seeking system and hold agent
     setTimeout(async () => {
       try {
@@ -304,8 +357,8 @@ export const setupSocketHandlers = (io: Server) => {
         };
         conversation.messages.push(userMessage);
 
-        // Emit user message to conversation room
-        io.to(conversation.id).emit('new_message', userMessage);
+        // Emit user message to conversation room (excluding sender since they do optimistic update)
+        socket.to(conversation.id).emit('new_message', userMessage);
 
         // Create AI message placeholder
         const aiMessageId = uuidv4();
@@ -421,6 +474,11 @@ export const setupSocketHandlers = (io: Server) => {
           agentUsed: agentResponse.agentUsed,
           confidence: agentResponse.confidence
         });
+
+        // Send agent status update after message processing
+        setTimeout(() => {
+          sendAgentStatus();
+        }, 100);
 
         // Handle proactive actions from goal-seeking system
         if (agentResponse.proactiveActions && agentResponse.proactiveActions.length > 0) {

@@ -68,21 +68,41 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
 
   const getAgentColor = (agentUsed?: string) => {
     switch (agentUsed) {
-      case 'technical': return '#2196F3';
-      case 'joke': return '#FF9800';
-      case 'trivia': return '#9C27B0';
+      case 'hold_agent': return '#FF9800';
+      case 'account_support': return '#2196F3';
+      case 'billing_support': return '#4CAF50';
+      case 'website_support': return '#9C27B0';
+      case 'operator_support': return '#607D8B';
+      case 'joke': return '#FF5722';
+      case 'trivia': return '#795548';
       case 'gif': return '#E91E63';
-      default: return '#4CAF50';
+      case 'story_teller': return '#3F51B5';
+      case 'riddle_master': return '#FF9800';
+      case 'quote_master': return '#009688';
+      case 'game_host': return '#8BC34A';
+      case 'music_guru': return '#673AB7';
+      case 'general': return '#4CAF50';
+      default: return '#757575';
     }
   };
 
   const getAgentLabel = (agentUsed?: string) => {
     switch (agentUsed) {
-      case 'technical': return '⚙️ Technical Agent';
+      case 'hold_agent': return '⏳ Hold Agent';
+      case 'account_support': return '👤 Account Support';
+      case 'billing_support': return '💳 Billing Support';
+      case 'website_support': return '🌐 Website Support';
+      case 'operator_support': return '📞 Customer Service';
       case 'joke': return '🎭 Adaptive Joke Master';
       case 'trivia': return '🧠 Trivia Master';
-      case 'gif': return '🎭 GIF Master';
-      default: return '💬 General Agent';
+      case 'gif': return '🎬 GIF Master';
+      case 'story_teller': return '📖 Story Teller';
+      case 'riddle_master': return '🧩 Riddle Master';
+      case 'quote_master': return '💭 Quote Master';
+      case 'game_host': return '🎮 Game Host';
+      case 'music_guru': return '🎵 Music Guru';
+      case 'general': return '💬 General Agent';
+      default: return '🤖 AI Agent';
     }
   };
 
@@ -404,10 +424,10 @@ const markdownStyles = {
     marginBottom: 8,
   },
   strong: {
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
   },
   em: {
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   code_inline: {
     backgroundColor: '#f0f0f0',

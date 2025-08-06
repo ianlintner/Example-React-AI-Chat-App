@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import type { Message, Conversation, StreamChunk, ChatRequest } from '../types';
+import type { Message, Conversation, StreamChunk, ChatRequest, AgentStatus } from '../types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -125,6 +125,16 @@ class SocketService {
   onProactiveError(callback: (data: { message: string; actionType: string; error: string }) => void): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);
+    }
+  }
+
+  // Agent status updates
+  onAgentStatusUpdate(callback: (status: AgentStatus) => void): void {
+    if (this.socket) {
+      this.socket.on('agent_status_update', (status) => {
+        console.log('📊 Agent status update received:', status);
+        callback(status);
+      });
     }
   }
 

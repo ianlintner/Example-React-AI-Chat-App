@@ -285,30 +285,34 @@ export default function HomeScreen() {
       socketService.removeListener('stream_complete');
       socketService.removeListener('proactive_message');
     };
-  }, [conversation]);
+  }, []);
 
-  const handleMessageSent = (newConversation: Conversation) => {
+  const handleMessageSent = (newMessage: Message) => {
     setConversation(prevConversation => {
       if (!prevConversation) {
-        return newConversation;
+        // Create a new conversation if one doesn't exist
+        return {
+          id: newMessage.conversationId,
+          title: 'AI Assistant Chat',
+          messages: [newMessage],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
       }
-      
+
       // Merge with existing conversation
-      const existingMessages = prevConversation.messages;
-      const newMessage = newConversation.messages[0];
-      
-      // Check if message already exists
-      const messageExists = existingMessages.some(m => m.id === newMessage.id);
+      const messageExists = prevConversation.messages.some(m => m.id === newMessage.id);
       if (messageExists) {
         return prevConversation;
       }
-      
+
       return {
         ...prevConversation,
-        messages: [...existingMessages, newMessage],
-        updatedAt: new Date()
+        messages: [...prevConversation.messages, newMessage],
+        updatedAt: new Date(),
       };
     });
+    setLastUpdateTime(new Date());
   };
 
   if (error) {

@@ -9,7 +9,7 @@ class SocketService {
     return new Promise((resolve, reject) => {
       // For mobile, you'll need to update this URL to your server's IP or deployed URL
       const serverUrl = __DEV__ 
-        ? 'http://10.0.2.2:5001' // Android emulator localhost
+        ? 'http://localhost:5001' // Android emulator localhost
         : 'https://your-deployed-backend.com'; // Production URL
       
       this.socket = io(serverUrl, {

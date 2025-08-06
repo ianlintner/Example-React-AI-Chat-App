@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { IconButton, ActivityIndicator } from 'react-native-paper';
 import { socketService } from '../services/socketService';
-import type { Conversation, ChatRequest } from '../types';
+import type { Conversation, ChatRequest, Message } from '../types';
 
 interface MessageInputProps {
   conversationId?: string;
-  onMessageSent: (conversation: Conversation) => void;
+  onMessageSent: (message: Message) => void;
   disabled?: boolean;
 }
 
@@ -26,8 +26,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const textInputRef = useRef<TextInput>(null);
+  const lastSendTime = useRef(0);
 
   const handleSend = async () => {
+    const now = Date.now();
+    if (now - lastSendTime.current < 500) {
+      return;
+    }
+    lastSendTime.current = now;
     if (!message.trim() || isLoading || disabled) return;
 
     const messageToSend = message.trim();
@@ -54,17 +60,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         status: 'complete' as const,
       };
 
-      // Create or update conversation
-      const conversation: Conversation = {
-        id: conversationId || userMessage.conversationId,
-        title: 'AI Assistant Chat',
-        messages: [userMessage],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      onMessageSent(conversation);
-
+      onMessageSent(userMessage);
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -83,6 +79,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
         socketService.stopTyping(conversationId);
       }
     }
+  };
+
+  const handleButtonPress = () => {
+    handleSend();
   };
 
   const canSend = message.trim().length > 0 && !isLoading && !disabled;
@@ -105,7 +105,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             maxLength={2000}
             editable={!disabled && !isLoading}
             onSubmitEditing={handleSend}
-            blurOnSubmit={false}
+            blurOnSubmit={true}
             returnKeyType="send"
           />
           
@@ -121,7 +121,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                   styles.sendButton,
                   canSend && styles.sendButtonEnabled
                 ]}
-                onPress={handleSend}
+                onPress={handleButtonPress}
                 disabled={!canSend}
               />
             )}

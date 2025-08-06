@@ -111,7 +111,24 @@ export class ConversationManager {
   private detectHandoffTriggers(context: ConversationContext, userMessage: string, currentAgent: AgentType): HandoffTrigger | null {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Explicit requests for different agent types
+    // **AUTOMATIC ENTERTAINMENT HANDOFF**: If this is the first message TO hold_agent, immediately handoff to random entertainment
+    // This triggers handoff during the initial message processing, not after
+    // HIGHEST PRIORITY - this overrides all other detections for hold_agent
+    // if (currentAgent === 'hold_agent' && context.conversationDepth === 0) {
+    //   const entertainmentAgents: AgentType[] = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru'];
+    //   const randomAgent = entertainmentAgents[Math.floor(Math.random() * entertainmentAgents.length)];
+      
+    //   console.log(`🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' from ${entertainmentAgents.length} available entertainment agents`);
+      
+    //   return {
+    //     type: 'explicit_request',
+    //     confidence: 1.0,
+    //     targetAgent: randomAgent,
+    //     reason: `No specialists available - automatically connecting you to our ${randomAgent} agent for entertainment while you wait`
+    //   };
+    // }
+
+    // Explicit requests for different agent types (only for non-hold agents)
     if (lowerMessage.includes('tell me a joke') && currentAgent !== 'joke') {
       return {
         type: 'explicit_request',
@@ -121,14 +138,6 @@ export class ConversationManager {
       };
     }
 
-    if ((lowerMessage.includes('technical') || lowerMessage.includes('code') || lowerMessage.includes('programming')) && currentAgent !== 'website_support') {
-      return {
-        type: 'explicit_request',
-        confidence: 0.8,
-        targetAgent: 'website_support',
-        reason: 'User requested technical assistance - routing to website support for web-related issues'
-      };
-    }
 
     if ((lowerMessage.includes('fact') || lowerMessage.includes('trivia') || lowerMessage.includes('learn')) && currentAgent !== 'trivia') {
       return {

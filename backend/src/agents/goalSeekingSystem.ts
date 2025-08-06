@@ -238,32 +238,32 @@ export class GoalSeekingSystem {
       delayMs = 10000; // 10 seconds
     }
 
+    // All available entertainment agents - ONLY entertainment agents can be proactive
+    const entertainmentAgents: AgentType[] = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru'];
+    
     switch (preference) {
       case 'jokes':
         agentType = 'joke';
-        // Direct command to the joke agent to tell a joke
         message = "Tell me a joke right now. I want to hear one of your best ones!";
         break;
       case 'trivia':
         agentType = 'trivia';
-        // Direct command to the trivia agent to share a fact
         message = "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
         break;
       case 'general_chat':
-        agentType = 'general';
-        message = "I'm here to chat while you wait! What's on your mind?";
+        // Changed from general agent to random entertainment agent
+        const randomChatIndex = Math.floor(Math.random() * entertainmentAgents.length);
+        agentType = entertainmentAgents[randomChatIndex];
+        message = this.getEntertainmentMessage(agentType);
         break;
       default:
-        // Mixed approach - rotate between entertainment types
-        const entertainmentTypes = ['joke', 'trivia'] as const;
-        const randomType = entertainmentTypes[Math.floor(Math.random() * entertainmentTypes.length)];
-        agentType = randomType;
+        // AUTOMATIC RANDOM ENTERTAINMENT HANDOFF
+        // Select a random entertainment agent from all available options
+        const randomIndex = Math.floor(Math.random() * entertainmentAgents.length);
+        agentType = entertainmentAgents[randomIndex];
+        message = this.getEntertainmentMessage(agentType);
         
-        if (randomType === 'joke') {
-          message = "Tell me a joke right now. I want to hear one of your best ones!";
-        } else {
-          message = "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
-        }
+        console.log(`🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${agentType}' from ${entertainmentAgents.length} available entertainment agents`);
     }
 
     return {
@@ -273,6 +273,30 @@ export class GoalSeekingSystem {
       timing: 'delayed',
       delayMs
     };
+  }
+
+  // Helper method to get appropriate message for each entertainment agent
+  private getEntertainmentMessage(agentType: AgentType): string {
+    switch (agentType) {
+      case 'joke':
+        return "Tell me a joke right now. I want to hear one of your best ones!";
+      case 'trivia':
+        return "Share a fascinating trivia fact with me right now. I want to learn something interesting!";
+      case 'gif':
+        return "Show me an entertaining GIF right now. I want to see something fun!";
+      case 'story_teller':
+        return "Tell me an engaging short story right now. I want to hear something captivating!";
+      case 'riddle_master':
+        return "Give me a brain teaser or riddle right now. I want to challenge my mind!";
+      case 'quote_master':
+        return "Share an inspiring or entertaining quote with me right now. I want some wisdom or humor!";
+      case 'game_host':
+        return "Start a fun interactive game with me right now. I want to play something engaging!";
+      case 'music_guru':
+        return "Give me a personalized music recommendation right now. I want to discover something great!";
+      default:
+        return "Entertain me right now with your specialty!";
+    }
   }
 
   private async generateTechnicalSupportAction(userState: UserState): Promise<GoalAction> {
@@ -293,39 +317,18 @@ export class GoalSeekingSystem {
   }
 
   private async generateEngagementAction(userState: UserState): Promise<GoalAction> {
-    const timeSinceLastInteraction = Date.now() - userState.lastInteractionTime.getTime();
+    // REMOVED ALL GENERAL AGENT PROACTIVE ACTIONS - Only entertainment agents should be proactive
+    // Instead of general agent status updates, let entertainment agents handle engagement
     
-    // Send status updates for users on hold
-    if (userState.currentState === 'on_hold') {
-      const waitTimeMinutes = Math.floor(timeSinceLastInteraction / 60000);
-      
-      if (waitTimeMinutes >= 2) {
-        return {
-          type: 'status_update',
-          agentType: 'general',
-          message: `You've been waiting for ${waitTimeMinutes} minutes. A support specialist will be with you soon. In the meantime, I'm here to keep you company!`,
-          timing: 'delayed',
-          delayMs: 45000 // 45 seconds delay for status updates
-        };
-      }
-    }
+    const entertainmentAgents: AgentType[] = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru'];
+    const randomAgent = entertainmentAgents[Math.floor(Math.random() * entertainmentAgents.length)];
     
-    if (timeSinceLastInteraction > 60000) { // 1 minute
-      return {
-        type: 'proactive_message',
-        agentType: 'general',
-        message: "I'm still here if you need anything! How can I help you today?",
-        timing: 'delayed',
-        delayMs: 10000 // 10 seconds delay
-      };
-    }
-
     return {
-      type: 'entertainment_offer',
-      agentType: 'general',
-      message: "Would you like me to entertain you with a joke, share some trivia, or help with a technical question?",
+      type: 'proactive_message',
+      agentType: randomAgent,
+      message: this.getEntertainmentMessage(randomAgent),
       timing: 'delayed',
-      delayMs: 30000 // 30 seconds
+      delayMs: 30000 // 30 seconds delay for engagement through entertainment
     };
   }
 

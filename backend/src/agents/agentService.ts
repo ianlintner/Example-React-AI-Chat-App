@@ -523,7 +523,30 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       context = this.conversationManager.completeHandoff(userId, handoffInfo.target);
       currentAgent = handoffInfo.target;
       
-      // Return handoff message first
+      // For entertainment agents, process the message directly with the target agent instead of returning handoff message
+      const entertainmentAgents = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru'];
+      if (entertainmentAgents.includes(handoffInfo.target)) {
+        console.log(`🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`);
+        
+        // Process message with the entertainment agent
+        const response = await this.processMessage(
+          message,
+          conversationHistory,
+          handoffInfo.target,
+          conversationId,
+          userId
+        );
+
+        // Update conversation context with the interaction
+        this.conversationManager.updateContext(userId, message, response.content, handoffInfo.target);
+
+        return {
+          ...response,
+          agentUsed: handoffInfo.target // Make sure the response shows it came from the entertainment agent
+        };
+      }
+      
+      // For non-entertainment agents, return handoff message first
       return {
         content: handoffInfo.message,
         agentUsed: 'general', // Handoff messages come from general agent

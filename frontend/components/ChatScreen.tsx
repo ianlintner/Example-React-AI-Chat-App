@@ -955,6 +955,13 @@ const markdownStyles = {
     marginVertical: 4,
     fontStyle: 'italic' as const,
   },
+  image: {
+    width: Math.min(width - 160, 150), // Set specific width for GIFs
+    height: 100, // Set specific height to prevent UI issues with large GIFs
+    borderRadius: 8,
+    marginVertical: 8,
+    resizeMode: 'contain' as const,
+  },
 };
 
 export default ChatScreen;

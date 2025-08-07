@@ -8,6 +8,7 @@ import { responseValidator } from '../validation/responseValidator';
 import { jokeLearningSystem } from './jokeLearningSystem';
 import { ConversationManager, ConversationContext } from './conversationManager';
 import { ragService } from './ragService';
+import { dndService } from './dndService';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -273,6 +274,46 @@ In demo mode with RAG, I:
 
 To get real AI responses with fresh GIF selections, please set your OPENAI_API_KEY environment variable.`;
       }
+    } else if (agentName === 'D&D Master') {
+      // Generate demo D&D content using the service
+      const character = dndService.generateCharacter();
+      const encounter = dndService.generateEncounter();
+      const diceRoll = dndService.rollDice('d20', 'Initiative roll');
+      const adventureHook = dndService.generateAdventureHook();
+
+      return `🎲 **D&D Master Response** (Demo Mode)
+
+Welcome, brave adventurer! I'm your D&D Master with full RPG capabilities! Here's a taste of what I can do:
+
+**🧙‍♂️ CHARACTER GENERATION:**
+${dndService.formatCharacter(character)}
+
+**🎲 DICE ROLLING:**
+${dndService.formatDiceRoll(diceRoll)}
+
+**⚔️ RANDOM ENCOUNTER:**
+${dndService.formatEncounter(encounter)}
+
+**🗺️ ADVENTURE HOOK:**
+${adventureHook}
+
+**🎮 What I can do in demo mode:**
+- Generate random characters with full stats and backstories
+- Roll any type of dice (d4, d6, d8, d10, d12, d20, d100) with modifiers
+- Create combat and roleplay encounters on demand
+- Handle advantage/disadvantage rolls
+- Generate adventure hooks and story elements
+- Run quick 10-15 minute RPG sessions
+- Format everything with proper D&D styling
+
+**Ready to play? Try saying:**
+- "Generate a new character"
+- "Roll a d20"
+- "Give me a combat encounter" 
+- "Start an adventure"
+- "Roll with advantage"
+
+To get full AI-powered D&D Master responses with dynamic storytelling, please set your OPENAI_API_KEY environment variable!`;
     } else {
       return `**General Assistant Response** (Demo Mode)
 
@@ -335,6 +376,11 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         id: 'hold_agent',
         name: 'Hold Agent',
         description: 'Manages customer hold experiences with wait time updates and entertainment coordination'
+      },
+      {
+        id: 'dnd_master',
+        name: 'D&D Master',
+        description: 'Interactive D&D RPG lite experience with character generation, dice rolling, and random encounters'
       }
     ];
   }
@@ -523,7 +569,30 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       context = this.conversationManager.completeHandoff(userId, handoffInfo.target);
       currentAgent = handoffInfo.target;
       
-      // Return handoff message first
+      // For entertainment agents, process the message directly with the target agent instead of returning handoff message
+      const entertainmentAgents = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru', 'dnd_master'];
+      if (entertainmentAgents.includes(handoffInfo.target)) {
+        console.log(`🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`);
+        
+        // Process message with the entertainment agent
+        const response = await this.processMessage(
+          message,
+          conversationHistory,
+          handoffInfo.target,
+          conversationId,
+          userId
+        );
+
+        // Update conversation context with the interaction
+        this.conversationManager.updateContext(userId, message, response.content, handoffInfo.target);
+
+        return {
+          ...response,
+          agentUsed: handoffInfo.target // Make sure the response shows it came from the entertainment agent
+        };
+      }
+      
+      // For non-entertainment agents, return handoff message first
       return {
         content: handoffInfo.message,
         agentUsed: 'general', // Handoff messages come from general agent

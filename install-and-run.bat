@@ -23,9 +23,9 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo Starting frontend server...
+echo Starting frontend (mobile app) server...
 cd ..\frontend
-start "Frontend Server" cmd /k "set PATH=C:\Program Files\nodejs;%PATH% && npm run dev"
+start "Frontend (Mobile App) Server" cmd /k "set PATH=C:\Program Files\nodejs;%PATH% && npm start"
 
 echo.
 echo Starting backend server...
@@ -34,4 +34,7 @@ start "Backend Server" cmd /k "set PATH=C:\Program Files\nodejs;%PATH% && npm ru
 
 echo.
 echo Both servers are starting...
-echo Frontend will be available at:
+echo Mobile app development server will start with Expo
+echo Scan the QR code with Expo Go app on your mobile device
+echo Backend API will be available at: http://localhost:3001
+pause

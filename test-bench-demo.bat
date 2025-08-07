@@ -127,23 +127,23 @@ echo    Frontend Test Bench Interface
 echo ====================================
 echo.
 
-echo Starting frontend development server...
-start "Frontend Server" cmd /k "cd frontend && npm run dev"
+echo Starting mobile app development server...
+start "Mobile App Server" cmd /k "cd frontend && npm start"
 
 echo.
-echo Waiting for frontend to start...
+echo Waiting for mobile app to start...
 timeout /t 8
 
 echo.
-echo Opening Developer Test Bench in browser...
-echo Navigate to: http://localhost:5173
+echo Mobile App Test Bench started...
+echo Use Expo Go app to scan QR code and test on mobile device
 echo.
-echo The test bench interface provides:
-echo - Tabbed interface for different test types
-echo - Real-time test results with timing
-echo - Export functionality for results
-echo - System health monitoring
-echo - Bulk testing capabilities
+echo The mobile app provides:
+echo - Chat interface for testing agent interactions
+echo - Validation dashboard for monitoring response quality
+echo - Real-time communication with backend
+echo - Native mobile experience for testing
+echo - Dark/Light theme support
 echo.
 
 echo ====================================
@@ -167,14 +167,14 @@ echo.
 echo The comprehensive test bench system is now running!
 echo.
 echo Backend API: http://localhost:5001/api/test-bench
-echo Frontend UI: http://localhost:5173
+echo Mobile App: Use Expo Go to scan QR code
 echo.
 echo Features created:
 echo ✓ 11 test endpoints for all system components
 echo ✓ 14 agent types fully testable
-echo ✓ Developer-friendly web interface
+echo ✓ Native mobile interface for testing
 echo ✓ Real-time results and performance metrics
-echo ✓ Bulk testing and export capabilities
+echo ✓ Validation dashboard with quality monitoring
 echo ✓ System health monitoring
 echo ✓ Complete documentation
 echo.

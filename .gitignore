@@ -2,3 +2,4 @@ frontend/.env
 backend/.env
 node_modules
 
+backend/coverage

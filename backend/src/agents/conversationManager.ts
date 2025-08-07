@@ -111,7 +111,24 @@ export class ConversationManager {
   private detectHandoffTriggers(context: ConversationContext, userMessage: string, currentAgent: AgentType): HandoffTrigger | null {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Explicit requests for different agent types
+    // **AUTOMATIC ENTERTAINMENT HANDOFF**: If this is the first message TO hold_agent, immediately handoff to random entertainment
+    // This triggers handoff during the initial message processing, not after
+    // HIGHEST PRIORITY - this overrides all other detections for hold_agent
+    if (currentAgent === 'hold_agent' && context.conversationDepth === 1) {
+      const entertainmentAgents: AgentType[] = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru', 'dnd_master'];
+      const randomAgent = entertainmentAgents[Math.floor(Math.random() * entertainmentAgents.length)];
+      
+      console.log(`🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' from ${entertainmentAgents.length} available entertainment agents`);
+      
+      return {
+        type: 'explicit_request',
+        confidence: 1.0,
+        targetAgent: randomAgent,
+        reason: `No specialists available - automatically connecting you to our ${randomAgent} agent for entertainment while you wait`
+      };
+    }
+
+    // Explicit requests for different agent types (only for non-hold agents)
     if (lowerMessage.includes('tell me a joke') && currentAgent !== 'joke') {
       return {
         type: 'explicit_request',
@@ -121,14 +138,6 @@ export class ConversationManager {
       };
     }
 
-    if ((lowerMessage.includes('technical') || lowerMessage.includes('code') || lowerMessage.includes('programming')) && currentAgent !== 'website_support') {
-      return {
-        type: 'explicit_request',
-        confidence: 0.8,
-        targetAgent: 'website_support',
-        reason: 'User requested technical assistance - routing to website support for web-related issues'
-      };
-    }
 
     if ((lowerMessage.includes('fact') || lowerMessage.includes('trivia') || lowerMessage.includes('learn')) && currentAgent !== 'trivia') {
       return {
@@ -145,6 +154,24 @@ export class ConversationManager {
         confidence: 0.8,
         targetAgent: 'gif',
         reason: 'User requested visual entertainment'
+      };
+    }
+
+    if ((lowerMessage.includes('youtube') || lowerMessage.includes('video') || lowerMessage.includes('viral') || lowerMessage.includes('show me something funny') || lowerMessage.includes('entertaining video')) && currentAgent !== 'youtube_guru') {
+      return {
+        type: 'explicit_request',
+        confidence: 0.9,
+        targetAgent: 'youtube_guru',
+        reason: 'User requested YouTube videos or viral content'
+      };
+    }
+
+    if ((lowerMessage.includes('d&d') || lowerMessage.includes('dnd') || lowerMessage.includes('dungeons and dragons') || lowerMessage.includes('rpg') || lowerMessage.includes('dice') || lowerMessage.includes('character') || lowerMessage.includes('adventure') || lowerMessage.includes('dungeon master') || lowerMessage.includes('roll dice')) && currentAgent !== 'dnd_master') {
+      return {
+        type: 'explicit_request',
+        confidence: 0.9,
+        targetAgent: 'dnd_master',
+        reason: 'User requested D&D RPG experience'
       };
     }
 
@@ -217,20 +244,22 @@ export class ConversationManager {
       'general': 'joke',
       'joke': 'trivia',
       'trivia': 'gif',
-      'gif': 'general',
-      'account_support': 'general',
-      'billing_support': 'general',
-      'website_support': 'general',
-      'operator_support': 'general',
+      'gif': 'riddle_master',
+      'account_support': 'hold_agent',
+      'billing_support': 'hold_agent',
+      'website_support': 'hold_agent',
+      'operator_support': 'hold_agent',
       'hold_agent': 'joke',
       'story_teller': 'riddle_master',
       'riddle_master': 'quote_master',
       'quote_master': 'game_host',
       'game_host': 'music_guru',
-      'music_guru': 'story_teller'
+      'music_guru': 'youtube_guru',
+      'youtube_guru': 'story_teller',
+      'dnd_master': 'story_teller'
     };
     
-    return refreshOptions[currentAgent] || 'general';
+    return refreshOptions[currentAgent] || 'hold_agent';
   }
 
   // Generate handoff message for smooth transition
@@ -252,7 +281,9 @@ export class ConversationManager {
         'riddle_master': "Our Riddle Master has fascinating brain teasers and puzzles to challenge your mind!",
         'quote_master': "Our Quote Master has inspirational and entertaining quotes to share with you!",
         'game_host': "Let me connect you with our Game Host who can start fun interactive games to pass the time!",
-        'music_guru': "Our Music Guru can provide personalized music recommendations and discuss your favorite artists!"
+        'music_guru': "Our Music Guru can provide personalized music recommendations and discuss your favorite artists!",
+        'youtube_guru': "Let me bring in our YouTube Guru who has amazing funny videos and viral content to entertain you!",
+        'dnd_master': "Let me bring in our D&D Master who can run an interactive RPG lite experience with dice rolling, character creation, and random encounters!"
       },
       'expertise_mismatch': {
         'joke': "I think our Adaptive Joke Master would be perfect for bringing some humor to this conversation!",
@@ -268,7 +299,9 @@ export class ConversationManager {
         'riddle_master': "Our Riddle Master would love to create mind-bending puzzles around this theme!",
         'quote_master': "Our Quote Master has relevant wisdom and quotes that would perfectly address this topic!",
         'game_host': "Our Game Host could turn this into an interactive and engaging experience!",
-        'music_guru': "Our Music Guru has perfect musical knowledge and recommendations for this topic!"
+        'music_guru': "Our Music Guru has perfect musical knowledge and recommendations for this topic!",
+        'youtube_guru': "Our YouTube Guru has amazing funny videos and viral content perfect for this topic!",
+        'dnd_master': "Our D&D Master would be perfect for turning this topic into an interactive RPG adventure with dice, characters, and storytelling!"
       },
       'performance_decline': {
         'joke': "How about we lighten the mood? Our Adaptive Joke Master is great at turning things around with some personalized humor!",
@@ -284,7 +317,9 @@ export class ConversationManager {
         'riddle_master': "Let's try some brain teasers! Our Riddle Master could help engage your mind differently!",
         'quote_master': "Our Quote Master might have the perfect inspirational words to help!",
         'game_host': "Let's make this more interactive! Our Game Host can turn this into an engaging experience!",
-        'music_guru': "Our Music Guru might have the perfect musical perspective to help brighten things up!"
+        'music_guru': "Our Music Guru might have the perfect musical perspective to help brighten things up!",
+        'youtube_guru': "Let's try our YouTube Guru - they have amazing funny videos that might be exactly what you need!",
+        'dnd_master': "How about we try something completely different? Our D&D Master can create an immersive RPG experience with dice rolling and adventures that might be exactly what you need!"
       },
       'conversation_stagnation': {
         'joke': "How about we shake things up with some humor? Our Adaptive Joke Master is great at refreshing conversations!",
@@ -300,7 +335,9 @@ export class ConversationManager {
         'riddle_master': "How about we challenge your mind differently? Our Riddle Master has fresh puzzles to reinvigorate our chat!",
         'quote_master': "Our Quote Master has inspiring words that might spark new directions for our conversation!",
         'game_host': "Let's try something completely different! Our Game Host can bring interactive fun to refresh our discussion!",
-        'music_guru': "Our Music Guru can bring a whole new vibe with music recommendations and discussions to liven things up!"
+        'music_guru': "Our Music Guru can bring a whole new vibe with music recommendations and discussions to liven things up!",
+        'youtube_guru': "Let's try our YouTube Guru! They have incredible funny videos and viral content that can completely transform our conversation energy!",
+        'dnd_master': "Let's completely reinvent our conversation! Our D&D Master can transform this into an epic interactive RPG adventure with dice rolling, character creation, and immersive storytelling!"
       }
     };
 

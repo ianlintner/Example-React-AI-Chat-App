@@ -131,6 +131,118 @@ export const setupSocketHandlers = (io: Server) => {
     // Initialize user in goal-seeking system immediately
     agentService.initializeUserGoals(socket.id);
 
+    // Enhanced agent status with proactive context polling
+    const sendAgentStatus = () => {
+      const activeAgent = agentService.getActiveAgentInfo(socket.id);
+      const conversationContext = agentService.getConversationContext(socket.id);
+      const goalState = agentService.getUserGoalState(socket.id);
+      
+      // Proactively update context if user has been idle
+      if (conversationContext) {
+        const timeSinceLastMessage = Date.now() - conversationContext.lastMessageTime.getTime();
+        
+        // If user has been idle for more than 2 minutes, gradually decrease satisfaction
+        if (timeSinceLastMessage > 120000) { // 2 minutes
+          conversationContext.userSatisfaction = Math.max(0.3, conversationContext.userSatisfaction - 0.02);
+        }
+        
+        // If user has been idle for more than 5 minutes with hold agent, suggest entertainment
+        if (timeSinceLastMessage > 300000 && conversationContext.currentAgent === 'hold_agent') { // 5 minutes
+          if (!conversationContext.shouldHandoff) {
+            conversationContext.shouldHandoff = true;
+            conversationContext.handoffTarget = 'joke'; // Default entertainment
+            conversationContext.handoffReason = 'Extended idle time - offering entertainment while waiting';
+            console.log(`🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`);
+          }
+        }
+      }
+      
+      // Update goal state based on time patterns
+      if (goalState) {
+        const currentHour = new Date().getHours();
+        
+        // Adjust entertainment preference based on time of day
+        if (currentHour >= 9 && currentHour <= 17) { // Business hours
+          goalState.entertainmentPreference = 'general_chat'; // Prefer lighter entertainment during work hours
+        } else if (currentHour >= 18 && currentHour <= 22) { // Evening
+          goalState.entertainmentPreference = 'mixed'; // Mixed entertainment in evening
+        } else { // Late night/early morning
+          goalState.entertainmentPreference = 'trivia'; // More engaging content for late night users
+        }
+        
+        // Auto-activate entertainment goal if user seems bored (low engagement)
+        if (goalState.engagementLevel < 0.4) {
+          const entertainmentGoal = goalState.goals.find(g => g.type === 'entertainment');
+          if (entertainmentGoal && !entertainmentGoal.active) {
+            entertainmentGoal.active = true;
+            entertainmentGoal.lastUpdated = new Date();
+            console.log(`🎯 Auto-activated entertainment goal for low-engagement user ${socket.id}`);
+          }
+        }
+        
+        // Check for proactive opportunities based on context
+        const timeSinceLastUpdate = Date.now() - (goalState.lastUpdated?.getTime() || 0);
+        if (timeSinceLastUpdate > 180000) { // 3 minutes since last update
+          // Gradually increase boredom/decrease engagement if no interaction
+          goalState.engagementLevel = Math.max(0.1, goalState.engagementLevel - 0.05);
+          goalState.lastUpdated = new Date();
+        }
+      }
+      
+      const agentStatus = {
+        currentAgent: conversationContext?.currentAgent || 'general',
+        isActive: !!activeAgent,
+        activeAgentInfo: activeAgent,
+        conversationContext: conversationContext ? {
+          currentAgent: conversationContext.currentAgent,
+          conversationTopic: conversationContext.conversationTopic,
+          conversationDepth: conversationContext.conversationDepth,
+          userSatisfaction: conversationContext.userSatisfaction,
+          agentPerformance: conversationContext.agentPerformance,
+          shouldHandoff: conversationContext.shouldHandoff,
+          handoffTarget: conversationContext.handoffTarget,
+          handoffReason: conversationContext.handoffReason,
+          timeSinceLastMessage: Date.now() - conversationContext.lastMessageTime.getTime(),
+          idleTime: Math.floor((Date.now() - conversationContext.lastMessageTime.getTime()) / 1000)
+        } : null,
+        goalState: goalState ? {
+          currentState: goalState.currentState,
+          engagementLevel: goalState.engagementLevel,
+          satisfactionLevel: goalState.satisfactionLevel,
+          entertainmentPreference: goalState.entertainmentPreference,
+          activeGoals: goalState.goals.filter(g => g.active).map(g => ({
+            type: g.type,
+            priority: g.priority,
+            progress: g.progress,
+            lastUpdated: g.lastUpdated
+          })),
+          timeSinceLastUpdate: Date.now() - (goalState.lastUpdated?.getTime() || 0)
+        } : null,
+        serverTime: new Date(),
+        timestamp: new Date(),
+        availableAgents: agentService.getAvailableAgents()
+      };
+      
+      console.log(`📊 Polling agent status for ${socket.id}: Agent=${agentStatus.currentAgent}, Active=${agentStatus.isActive}, Satisfaction=${agentStatus.conversationContext?.userSatisfaction?.toFixed(2)}, Engagement=${agentStatus.goalState?.engagementLevel?.toFixed(2)}`);
+      
+      socket.emit('agent_status_update', agentStatus);
+    };
+
+    // Send initial status after connection
+    setTimeout(() => {
+      sendAgentStatus();
+    }, 500);
+
+    // Set up periodic agent status updates (every 5 seconds)
+    const statusInterval = setInterval(() => {
+      sendAgentStatus();
+    }, 5000);
+
+    // Clear interval on disconnect
+    socket.on('disconnect', () => {
+      clearInterval(statusInterval);
+    });
+
     // Initialize user state for goal-seeking system and hold agent
     setTimeout(async () => {
       try {
@@ -304,8 +416,8 @@ export const setupSocketHandlers = (io: Server) => {
         };
         conversation.messages.push(userMessage);
 
-        // Emit user message to conversation room
-        io.to(conversation.id).emit('new_message', userMessage);
+        // Emit user message to conversation room (excluding sender since they do optimistic update)
+        socket.to(conversation.id).emit('new_message', userMessage);
 
         // Create AI message placeholder
         const aiMessageId = uuidv4();
@@ -421,6 +533,11 @@ export const setupSocketHandlers = (io: Server) => {
           agentUsed: agentResponse.agentUsed,
           confidence: agentResponse.confidence
         });
+
+        // Send agent status update after message processing
+        setTimeout(() => {
+          sendAgentStatus();
+        }, 100);
 
         // Handle proactive actions from goal-seeking system
         if (agentResponse.proactiveActions && agentResponse.proactiveActions.length > 0) {

@@ -64,7 +64,7 @@ cd mobile-app && npm start   # Terminal 2
 ### Access Points
 - **📱 Mobile App**: Scan QR code with Expo Go
 - **📖 API Docs**: http://localhost:3000/api/docs
-- **📊 Monitoring**: http://localhost:3001 (Grafana)
+- **📊 Monitoring**: http://localhost:5001 (Grafana)
 - **📈 Metrics**: http://localhost:9090 (Prometheus)
 - **🔍 Tracing**: http://localhost:16686 (Jaeger)
 

@@ -1,6 +1,8 @@
 import { MessageQueueProvider, QueueMessage, MessageHandler, QueueOptions, QueueStats } from '../types';
 import { EventEmitter } from 'events';
 
+const DEFAULT_PRIORITY = 5;
+
 interface QueueData {
   messages: QueueMessage[];
   subscribers: MessageHandler[];
@@ -76,7 +78,7 @@ export class InMemoryMessageQueueProvider extends EventEmitter implements Messag
     // Set defaults
     message.retryCount = message.retryCount || 0;
     message.maxRetries = message.maxRetries || 3;
-    message.priority = message.priority || 5;
+    message.priority = message.priority || DEFAULT_PRIORITY;
 
     if (message.delayMs && message.delayMs > 0) {
       // Schedule delayed message
@@ -94,7 +96,7 @@ export class InMemoryMessageQueueProvider extends EventEmitter implements Messag
     // Insert message based on priority (higher priority first)
     let insertIndex = queue.messages.length;
     for (let i = 0; i < queue.messages.length; i++) {
-      if ((queue.messages[i].priority || 5) < (message.priority || 5)) {
+      if ((queue.messages[i].priority || DEFAULT_PRIORITY) < (message.priority || DEFAULT_PRIORITY)) {
         insertIndex = i;
         break;
       }

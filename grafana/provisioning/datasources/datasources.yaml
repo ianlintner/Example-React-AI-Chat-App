@@ -15,10 +15,10 @@ datasources:
       disableRecordingRules: false
       incrementalQueryOverlapWindow: 10m
 
-  - name: Jaeger
-    type: jaeger
+  - name: Zipkin
+    type: zipkin
     access: proxy
-    url: http://jaeger:16686
+    url: http://zipkin:9411
     jsonData:
       tracesToLogsV2:
         datasourceUid: 'loki'
@@ -35,13 +35,6 @@ datasources:
         queries:
           - name: 'Sample query'
             query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
-      serviceMap:
-        datasourceUid: 'prometheus'
-      search:
-        hide: false
-      spanBar:
-        type: 'Tag'
-        tag: 'http.path'
       
   - name: Loki
     type: loki
@@ -50,7 +43,7 @@ datasources:
     jsonData:
       maxLines: 1000
       derivedFields:
-        - datasourceUid: jaeger
+        - datasourceUid: zipkin
           matcherRegex: "traceID=(\\w+)"
           name: TraceID
           url: "$${__value.raw}"

@@ -2,6 +2,11 @@ import express from 'express';
 import { getQueueService } from '../messageQueue/queueService';
 import { QUEUE_NAMES } from '../messageQueue/messageQueue';
 
+// Type guard to check if a value is a valid queue name
+function isValidQueueName(name: unknown): name is (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES] {
+  return typeof name === 'string' && Object.values(QUEUE_NAMES).includes(name as any);
+}
+
 const router = express.Router();
 
 /**
@@ -161,7 +166,10 @@ router.get('/size/:queueName', async (req, res) => {
     const { queueName } = req.params;
     
     // Validate queue name
-    if (!Object.values(QUEUE_NAMES).includes(queueName as any)) {
+    if (!isValidQueueName(queueName)) {
+      return res.status(400).json({ error: 'Invalid queue name' });
+    }
+    if (!isValidQueueName(queueName)) {
       return res.status(400).json({ error: 'Invalid queue name' });
     }
 

@@ -9,6 +9,16 @@ import { jokeLearningSystem } from './jokeLearningSystem';
 import { ConversationManager, ConversationContext } from './conversationManager';
 import { ragService } from './ragService';
 import { dndService } from './dndService';
+import { 
+  tracer, 
+  createAgentSpan, 
+  createConversationSpan,
+  createValidationSpan,
+  addSpanEvent, 
+  setSpanStatus, 
+  endSpan 
+} from '../tracing/tracer';
+import { tracingContextManager } from '../tracing/contextManager';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -82,110 +92,201 @@ export class AgentService {
     conversationId?: string,
     userId?: string
   ): Promise<AgentResponse> {
-    // Classify the message to determine which agent to use
-    let agentType: AgentType;
-    let confidence: number;
+    const span = createAgentSpan('agent_service', 'process_message', conversationId);
     
-    if (forcedAgentType) {
-      agentType = forcedAgentType;
-      confidence = 1.0;
-    } else {
-      const classification = await classifyMessage(message);
-      agentType = classification.agentType;
-      confidence = classification.confidence;
-      
-      console.log(`Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`);
-    }
-
-    // Get the appropriate agent
-    const agent = getAgent(agentType);
-
-    // For joke agent, use adaptive prompt based on user learning data
-    let systemPrompt = agent.systemPrompt;
-    if (agentType === 'joke' && userId) {
-      systemPrompt = jokeLearningSystem.generateAdaptivePrompt(userId, agent.systemPrompt);
-    }
-
-    // Prepare the conversation history for the agent
-    const messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = [
-      {
-        role: 'system',
-        content: systemPrompt
-      }
-    ];
-
-    // Add conversation history (limit to last 10 messages to avoid token limits)
-    const recentHistory = conversationHistory.slice(-10);
-    for (const msg of recentHistory) {
-      messages.push({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content
-      });
-    }
-
-    // Add the current message
-    messages.push({
-      role: 'user',
-      content: message
+    span.setAttributes({
+      'message.length': message.length,
+      'conversation.history_count': conversationHistory.length,
+      'agent.forced': !!forcedAgentType,
+      'user.id': userId || 'anonymous'
+    });
+    
+    addSpanEvent(span, 'agent.process_message_start', {
+      message_preview: message.substring(0, 50)
     });
 
-    // Generate response using the agent
-    let responseContent: string;
-    
     try {
-      if (!process.env.OPENAI_API_KEY) {
-        // Demo response when no API key is provided
-        responseContent = this.generateDemoResponse(agent.name, message);
+      // Classify the message to determine which agent to use
+      let agentType: AgentType;
+      let confidence: number;
+      
+      addSpanEvent(span, 'agent.classification_start');
+      
+      if (forcedAgentType) {
+        agentType = forcedAgentType;
+        confidence = 1.0;
+        addSpanEvent(span, 'agent.classification_forced', { agentType });
       } else {
-        // Create OpenAI client at runtime to ensure env vars are loaded
-        const openai = new OpenAI({
-          apiKey: process.env.OPENAI_API_KEY,
+        const classification = await classifyMessage(message);
+        agentType = classification.agentType;
+        confidence = classification.confidence;
+        
+        addSpanEvent(span, 'agent.classification_complete', { 
+          agentType, 
+          confidence,
+          reasoning: classification.reasoning 
         });
-
-        const completion = await openai.chat.completions.create({
-          model: agent.model,
-          messages: messages,
-          max_tokens: agent.maxTokens,
-          temperature: agent.temperature,
-        });
-
-        responseContent = completion.choices[0]?.message?.content || 
-          `I apologize, but I encountered an error while processing your request. Please try again.`;
+        console.log(`Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`);
       }
+
+      span.setAttributes({
+        'agent.type': agentType,
+        'agent.confidence': confidence
+      });
+
+      // Get the appropriate agent
+      const agent = getAgent(agentType);
+      addSpanEvent(span, 'agent.config_loaded', { agentName: agent.name });
+
+      // For joke agent, use adaptive prompt based on user learning data
+      let systemPrompt = agent.systemPrompt;
+      if (agentType === 'joke' && userId) {
+        systemPrompt = jokeLearningSystem.generateAdaptivePrompt(userId, agent.systemPrompt);
+        addSpanEvent(span, 'agent.adaptive_prompt_generated');
+      }
+
+      // Prepare the conversation history for the agent
+      const messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = [
+        {
+          role: 'system',
+          content: systemPrompt
+        }
+      ];
+
+      // Add conversation history (limit to last 10 messages to avoid token limits)
+      const recentHistory = conversationHistory.slice(-10);
+      for (const msg of recentHistory) {
+        messages.push({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        });
+      }
+
+      // Add the current message
+      messages.push({
+        role: 'user',
+        content: message
+      });
+
+      addSpanEvent(span, 'agent.messages_prepared', { 
+        messageCount: messages.length,
+        historyCount: recentHistory.length 
+      });
+
+      // Generate response using the agent
+      let responseContent: string;
+      
+      addSpanEvent(span, 'agent.response_generation_start');
+      
+      try {
+        if (!process.env.OPENAI_API_KEY) {
+          // Demo response when no API key is provided
+          responseContent = this.generateDemoResponse(agent.name, message);
+          addSpanEvent(span, 'agent.demo_response_generated');
+        } else {
+          // Create OpenAI client at runtime to ensure env vars are loaded
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+
+          addSpanEvent(span, 'agent.openai_call_start', { model: agent.model });
+
+          const completion = await openai.chat.completions.create({
+            model: agent.model,
+            messages: messages,
+            max_tokens: agent.maxTokens,
+            temperature: agent.temperature,
+          });
+
+          responseContent = completion.choices[0]?.message?.content || 
+            `I apologize, but I encountered an error while processing your request. Please try again.`;
+            
+          addSpanEvent(span, 'agent.openai_call_complete', { 
+            tokensUsed: completion.usage?.total_tokens,
+            responseLength: responseContent.length 
+          });
+        }
+      } catch (error) {
+        console.error(`Error calling OpenAI API with ${agent.name}:`, error);
+        addSpanEvent(span, 'agent.openai_call_error', { 
+          error: (error as Error).message 
+        });
+        responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
+      }
+
+      // Validate the response if conversationId and userId are provided
+      if (conversationId && userId) {
+        const validationSpan = createValidationSpan(conversationId, agentType);
+        addSpanEvent(validationSpan, 'validation.start');
+        
+        const validationResult = responseValidator.validateResponse(
+          agentType,
+          message,
+          responseContent,
+          conversationId,
+          userId,
+          false // Not a proactive message
+        );
+        
+        validationSpan.setAttributes({
+          'validation.issues_count': validationResult.issues.length,
+          'validation.has_high_severity': validationResult.issues.some(issue => issue.severity === 'high')
+        });
+        
+        // Log validation issues if any
+        if (validationResult.issues.length > 0) {
+          console.warn(`⚠️ Validation issues for ${agentType} response:`, validationResult.issues);
+          addSpanEvent(validationSpan, 'validation.issues_found', { 
+            issueCount: validationResult.issues.length 
+          });
+        }
+        
+        // For high-severity issues, you might want to regenerate the response
+        // or provide a fallback response
+        if (validationResult.issues.some(issue => issue.severity === 'high')) {
+          console.error(`❌ High severity validation issues detected for ${agentType} response`);
+          addSpanEvent(validationSpan, 'validation.high_severity_issues');
+          // Could implement fallback logic here
+        }
+        
+        setSpanStatus(validationSpan, true);
+        endSpan(validationSpan);
+      }
+
+      const result = {
+        content: responseContent,
+        agentUsed: agentType,
+        confidence: confidence
+      };
+
+      span.setAttributes({
+        'response.length': responseContent.length,
+        'response.agent_used': agentType
+      });
+
+      addSpanEvent(span, 'agent.process_message_complete', {
+        responseLength: responseContent.length
+      });
+      
+      setSpanStatus(span, true);
+      endSpan(span);
+      
+      return result;
     } catch (error) {
-      console.error(`Error calling OpenAI API with ${agent.name}:`, error);
-      responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
-    }
-
-    // Validate the response if conversationId and userId are provided
-    if (conversationId && userId) {
-      const validationResult = responseValidator.validateResponse(
-        agentType,
-        message,
-        responseContent,
-        conversationId,
-        userId,
-        false // Not a proactive message
-      );
+      console.error('Error in processMessage:', error);
+      addSpanEvent(span, 'agent.process_message_error', { 
+        error: (error as Error).message 
+      });
+      setSpanStatus(span, false, (error as Error).message);
+      endSpan(span);
       
-      // Log validation issues if any
-      if (validationResult.issues.length > 0) {
-        console.warn(`⚠️ Validation issues for ${agentType} response:`, validationResult.issues);
-      }
-      
-      // For high-severity issues, you might want to regenerate the response
-      // or provide a fallback response
-      if (validationResult.issues.some(issue => issue.severity === 'high')) {
-        console.error(`❌ High severity validation issues detected for ${agentType} response`);
-        // Could implement fallback logic here
-      }
+      // Return fallback response
+      return {
+        content: 'I apologize, but I encountered an error while processing your request. Please try again.',
+        agentUsed: 'general' as AgentType,
+        confidence: 0
+      };
     }
-
-    return {
-      content: responseContent,
-      agentUsed: agentType,
-      confidence: confidence
-    };
   }
 
   private generateDemoResponse(agentName: string, message: string): string {

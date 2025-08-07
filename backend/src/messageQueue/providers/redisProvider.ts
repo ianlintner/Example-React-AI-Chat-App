@@ -2,6 +2,8 @@ import { MessageQueueProvider, QueueMessage, MessageHandler, QueueOptions, Queue
 import { EventEmitter } from 'events';
 import { createClient, RedisClientType } from 'redis';
 
+const MESSAGE_PROCESSING_EXPIRY_SECONDS = 300; // 5 minutes
+
 interface RedisQueueData {
   subscribers: Map<string, MessageHandler>;
   stats: {
@@ -14,6 +16,8 @@ interface RedisQueueData {
   };
 }
 
+const DEFAULT_PRIORITY = 5;
+
 export class RedisMessageQueueProvider extends EventEmitter implements MessageQueueProvider {
   private client: RedisClientType | null = null;
   private subscriber: RedisClientType | null = null;
@@ -25,7 +29,12 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
   constructor(redisUrl?: string) {
     super();
-    this.redisUrl = redisUrl || process.env.REDIS_URL || 'redis://localhost:6379';
+    const urlToUse = redisUrl || process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrlPattern = /^redis:\/\/([^\s:@]+(:[^\s:@]*)?@)?([^\s:@]+)(:\d+)?(\/\d+)?$/;
+    if (!redisUrlPattern.test(urlToUse)) {
+      throw new Error(`Invalid Redis connection string: ${urlToUse}`);
+    }
+    this.redisUrl = urlToUse;
   }
 
   async connect(): Promise<void> {
@@ -111,13 +120,9 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
     if (options) {
       if (options.maxRetries !== undefined) message.maxRetries = options.maxRetries;
       if (options.priority !== undefined) message.priority = options.priority;
-      if (options.delayMs !== undefined) message.delayMs = options.delayMs;
     }
-
-    // Set defaults
-    message.retryCount = message.retryCount || 0;
     message.maxRetries = message.maxRetries || 3;
-    message.priority = message.priority || 5;
+    message.priority = message.priority || DEFAULT_PRIORITY;
 
     const messageData = JSON.stringify(message);
 
@@ -130,9 +135,13 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
       setTimeout(() => {
         this.processDelayedMessages(queueName);
       }, message.delayMs);
+      
+      // Update stats for delayed message
+      await this.client.hIncrBy(keys.stats, 'totalMessages', 1);
+      await this.client.hIncrBy(keys.stats, 'pendingMessages', 1);
     } else {
       // Add to priority queue using sorted set (higher priority = higher score)
-      await this.client.zAdd(keys.queue, { score: message.priority || 5, value: messageData });
+      await this.client.zAdd(keys.queue, { score: message.priority || DEFAULT_PRIORITY, value: messageData });
       
       // Update stats
       await this.client.hIncrBy(keys.stats, 'totalMessages', 1);
@@ -188,10 +197,11 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
         return null;
       }
 
-      const message = JSON.parse(result.value);
-      
+      // Parse the message from the Redis result
+      const message: QueueMessage = JSON.parse(result.value);
+
       // Move to processing set with expiry (for reliability)
-      await this.client.setEx(`${keys.processing}:${message.id}`, 300, JSON.stringify(message)); // 5 min expiry
+      await this.client.setEx(`${keys.processing}:${message.id}`, MESSAGE_PROCESSING_EXPIRY_SECONDS, JSON.stringify(message));
       
       // Update stats
       await this.client.hIncrBy(keys.stats, 'pendingMessages', -1);

@@ -5,14 +5,6 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-  
-  # Prometheus metrics from the collector itself
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: 'otel-collector'
-          static_configs:
-            - targets: ['localhost:8888']
 
 processors:
   batch:
@@ -25,35 +17,27 @@ processors:
     spike_limit_mib: 128
     check_interval: 5s
   
-  # Resource processor to add service information
   resource:
     attributes:
-      - key: service.name
-        value: "ai-goal-seeking-system"
-        action: upsert
-      - key: service.version
-        value: "1.0.0"
-        action: upsert
       - key: deployment.environment
         value: "development"
         action: upsert
+      - key: sampling.enabled
+        value: "true"
+        action: upsert
+      - key: sampling.rate
+        value: "1.0"
+        action: upsert
 
 exporters:
-  jaeger:
-    endpoint: jaeger:14250
-    tls:
-      insecure: true
+  zipkin:
+    endpoint: http://zipkin:9411/api/v2/spans
+    format: json
   
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-    namespace: "ai_goal_seeking"
-    const_labels:
-      service: "ai-goal-seeking-system"
-  
-  logging:
-    loglevel: info
-    sampling_initial: 5
-    sampling_thereafter: 200
+  debug:
+    verbosity: detailed
+
+    
 
 extensions:
   health_check:
@@ -70,16 +54,16 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, batch, resource]
-      exporters: [jaeger, logging]
+      processors: [memory_limiter, resource, batch]
+      exporters: [zipkin, debug]
     
     metrics:
-      receivers: [otlp, prometheus]
-      processors: [memory_limiter, batch, resource]
-      exporters: [prometheus, logging]
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [debug]
   
   telemetry:
     logs:
-      level: "info"
+      level: "debug"
     metrics:
-      address: 0.0.0.0:8888
+      level: "basic"

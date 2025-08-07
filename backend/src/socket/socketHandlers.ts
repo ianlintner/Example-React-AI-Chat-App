@@ -14,6 +14,7 @@ import {
   endSpan,
   context
 } from '../tracing/tracer';
+import { tracingContextManager } from '../tracing/contextManager';
 
 // Helper function to generate conversation title
 const generateConversationTitle = (message: string): string => {
@@ -354,16 +355,19 @@ export const setupSocketHandlers = (io: Server) => {
     socket.on('stream_chat', async (data: ChatRequest) => {
       console.log('🔄 Received stream_chat request:', { message: data.message, conversationId: data.conversationId, forceAgent: data.forceAgent });
       
-      // Create conversation span for tracing
-      const conversationSpan = createConversationSpan(data.conversationId || 'new', 'stream_chat');
-      addSpanEvent(conversationSpan, 'chat_request_received', {
-        'user.socket_id': socket.id,
-        'message.length': data.message?.length || 0,
-        'conversation.has_id': !!data.conversationId,
-        'agent.forced': data.forceAgent || 'none'
-      });
+      // Create conversation span for tracing with proper context
+      const conversationSpan = createConversationSpan(data.conversationId || 'new', 'stream_chat', socket.id);
+      
+      // Use context manager to ensure proper trace propagation
+      await tracingContextManager.withSpan(conversationSpan, async (span, traceContext) => {
+        addSpanEvent(span, 'chat_request_received', {
+          'user.socket_id': socket.id,
+          'message.length': data.message?.length || 0,
+          'conversation.has_id': !!data.conversationId,
+          'agent.forced': data.forceAgent || 'none'
+        });
 
-      try {
+        try {
         const { message, conversationId, forceAgent } = data;
 
         if (!message || message.trim() === '') {
@@ -580,25 +584,23 @@ export const setupSocketHandlers = (io: Server) => {
           'user.engagement': userGoalState?.engagementLevel || 0,
           'user.satisfaction': userGoalState?.satisfactionLevel || 0
         });
-        setSpanStatus(conversationSpan, true);
-        endSpan(conversationSpan);
 
-      } catch (error) {
-        console.error('Stream chat error:', error);
-        
-        // Log error to tracing span
-        addSpanEvent(conversationSpan, 'conversation_error', {
-          'error.message': error instanceof Error ? error.message : 'Unknown error',
-          'error.stack': error instanceof Error ? error.stack : undefined
-        });
-        setSpanStatus(conversationSpan, false, error instanceof Error ? error.message : 'Unknown error');
-        endSpan(conversationSpan);
-        
-        socket.emit('stream_error', {
-          message: 'Internal server error',
-          code: 'INTERNAL_ERROR'
-        });
-      }
+        } catch (error) {
+          console.error('Stream chat error:', error);
+          
+          // Log error to tracing span
+          addSpanEvent(span, 'conversation_error', {
+            'error.message': error instanceof Error ? error.message : 'Unknown error',
+            'error.stack': error instanceof Error ? error.stack : undefined
+          });
+          setSpanStatus(span, false, error instanceof Error ? error.message : 'Unknown error');
+          
+          socket.emit('stream_error', {
+            message: 'Internal server error',
+            code: 'INTERNAL_ERROR'
+          });
+        }
+      });
     });
 
     // Handle disconnection

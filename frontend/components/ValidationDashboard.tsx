@@ -62,7 +62,7 @@ interface ValidationSummary {
   };
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001';
 
 const ValidationDashboard: React.FC = () => {
   const [stats, setStats] = useState<ValidationStats | null>(null);

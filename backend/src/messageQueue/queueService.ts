@@ -9,6 +9,8 @@ import {
   StreamChunkPayload 
 } from './types';
 
+const DEFAULT_PRIORITY = 5;
+
 export class QueueService {
   private messageQueue: MessageQueue;
   private io: SocketServer;
@@ -119,7 +121,7 @@ export class QueueService {
       {
         userId,
         conversationId,
-        priority: priority || 5
+        priority: priority || DEFAULT_PRIORITY
       }
     );
 
@@ -250,7 +252,7 @@ export class QueueService {
     // Enqueue messages with different priorities
     await this.enqueueChatMessage(userId, conversationId, 'Low priority message', undefined, 3);
     await this.enqueueChatMessage(userId, conversationId, 'High priority message', undefined, 9);
-    await this.enqueueChatMessage(userId, conversationId, 'Normal priority message', undefined, 5);
+    await this.enqueueChatMessage(userId, conversationId, 'Normal priority message', undefined, DEFAULT_PRIORITY);
 
     // Enqueue delayed proactive action (will be processed after delay)
     await this.enqueueProactiveAction(

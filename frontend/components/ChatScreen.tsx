@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   Animated,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Avatar, Chip } from 'react-native-paper';
 import Markdown from 'react-native-markdown-display';
+import * as WebBrowser from 'expo-web-browser';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { Conversation, Message, AgentStatus, AgentType } from '../types';
@@ -18,6 +20,90 @@ import type { Conversation, Message, AgentStatus, AgentType } from '../types';
 interface ChatScreenProps {
   conversation: Conversation | null;
 }
+
+// YouTube Embed Component
+const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string }> = ({ 
+  videoId, 
+  title, 
+  duration 
+}) => {
+  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  
+  const handlePress = async () => {
+    await WebBrowser.openBrowserAsync(youtubeUrl, {
+      presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
+    });
+  };
+  
+  return (
+    <TouchableOpacity style={styles.youtubeContainer} onPress={handlePress} activeOpacity={0.8}>
+      <View style={styles.youtubeHeader}>
+        <Text style={styles.youtubeTitle} numberOfLines={2}>🎬 {title}</Text>
+        <Text style={styles.youtubeDuration}>⏱️ {duration}</Text>
+      </View>
+      <View style={styles.youtubeThumbnailContainer}>
+        <Image
+          source={{ uri: thumbnailUrl }}
+          style={styles.youtubeThumbnailImage}
+          resizeMode="cover"
+        />
+        <View style={styles.youtubeOverlay}>
+          <View style={styles.youtubePlayButton}>
+            <Text style={styles.youtubePlayIcon}>▶</Text>
+          </View>
+          <View style={styles.youtubeDurationBadge}>
+            <Text style={styles.youtubeDurationBadgeText}>{duration}</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+// Function to parse YouTube embeds from message content
+const parseMessageContent = (content: string) => {
+  const youtubeRegex = /```youtube\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g;
+  const parts: Array<{ type: 'text' | 'youtube'; content: string; videoData?: { id: string; title: string; duration: string } }> = [];
+  
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = youtubeRegex.exec(content)) !== null) {
+    // Add text before YouTube embed
+    if (match.index > lastIndex) {
+      const textContent = content.substring(lastIndex, match.index);
+      if (textContent.trim()) {
+        parts.push({ type: 'text', content: textContent });
+      }
+    }
+    
+    // Add YouTube embed
+    const [, videoId, title, duration] = match;
+    parts.push({
+      type: 'youtube',
+      content: match[0],
+      videoData: { id: videoId, title, duration }
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < content.length) {
+    const textContent = content.substring(lastIndex);
+    if (textContent.trim()) {
+      parts.push({ type: 'text', content: textContent });
+    }
+  }
+  
+  // If no YouTube embeds found, return original content as text
+  if (parts.length === 0) {
+    return [{ type: 'text' as const, content }];
+  }
+  
+  return parts;
+};
 
 const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -218,6 +304,18 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           avatar: 'music', 
           color: '#673AB7' 
         };
+      case 'youtube_guru': 
+        return { 
+          name: 'YouTube Guru', 
+          avatar: 'youtube', 
+          color: '#FF0000' 
+        };
+      case 'dnd_master': 
+        return { 
+          name: 'D&D Master', 
+          avatar: 'dice-6', 
+          color: '#6B46C1' 
+        };
       case 'general': 
         return { 
           name: 'AI Assistant', 
@@ -301,9 +399,29 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             ) : isStreamingMessage ? (
               <View style={styles.markdownContainer}>
                 {message.content ? (
-                  <Markdown style={markdownStyles}>
-                    {message.content}
-                  </Markdown>
+                  (() => {
+                    const parsedContent = parseMessageContent(message.content);
+                    
+                    return parsedContent.map((part, index) => {
+                      if (part.type === 'youtube' && part.videoData) {
+                        return (
+                          <YouTubeEmbed
+                            key={index}
+                            videoId={part.videoData.id}
+                            title={part.videoData.title}
+                            duration={part.videoData.duration}
+                          />
+                        );
+                      } else if (part.type === 'text' && part.content.trim()) {
+                        return (
+                          <Markdown key={index} style={markdownStyles}>
+                            {part.content}
+                          </Markdown>
+                        );
+                      }
+                      return null;
+                    });
+                  })()
                 ) : (
                   <View style={styles.thinkingContainer}>
                     <ActivityIndicator 
@@ -321,9 +439,29 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               </View>
             ) : (
               <View style={styles.markdownContainer}>
-                <Markdown style={markdownStyles}>
-                  {message.content}
-                </Markdown>
+                {(() => {
+                  const parsedContent = parseMessageContent(message.content);
+                  
+                  return parsedContent.map((part, index) => {
+                    if (part.type === 'youtube' && part.videoData) {
+                      return (
+                        <YouTubeEmbed
+                          key={index}
+                          videoId={part.videoData.id}
+                          title={part.videoData.title}
+                          duration={part.videoData.duration}
+                        />
+                      );
+                    } else if (part.type === 'text' && part.content.trim()) {
+                      return (
+                        <Markdown key={index} style={markdownStyles}>
+                          {part.content}
+                        </Markdown>
+                      );
+                    }
+                    return null;
+                  });
+                })()}
               </View>
             )}
           </Animated.View>
@@ -359,14 +497,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Ultra-Compact Mobile Header */}
+      {/* Minimal Mobile Header */}
       <Animated.View 
         style={[
           styles.header,
           {
             height: headerAnimValue.interpolate({
               inputRange: [0, 1],
-              outputRange: [42, 64],
+              outputRange: [48, 72],
             }),
           }
         ]}
@@ -378,21 +516,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         >
           <View style={styles.headerMain}>
             <View style={styles.headerLeft}>
-              <Animated.View 
-                style={[
-                  styles.activityPulse,
-                  {
-                    backgroundColor: agentStatus?.isActive ? ForestColors.success : ForestColors.textMuted,
-                    transform: [{ scale: agentStatus?.isActive ? agentPulseAnim : 1 }]
-                  }
-                ]} 
-              />
-              <View style={styles.connectionDot}>
-                <View style={[
-                  styles.connectionIndicator,
-                  { backgroundColor: isConnected ? ForestColors.success : ForestColors.error }
-                ]} />
-              </View>
+              {/* Single status indicator combining connection and activity */}
+              <View style={[
+                styles.statusIndicator,
+                { 
+                  backgroundColor: !isConnected ? ForestColors.error : 
+                                  agentStatus?.isActive ? ForestColors.success : ForestColors.textMuted 
+                }
+              ]} />
+              
               <View style={styles.headerTextContainer}>
                 <Text style={styles.headerTitle} numberOfLines={1}>
                   {conversation.title}
@@ -402,23 +534,18 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                     opacity: headerAnimValue,
                     height: headerAnimValue.interpolate({
                       inputRange: [0, 1],
-                      outputRange: [0, 14],
+                      outputRange: [0, 16],
                     }),
                   }}
                 >
                   <Text style={styles.headerSubtitle}>
-                    {conversation.messages.length} msgs • {agentStatus ? getAgentInfo(agentStatus.currentAgent).name : 'AI Assistant'}
+                    {agentStatus ? getAgentInfo(agentStatus.currentAgent).name : 'AI Assistant'}
                   </Text>
                 </Animated.View>
               </View>
             </View>
             
             <View style={styles.headerRight}>
-              <View style={styles.messageBadge}>
-                <Text style={styles.messageBadgeText}>
-                  {conversation.messages.length}
-                </Text>
-              </View>
               <Animated.View
                 style={[
                   styles.expandToggle,
@@ -438,78 +565,36 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           </View>
         </TouchableOpacity>
         
-        {/* Expanded Agent Metrics */}
+        {/* Simplified Expanded Info */}
         <Animated.View
           style={[
-            styles.expandedMetrics,
+            styles.expandedInfo,
             {
               opacity: headerAnimValue,
               height: headerAnimValue.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0, 22],
+                outputRange: [0, 24],
               }),
             }
           ]}
         >
-          {agentStatus && (
-            <View style={styles.metricsRow}>
-              <View style={styles.metric}>
-                <Text style={styles.metricValue}>
-                  {agentStatus.conversationContext 
-                    ? `${Math.round(agentStatus.conversationContext.userSatisfaction * 100)}%`
-                    : 'N/A'
-                  }
-                </Text>
-                <Text style={styles.metricLabel}>SAT</Text>
-              </View>
-
-              <View style={styles.metricDivider} />
-
-              <View style={styles.metric}>
-                <View style={styles.goalMetric}>
-                  <Text style={styles.metricValue}>
-                    {agentStatus.goalState?.currentState || 'Idle'}
-                  </Text>
-                  {agentStatus.goalState?.activeGoals && agentStatus.goalState.activeGoals.length > 0 && (
-                    <View style={styles.goalCount}>
-                      <Text style={styles.goalCountText}>
-                        {agentStatus.goalState.activeGoals.length}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.metricLabel}>STATE</Text>
-              </View>
-
-              <View style={styles.metricDivider} />
-
-              <View style={styles.metric}>
-                <Text style={styles.metricValue}>
-                  {agentStatus.conversationContext?.conversationDepth || 0}
-                </Text>
-                <Text style={styles.metricLabel}>DEPTH</Text>
-              </View>
-            </View>
-          )}
+          <View style={styles.expandedContent}>
+            <Text style={styles.expandedText}>
+              {conversation.messages.length} messages
+            </Text>
+            {agentStatus?.isActive && (
+              <Text style={styles.statusText}>• Active</Text>
+            )}
+          </View>
         </Animated.View>
 
-        {/* Progress Accent */}
-        <Animated.View
-          style={[
-            styles.progressAccent,
-            {
-              backgroundColor: agentStatus?.isActive ? ForestColors.brandPrimary : ForestColors.borderLight,
-              opacity: headerAnimValue.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.4, 1],
-              }),
-              scaleX: headerAnimValue.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0.6, 1],
-              }),
-            }
-          ]}
-        />
+        {/* Subtle bottom accent */}
+        <View style={[
+          styles.bottomAccent,
+          {
+            backgroundColor: agentStatus?.isActive ? ForestColors.success : ForestColors.borderLight,
+          }
+        ]} />
       </Animated.View>
 
       {/* Messages */}
@@ -638,6 +723,41 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ForestColors.textMuted,
     fontWeight: '600',
+  },
+  // New minimal header styles
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  expandedInfo: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    overflow: 'hidden',
+  },
+  expandedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expandedText: {
+    fontSize: 12,
+    color: ForestColors.headerSecondary,
+    fontWeight: '500',
+  },
+  statusText: {
+    fontSize: 12,
+    color: ForestColors.success,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  bottomAccent: {
+    height: 1,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   progressAccent: {
     height: 2,
@@ -874,6 +994,91 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: ForestColors.headerPrimary,
   },
+  
+  // YouTube Embed Styles
+  youtubeContainer: {
+    marginVertical: 8,
+    borderRadius: 8,
+    backgroundColor: ForestColors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: ForestColors.borderLight,
+    overflow: 'hidden',
+    width: '100%',
+    maxWidth: 320,
+    alignSelf: 'flex-start',
+  },
+  youtubeHeader: {
+    padding: 12,
+    backgroundColor: ForestColors.backgroundTertiary,
+    borderBottomWidth: 1,
+    borderBottomColor: ForestColors.borderLight,
+  },
+  youtubeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: ForestColors.headerPrimary,
+    marginBottom: 4,
+  },
+  youtubeDuration: {
+    fontSize: 12,
+    color: ForestColors.textMuted,
+    fontWeight: '500',
+  },
+  youtubeThumbnailContainer: {
+    width: '100%',
+    maxWidth: 320,
+    aspectRatio: 16 / 9,
+    backgroundColor: '#000',
+    position: 'relative',
+    alignSelf: 'flex-start',
+  },
+  youtubeThumbnailImage: {
+    width: '100%',
+    height: '100%',
+  },
+  youtubeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  youtubePlayButton: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#FF0000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  youtubePlayIcon: {
+    fontSize: 28,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginLeft: 3, // Slight offset for visual centering
+  },
+  youtubeDurationBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  youtubeDurationBadgeText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });
 
 const markdownStyles = {
@@ -954,6 +1159,13 @@ const markdownStyles = {
     paddingVertical: 8,
     marginVertical: 4,
     fontStyle: 'italic' as const,
+  },
+  image: {
+    width: Math.min(width - 160, 150), // Set specific width for GIFs
+    height: 100, // Set specific height to prevent UI issues with large GIFs
+    borderRadius: 8,
+    marginVertical: 8,
+    resizeMode: 'contain' as const,
   },
 };
 

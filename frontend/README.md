@@ -40,7 +40,7 @@ This is the React Native version of the AI Chat Application, migrated from the w
    ```typescript
    const serverUrl = __DEV__ 
      ? 'http://10.0.2.2:5001' // Android emulator localhost
-     : 'https://your-deployed-backend.com'; // Production URL
+     : 'http://localhost:5001'; // Production URL
    ```
 
    **Important:** 
@@ -106,7 +106,7 @@ This is the React Native version of the AI Chat Application, migrated from the w
    ```typescript
    const serverUrl = __DEV__ 
      ? 'http://YOUR_IP_ADDRESS:5001' // Replace with your IP
-     : 'https://your-deployed-backend.com';
+     : 'http://localhost:5001';
    ```
 
 3. **Ensure your backend allows connections** from your mobile device's IP.

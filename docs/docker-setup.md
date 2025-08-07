@@ -59,7 +59,7 @@ Clean everything and start fresh:
 When running in detached mode, access services at:
 
 - **Frontend**: http://localhost:8080
-- **Backend API**: http://localhost:3001
+- **Backend API**: http://localhost:5001
 - **Grafana**: http://localhost:3000 (admin/admin)
 - **Jaeger UI**: http://localhost:16686
 - **Prometheus**: http://localhost:9090
@@ -115,7 +115,7 @@ The backend service uses these environment variables:
 ```bash
 # Application
 NODE_ENV=production
-PORT=3001
+PORT=5001
 
 # Redis
 REDIS_URL=redis://redis:6379
@@ -133,8 +133,8 @@ FRONTEND_URL=http://frontend:80,http://localhost:8080
 
 ```bash
 NODE_ENV=development
-REACT_APP_API_URL=http://backend:3001
-REACT_APP_SOCKET_URL=http://backend:3001
+REACT_APP_API_URL=http://backend:5001
+REACT_APP_SOCKET_URL=http://backend:5001
 ```
 
 ## Health Checks
@@ -143,7 +143,7 @@ All services include health checks:
 
 ### Backend Health Check
 ```bash
-curl http://localhost:3001/health
+curl http://localhost:5001/health
 ```
 
 ### Frontend Health Check
@@ -226,7 +226,7 @@ Access Prometheus at http://localhost:9090:
 1. **Port Conflicts**
    ```bash
    # Stop conflicting services
-   sudo lsof -i :3001
+   sudo lsof -i :5001
    sudo lsof -i :8080
    ```
 

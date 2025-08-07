@@ -3,7 +3,7 @@
 set -e
 
 JAEGER_URL=${JAEGER_URL:-"http://jaeger:16686"}
-BACKEND_URL=${BACKEND_URL:-"http://backend:3001"}
+BACKEND_URL=${BACKEND_URL:-"http://backend:5001"}
 MAX_RETRIES=30
 RETRY_INTERVAL=10
 

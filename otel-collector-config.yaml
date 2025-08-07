@@ -5,14 +5,6 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-  
-  # Prometheus metrics from the collector itself
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: 'otel-collector'
-          static_configs:
-            - targets: ['localhost:8888']
 
 processors:
   batch:
@@ -25,33 +17,20 @@ processors:
     spike_limit_mib: 128
     check_interval: 5s
   
-  # Resource processor to add service information
   resource:
     attributes:
-      - key: service.name
-        value: "ai-goal-seeking-system"
-        action: upsert
-      - key: service.version
-        value: "1.0.0"
-        action: upsert
       - key: deployment.environment
         value: "development"
         action: upsert
 
 exporters:
-  jaeger:
-    endpoint: jaeger:14250
+  otlp/jaeger:
+    endpoint: jaeger:4317
     tls:
       insecure: true
   
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-    namespace: "ai_goal_seeking"
-    const_labels:
-      service: "ai-goal-seeking-system"
-  
-  logging:
-    loglevel: info
+  debug:
+    verbosity: detailed
     sampling_initial: 5
     sampling_thereafter: 200
 
@@ -71,15 +50,15 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch, resource]
-      exporters: [jaeger, logging]
+      exporters: [otlp/jaeger, debug]
     
     metrics:
-      receivers: [otlp, prometheus]
+      receivers: [otlp]
       processors: [memory_limiter, batch, resource]
-      exporters: [prometheus, logging]
+      exporters: [debug]
   
   telemetry:
     logs:
       level: "info"
     metrics:
-      address: 0.0.0.0:8888
+      level: none

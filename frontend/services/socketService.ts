@@ -7,12 +7,11 @@ class SocketService {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // For mobile, you'll need to update this URL to your server's IP or deployed URL
-      const serverUrl = __DEV__ 
-        ? 'http://localhost:5001' // Android emulator localhost
-        : 'https://your-deployed-backend.com'; // Production URL
+      // Get API URL from environment variable or use default
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5001';
+      console.log('Connecting to socket server at:', apiUrl);
       
-      this.socket = io(serverUrl, {
+      this.socket = io(apiUrl, {
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,

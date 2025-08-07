@@ -29,7 +29,7 @@ scrape_configs:
   # AI Goal-Seeking System backend metrics
   - job_name: 'ai-goal-seeking-backend'
     static_configs:
-      - targets: ['backend:3001']
+      - targets: ['backend:5001']
     scrape_interval: 15s
     metrics_path: '/metrics'
     scrape_timeout: 10s

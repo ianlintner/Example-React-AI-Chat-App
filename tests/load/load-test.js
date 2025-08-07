@@ -20,7 +20,7 @@ export let options = {
   },
 };
 
-const BASE_URL = __ENV.BASE_URL || 'http://backend:3001';
+const BASE_URL = __ENV.BASE_URL || 'http://backend:5001';
 
 export default function () {
   const responses = {};

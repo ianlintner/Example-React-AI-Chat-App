@@ -43,8 +43,8 @@ services:
   frontend:
     environment:
       - NODE_ENV=development
-      - REACT_APP_API_URL=http://backend:3001
-      - REACT_APP_SOCKET_URL=http://backend:3001
+      - REACT_APP_API_URL=http://backend:5001
+      - REACT_APP_SOCKET_URL=http://backend:5001
 
   # Load testing service using k6
   load-test:
@@ -54,7 +54,7 @@ services:
       - ./tests/load:/scripts
     command: ["run", "/scripts/load-test.js"]
     environment:
-      - BASE_URL=http://backend:3001
+      - BASE_URL=http://backend:5001
     depends_on:
       backend:
         condition: service_healthy

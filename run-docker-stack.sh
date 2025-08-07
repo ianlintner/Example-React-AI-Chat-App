@@ -103,7 +103,7 @@ if [ "$DETACHED" = true ]; then
     echo -e "${GREEN}✅ Services started in detached mode${NC}"
     echo -e "${BLUE}📊 Service URLs:${NC}"
     echo -e "  🌐 Frontend:    http://localhost:8080"
-    echo -e "  🔧 Backend:     http://localhost:3001"
+    echo -e "  🔧 Backend:     http://localhost:5001"
     echo -e "  📈 Grafana:     http://localhost:3000 (admin/admin)"
     echo -e "  🔍 Jaeger UI:   http://localhost:16686"
     echo -e "  📊 Prometheus:  http://localhost:9090"

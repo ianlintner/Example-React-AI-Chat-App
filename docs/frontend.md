@@ -450,7 +450,7 @@ class SocketService {
   private isConnected = false;
 
   connect() {
-    this.socket = io(process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001', {
+    this.socket = io(process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001', {
       transports: ['websocket'],
       timeout: 20000,
     });
@@ -517,7 +517,7 @@ export const socketService = new SocketService();
 // services/api.ts (mobile-specific)
 import Constants from 'expo-constants';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001';
 
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -633,7 +633,7 @@ export interface ValidationDashboardProps {
 
 ```bash
 # .env (development)
-EXPO_PUBLIC_API_URL=http://localhost:3001
+EXPO_PUBLIC_API_URL=http://localhost:5001
 
 # .env.production
 EXPO_PUBLIC_API_URL=https://your-production-api.com

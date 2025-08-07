@@ -1,4 +1,10 @@
-import { MessageQueueProvider, QueueMessage, MessageHandler, QueueOptions, QueueStats } from './types';
+import {
+  MessageQueueProvider,
+  QueueMessage,
+  MessageHandler,
+  QueueOptions,
+  QueueStats,
+} from './types';
 import { InMemoryMessageQueueProvider } from './providers/inMemoryProvider';
 import { RedisMessageQueueProvider } from './providers/redisProvider';
 
@@ -24,10 +30,10 @@ export class MessageQueue {
     switch (this.config.provider) {
       case 'memory':
         return new InMemoryMessageQueueProvider();
-      
+
       case 'redis':
         return new RedisMessageQueueProvider(this.config.redis?.url);
-      
+
       default:
         throw new Error(`Unknown queue provider: ${this.config.provider}`);
     }
@@ -47,7 +53,11 @@ export class MessageQueue {
   }
 
   // Core queue operations
-  async enqueue(queueName: string, message: QueueMessage, options?: QueueOptions): Promise<void> {
+  async enqueue(
+    queueName: string,
+    message: QueueMessage,
+    options?: QueueOptions
+  ): Promise<void> {
     return await this.provider.enqueue(queueName, message, options);
   }
 
@@ -126,7 +136,7 @@ export class MessageQueue {
       delayMs: options?.delayMs,
       maxRetries: options?.maxRetries || 3,
       retryCount: 0,
-      metadata: options?.metadata
+      metadata: options?.metadata,
     };
   }
 
@@ -136,12 +146,15 @@ export class MessageQueue {
 }
 
 // Factory function for easy creation
-export function createMessageQueue(config?: Partial<MessageQueueConfig>): MessageQueue {
+export function createMessageQueue(
+  config?: Partial<MessageQueueConfig>
+): MessageQueue {
   const defaultConfig: MessageQueueConfig = {
-    provider: (process.env.MESSAGE_QUEUE_PROVIDER as QueueProviderType) || 'memory',
+    provider:
+      (process.env.MESSAGE_QUEUE_PROVIDER as QueueProviderType) || 'memory',
     redis: {
-      url: process.env.REDIS_URL
-    }
+      url: process.env.REDIS_URL,
+    },
   };
 
   const finalConfig = { ...defaultConfig, ...config };
@@ -154,9 +167,9 @@ export function createInMemoryQueue(): MessageQueue {
 }
 
 export function createRedisQueue(redisUrl?: string): MessageQueue {
-  return createMessageQueue({ 
+  return createMessageQueue({
     provider: 'redis',
-    redis: { url: redisUrl }
+    redis: { url: redisUrl },
   });
 }
 
@@ -169,7 +182,7 @@ export const QUEUE_NAMES = {
   STATUS_UPDATES: 'status_updates',
   VALIDATION_REQUESTS: 'validation_requests',
   GOAL_SEEKING_UPDATES: 'goal_seeking_updates',
-  CONVERSATION_EVENTS: 'conversation_events'
+  CONVERSATION_EVENTS: 'conversation_events',
 } as const;
 
-export type QueueName = typeof QUEUE_NAMES[keyof typeof QUEUE_NAMES];
+export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];

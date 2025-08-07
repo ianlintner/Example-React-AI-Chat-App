@@ -8,18 +8,17 @@ const router = express.Router();
 // GET /api/conversations - Get all conversations
 router.get('/', (req, res) => {
   try {
-    const sortedConversations = storage.getSortedConversations()
-      .map(conv => ({
-        ...conv,
-        messages: conv.messages.slice(-1) // Only include the last message for the list view
-      }));
+    const sortedConversations = storage.getSortedConversations().map(conv => ({
+      ...conv,
+      messages: conv.messages.slice(-1), // Only include the last message for the list view
+    }));
 
     return res.json(sortedConversations);
   } catch (error) {
     console.error('Get conversations error:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   }
 });
@@ -33,7 +32,7 @@ router.get('/:id', (req, res) => {
     if (!conversation) {
       return res.status(404).json({
         message: 'Conversation not found',
-        code: 'CONVERSATION_NOT_FOUND'
+        code: 'CONVERSATION_NOT_FOUND',
       });
     }
 
@@ -42,7 +41,7 @@ router.get('/:id', (req, res) => {
     console.error('Get conversation error:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   }
 });
@@ -55,7 +54,7 @@ router.post('/', (req, res) => {
     if (!title || title.trim() === '') {
       return res.status(400).json({
         message: 'Title is required',
-        code: 'INVALID_REQUEST'
+        code: 'INVALID_REQUEST',
       });
     }
 
@@ -64,7 +63,7 @@ router.post('/', (req, res) => {
       title: title.trim(),
       messages: [],
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     storage.addConversation(newConversation);
@@ -73,7 +72,7 @@ router.post('/', (req, res) => {
     console.error('Create conversation error:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   }
 });
@@ -87,19 +86,19 @@ router.put('/:id', (req, res) => {
     if (!title || title.trim() === '') {
       return res.status(400).json({
         message: 'Title is required',
-        code: 'INVALID_REQUEST'
+        code: 'INVALID_REQUEST',
       });
     }
 
     const updatedConversation = storage.updateConversation(id, {
       title: title.trim(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     if (!updatedConversation) {
       return res.status(404).json({
         message: 'Conversation not found',
-        code: 'CONVERSATION_NOT_FOUND'
+        code: 'CONVERSATION_NOT_FOUND',
       });
     }
 
@@ -108,7 +107,7 @@ router.put('/:id', (req, res) => {
     console.error('Update conversation error:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   }
 });
@@ -122,7 +121,7 @@ router.delete('/:id', (req, res) => {
     if (!deleted) {
       return res.status(404).json({
         message: 'Conversation not found',
-        code: 'CONVERSATION_NOT_FOUND'
+        code: 'CONVERSATION_NOT_FOUND',
       });
     }
 
@@ -131,7 +130,7 @@ router.delete('/:id', (req, res) => {
     console.error('Delete conversation error:', error);
     return res.status(500).json({
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   }
 });

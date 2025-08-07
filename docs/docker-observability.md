@@ -45,7 +45,7 @@ cp backend/.env.example backend/.env
 # Terminal 1: Start backend
 cd backend && npm run dev
 
-# Terminal 2: Start frontend  
+# Terminal 2: Start frontend
 cd frontend && npm run dev
 ```
 
@@ -62,6 +62,7 @@ cd frontend && npm run dev
 ### OpenTelemetry Collector
 
 The collector is configured to:
+
 - Receive traces via OTLP HTTP (port 4318) and gRPC (port 4317)
 - Export traces to Zipkin
 - Export metrics to Prometheus
@@ -72,6 +73,7 @@ The collector is configured to:
 ### Zipkin
 
 Zipkin provides:
+
 - Distributed tracing visualization
 - Trace search and filtering
 - Service dependency maps
@@ -82,6 +84,7 @@ Zipkin provides:
 ### Prometheus
 
 Prometheus scrapes metrics from:
+
 - OpenTelemetry Collector
 - Application metrics endpoints
 - System metrics
@@ -91,6 +94,7 @@ Prometheus scrapes metrics from:
 ### Grafana
 
 Grafana is pre-configured with:
+
 - Prometheus datasource
 - Zipkin datasource
 - Custom dashboards for the AI system
@@ -107,6 +111,7 @@ Grafana is pre-configured with:
 4. Explore conversation flows, agent selections, and goal-seeking processes
 
 **Key Trace Operations**:
+
 - `conversation.stream_chat` - Full conversation processing
 - `goal_seeking.process` - Goal-seeking system operations
 - `agent.{type}.{operation}` - Agent-specific operations
@@ -119,6 +124,7 @@ Grafana is pre-configured with:
 3. Create custom queries for system monitoring
 
 **Key Metrics**:
+
 - `ai_goal_seeking_*` - Application-specific metrics
 - `otel_*` - OpenTelemetry collector metrics
 - `system_*` - System resource metrics
@@ -201,11 +207,12 @@ Grafana is pre-configured with:
 ### Common Issues
 
 1. **Services not starting**
+
    ```bash
    # Check service logs
    docker-compose logs zipkin
    docker-compose logs otel-collector
-   
+
    # Restart specific service
    docker-compose restart zipkin
    ```
@@ -300,7 +307,7 @@ services:
       - ES_HOSTS=https://elasticsearch:9200
       - ES_USERNAME=zipkin
       - ES_PASSWORD=${ZIPKIN_ES_PASSWORD}
-  
+
   grafana:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
@@ -317,7 +324,7 @@ Configure trace sampling to reduce overhead:
 # otel-collector-config.yaml
 processors:
   probabilistic_sampler:
-    sampling_percentage: 10  # Sample 10% of traces
+    sampling_percentage: 10 # Sample 10% of traces
 ```
 
 ### Batching

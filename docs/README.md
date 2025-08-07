@@ -6,7 +6,7 @@ Welcome to the comprehensive documentation for the AI Chat Application. This doc
 
 1. [Overview](#overview)
 2. [🆕 New Features](#-new-features)
-3. [Quick Start](#quick-start)  
+3. [Quick Start](#quick-start)
 4. [Documentation Structure](#documentation-structure)
 5. [Getting Help](#getting-help)
 
@@ -40,6 +40,7 @@ The AI Chat Application is a full-featured real-time chat application that integ
 - **[🎭 Entertainment Agents](./entertainment-agents.md)** - Joke Master, Trivia Master, and GIF Master
 
 ### 10-Agent System
+
 The application now features 10 specialized AI agents:
 
 1. **Technical Assistant** - Programming and development support
@@ -54,6 +55,7 @@ The application now features 10 specialized AI agents:
 10. **📞 Hold Agent** - Professional hold experience management
 
 ### RAG Content Database
+
 - **30 Curated Items**: 10 jokes, 10 trivia facts, 10 GIFs
 - **Quality Rated**: All content rated 4-5 stars
 - **Smart Search**: Contextual matching and relevance scoring
@@ -80,7 +82,9 @@ cd frontend && npm run dev   # Terminal 2
 ```
 
 ### Demo Mode Experience
+
 Even without an OpenAI API key, the application provides:
+
 - **High-quality entertainment** through RAG system
 - **Professional hold management** with realistic wait times
 - **All 10 agents functional** with curated responses
@@ -89,39 +93,44 @@ Even without an OpenAI API key, the application provides:
 ## Documentation Structure
 
 ### 🆕 New Features Documentation
-| Document | Description |
-|----------|-------------|
-| [New Features Overview](./new-features-overview.md) | Comprehensive overview of all new features |
-| [RAG System](./rag-system.md) | Retrieval-Augmented Generation system guide |
-| [Hold Agent System](./hold-agent-system.md) | Professional hold experience management |
-| [Entertainment Agents](./entertainment-agents.md) | Joke, Trivia, and GIF Master documentation |
+
+| Document                                            | Description                                 |
+| --------------------------------------------------- | ------------------------------------------- |
+| [New Features Overview](./new-features-overview.md) | Comprehensive overview of all new features  |
+| [RAG System](./rag-system.md)                       | Retrieval-Augmented Generation system guide |
+| [Hold Agent System](./hold-agent-system.md)         | Professional hold experience management     |
+| [Entertainment Agents](./entertainment-agents.md)   | Joke, Trivia, and GIF Master documentation  |
 
 ### Core Documentation
-| Document | Description |
-|----------|-------------|
+
+| Document                              | Description                              |
+| ------------------------------------- | ---------------------------------------- |
 | [System Summary](./system-summary.md) | High-level overview of the entire system |
-| [Architecture](./architecture.md) | System architecture and design patterns |
-| [API Reference](./api-reference.md) | Complete API documentation |
-| [Development Guide](./development.md) | Setup and development instructions |
+| [Architecture](./architecture.md)     | System architecture and design patterns  |
+| [API Reference](./api-reference.md)   | Complete API documentation               |
+| [Development Guide](./development.md) | Setup and development instructions       |
 
 ### Component Documentation
-| Document | Description |
-|----------|-------------|
-| [Frontend Guide](./frontend.md) | React components and client-side architecture |
-| [Backend Guide](./backend.md) | Server architecture and middleware |
-| [Agents](./agents.md) | AI agent system documentation |
-| [Goal-Seeking System](./goal-seeking-system.md) | Proactive AI behavior system |
-| [Validation System](./validation-system.md) | Response validation and quality control |
+
+| Document                                        | Description                                   |
+| ----------------------------------------------- | --------------------------------------------- |
+| [Frontend Guide](./frontend.md)                 | React components and client-side architecture |
+| [Backend Guide](./backend.md)                   | Server architecture and middleware            |
+| [Agents](./agents.md)                           | AI agent system documentation                 |
+| [Goal-Seeking System](./goal-seeking-system.md) | Proactive AI behavior system                  |
+| [Validation System](./validation-system.md)     | Response validation and quality control       |
 
 ### Monitoring & Operations
-| Document | Description |
-|----------|-------------|
+
+| Document                                                    | Description                    |
+| ----------------------------------------------------------- | ------------------------------ |
 | [Observability & Monitoring](./observability-monitoring.md) | Comprehensive monitoring setup |
-| [Docker Observability](./docker-observability.md) | Docker-based monitoring stack |
+| [Docker Observability](./docker-observability.md)           | Docker-based monitoring stack  |
 
 ## Customer Service Experience
 
 ### Professional Hold Flow
+
 ```
 1. User connects → Hold Agent (initial greeting, wait time estimate)
 2. Entertainment offered → User selects preferred type (jokes/trivia/GIFs)
@@ -131,6 +140,7 @@ Even without an OpenAI API key, the application provides:
 ```
 
 ### Quality Assurance
+
 - **Content Standards**: All RAG content rated 4-5 stars
 - **Family-Friendly**: Appropriate for all audiences
 - **Professional**: Maintains business standards throughout
@@ -148,6 +158,7 @@ Even without an OpenAI API key, the application provides:
 ## Technology Stack
 
 ### Frontend
+
 - **React 19** - Modern React with latest features
 - **TypeScript** - Type safety and better developer experience
 - **Material-UI v7** - Comprehensive component library
@@ -158,6 +169,7 @@ Even without an OpenAI API key, the application provides:
 - **React Markdown** - Markdown rendering
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **Express 5** - Web framework
 - **TypeScript** - Type safety
@@ -170,6 +182,7 @@ Even without an OpenAI API key, the application provides:
 - **🆕 Goal-Seeking System** - Proactive AI behavior
 
 ### Development Tools
+
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Nodemon** - Development server auto-reload
@@ -215,6 +228,7 @@ ai-chat-app/
 ## Performance & Quality
 
 ### Entertainment System
+
 - **🎭 Joke Master**: 10 curated jokes, adaptive learning
 - **🧠 Trivia Master**: 10 fascinating facts across multiple topics
 - **🎬 GIF Master**: 10 curated GIFs with accessibility features
@@ -222,6 +236,7 @@ ai-chat-app/
 - **Quality First**: Only 4-5 star rated content
 
 ### System Reliability
+
 - **Demo Mode Excellence**: Full functionality without API keys
 - **Fallback Mechanisms**: Always provides quality responses
 - **Error Handling**: Graceful degradation when APIs unavailable
@@ -244,6 +259,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🎪 Experience the New Features
 
 Try the enhanced customer service demo with:
+
 - **Professional hold experience** with transparent wait times
 - **RAG-powered entertainment** during hold periods
 - **10 specialized agents** for comprehensive support

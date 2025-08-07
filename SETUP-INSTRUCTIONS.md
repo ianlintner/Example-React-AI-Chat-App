@@ -10,6 +10,7 @@
 ## How to Run the App
 
 ### Option 1: Use the Automated Script (Recommended)
+
 1. Double-click `run-app.bat` in the project folder
 2. This will open a new Command Prompt and automatically:
    - Install all dependencies
@@ -17,6 +18,7 @@
    - Start the mobile app (http://localhost:8081 for web, or use mobile device/emulator)
 
 ### Option 2: Manual Setup
+
 If the automated script doesn't work:
 
 1. **Open a NEW Command Prompt** (important - needs fresh PATH)
@@ -53,6 +55,7 @@ If the automated script doesn't work:
 ## Troubleshooting
 
 If you get "node is not recognized" errors:
+
 1. Close all terminals/command prompts
 2. Open a NEW Command Prompt (this picks up the updated PATH)
 3. Try running the commands again

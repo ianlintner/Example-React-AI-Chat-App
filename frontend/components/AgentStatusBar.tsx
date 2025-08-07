@@ -16,7 +16,9 @@ interface AgentStatusBarProps {
   isVisible?: boolean;
 }
 
-const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => {
+const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
+  isVisible = true,
+}) => {
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -28,7 +30,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
     // Handle agent status updates
     const handleAgentStatusUpdate = (status: AgentStatus) => {
       setAgentStatus(status);
-      
+
       // Trigger slide animation when status changes
       Animated.sequence([
         Animated.timing(slideAnim, {
@@ -40,7 +42,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
-        })
+        }),
       ]).start();
     };
 
@@ -83,7 +85,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
   const toggleCollapse = () => {
     const newCollapsedState = !isCollapsed;
     setIsCollapsed(newCollapsedState);
-    
+
     Animated.timing(collapseAnim, {
       toValue: newCollapsedState ? 0 : 1,
       duration: 300,
@@ -93,58 +95,100 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
 
   const getAgentColor = (agentType: AgentType): string => {
     switch (agentType) {
-      case 'hold_agent': return '#FF9800';
-      case 'account_support': return '#2196F3';
-      case 'billing_support': return '#4CAF50';
-      case 'website_support': return '#9C27B0';
-      case 'operator_support': return '#607D8B';
-      case 'joke': return '#FF5722';
-      case 'trivia': return '#795548';
-      case 'gif': return '#E91E63';
-      case 'story_teller': return '#3F51B5';
-      case 'riddle_master': return '#FF9800';
-      case 'quote_master': return '#009688';
-      case 'game_host': return '#8BC34A';
-      case 'music_guru': return '#673AB7';
-      default: return '#757575';
+      case 'hold_agent':
+        return '#FF9800';
+      case 'account_support':
+        return '#2196F3';
+      case 'billing_support':
+        return '#4CAF50';
+      case 'website_support':
+        return '#9C27B0';
+      case 'operator_support':
+        return '#607D8B';
+      case 'joke':
+        return '#FF5722';
+      case 'trivia':
+        return '#795548';
+      case 'gif':
+        return '#E91E63';
+      case 'story_teller':
+        return '#3F51B5';
+      case 'riddle_master':
+        return '#FF9800';
+      case 'quote_master':
+        return '#009688';
+      case 'game_host':
+        return '#8BC34A';
+      case 'music_guru':
+        return '#673AB7';
+      default:
+        return '#757575';
     }
   };
 
   const getAgentIcon = (agentType: AgentType): string => {
     switch (agentType) {
-      case 'hold_agent': return '⏳';
-      case 'account_support': return '👤';
-      case 'billing_support': return '💳';
-      case 'website_support': return '🌐';
-      case 'operator_support': return '📞';
-      case 'joke': return '🎭';
-      case 'trivia': return '🧠';
-      case 'gif': return '🎬';
-      case 'story_teller': return '📖';
-      case 'riddle_master': return '🧩';
-      case 'quote_master': return '💭';
-      case 'game_host': return '🎮';
-      case 'music_guru': return '🎵';
-      default: return '🤖';
+      case 'hold_agent':
+        return '⏳';
+      case 'account_support':
+        return '👤';
+      case 'billing_support':
+        return '💳';
+      case 'website_support':
+        return '🌐';
+      case 'operator_support':
+        return '📞';
+      case 'joke':
+        return '🎭';
+      case 'trivia':
+        return '🧠';
+      case 'gif':
+        return '🎬';
+      case 'story_teller':
+        return '📖';
+      case 'riddle_master':
+        return '🧩';
+      case 'quote_master':
+        return '💭';
+      case 'game_host':
+        return '🎮';
+      case 'music_guru':
+        return '🎵';
+      default:
+        return '🤖';
     }
   };
 
   const getAgentDisplayName = (agentType: AgentType): string => {
     switch (agentType) {
-      case 'hold_agent': return 'Hold Agent';
-      case 'account_support': return 'Account Support';
-      case 'billing_support': return 'Billing Support';
-      case 'website_support': return 'Website Support';
-      case 'operator_support': return 'Customer Service';
-      case 'joke': return 'Joke Master';
-      case 'trivia': return 'Trivia Master';
-      case 'gif': return 'GIF Master';
-      case 'story_teller': return 'Story Teller';
-      case 'riddle_master': return 'Riddle Master';
-      case 'quote_master': return 'Quote Master';
-      case 'game_host': return 'Game Host';
-      case 'music_guru': return 'Music Guru';
-      default: return 'General Agent';
+      case 'hold_agent':
+        return 'Hold Agent';
+      case 'account_support':
+        return 'Account Support';
+      case 'billing_support':
+        return 'Billing Support';
+      case 'website_support':
+        return 'Website Support';
+      case 'operator_support':
+        return 'Customer Service';
+      case 'joke':
+        return 'Joke Master';
+      case 'trivia':
+        return 'Trivia Master';
+      case 'gif':
+        return 'GIF Master';
+      case 'story_teller':
+        return 'Story Teller';
+      case 'riddle_master':
+        return 'Riddle Master';
+      case 'quote_master':
+        return 'Quote Master';
+      case 'game_host':
+        return 'Game Host';
+      case 'music_guru':
+        return 'Music Guru';
+      default:
+        return 'General Agent';
     }
   };
 
@@ -157,7 +201,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
   const agentName = getAgentDisplayName(agentStatus.currentAgent);
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
@@ -165,47 +209,59 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
             inputRange: [0, 1],
             outputRange: [36, 90],
           }),
-          transform: [{ scale: pulseAnim }]
-        }
+          transform: [{ scale: pulseAnim }],
+        },
       ]}
     >
       {/* Ultra-Compact Header */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.compactHeader}
         onPress={toggleCollapse}
         activeOpacity={0.7}
       >
         {/* Status Pulse Indicator */}
-        <Animated.View style={[
-          styles.statusPulse,
-          { 
-            backgroundColor: agentStatus.isActive ? ForestColors.success : ForestColors.textMuted,
-            transform: [{ scale: agentStatus.isActive ? pulseAnim : 1 }]
-          }
-        ]} />
-        
+        <Animated.View
+          style={[
+            styles.statusPulse,
+            {
+              backgroundColor: agentStatus.isActive
+                ? ForestColors.success
+                : ForestColors.textMuted,
+              transform: [{ scale: agentStatus.isActive ? pulseAnim : 1 }],
+            },
+          ]}
+        />
+
         {/* Agent Info */}
         <Text style={styles.compactAgentName} numberOfLines={1}>
           {agentIcon} {agentName}
         </Text>
-        
+
         {/* Connection & Expand Indicator */}
         <View style={styles.rightControls}>
-          <View style={[
-            styles.connectionIndicator,
-            { backgroundColor: isConnected ? ForestColors.success : ForestColors.error }
-          ]} />
+          <View
+            style={[
+              styles.connectionIndicator,
+              {
+                backgroundColor: isConnected
+                  ? ForestColors.success
+                  : ForestColors.error,
+              },
+            ]}
+          />
           <Animated.View
             style={[
               styles.expandIcon,
               {
-                transform: [{
-                  rotate: collapseAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '180deg'],
-                  }),
-                }],
-              }
+                transform: [
+                  {
+                    rotate: collapseAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '180deg'],
+                    }),
+                  },
+                ],
+              },
             ]}
           >
             <Text style={styles.chevronText}>⌃</Text>
@@ -223,17 +279,16 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
               inputRange: [0, 1],
               outputRange: [0, 54],
             }),
-          }
+          },
         ]}
       >
         {/* Metrics Row */}
         <View style={styles.metricsRow}>
           <View style={styles.metric}>
             <Text style={styles.metricValue}>
-              {agentStatus.conversationContext 
+              {agentStatus.conversationContext
                 ? `${Math.round(agentStatus.conversationContext.userSatisfaction * 100)}%`
-                : 'N/A'
-              }
+                : 'N/A'}
             </Text>
             <Text style={styles.metricLabel}>SATISFACTION</Text>
           </View>
@@ -245,13 +300,14 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
               <Text style={styles.metricValue}>
                 {agentStatus.goalState?.currentState || 'Idle'}
               </Text>
-              {agentStatus.goalState?.activeGoals && agentStatus.goalState.activeGoals.length > 0 && (
-                <View style={styles.goalCount}>
-                  <Text style={styles.goalCountText}>
-                    {agentStatus.goalState.activeGoals.length}
-                  </Text>
-                </View>
-              )}
+              {agentStatus.goalState?.activeGoals &&
+                agentStatus.goalState.activeGoals.length > 0 && (
+                  <View style={styles.goalCount}>
+                    <Text style={styles.goalCountText}>
+                      {agentStatus.goalState.activeGoals.length}
+                    </Text>
+                  </View>
+                )}
             </View>
             <Text style={styles.metricLabel}>STATE</Text>
           </View>
@@ -270,7 +326,10 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
         {agentStatus.conversationContext?.shouldHandoff && (
           <View style={styles.handoffAlert}>
             <Text style={styles.handoffAlertText}>
-              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget!)}
+              →{' '}
+              {getAgentDisplayName(
+                agentStatus.conversationContext.handoffTarget!
+              )}
             </Text>
           </View>
         )}
@@ -281,12 +340,14 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
         style={[
           styles.accentLine,
           {
-            backgroundColor: agentStatus.isActive ? ForestColors.brandPrimary : ForestColors.borderLight,
+            backgroundColor: agentStatus.isActive
+              ? ForestColors.brandPrimary
+              : ForestColors.borderLight,
             scaleX: collapseAnim.interpolate({
               inputRange: [0, 1],
               outputRange: [0.3, 1],
             }),
-          }
+          },
         ]}
       />
     </Animated.View>
@@ -308,7 +369,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     overflow: 'hidden',
   },
-  
+
   // Ultra-Compact Header (Mobile Optimized)
   compactHeader: {
     flexDirection: 'row',
@@ -317,7 +378,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     minHeight: 36,
   },
-  
+
   // Animated Status Pulse
   statusPulse: {
     width: 8,
@@ -326,7 +387,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     opacity: 0.8,
   },
-  
+
   // Compact Agent Name
   compactAgentName: {
     flex: 1,
@@ -335,21 +396,21 @@ const styles = StyleSheet.create({
     color: ForestColors.textNormal,
     letterSpacing: 0.2,
   },
-  
+
   // Right Side Controls
   rightControls: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  
-  // Minimal Connection Indicator  
+
+  // Minimal Connection Indicator
   connectionIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
   },
-  
+
   // Modern Expand Icon
   expandIcon: {
     width: 20,
@@ -359,20 +420,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: ForestColors.backgroundAccent,
   },
-  
+
   chevronText: {
     fontSize: 12,
     color: ForestColors.textMuted,
     fontWeight: '600',
   },
-  
+
   // Smart Expandable Content
   expandedContent: {
     paddingHorizontal: 12,
     paddingBottom: 6,
     overflow: 'hidden',
   },
-  
+
   // Metrics Grid Layout
   metricsRow: {
     flexDirection: 'row',
@@ -380,19 +441,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
-  
+
   metric: {
     flex: 1,
     alignItems: 'center',
   },
-  
+
   metricValue: {
     fontSize: 14,
     fontWeight: '700',
     color: ForestColors.textNormal,
     marginBottom: 2,
   },
-  
+
   metricLabel: {
     fontSize: 8,
     fontWeight: '600',
@@ -400,7 +461,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  
+
   // Elegant Dividers
   metricDivider: {
     width: 1,
@@ -409,14 +470,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     opacity: 0.5,
   },
-  
+
   // Goal Metric Container
   goalMetric: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   goalCount: {
     backgroundColor: ForestColors.brandPrimary,
     borderRadius: 8,
@@ -426,13 +487,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 4,
   },
-  
+
   goalCountText: {
     fontSize: 9,
     fontWeight: '700',
     color: '#fff',
   },
-  
+
   // Inline Handoff Alert
   handoffAlert: {
     backgroundColor: ForestColors.loadingBackground,
@@ -441,14 +502,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     alignSelf: 'center',
   },
-  
+
   handoffAlertText: {
     fontSize: 10,
     fontWeight: '600',
     color: ForestColors.warning,
     textAlign: 'center',
   },
-  
+
   // Dynamic Accent Line
   accentLine: {
     height: 1.5,

@@ -9,7 +9,9 @@ A sophisticated mobile-first AI chat system featuring multi-agent intelligence, 
 This project includes extensive documentation covering all aspects of the system:
 
 ### 🏗️ **[Complete Architecture Guide](./docs/ARCHITECTURE.md)**
+
 Comprehensive technical architecture with detailed Mermaid diagrams covering:
+
 - System overview & architectural principles
 - Component architecture (Frontend & Backend)
 - Data flow diagrams & sequence charts
@@ -22,15 +24,18 @@ Comprehensive technical architecture with detailed Mermaid diagrams covering:
 - Performance benchmarks & scalability targets
 
 ### 📖 **[Documentation Index](./docs/INDEX.md)**
+
 Complete index of all documentation with navigation guides for:
+
 - New Developers
-- System Architects  
+- System Architects
 - DevOps Engineers
 - Product Managers
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Expo CLI: `npm install -g @expo/cli`
@@ -38,6 +43,7 @@ Complete index of all documentation with navigation guides for:
 - Docker (optional, for monitoring stack)
 
 ### One-Command Setup
+
 ```bash
 # Windows - Complete setup with monitoring
 ./setup-and-run.bat
@@ -47,6 +53,7 @@ Complete index of all documentation with navigation guides for:
 ```
 
 ### Manual Setup
+
 ```bash
 # 1. Install dependencies
 cd backend && npm install
@@ -62,6 +69,7 @@ cd frontend && npm start     # Terminal 2
 ```
 
 ### Access Points
+
 - **📱 Mobile App**: Scan QR code with Expo Go
 - **📖 API Docs**: http://localhost:3000/api/docs
 - **📊 Monitoring**: http://localhost:5001 (Grafana)
@@ -71,42 +79,47 @@ cd frontend && npm start     # Terminal 2
 ## 🤖 AI Agent System (16 Agents)
 
 ### 🎭 Entertainment Agents (10)
-| Agent | Purpose | Features |
-|-------|---------|----------|
-| 🎭 **Adaptive Joke Master** | Humor with learning | Personalized jokes, reaction learning |
-| 🧠 **Trivia Master** | Educational facts | Fascinating trivia across all topics |
-| 🎬 **GIF Master** | Visual entertainment | Curated GIFs from Giphy |
-| 📚 **Story Teller** | Interactive narratives | Choose-your-adventure stories |
-| 🧩 **Riddle Master** | Brain teasers | Puzzles with progressive hints |
-| 💫 **Quote Master** | Inspirational content | Motivational and thought-provoking quotes |
-| 🎮 **Game Host** | Interactive games | Text-based games and challenges |
-| 🎵 **Music Guru** | Music recommendations | Personalized music discovery |
-| 📺 **YouTube Guru** | Video curation | Funny and trending video suggestions |
-| 🎲 **D&D Master** | RPG adventures | Interactive D&D with dice rolling |
+
+| Agent                       | Purpose                | Features                                  |
+| --------------------------- | ---------------------- | ----------------------------------------- |
+| 🎭 **Adaptive Joke Master** | Humor with learning    | Personalized jokes, reaction learning     |
+| 🧠 **Trivia Master**        | Educational facts      | Fascinating trivia across all topics      |
+| 🎬 **GIF Master**           | Visual entertainment   | Curated GIFs from Giphy                   |
+| 📚 **Story Teller**         | Interactive narratives | Choose-your-adventure stories             |
+| 🧩 **Riddle Master**        | Brain teasers          | Puzzles with progressive hints            |
+| 💫 **Quote Master**         | Inspirational content  | Motivational and thought-provoking quotes |
+| 🎮 **Game Host**            | Interactive games      | Text-based games and challenges           |
+| 🎵 **Music Guru**           | Music recommendations  | Personalized music discovery              |
+| 📺 **YouTube Guru**         | Video curation         | Funny and trending video suggestions      |
+| 🎲 **D&D Master**           | RPG adventures         | Interactive D&D with dice rolling         |
 
 ### 📞 Support Agents (4)
-| Agent | Specialty | Focus |
-|-------|-----------|-------|
-| 👤 **Account Support** | User accounts | Profile, auth, settings |
-| 💳 **Billing Support** | Payments | Subscriptions, refunds, billing |
-| 🌐 **Website Support** | Technical issues | Browser, performance, bugs |
-| 🎧 **Customer Service** | General support | Routing, coordination |
+
+| Agent                   | Specialty        | Focus                           |
+| ----------------------- | ---------------- | ------------------------------- |
+| 👤 **Account Support**  | User accounts    | Profile, auth, settings         |
+| 💳 **Billing Support**  | Payments         | Subscriptions, refunds, billing |
+| 🌐 **Website Support**  | Technical issues | Browser, performance, bugs      |
+| 🎧 **Customer Service** | General support  | Routing, coordination           |
 
 ### ⚙️ Specialized Agents (2)
-| Agent | Purpose | Capabilities |
-|-------|---------|--------------|
-| 📞 **Hold Agent** | Wait management | Professional hold experience |
-| 🤖 **General Router** | Classification | Message routing, fallback |
+
+| Agent                 | Purpose         | Capabilities                 |
+| --------------------- | --------------- | ---------------------------- |
+| 📞 **Hold Agent**     | Wait management | Professional hold experience |
+| 🤖 **General Router** | Classification  | Message routing, fallback    |
 
 ## ✨ Key Features
 
 ### 🎯 **Goal-Seeking AI System**
+
 - **Proactive Engagement**: Automatically detects user needs
-- **Adaptive Learning**: Learns user preferences over time  
+- **Adaptive Learning**: Learns user preferences over time
 - **Context Awareness**: Responds to user state and mood
 - **Entertainment Coordination**: Manages wait times with appropriate content
 
 ### 📊 **Enterprise Observability**
+
 - **Three Pillars**: Metrics, Logs, and Traces
 - **Real-time Dashboards**: Grafana visualizations
 - **Performance Monitoring**: Prometheus metrics collection
@@ -114,12 +127,14 @@ cd frontend && npm start     # Terminal 2
 - **Custom Metrics**: Agent performance, user satisfaction
 
 ### ✅ **Quality Assurance**
+
 - **Response Validation**: Multi-layer quality control
 - **Content Safety**: Harmful content detection
 - **Performance Optimization**: Sub-200ms response times
 - **Error Handling**: Comprehensive error recovery
 
 ### 🔒 **Security Architecture**
+
 - **Multi-layer Security**: Client, transport, API, data, agent
 - **Input Validation**: XSS and injection protection
 - **Rate Limiting**: DDoS and abuse prevention
@@ -132,29 +147,29 @@ graph TB
     subgraph "Mobile Layer"
         Mobile[📱 React Native App<br/>Multi-platform Client]
     end
-    
+
     subgraph "API Layer"
         Gateway[🚪 Express Gateway<br/>REST + WebSocket]
     end
-    
+
     subgraph "Intelligence Layer"
         AgentRouter[🤖 Agent Router]
         GoalSeeker[🎯 Goal-Seeking AI]
         Validator[✅ Quality Control]
     end
-    
+
     subgraph "Agent Layer"
         Entertainment[🎭 Entertainment<br/>10 Agents]
         Support[📞 Support<br/>4 Agents]
         Specialized[⚙️ Specialized<br/>2 Agents]
     end
-    
+
     subgraph "Data Layer"
         Memory[(💾 Memory Store)]
         RAG[(📚 RAG Content)]
         Metrics[(📊 Analytics)]
     end
-    
+
     Mobile --> Gateway
     Gateway --> AgentRouter
     AgentRouter --> GoalSeeker
@@ -170,6 +185,7 @@ graph TB
 ## 📋 Technology Stack
 
 ### 📱 Frontend (React Native)
+
 ```yaml
 Platform: React Native + Expo
 Language: TypeScript
@@ -180,6 +196,7 @@ Testing: Jest + React Native Testing Library
 ```
 
 ### ⚙️ Backend (Node.js)
+
 ```yaml
 Runtime: Node.js 18+
 Framework: Express 5
@@ -192,6 +209,7 @@ Testing: Jest + Supertest
 ```
 
 ### 🐳 Infrastructure
+
 ```yaml
 Containers: Docker + Docker Compose
 Monitoring: Prometheus + Grafana + Jaeger
@@ -203,20 +221,21 @@ Cloud: AWS/GCP/Azure compatible
 
 ## 📊 Performance Metrics
 
-| Metric | Target | Current | Status |
-|--------|--------|---------|---------|
-| **Response Time** | < 200ms | ~150ms | ✅ |
-| **Agent Selection** | < 50ms | ~30ms | ✅ |
-| **Message Validation** | < 100ms | ~80ms | ✅ |
-| **Goal-Seeking Latency** | < 1s | ~800ms | ✅ |
-| **WebSocket Latency** | < 50ms | ~25ms | ✅ |
-| **Throughput** | 1000 msg/s | ~800 msg/s | 🔄 |
-| **Error Rate** | < 0.1% | ~0.05% | ✅ |
-| **Availability** | 99.9% | 99.95% | ✅ |
+| Metric                   | Target     | Current    | Status |
+| ------------------------ | ---------- | ---------- | ------ |
+| **Response Time**        | < 200ms    | ~150ms     | ✅     |
+| **Agent Selection**      | < 50ms     | ~30ms      | ✅     |
+| **Message Validation**   | < 100ms    | ~80ms      | ✅     |
+| **Goal-Seeking Latency** | < 1s       | ~800ms     | ✅     |
+| **WebSocket Latency**    | < 50ms     | ~25ms      | ✅     |
+| **Throughput**           | 1000 msg/s | ~800 msg/s | 🔄     |
+| **Error Rate**           | < 0.1%     | ~0.05%     | ✅     |
+| **Availability**         | 99.9%      | 99.95%     | ✅     |
 
 ## 🛠️ Development
 
 ### Project Structure
+
 ```
 ├── backend/                 # Node.js backend server
 │   ├── src/
@@ -234,6 +253,7 @@ Cloud: AWS/GCP/Azure compatible
 ```
 
 ### Development Commands
+
 ```bash
 # Backend
 cd backend
@@ -254,6 +274,7 @@ docker-compose up        # Start monitoring stack
 ## 📖 API Documentation
 
 ### REST API Endpoints
+
 - **POST** `/api/chat` - Send chat message
 - **GET** `/api/conversations` - List conversations
 - **GET** `/api/validation/dashboard` - Quality metrics
@@ -261,8 +282,9 @@ docker-compose up        # Start monitoring stack
 - **GET** `/api/docs` - Interactive API documentation
 
 ### WebSocket Events
+
 - `message` - Send chat message
-- `response` - Receive agent response  
+- `response` - Receive agent response
 - `agent_status` - Agent status updates
 - `proactive_action` - Proactive AI messages
 - `validation_update` - Quality metrics updates
@@ -270,6 +292,7 @@ docker-compose up        # Start monitoring stack
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
 # Development with monitoring
 docker-compose up
@@ -279,6 +302,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Cloud Deployment
+
 - **Kubernetes**: Configuration files included
 - **Auto-scaling**: Horizontal pod autoscaling
 - **Load Balancing**: NGINX ingress controller
@@ -293,7 +317,7 @@ npm test
 # Backend tests
 cd backend && npm test
 
-# Mobile app tests  
+# Mobile app tests
 cd frontend && npm test
 
 # Integration tests
@@ -325,6 +349,7 @@ For detailed technical information, see our comprehensive documentation:
 5. **Submit pull request** with detailed description
 
 ### Development Guidelines
+
 - Follow TypeScript best practices
 - Add comprehensive tests for new features
 - Update documentation for significant changes
@@ -346,24 +371,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🏆 Project Highlights
 
 ### ✅ **Enterprise-Grade Architecture**
+
 - Mobile-first design with cross-platform support
 - Microservices-ready modular backend
 - Comprehensive observability and monitoring
 - Production-ready Docker deployment
 
-### ✅ **Advanced AI System**  
+### ✅ **Advanced AI System**
+
 - 16 specialized AI agents with distinct personalities
 - Goal-seeking behavior that adapts to user needs
 - RAG integration with curated, high-quality content
 - Multi-layer response validation and safety
 
 ### ✅ **Developer Experience**
+
 - Full TypeScript implementation
 - Comprehensive testing suite
 - Extensive documentation with diagrams
 - CI/CD pipeline with quality gates
 
 ### ✅ **User Experience**
+
 - Sub-200ms response times
 - Professional customer service workflows
 - High-quality entertainment content
@@ -373,4 +402,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*For complete technical details, architecture diagrams, and implementation guides, see the [comprehensive documentation suite](./docs/).*
+_For complete technical details, architecture diagrams, and implementation guides, see the [comprehensive documentation suite](./docs/)._

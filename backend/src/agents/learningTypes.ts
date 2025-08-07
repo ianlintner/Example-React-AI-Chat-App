@@ -18,12 +18,15 @@ export interface JokePerformance {
   neutralReactions: number;
   successRate: number;
   lastUsed: Date;
-  userSpecificPerformance: Map<string, {
-    shows: number;
-    positiveReactions: number;
-    negativeReactions: number;
-    successRate: number;
-  }>;
+  userSpecificPerformance: Map<
+    string,
+    {
+      shows: number;
+      positiveReactions: number;
+      negativeReactions: number;
+      successRate: number;
+    }
+  >;
 }
 
 export interface UserJokeProfile {

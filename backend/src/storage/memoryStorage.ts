@@ -28,7 +28,10 @@ export class MemoryStorage {
     this.conversations.push(conversation);
   }
 
-  updateConversation(id: string, updates: Partial<Conversation>): Conversation | null {
+  updateConversation(
+    id: string,
+    updates: Partial<Conversation>
+  ): Conversation | null {
     const index = this.conversations.findIndex(c => c.id === id);
     if (index === -1) return null;
 
@@ -46,8 +49,9 @@ export class MemoryStorage {
 
   // Helper methods
   getSortedConversations(): Conversation[] {
-    return [...this.conversations].sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    return [...this.conversations].sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
   }
 
@@ -57,7 +61,7 @@ export class MemoryStorage {
 
     return {
       ...conversation,
-      messages: conversation.messages.slice(-1)
+      messages: conversation.messages.slice(-1),
     };
   }
 }

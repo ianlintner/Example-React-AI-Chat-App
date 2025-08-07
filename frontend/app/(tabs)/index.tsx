@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, AppState, ActivityIndicator, Text, StatusBar } from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { View, StyleSheet, AppState, ActivityIndicator, Text } from 'react-native';
 import { DiscordColors } from '../../constants/Colors';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
@@ -11,7 +10,6 @@ export default function HomeScreen() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
 
   // Initialize socket connection on app start
@@ -20,13 +18,11 @@ export default function HomeScreen() {
       try {
         // Connect to socket server
         await socketService.connect();
-        console.log('Socket connected successfully');
         setError(null);
         setIsConnected(true);
 
         // Automatically send support request after connection
         setTimeout(() => {
-          console.log('Sending automatic support request...');
           socketService.sendStreamingMessage({
             message:
               "Hello, I need technical support. I'm experiencing some issues and would like assistance from a support agent. Please let me know if I'll be on hold and if you can help keep me entertained while I wait.",
@@ -35,7 +31,6 @@ export default function HomeScreen() {
           });
         }, 1000); // Send after 1 second to ensure connection is established
       } catch (error) {
-        console.error('Failed to connect to socket server:', error);
         setError('Failed to connect to server. Please check your connection.');
         setIsConnected(false);
       } finally {
@@ -65,8 +60,6 @@ export default function HomeScreen() {
   // Handle socket events for new messages, proactive messages and streaming
   useEffect(() => {
     const handleNewMessage = (message: Message) => {
-      console.log('📨 New message received in App:', message);
-
       // Add new message to current conversation or create new one
       setConversation(prev => {
         if (!prev) {
@@ -78,40 +71,30 @@ export default function HomeScreen() {
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          console.log('New conversation created for new message:', newConversation);
           return newConversation;
         }
 
         // Check if this conversation is different from current one
         if (prev.id !== message.conversationId) {
-          console.log('Different conversation ID, not adding new message');
           return prev; // Don't add message from different conversation
         }
 
         // Check if message already exists to prevent duplicates
         const existingMessage = prev.messages.find(m => m.id === message.id);
         if (existingMessage) {
-          console.log('Message already exists, not adding duplicate');
           return prev;
         }
 
-        console.log('Adding new message to existing conversation');
         const updatedConversation = {
           ...prev,
           messages: [...prev.messages, { ...message, status: 'complete' as const }],
           updatedAt: new Date(),
         };
-        console.log('Updated conversation with new message:', updatedConversation);
         return updatedConversation;
       });
-
-      // Update last update time to trigger re-renders
-      setLastUpdateTime(new Date());
     };
 
     const handleStreamStart = (data: { messageId: string; conversationId: string }) => {
-      console.log('🔄 Stream start received:', data);
-
       // Add streaming message placeholder
       setConversation(prev => {
         if (!prev) {
@@ -139,7 +122,6 @@ export default function HomeScreen() {
         const isTemporaryConversation = prev.id.startsWith('temp-');
         if (isTemporaryConversation && prev.id !== data.conversationId) {
           // Update conversation to use the real ID from backend
-          console.log(`🔄 Updating conversation ID from ${prev.id} to ${data.conversationId}`);
           return {
             ...prev,
             id: data.conversationId,
@@ -203,8 +185,6 @@ export default function HomeScreen() {
       content: string;
       isComplete: boolean;
     }) => {
-      console.log('📝 Stream chunk received:', chunk.content.slice(-20));
-
       // Update message content
       setConversation(prev => {
         if (!prev) return prev;
@@ -232,8 +212,6 @@ export default function HomeScreen() {
       agentUsed?: string;
       confidence?: number;
     }) => {
-      console.log('✅ Stream complete received:', data);
-
       // Update message with final agent info and complete status
       setConversation(prev => {
         if (!prev) return data.conversation;
@@ -261,8 +239,6 @@ export default function HomeScreen() {
       agentUsed: string;
       confidence: number;
     }) => {
-      console.log('🎁 Proactive message received in App:', JSON.stringify(data, null, 2));
-
       // Add proactive message to current conversation or create new one
       setConversation(prev => {
         if (!prev) {
@@ -295,9 +271,6 @@ export default function HomeScreen() {
           updatedAt: new Date(),
         };
       });
-
-      // Update last update time to trigger re-renders
-      setLastUpdateTime(new Date());
     };
 
     // Set up socket listeners
@@ -341,7 +314,6 @@ export default function HomeScreen() {
         updatedAt: new Date(),
       };
     });
-    setLastUpdateTime(new Date());
   };
 
   if (error) {
@@ -357,7 +329,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' />
+        <ActivityIndicator size="large" />
         <Text style={styles.loadingText}>Connecting to AI Assistant...</Text>
       </View>
     );

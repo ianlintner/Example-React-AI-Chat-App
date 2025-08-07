@@ -27,5 +27,8 @@ jest.mock('socket.io-client', () => ({
   })),
 }));
 
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// Mock react-native modules that might cause issues
+jest.mock('react-native/Libraries/LogBox/LogBox', () => ({
+  ignoreLogs: jest.fn(),
+  ignoreAllLogs: jest.fn(),
+}));

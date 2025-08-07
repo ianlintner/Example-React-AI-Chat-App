@@ -1,23 +1,28 @@
-import {
-  tracer,
-  createConversationSpan,
-  createAgentSpan,
-  endSpan,
-  setSpanStatus,
-  addSpanEvent,
-} from '../tracer';
+// Mock OpenTelemetry dependencies before importing
+const mockSpan = {
+  setAttributes: jest.fn(),
+  setStatus: jest.fn(),
+  addEvent: jest.fn(),
+  end: jest.fn(),
+};
 
-// Mock OpenTelemetry dependencies
 jest.mock('@opentelemetry/api', () => ({
   trace: {
     getTracer: jest.fn(() => ({
-      startSpan: jest.fn(() => ({
-        setAttributes: jest.fn(),
-        setStatus: jest.fn(),
-        addEvent: jest.fn(),
-        end: jest.fn(),
-      })),
+      startSpan: jest.fn(() => mockSpan),
     })),
+  },
+  context: {
+    active: jest.fn(() => ({})),
+    with: jest.fn((ctx, fn) => fn()),
+  },
+  createContextKey: jest.fn(() => ({
+    ROOT_CONTEXT: {},
+  })),
+  ROOT_CONTEXT: {},
+  SpanKind: {
+    SERVER: 1,
+    INTERNAL: 2,
   },
   SpanStatusCode: {
     OK: 1,
@@ -25,9 +30,28 @@ jest.mock('@opentelemetry/api', () => ({
   },
 }));
 
-jest.mock('@opentelemetry/auto-instrumentations-node');
-jest.mock('@opentelemetry/exporter-zipkin');
-jest.mock('@opentelemetry/sdk-node');
+jest.mock('@opentelemetry/auto-instrumentations-node', () => ({
+  getNodeAutoInstrumentations: jest.fn(() => []),
+}));
+
+jest.mock('@opentelemetry/exporter-zipkin', () => ({
+  ZipkinExporter: jest.fn().mockImplementation(() => ({
+    export: jest.fn(),
+  })),
+}));
+
+jest.mock('@opentelemetry/sdk-node', () => ({
+  NodeSDK: jest.fn().mockImplementation(() => ({
+    start: jest.fn(),
+  })),
+}));
+
+jest.mock('@opentelemetry/sdk-trace-base', () => ({
+  ConsoleSpanExporter: jest.fn(),
+  BatchSpanProcessor: jest.fn(),
+  SimpleSpanProcessor: jest.fn(),
+  AlwaysOnSampler: jest.fn(),
+}));
 
 // Mock the context manager
 jest.mock('../contextManager', () => ({
@@ -38,9 +62,23 @@ jest.mock('../contextManager', () => ({
   },
 }));
 
+import {
+  tracer,
+  createConversationSpan,
+  createAgentSpan,
+  endSpan,
+  setSpanStatus,
+  addSpanEvent,
+} from '../tracer';
+
 describe('Tracer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset the mock span functions
+    mockSpan.setAttributes.mockClear();
+    mockSpan.setStatus.mockClear();
+    mockSpan.addEvent.mockClear();
+    mockSpan.end.mockClear();
   });
 
   describe('createConversationSpan', () => {
@@ -112,7 +150,10 @@ describe('Tracer', () => {
       const eventData = { key: 'value', count: 123 };
       
       addSpanEvent(span, 'test.event', eventData);
-      expect(span.addEvent).toHaveBeenCalledWith('test.event', eventData);
+      expect(span.addEvent).toHaveBeenCalledWith('test.event', {
+        timestamp: expect.any(Number),
+        ...eventData,
+      });
     });
   });
 

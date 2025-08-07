@@ -5,6 +5,31 @@ process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.LOG_LEVEL = 'error';
 process.env.PORT = '0'; // Use random available port for tests
 
+// Global tracing mocks
+jest.mock('../tracing/tracer', () => {
+  const mockSpan = {
+    setAttributes: jest.fn(),
+    setStatus: jest.fn(),
+    addEvent: jest.fn(),
+    end: jest.fn(),
+  };
+
+  return {
+    tracer: {
+      startSpan: jest.fn(() => mockSpan),
+    },
+    createConversationSpan: jest.fn(() => mockSpan),
+    createAgentSpan: jest.fn(() => mockSpan),
+    createValidationSpan: jest.fn(() => mockSpan),
+    createGoalSeekingSpan: jest.fn(() => mockSpan),
+    endSpan: jest.fn(),
+    setSpanStatus: jest.fn(),
+    addSpanEvent: jest.fn(),
+    initializeTracing: jest.fn(),
+    context: {},
+  };
+});
+
 // Global test configuration
 jest.setTimeout(30000);
 

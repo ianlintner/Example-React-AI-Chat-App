@@ -48,8 +48,10 @@ describe('Chat Routes', () => {
 
     it('should create a new conversation and process message', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
+      let capturedConversation: any;
       mockStorage.addConversation.mockImplementation((conv) => {
-        // Simulate storage behavior
+        // Capture a deep copy of the conversation at the time it's stored
+        capturedConversation = JSON.parse(JSON.stringify(conv));
         return conv;
       });
 
@@ -65,18 +67,19 @@ describe('Chat Routes', () => {
       expect(response.body).toHaveProperty('agentUsed', 'joke');
       expect(response.body).toHaveProperty('confidence', 0.9);
 
-      // Verify conversation was created
-      expect(mockStorage.addConversation).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: expect.any(String),
-          title: expect.any(String),
-          messages: [],
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
-        })
-      );
+      // Verify conversation was created with empty messages initially
+      expect(capturedConversation).toMatchObject({
+        id: expect.any(String),
+        title: 'Tell me a joke',
+        messages: [],
+        createdAt: expect.any(String), // JSON.stringify converts Date to string
+        updatedAt: expect.any(String), // JSON.stringify converts Date to string
+      });
 
-      // Verify agent service was called
+      // Verify storage was called to add conversation
+      expect(mockStorage.addConversation).toHaveBeenCalled();
+
+      // Verify agent service was called with empty array (no previous messages)
       expect(mockAgentService.processMessage).toHaveBeenCalledWith(
         'Tell me a joke',
         [],
@@ -97,7 +100,7 @@ describe('Chat Routes', () => {
 
       const conversationWithMessages = {
         ...mockConversation,
-        messages: existingMessages,
+        messages: [...existingMessages], // Create a copy to avoid mutation issues
       };
 
       mockStorage.getConversation.mockReturnValue(conversationWithMessages);
@@ -113,7 +116,7 @@ describe('Chat Routes', () => {
       expect(mockStorage.getConversation).toHaveBeenCalledWith('conv-123');
       expect(mockStorage.addConversation).not.toHaveBeenCalled();
 
-      // Verify agent service was called with previous messages
+      // Verify agent service was called with previous messages (the code calls slice(0, -1) to exclude the just-added user message)
       expect(mockAgentService.processMessage).toHaveBeenCalledWith(
         'Another message',
         existingMessages,

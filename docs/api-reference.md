@@ -283,8 +283,8 @@ Currently, no rate limiting is implemented. In production, consider implementing
 ## CORS Configuration
 
 The server is configured to accept requests from:
-- `http://localhost:5173` (default Vite dev server)
-- `http://localhost:5174` (alternative dev server)
+- `http://localhost:8081` (Expo development server)
+- `http://localhost:19000` (Expo DevTools)
 - Custom frontend URL via `FRONTEND_URL` environment variable
 
 ## Environment Variables
@@ -292,4 +292,4 @@ The server is configured to accept requests from:
 Required environment variables:
 - `OPENAI_API_KEY`: OpenAI API key for AI responses (optional for demo mode)
 - `PORT`: Server port (default: 5001)
-- `FRONTEND_URL`: Frontend URL for CORS (default: http://localhost:5173)
+- `FRONTEND_URL`: Frontend URL for CORS (default: http://localhost:8081)

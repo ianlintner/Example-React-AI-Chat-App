@@ -14,7 +14,7 @@
 2. This will open a new Command Prompt and automatically:
    - Install all dependencies
    - Start the backend server (http://localhost:5000)
-   - Start the frontend app (http://localhost:5173)
+   - Start the mobile app (http://localhost:8081 for web, or use mobile device/emulator)
 
 ### Option 2: Manual Setup
 If the automated script doesn't work:
@@ -46,8 +46,8 @@ If the automated script doesn't work:
 
 - **Your OpenAI API key** is already configured in `backend/.env`
 - The app uses **in-memory storage** (no database required)
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:5000
+- **Frontend**: http://localhost:8081 (Expo web) or use mobile device/emulator
+- **Backend**: http://localhost:5001
 - Both servers need to be running for the chat to work
 
 ## Troubleshooting

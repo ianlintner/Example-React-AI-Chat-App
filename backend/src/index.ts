@@ -10,8 +10,10 @@ import reactionRoutes from './routes/reactions';
 import validationRoutes from './routes/validation';
 import agentTestBenchRoutes from './routes/agentTestBench';
 import swaggerDocsRoutes from './routes/swaggerDocs';
+import messageQueueRoutes from './routes/messageQueue';
 import { setupSocketHandlers } from './socket/socketHandlers';
 import { httpMetricsMiddleware, register } from './metrics/prometheus';
+import { createQueueService } from './messageQueue/queueService';
 
 dotenv.config();
 
@@ -47,6 +49,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/reactions', reactionRoutes);
 app.use('/api/validation', validationRoutes);
 app.use('/api/test-bench', agentTestBenchRoutes);
+app.use('/api/queue', messageQueueRoutes);
 app.use('/docs', swaggerDocsRoutes);
 
 // Health check endpoint
@@ -67,11 +70,59 @@ app.get('/metrics', async (req, res) => {
 // Socket.IO setup
 setupSocketHandlers(io);
 
+// Initialize message queue system
+const queueService = createQueueService(io);
+
 // Start server
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:5173"}`);
   console.log(`💾 Using in-memory storage for demo purposes`);
+  
+  // Initialize queue service
+  try {
+    await queueService.initialize();
+    console.log(`📨 Message Queue System initialized (${queueService.getProviderType()} provider)`);
+  } catch (error) {
+    console.error('❌ Failed to initialize message queue system:', error);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+  
+  try {
+    // Shutdown queue service
+    await queueService.shutdown();
+    
+    // Close server
+    server.close(() => {
+      console.log('👋 Server shut down complete');
+      process.exit(0);
+    });
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+  
+  try {
+    // Shutdown queue service
+    await queueService.shutdown();
+    
+    // Close server
+    server.close(() => {
+      console.log('👋 Server shut down complete');
+      process.exit(0);
+    });
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+    process.exit(1);
+  }
 });
 
 export { io };

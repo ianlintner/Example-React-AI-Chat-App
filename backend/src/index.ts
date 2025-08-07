@@ -29,7 +29,7 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -52,7 +52,11 @@ app.use('/api/test-bench', agentTestBenchRoutes);
 app.use('/api/queue', messageQueueRoutes);
 app.use('/docs', swaggerDocsRoutes);
 
-// Health check endpoint
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });

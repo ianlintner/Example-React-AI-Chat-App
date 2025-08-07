@@ -26,10 +26,10 @@ scrape_configs:
     scrape_interval: 10s
     metrics_path: '/metrics'
 
-  # AI Goal-Seeking System metrics (if we add a metrics endpoint)
-  - job_name: 'ai-goal-seeking-system'
+  # AI Goal-Seeking System backend metrics
+  - job_name: 'ai-goal-seeking-backend'
     static_configs:
-      - targets: ['host.docker.internal:5001']
+      - targets: ['backend:3001']
     scrape_interval: 15s
     metrics_path: '/metrics'
     scrape_timeout: 10s

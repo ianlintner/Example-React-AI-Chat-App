@@ -497,13 +497,13 @@ describe('AgentService', () => {
           type: 'entertainment_offer' as const,
           agentType: 'joke' as AgentType,
           message: 'Want a joke?',
-          timing: 'delayed' as const, // Changed to delayed so technical_check wins
+          timing: 'immediate' as const,
         },
         {
           type: 'technical_check' as const,
           agentType: 'general' as AgentType,
           message: 'Need technical help?',
-          timing: 'immediate' as const, // Changed to immediate to win
+          timing: 'immediate' as const,
         },
       ]);
 
@@ -516,7 +516,7 @@ describe('AgentService', () => {
       );
 
       expect(result.proactiveActions).toHaveLength(1);
-      expect(result.proactiveActions![0].type).toBe('technical_check'); // Higher priority
+      expect(result.proactiveActions![0].type).toBe('technical_check'); // Higher priority (3 vs 2)
     });
 
     it('should handle forced agent type', async () => {
@@ -557,8 +557,12 @@ describe('AgentService', () => {
     });
 
     it('should throw error when agent is already active', async () => {
-      // Make agent active first
-      await testAgentService.processMessageWithGoalSeeking(userId, 'Test', []);
+      // Set agent as active with current timestamp to ensure it's considered active
+      const activeAgents = (testAgentService as any).activeAgents;
+      activeAgents.set(userId, {
+        agentType: 'joke',
+        timestamp: new Date(), // Current timestamp ensures it's active
+      });
 
       // Try to execute proactive action
       await expect(
@@ -567,8 +571,12 @@ describe('AgentService', () => {
     });
 
     it('should queue action when agent is active', async () => {
-      // Make agent active first
-      await testAgentService.processMessageWithGoalSeeking(userId, 'Test', []);
+      // Set agent as active with current timestamp
+      const activeAgents = (testAgentService as any).activeAgents;
+      activeAgents.set(userId, {
+        agentType: 'joke',
+        timestamp: new Date(), // Current timestamp ensures it's active
+      });
 
       // Try to execute proactive action (should queue it)
       await expect(
@@ -735,6 +743,20 @@ describe('AgentService', () => {
     });
 
     it('should prioritize goal-seeking when agent is forced', async () => {
+      const contextObject = {
+        userId,
+        currentAgent: 'trivia' as AgentType,
+        lastInteraction: new Date(),
+        messageCount: 1,
+        shouldHandoff: false,
+        handoffTarget: null,
+        handoffReason: null,
+      };
+
+      // Mock both updateContext and getContext to return a context object
+      mockConversationManager.updateContext.mockReturnValue(contextObject);
+      mockConversationManager.getContext.mockReturnValue(contextObject);
+
       const result = await testAgentService.processMessageWithBothSystems(
         userId,
         'Test message',

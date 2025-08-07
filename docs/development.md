@@ -82,7 +82,7 @@ Required environment variables:
 ```bash
 PORT=5001
 NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:8081
 OPENAI_API_KEY=your-openai-api-key-here
 ```
 
@@ -117,7 +117,7 @@ npm run dev
 ### 5. Verify Setup
 
 - Backend: http://localhost:5001/api/health
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:8081 (Expo web) or use mobile app
 - Test real-time features by opening multiple browser tabs
 
 ## Project Structure
@@ -205,7 +205,7 @@ Follow conventional commits:
 # Server Configuration
 PORT=5001
 NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:8081
 
 # OpenAI Configuration
 OPENAI_API_KEY=your-openai-api-key

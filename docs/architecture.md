@@ -51,7 +51,7 @@ The AI Chat Application is a sophisticated, mobile-first real-time chat system f
 ### Key Architectural Principles
 - **Mobile-First**: Native React Native/Expo application
 - **Microservices-Ready**: Modular backend architecture
-- **Agent-Based**: 15 specialized AI agents for different use cases
+- **Agent-Based**: 16 specialized AI agents for different use cases
 - **Real-Time**: Socket.io for instant communication
 - **Observable**: Comprehensive monitoring and tracing
 - **Scalable**: Horizontal scaling capabilities
@@ -512,7 +512,6 @@ graph TB
         end
         
         subgraph "Specialized Agents"
-            Technical[👨‍💻 Technical Agent<br/>Programming Support]
             Hold[📞 Hold Agent<br/>Wait Management]
             General[💬 General Router<br/>Fallback & Routing]
         end
@@ -534,7 +533,6 @@ graph TB
     Router --> Website
     Router --> Operator
     
-    Router --> Technical
     Router --> Hold
     Router --> General
     
@@ -545,7 +543,7 @@ graph TB
     
     class Joke,Trivia,Gif,Story,Riddle,Quote,Game,Music,YouTube,DND entertainment
     class Account,Billing,Website,Operator support
-    class Technical,Hold,General specialized
+    class Hold,General specialized
     class Router router
 ```
 
@@ -1247,7 +1245,7 @@ The AI Chat Application represents a sophisticated, production-ready system that
 - **Comprehensive Observability**: Full monitoring, tracing, and metrics collection
 
 ### ✅ **AI Innovation**
-- **Multi-Agent System**: 17 specialized AI agents for different use cases
+- **Multi-Agent System**: 16 specialized AI agents for different use cases
 - **Goal-Seeking Behavior**: Proactive AI that adapts to user needs
 - **RAG Integration**: High-quality curated content with AI enhancement
 - **Quality Assurance**: Comprehensive response validation and safety measures

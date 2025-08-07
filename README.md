@@ -13,7 +13,7 @@ Comprehensive technical architecture with detailed Mermaid diagrams covering:
 - System overview & architectural principles
 - Component architecture (Frontend & Backend)
 - Data flow diagrams & sequence charts
-- 17 specialized AI agents architecture
+- 16 specialized AI agents architecture
 - Database design & storage architecture
 - API architecture (REST + WebSocket)
 - Security architecture & best practices
@@ -50,7 +50,7 @@ Complete index of all documentation with navigation guides for:
 ```bash
 # 1. Install dependencies
 cd backend && npm install
-cd ../mobile-app && npm install
+cd ../frontend && npm install
 
 # 2. Configure environment
 cp backend/.env.example backend/.env
@@ -58,7 +58,7 @@ cp backend/.env.example backend/.env
 
 # 3. Start services
 cd backend && npm run dev     # Terminal 1
-cd mobile-app && npm start   # Terminal 2
+cd frontend && npm start     # Terminal 2
 ```
 
 ### Access Points
@@ -68,7 +68,7 @@ cd mobile-app && npm start   # Terminal 2
 - **📈 Metrics**: http://localhost:9090 (Prometheus)
 - **🔍 Tracing**: http://localhost:16686 (Jaeger)
 
-## 🤖 AI Agent System (17 Agents)
+## 🤖 AI Agent System (16 Agents)
 
 ### 🎭 Entertainment Agents (10)
 | Agent | Purpose | Features |
@@ -92,10 +92,9 @@ cd mobile-app && npm start   # Terminal 2
 | 🌐 **Website Support** | Technical issues | Browser, performance, bugs |
 | 🎧 **Customer Service** | General support | Routing, coordination |
 
-### ⚙️ Specialized Agents (3)
+### ⚙️ Specialized Agents (2)
 | Agent | Purpose | Capabilities |
 |-------|---------|--------------|
-| 👨‍💻 **Technical Agent** | Programming help | Code assistance, debugging |
 | 📞 **Hold Agent** | Wait management | Professional hold experience |
 | 🤖 **General Router** | Classification | Message routing, fallback |
 
@@ -147,7 +146,7 @@ graph TB
     subgraph "Agent Layer"
         Entertainment[🎭 Entertainment<br/>10 Agents]
         Support[📞 Support<br/>4 Agents]
-        Technical[👨‍💻 Technical<br/>3 Agents]
+        Specialized[⚙️ Specialized<br/>2 Agents]
     end
     
     subgraph "Data Layer"
@@ -161,10 +160,10 @@ graph TB
     AgentRouter --> GoalSeeker
     GoalSeeker --> Entertainment
     GoalSeeker --> Support
-    GoalSeeker --> Technical
+    GoalSeeker --> Specialized
     Entertainment --> RAG
     Support --> Memory
-    Technical --> Memory
+    Specialized --> Memory
     Validator --> Metrics
 ```
 
@@ -225,11 +224,10 @@ Cloud: AWS/GCP/Azure compatible
 │   │   ├── routes/         # API route handlers
 │   │   ├── socket/         # WebSocket handlers
 │   │   └── validation/     # Response validation
-├── mobile-app/             # React Native mobile app
+├── frontend/               # React Native mobile app
 │   ├── app/               # Screens and navigation
 │   ├── components/        # Reusable components
 │   └── services/          # API and socket services
-├── frontend/              # Legacy web frontend (deprecated)
 ├── docs/                  # Comprehensive documentation
 ├── grafana/               # Monitoring dashboards
 └── docker-compose.yml     # Container orchestration
@@ -244,7 +242,7 @@ npm test            # Run tests
 npm run lint        # Code linting
 
 # Mobile App
-cd mobile-app
+cd frontend
 npm start           # Start Expo development server
 npm test           # Run tests
 
@@ -296,7 +294,7 @@ npm test
 cd backend && npm test
 
 # Mobile app tests  
-cd mobile-app && npm test
+cd frontend && npm test
 
 # Integration tests
 npm run test:integration
@@ -354,7 +352,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Production-ready Docker deployment
 
 ### ✅ **Advanced AI System**  
-- 17 specialized AI agents with distinct personalities
+- 16 specialized AI agents with distinct personalities
 - Goal-seeking behavior that adapts to user needs
 - RAG integration with curated, high-quality content
 - Multi-layer response validation and safety

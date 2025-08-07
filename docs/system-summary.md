@@ -263,7 +263,7 @@ The system continuously learns and adapts:
 
 ### Testing the System
 
-1. **Open the application**: Navigate to `http://localhost:5173`
+1. **Open the application**: Navigate to `http://localhost:8081` (Expo web) or use the mobile app
 2. **Start chatting**: Begin with casual conversation to see entertainment features
 3. **Ask technical questions**: Try questions like "How do I center a div in CSS?"
 4. **Wait for proactive actions**: Stay idle to see proactive entertainment offers

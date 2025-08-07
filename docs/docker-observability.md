@@ -51,7 +51,7 @@ cd frontend && npm run dev
 
 ### 4. Access Observability Tools
 
-- **Application**: http://localhost:5173
+- **Application**: http://localhost:8081 (Expo web), or use mobile app
 - **Zipkin UI**: http://localhost:9411 (Distributed tracing)
 - **Grafana**: http://localhost:3000 (Dashboards) - admin/admin
 - **Prometheus**: http://localhost:9090 (Metrics)

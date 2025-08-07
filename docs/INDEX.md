@@ -15,7 +15,7 @@ This documentation suite provides complete coverage of all aspects of the system
 - System overview and architectural principles
 - Component architecture (Frontend & Backend)
 - Data flow diagrams and sequence charts
-- Agent system architecture with 17 specialized agents
+- Agent system architecture with 16 specialized agents
 - Database design and storage architecture
 - API architecture (REST + WebSocket)
 - Security architecture and best practices
@@ -70,7 +70,7 @@ This documentation suite provides complete coverage of all aspects of the system
 
 ### [🤖 Agent System](./agents.md)
 **Multi-agent framework documentation**
-- Agent architecture and classification
+- 16 specialized AI agents with distinct roles
 - Message routing and intent recognition
 - Agent configuration and customization
 
@@ -203,6 +203,7 @@ This documentation suite provides complete coverage of all aspects of the system
 
 ### [📋 Migration Complete](../MIGRATION_COMPLETE.md)
 **Frontend migration status and details**
+- mobile-app/ → frontend/ directory restructure
 - React Native migration completion
 - Architecture changes and improvements
 - Breaking changes and migration path

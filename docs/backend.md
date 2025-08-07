@@ -81,14 +81,14 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:8081",
     methods: ["GET", "POST"]
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173"
+  origin: process.env.FRONTEND_URL || "http://localhost:8081"
 }));
 app.use(express.json());
 
@@ -718,7 +718,7 @@ export const setupMiddleware = (app: express.Application) => {
   
   // CORS configuration
   app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'http://localhost:8081',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -753,7 +753,7 @@ export const setupMiddleware = (app: express.Application) => {
 # .env
 PORT=5001
 NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:8081
 OPENAI_API_KEY=your-openai-api-key-here
 
 # Optional configurations
@@ -773,7 +773,7 @@ config();
 export const serverConfig = {
   port: parseInt(process.env.PORT || '5001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8081',
   openaiApiKey: process.env.OPENAI_API_KEY,
   logLevel: process.env.LOG_LEVEL || 'info',
   rateLimit: {

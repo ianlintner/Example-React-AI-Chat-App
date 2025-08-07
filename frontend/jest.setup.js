@@ -17,6 +17,53 @@ jest.mock('react-native-reanimated', () => {
 // Mock Expo modules
 jest.mock('expo-font');
 jest.mock('expo-asset');
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(),
+}));
+
+// Mock expo-router
+jest.mock('expo-router', () => {
+  const React = require('react');
+  return {
+    Link: ({ children, href, testID, ...props }) => {
+      return React.createElement('Text', { 
+        testID: testID || 'external-link',
+        href,
+        ...props 
+      }, children);
+    },
+    useRouter: () => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      back: jest.fn(),
+    }),
+  };
+});
+
+// Mock @react-navigation/bottom-tabs and @react-navigation/elements
+jest.mock('@react-navigation/elements', () => ({
+  PlatformPressable: ({ children, testID, onPressIn, ...props }) => {
+    const React = require('react');
+    return React.createElement('View', {
+      testID: testID || 'haptic-tab',
+      accessible: true,
+      onPressIn: onPressIn,
+      ...props
+    }, typeof children === 'string' ? children : React.createElement('Text', {}, children));
+  },
+}));
+
+// Mock Haptics - needs to be done before the component import
+const mockImpactAsync = jest.fn().mockResolvedValue(undefined);
+jest.mock('expo-haptics', () => ({
+  impactAsync: mockImpactAsync,
+  ImpactFeedbackStyle: {
+    Light: 'light',
+  },
+}));
+
+// Make the mock available globally for tests
+global.mockImpactAsync = mockImpactAsync;
 
 // Mock socket.io-client
 jest.mock('socket.io-client', () => ({
@@ -27,8 +74,27 @@ jest.mock('socket.io-client', () => ({
   })),
 }));
 
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const MockIcon = ({ name, size, color, ...props }) => {
+    return React.createElement('Text', props, name);
+  };
+  
+  return {
+    Ionicons: MockIcon,
+    MaterialIcons: MockIcon,
+    FontAwesome: MockIcon,
+    Feather: MockIcon,
+  };
+});
+
 // Mock react-native modules that might cause issues
 jest.mock('react-native/Libraries/LogBox/LogBox', () => ({
   ignoreLogs: jest.fn(),
   ignoreAllLogs: jest.fn(),
 }));
+
+// Suppress warnings for deprecated modules
+global.__DEV__ = true;
+console.warn = jest.fn();

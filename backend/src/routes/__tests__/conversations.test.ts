@@ -55,11 +55,23 @@ describe('Conversations Routes', () => {
       expect(response.body[0]).toMatchObject({
         id: 'conv-123',
         title: 'Test Conversation',
-        messages: [mockConversation.messages[1]], // Should only have last message
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'msg-2',
+            content: 'Hi there!',
+            role: 'assistant',
+            timestamp: expect.any(String),
+            conversationId: 'conv-123',
+            agentUsed: 'general',
+            confidence: 0.8,
+          })
+        ]),
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
 
+      // Should only have last message
+      expect(response.body[0].messages).toHaveLength(1);
       expect(mockStorage.getSortedConversations).toHaveBeenCalled();
     });
 

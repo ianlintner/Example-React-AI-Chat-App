@@ -21,6 +21,8 @@ module.exports = {
   env: {
     'react-native/react-native': true,
     jest: true,
+    es2022: true,
+    node: true,
   },
   parserOptions: {
     ecmaVersion: 2022,
@@ -66,7 +68,7 @@ module.exports = {
     'prefer-template': 'error',
     'prettier/prettier': 'error',
   },
-  ignores: [
+  ignorePatterns: [
     'dist/',
     'node_modules/',
     'coverage/',

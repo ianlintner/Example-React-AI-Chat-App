@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  StatusBar,
-  Alert,
-  AppState,
-  Platform,
-} from 'react-native';
-import {
-  Provider as PaperProvider,
-  Appbar,
-  ActivityIndicator,
-  Text,
-} from 'react-native-paper';
+import { View, StyleSheet, StatusBar, Alert, AppState, Platform } from 'react-native';
+import { Provider as PaperProvider, Appbar, ActivityIndicator, Text } from 'react-native-paper';
 import { socketService } from './services/socketService';
 import ChatScreen from './components/ChatScreen';
 import MessageInput from './components/MessageInput';
@@ -64,10 +52,7 @@ export default function App() {
       }
     };
 
-    const subscription = AppState.addEventListener(
-      'change',
-      handleAppStateChange
-    );
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     // Cleanup on unmount
     return () => {
@@ -92,10 +77,7 @@ export default function App() {
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          console.log(
-            'New conversation created for new message:',
-            newConversation
-          );
+          console.log('New conversation created for new message:', newConversation);
           return newConversation;
         }
 
@@ -115,16 +97,10 @@ export default function App() {
         console.log('Adding new message to existing conversation');
         const updatedConversation = {
           ...prev,
-          messages: [
-            ...prev.messages,
-            { ...message, status: 'complete' as const },
-          ],
+          messages: [...prev.messages, { ...message, status: 'complete' as const }],
           updatedAt: new Date(),
         };
-        console.log(
-          'Updated conversation with new message:',
-          updatedConversation
-        );
+        console.log('Updated conversation with new message:', updatedConversation);
         return updatedConversation;
       });
 
@@ -132,10 +108,7 @@ export default function App() {
       setLastUpdateTime(new Date());
     };
 
-    const handleStreamStart = (data: {
-      messageId: string;
-      conversationId: string;
-    }) => {
+    const handleStreamStart = (data: { messageId: string; conversationId: string }) => {
       console.log('🔄 Stream start received:', data);
 
       // Add streaming message placeholder
@@ -167,17 +140,13 @@ export default function App() {
         }
 
         // Check if message already exists
-        const existingMessage = prev.messages.find(
-          m => m.id === data.messageId
-        );
+        const existingMessage = prev.messages.find(m => m.id === data.messageId);
         if (existingMessage) {
           // Update existing message to streaming
           return {
             ...prev,
             messages: prev.messages.map(m =>
-              m.id === data.messageId
-                ? { ...m, status: 'streaming' as const }
-                : m
+              m.id === data.messageId ? { ...m, status: 'streaming' as const } : m,
             ),
             updatedAt: new Date(),
           };
@@ -220,11 +189,9 @@ export default function App() {
               ? {
                   ...m,
                   content: chunk.content,
-                  status: chunk.isComplete
-                    ? ('complete' as const)
-                    : ('streaming' as const),
+                  status: chunk.isComplete ? ('complete' as const) : ('streaming' as const),
                 }
-              : m
+              : m,
           ),
           updatedAt: new Date(),
         };
@@ -254,7 +221,7 @@ export default function App() {
                   ...(data.confidence && { confidence: data.confidence }),
                   status: 'complete' as const,
                 }
-              : m
+              : m,
           ),
           updatedAt: new Date(),
         };
@@ -267,10 +234,7 @@ export default function App() {
       agentUsed: string;
       confidence: number;
     }) => {
-      console.log(
-        '🎁 Proactive message received in App:',
-        JSON.stringify(data, null, 2)
-      );
+      console.log('🎁 Proactive message received in App:', JSON.stringify(data, null, 2));
 
       // Add proactive message to current conversation or create new one
       setConversation(prev => {
@@ -292,9 +256,7 @@ export default function App() {
         }
 
         // Check if message already exists to prevent duplicates
-        const existingMessage = prev.messages.find(
-          m => m.id === data.message.id
-        );
+        const existingMessage = prev.messages.find(m => m.id === data.message.id);
         if (existingMessage) {
           return prev;
         }
@@ -302,10 +264,7 @@ export default function App() {
         // Add proactive message
         return {
           ...prev,
-          messages: [
-            ...prev.messages,
-            { ...data.message, status: 'complete' as const },
-          ],
+          messages: [...prev.messages, { ...data.message, status: 'complete' as const }],
           updatedAt: new Date(),
         };
       });
@@ -399,12 +358,7 @@ export default function App() {
         <Appbar.Header>
           <Appbar.Content title='🎯 AI Assistant' />
           <View style={styles.connectionIndicator}>
-            <Text
-              style={[
-                styles.connectionText,
-                { color: isConnected ? '#4CAF50' : '#f44336' },
-              ]}
-            >
+            <Text style={[styles.connectionText, { color: isConnected ? '#4CAF50' : '#f44336' }]}>
               {isConnected ? '●' : '●'}
             </Text>
           </View>

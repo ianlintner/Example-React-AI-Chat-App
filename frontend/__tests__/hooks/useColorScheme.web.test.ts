@@ -69,11 +69,11 @@ describe('useColorScheme.web', () => {
     renderHook(() => useColorScheme());
 
     expect(mockUseEffect).toHaveBeenCalledWith(expect.any(Function), []);
-    
+
     // Call the useEffect callback manually to test it
     const effectCallback = mockUseEffect.mock.calls[0][0];
     effectCallback();
-    
+
     expect(setHasHydrated).toHaveBeenCalledWith(true);
   });
 });

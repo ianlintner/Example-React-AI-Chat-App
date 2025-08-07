@@ -1,52 +1,57 @@
-const { FlatCompat } = require('@eslint/eslintrc');
 const js = require('@eslint/js');
-const typescriptEslint = require('@typescript-eslint/eslint-plugin');
-const typescriptParser = require('@typescript-eslint/parser');
+const tseslint = require('@typescript-eslint/eslint-plugin');
+const tsparser = require('@typescript-eslint/parser');
 const react = require('eslint-plugin-react');
 const reactHooks = require('eslint-plugin-react-hooks');
 const reactNative = require('eslint-plugin-react-native');
 const prettier = require('eslint-plugin-prettier');
-const testingLibrary = require('eslint-plugin-testing-library');
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
+const globals = require('globals');
 
 module.exports = [
+  // Ignore patterns first
+  {
+    ignores: [
+      'coverage/**',
+      'dist/**', 
+      '.expo/**',
+      'node_modules/**',
+      'build/**',
+      'public/**',
+      '*.config.js',
+      'jest.setup.js',
+      'scripts/**',
+      '**/*.bundle.js',
+      '**/*.min.js',
+    ],
+  },
+  
+  // Base JavaScript configuration
   js.configs.recommended,
-  ...compat.extends(
-    'expo',
-    '@react-native',
-    '@typescript-eslint/recommended',
-    'plugin:react/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:react-native/all',
-    'prettier'
-  ),
+  
+  // Main configuration for TypeScript and React files
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
-      parser: typescriptParser,
+      parser: tsparser,
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
         },
         ecmaVersion: 2022,
         sourceType: 'module',
+        project: './tsconfig.json',
       },
       globals: {
         __DEV__: 'readonly',
-        ...require('globals').browser,
-        ...require('globals').es2022,
-        ...require('globals').node,
+        ...globals.browser,
+        ...globals.es2022,
       },
     },
     plugins: {
+      '@typescript-eslint': tseslint,
       react,
       'react-hooks': reactHooks,
       'react-native': reactNative,
-      '@typescript-eslint': typescriptEslint,
       prettier,
     },
     settings: {
@@ -65,14 +70,15 @@ module.exports = [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/prefer-const': 'error',
-      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
 
       // React rules
-      'react/react-in-jsx-scope': 'off', // Not needed with React 17+
-      'react/prop-types': 'off', // Using TypeScript for prop validation
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
       'react/display-name': 'off',
       'react/no-unescaped-entities': 'warn',
+
+      // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
 
@@ -104,7 +110,7 @@ module.exports = [
         'error',
         {
           singleQuote: true,
-          trailingComma: 'always',
+          trailingComma: 'all',
           semi: true,
           printWidth: 100,
           tabWidth: 2,
@@ -114,28 +120,32 @@ module.exports = [
       ],
     },
   },
+  
   // Test files configuration
   {
     files: ['**/__tests__/**/*', '**/*.test.{js,jsx,ts,tsx}'],
-    plugins: {
-      'testing-library': testingLibrary,
-    },
     languageOptions: {
       globals: {
-        ...require('globals').jest,
+        ...globals.jest,
       },
     },
     rules: {
-      ...testingLibrary.configs.react.rules,
       'react-native/no-raw-text': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
-  // JavaScript files configuration
+  
+  // Node.js files configuration
   {
-    files: ['**/*.js'],
+    files: ['**/*.config.js', 'jest.setup.js', 'scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
     rules: {
-      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-undef': 'off',
     },
   },
 ];

@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity } from 'react-native';
 import { Chip, Badge, Avatar } from 'react-native-paper';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
@@ -16,9 +9,7 @@ interface AgentStatusBarProps {
   isVisible?: boolean;
 }
 
-const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
-  isVisible = true,
-}) => {
+const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => {
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -73,7 +64,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
               duration: 1000,
               useNativeDriver: true,
             }),
-          ])
+          ]),
         ).start();
       };
       startPulse();
@@ -214,19 +205,13 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
       ]}
     >
       {/* Ultra-Compact Header */}
-      <TouchableOpacity
-        style={styles.compactHeader}
-        onPress={toggleCollapse}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.compactHeader} onPress={toggleCollapse} activeOpacity={0.7}>
         {/* Status Pulse Indicator */}
         <Animated.View
           style={[
             styles.statusPulse,
             {
-              backgroundColor: agentStatus.isActive
-                ? ForestColors.success
-                : ForestColors.textMuted,
+              backgroundColor: agentStatus.isActive ? ForestColors.success : ForestColors.textMuted,
               transform: [{ scale: agentStatus.isActive ? pulseAnim : 1 }],
             },
           ]}
@@ -243,9 +228,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
             style={[
               styles.connectionIndicator,
               {
-                backgroundColor: isConnected
-                  ? ForestColors.success
-                  : ForestColors.error,
+                backgroundColor: isConnected ? ForestColors.success : ForestColors.error,
               },
             ]}
           />
@@ -326,10 +309,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
         {agentStatus.conversationContext?.shouldHandoff && (
           <View style={styles.handoffAlert}>
             <Text style={styles.handoffAlertText}>
-              →{' '}
-              {getAgentDisplayName(
-                agentStatus.conversationContext.handoffTarget!
-              )}
+              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget!)}
             </Text>
           </View>
         )}

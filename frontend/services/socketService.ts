@@ -1,11 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import type {
-  Message,
-  Conversation,
-  StreamChunk,
-  ChatRequest,
-  AgentStatus,
-} from '../types';
+import type { Message, Conversation, StreamChunk, ChatRequest, AgentStatus } from '../types';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -15,9 +9,7 @@ class SocketService {
     return new Promise((resolve, reject) => {
       // Get API URL from environment variable or use default
       const apiUrl =
-        process.env.EXPO_PUBLIC_API_URL ||
-        process.env.API_URL ||
-        'http://localhost:5001';
+        process.env.EXPO_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5001';
       console.log('Connecting to socket server at:', apiUrl);
 
       this.socket = io(apiUrl, {
@@ -84,9 +76,7 @@ class SocketService {
     }
   }
 
-  onStreamStart(
-    callback: (data: { messageId: string; conversationId: string }) => void
-  ): void {
+  onStreamStart(callback: (data: { messageId: string; conversationId: string }) => void): void {
     if (this.socket) {
       this.socket.on('stream_start', callback);
     }
@@ -105,27 +95,21 @@ class SocketService {
       conversation: Conversation;
       agentUsed?: string;
       confidence?: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_complete', callback);
     }
   }
 
-  onStreamError(
-    callback: (error: { message: string; code: string }) => void
-  ): void {
+  onStreamError(callback: (error: { message: string; code: string }) => void): void {
     if (this.socket) {
       this.socket.on('stream_error', callback);
     }
   }
 
   onUserTyping(
-    callback: (data: {
-      userId: string;
-      userName?: string;
-      isTyping: boolean;
-    }) => void
+    callback: (data: { userId: string; userName?: string; isTyping: boolean }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('user_typing', callback);
@@ -133,11 +117,7 @@ class SocketService {
   }
 
   onMessageStatus(
-    callback: (data: {
-      messageId: string;
-      status: string;
-      readBy: string;
-    }) => void
+    callback: (data: { messageId: string; status: string; readBy: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('message_status', callback);
@@ -151,13 +131,13 @@ class SocketService {
       actionType: string;
       agentUsed: string;
       confidence: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_message', data => {
         console.log(
           '🎁 Proactive message received in mobile socket service:',
-          JSON.stringify(data, null, 2)
+          JSON.stringify(data, null, 2),
         );
         callback(data);
       });
@@ -165,11 +145,7 @@ class SocketService {
   }
 
   onProactiveError(
-    callback: (data: {
-      message: string;
-      actionType: string;
-      error: string;
-    }) => void
+    callback: (data: { message: string; actionType: string; error: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);

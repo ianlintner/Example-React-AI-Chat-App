@@ -143,7 +143,7 @@ const ValidationDashboard: React.FC = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -242,16 +242,12 @@ const ValidationDashboard: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>AI Response Validation</Text>
-        <Text style={styles.headerSubtitle}>
-          Monitor and analyze AI response quality
-        </Text>
+        <Text style={styles.headerSubtitle}>Monitor and analyze AI response quality</Text>
       </View>
 
       {/* Stats Cards */}
@@ -266,17 +262,13 @@ const ValidationDashboard: React.FC = () => {
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>✅</Text>
             <Text style={styles.statLabel}>Success Rate</Text>
-            <Text style={styles.statValue}>
-              {(stats.validationRate * 100).toFixed(1)}%
-            </Text>
+            <Text style={styles.statValue}>{(stats.validationRate * 100).toFixed(1)}%</Text>
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>⭐</Text>
             <Text style={styles.statLabel}>Average Score</Text>
-            <Text style={styles.statValue}>
-              {stats.averageScore.toFixed(3)}
-            </Text>
+            <Text style={styles.statValue}>{stats.averageScore.toFixed(3)}</Text>
           </View>
 
           <View style={styles.statCard}>
@@ -298,10 +290,7 @@ const ValidationDashboard: React.FC = () => {
               <View key={agentType} style={styles.agentCard}>
                 <View style={styles.agentHeader}>
                   <View
-                    style={[
-                      styles.agentColorDot,
-                      { backgroundColor: getAgentColor(agentType) },
-                    ]}
+                    style={[styles.agentColorDot, { backgroundColor: getAgentColor(agentType) }]}
                   />
                   <Text style={styles.agentName}>{agentType}</Text>
                 </View>
@@ -310,19 +299,13 @@ const ValidationDashboard: React.FC = () => {
                   <Text style={styles.agentStatText}>
                     Success: {(data.validationRate * 100).toFixed(1)}%
                   </Text>
-                  <Text style={styles.agentStatText}>
-                    Score: {data.averageScore.toFixed(3)}
-                  </Text>
+                  <Text style={styles.agentStatText}>Score: {data.averageScore.toFixed(3)}</Text>
                   <View style={styles.issueRow}>
-                    <Text style={[styles.issueText, { color: '#ef4444' }]}>
-                      {data.issues.high}
-                    </Text>
+                    <Text style={[styles.issueText, { color: '#ef4444' }]}>{data.issues.high}</Text>
                     <Text style={[styles.issueText, { color: '#f59e0b' }]}>
                       {data.issues.medium}
                     </Text>
-                    <Text style={[styles.issueText, { color: '#6b7280' }]}>
-                      {data.issues.low}
-                    </Text>
+                    <Text style={[styles.issueText, { color: '#6b7280' }]}>{data.issues.low}</Text>
                   </View>
                 </View>
               </View>
@@ -353,17 +336,11 @@ const ValidationDashboard: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              showFailedOnly && styles.toggleButtonActive,
-            ]}
+            style={[styles.toggleButton, showFailedOnly && styles.toggleButtonActive]}
             onPress={() => setShowFailedOnly(!showFailedOnly)}
           >
             <Text
-              style={[
-                styles.toggleButtonText,
-                showFailedOnly && styles.toggleButtonTextActive,
-              ]}
+              style={[styles.toggleButtonText, showFailedOnly && styles.toggleButtonTextActive]}
             >
               Failed Only
             </Text>
@@ -384,9 +361,7 @@ const ValidationDashboard: React.FC = () => {
           {logs.map(log => (
             <View key={log.id} style={styles.logItem}>
               <View style={styles.logHeader}>
-                <Text style={styles.logTimestamp}>
-                  {formatTimestamp(log.timestamp)}
-                </Text>
+                <Text style={styles.logTimestamp}>{formatTimestamp(log.timestamp)}</Text>
                 <View style={styles.logAgent}>
                   <View
                     style={[
@@ -400,10 +375,7 @@ const ValidationDashboard: React.FC = () => {
 
               <View style={styles.logMetrics}>
                 <Text
-                  style={[
-                    styles.logScore,
-                    { color: getScoreColor(log.validationResult.score) },
-                  ]}
+                  style={[styles.logScore, { color: getScoreColor(log.validationResult.score) }]}
                 >
                   Score: {log.validationResult.score.toFixed(3)}
                 </Text>
@@ -411,9 +383,7 @@ const ValidationDashboard: React.FC = () => {
                   style={[
                     styles.statusBadge,
                     {
-                      backgroundColor: log.validationResult.isValid
-                        ? '#dcfce7'
-                        : '#fee2e2',
+                      backgroundColor: log.validationResult.isValid ? '#dcfce7' : '#fee2e2',
                     },
                   ]}
                 >
@@ -421,9 +391,7 @@ const ValidationDashboard: React.FC = () => {
                     style={[
                       styles.statusText,
                       {
-                        color: log.validationResult.isValid
-                          ? '#166534'
-                          : '#dc2626',
+                        color: log.validationResult.isValid ? '#166534' : '#dc2626',
                       },
                     ]}
                   >
@@ -434,28 +402,21 @@ const ValidationDashboard: React.FC = () => {
 
               {log.validationResult.issues.length > 0 && (
                 <View style={styles.issues}>
-                  {log.validationResult.issues
-                    .slice(0, 3)
-                    .map((issue, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.issueBadge,
-                          {
-                            backgroundColor: `${getSeverityColor(issue.severity)}20`,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.issueText,
-                            { color: getSeverityColor(issue.severity) },
-                          ]}
-                        >
-                          {issue.severity}
-                        </Text>
-                      </View>
-                    ))}
+                  {log.validationResult.issues.slice(0, 3).map((issue, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.issueBadge,
+                        {
+                          backgroundColor: `${getSeverityColor(issue.severity)}20`,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.issueText, { color: getSeverityColor(issue.severity) }]}>
+                        {issue.severity}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               )}
 
@@ -465,12 +426,7 @@ const ValidationDashboard: React.FC = () => {
                   { backgroundColor: log.isProactive ? '#f3e8ff' : '#f3f4f6' },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.typeText,
-                    { color: log.isProactive ? '#7c3aed' : '#6b7280' },
-                  ]}
-                >
+                <Text style={[styles.typeText, { color: log.isProactive ? '#7c3aed' : '#6b7280' }]}>
                   {log.isProactive ? 'Proactive' : 'Regular'}
                 </Text>
               </View>

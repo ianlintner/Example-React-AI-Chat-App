@@ -5,7 +5,7 @@ import { ExternalLink } from '../../components/ExternalLink';
 
 describe('ExternalLink', () => {
   const mockOpenBrowserAsync = (global as any).mockOpenBrowserAsync || jest.fn();
-  
+
   beforeEach(() => {
     mockOpenBrowserAsync.mockClear();
     jest.clearAllMocks();
@@ -13,9 +13,7 @@ describe('ExternalLink', () => {
 
   it('renders correctly with children', () => {
     const { getByTestId } = render(
-      <ExternalLink href="https://example.com">
-        Visit Example
-      </ExternalLink>
+      <ExternalLink href="https://example.com">Visit Example</ExternalLink>,
     );
 
     const link = getByTestId('external-link');
@@ -25,9 +23,7 @@ describe('ExternalLink', () => {
 
   it('renders correctly with href prop', () => {
     const { getByTestId } = render(
-      <ExternalLink href="https://example.com">
-        Visit Example
-      </ExternalLink>
+      <ExternalLink href="https://example.com">Visit Example</ExternalLink>,
     );
 
     const link = getByTestId('external-link');
@@ -37,15 +33,15 @@ describe('ExternalLink', () => {
 
   it('passes through additional props', () => {
     const { getByTestId } = render(
-      <ExternalLink 
-        href="https://example.com" 
+      <ExternalLink
+        href="https://example.com"
         accessibilityLabel="Custom link"
         testID="custom-link"
       >
         Visit Example
-      </ExternalLink>
+      </ExternalLink>,
     );
-    
+
     const link = getByTestId('custom-link');
     expect(link).toBeTruthy();
     expect(link.props.accessibilityLabel).toBe('Custom link');
@@ -53,19 +49,13 @@ describe('ExternalLink', () => {
 
   it('handles different href formats', () => {
     const { rerender, getByTestId } = render(
-      <ExternalLink href="mailto:test@example.com">
-        Send Email
-      </ExternalLink>
+      <ExternalLink href="mailto:test@example.com">Send Email</ExternalLink>,
     );
 
     expect(getByTestId('external-link')).toBeTruthy();
     expect(getByTestId('external-link').props.href).toBe('mailto:test@example.com');
 
-    rerender(
-      <ExternalLink href="tel:+1234567890">
-        Call Phone
-      </ExternalLink>
-    );
+    rerender(<ExternalLink href="tel:+1234567890">Call Phone</ExternalLink>);
 
     expect(getByTestId('external-link').props.href).toBe('tel:+1234567890');
   });
@@ -81,15 +71,11 @@ describe('ExternalLink', () => {
 
     it('opens browser on native when pressed and prevents default', async () => {
       const href = 'https://example.com';
-      const { getByTestId } = render(
-        <ExternalLink href={href}>
-          Visit Example
-        </ExternalLink>
-      );
+      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
 
       const link = getByTestId('external-link');
       const mockEvent = { preventDefault: jest.fn() };
-      
+
       // Simulate press with preventDefault
       fireEvent.press(link, mockEvent);
 
@@ -104,17 +90,13 @@ describe('ExternalLink', () => {
         writable: true,
         value: 'android',
       });
-      
+
       const href = 'https://example.com';
-      const { getByTestId } = render(
-        <ExternalLink href={href}>
-          Visit Example
-        </ExternalLink>
-      );
+      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
 
       const link = getByTestId('external-link');
       const mockEvent = { preventDefault: jest.fn() };
-      
+
       fireEvent.press(link, mockEvent);
 
       await new Promise(resolve => setTimeout(resolve, 10));
@@ -133,15 +115,11 @@ describe('ExternalLink', () => {
 
     it('does not call openBrowserAsync on web platform', async () => {
       const href = 'https://example.com';
-      const { getByTestId } = render(
-        <ExternalLink href={href}>
-          Visit Example
-        </ExternalLink>
-      );
+      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
 
       const link = getByTestId('external-link');
       const mockEvent = { preventDefault: jest.fn() };
-      
+
       fireEvent.press(link, mockEvent);
 
       await new Promise(resolve => setTimeout(resolve, 10));

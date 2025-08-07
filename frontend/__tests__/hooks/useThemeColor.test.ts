@@ -33,51 +33,47 @@ describe('useThemeColor', () => {
 
   it('returns light color when theme is light', () => {
     mockUseColorScheme.mockReturnValue('light');
-    
+
     const { result } = renderHook(() =>
-      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background')
+      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background'),
     );
-    
+
     expect(result.current).toBe('#FFFFFF');
   });
 
   it('returns dark color when theme is dark', () => {
     mockUseColorScheme.mockReturnValue('dark');
-    
+
     const { result } = renderHook(() =>
-      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background')
+      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background'),
     );
-    
+
     expect(result.current).toBe('#000000');
   });
 
   it('falls back to Colors constant when no props provided', () => {
     mockUseColorScheme.mockReturnValue('light');
-    
-    const { result } = renderHook(() =>
-      useThemeColor({}, 'background')
-    );
-    
+
+    const { result } = renderHook(() => useThemeColor({}, 'background'));
+
     expect(result.current).toBe('#FFFFFF');
   });
 
   it('defaults to light theme when useColorScheme returns null', () => {
     mockUseColorScheme.mockReturnValue(null);
-    
+
     const { result } = renderHook(() =>
-      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background')
+      useThemeColor({ light: '#FFFFFF', dark: '#000000' }, 'background'),
     );
-    
+
     expect(result.current).toBe('#FFFFFF');
   });
 
   it('prioritizes prop colors over Colors constant', () => {
     mockUseColorScheme.mockReturnValue('light');
-    
-    const { result } = renderHook(() =>
-      useThemeColor({ light: '#FF0000' }, 'background')
-    );
-    
+
+    const { result } = renderHook(() => useThemeColor({ light: '#FF0000' }, 'background'));
+
     expect(result.current).toBe('#FF0000');
   });
 });

@@ -54,11 +54,7 @@ jobs:
     - name: Run tests
       run: |
         cd ${{ matrix.component }}
-        if [ "${{ matrix.component }}" = "backend" ]; then
-          npm test
-        else
-          npm run test:ci
-        fi
+        npm run test:ci
         
     - name: Run linting (frontend only)
       if: matrix.component == 'frontend'

@@ -30,7 +30,7 @@ jobs:
     - name: Run backend tests
       run: |
         cd backend
-        npm test
+        npm run test:ci
         
     - name: Build backend
       run: |

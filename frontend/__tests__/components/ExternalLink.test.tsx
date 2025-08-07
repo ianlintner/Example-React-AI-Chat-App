@@ -1,18 +1,14 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import { ExternalLink } from '../../components/ExternalLink';
 
-// Mock expo-web-browser
-const mockOpenBrowserAsync = jest.fn();
-jest.mock('expo-web-browser', () => ({
-  openBrowserAsync: mockOpenBrowserAsync,
-}));
-
 describe('ExternalLink', () => {
+  const mockOpenBrowserAsync = (global as any).mockOpenBrowserAsync || jest.fn();
+  
   beforeEach(() => {
     mockOpenBrowserAsync.mockClear();
+    jest.clearAllMocks();
   });
 
   it('renders correctly with children', () => {

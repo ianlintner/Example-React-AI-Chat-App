@@ -8,10 +8,10 @@ import {
   StatusBar,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { DiscordColors } from '../../constants/Colors';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
 import MessageInput from '../../components/MessageInput';
-import AgentStatusBar from '../../components/AgentStatusBar';
 import type { Conversation, Message } from '../../types';
 
 export default function HomeScreen() {
@@ -370,10 +370,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Agent Status Bar */}
-      <AgentStatusBar isVisible={isConnected} />
-
-      {/* Chat Area */}
+      {/* Chat Area with Combined Menu/Status Bar */}
       <View style={styles.chatContainer}>
         <ChatScreen conversation={conversation} />
       </View>
@@ -391,7 +388,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: DiscordColors.backgroundPrimary,
   },
   chatContainer: {
     flex: 1,
@@ -400,31 +397,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: DiscordColors.backgroundPrimary,
   },
   loadingText: {
     marginTop: 16,
     textAlign: 'center',
+    color: DiscordColors.textNormal,
+    fontSize: 16,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: DiscordColors.backgroundPrimary,
   },
   errorTitle: {
-    color: '#f44336',
+    color: DiscordColors.red,
     marginBottom: 8,
     textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
   },
   errorMessage: {
-    color: '#333',
+    color: DiscordColors.textNormal,
     marginBottom: 16,
     textAlign: 'center',
+    fontSize: 16,
   },
   errorSubtext: {
-    color: '#666',
+    color: DiscordColors.textMuted,
     textAlign: 'center',
+    fontSize: 14,
   },
 });

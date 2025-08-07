@@ -5,8 +5,10 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
-import { Chip, Badge } from 'react-native-paper';
+import { Chip, Badge, Avatar } from 'react-native-paper';
+import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { AgentStatus, AgentType } from '../types';
 
@@ -17,8 +19,10 @@ interface AgentStatusBarProps {
 const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => {
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const collapseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Handle agent status updates
@@ -75,6 +79,17 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
       pulseAnim.setValue(1);
     }
   }, [agentStatus?.isActive, pulseAnim]);
+
+  const toggleCollapse = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    
+    Animated.timing(collapseAnim, {
+      toValue: newCollapsedState ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const getAgentColor = (agentType: AgentType): string => {
     switch (agentType) {
@@ -146,102 +161,134 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
       style={[
         styles.container,
         {
-          transform: [
-            {
-              translateY: slideAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, -5]
-              })
-            },
-            { scale: pulseAnim }
-          ]
+          height: collapseAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [36, 90],
+          }),
+          transform: [{ scale: pulseAnim }]
         }
       ]}
     >
-      <View style={styles.statusContainer}>
-        {/* Current Agent Display */}
-        <View style={styles.agentInfo}>
-          <Chip
-            mode="flat"
-            textStyle={styles.chipText}
-            style={[styles.agentChip, { backgroundColor: agentColor + '20', borderColor: agentColor }]}
+      {/* Ultra-Compact Header */}
+      <TouchableOpacity 
+        style={styles.compactHeader}
+        onPress={toggleCollapse}
+        activeOpacity={0.7}
+      >
+        {/* Status Pulse Indicator */}
+        <Animated.View style={[
+          styles.statusPulse,
+          { 
+            backgroundColor: agentStatus.isActive ? ForestColors.success : ForestColors.textMuted,
+            transform: [{ scale: agentStatus.isActive ? pulseAnim : 1 }]
+          }
+        ]} />
+        
+        {/* Agent Info */}
+        <Text style={styles.compactAgentName} numberOfLines={1}>
+          {agentIcon} {agentName}
+        </Text>
+        
+        {/* Connection & Expand Indicator */}
+        <View style={styles.rightControls}>
+          <View style={[
+            styles.connectionIndicator,
+            { backgroundColor: isConnected ? ForestColors.success : ForestColors.error }
+          ]} />
+          <Animated.View
+            style={[
+              styles.expandIcon,
+              {
+                transform: [{
+                  rotate: collapseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg'],
+                  }),
+                }],
+              }
+            ]}
           >
-            {agentIcon} {agentName}
-          </Chip>
-          
-          {/* Active Status Badge */}
-          {agentStatus.isActive && (
-            <Badge 
-              style={[styles.activeBadge, { backgroundColor: '#4CAF50' }]}
-              size={8}
-            />
-          )}
+            <Text style={styles.chevronText}>⌃</Text>
+          </Animated.View>
         </View>
+      </TouchableOpacity>
 
-        {/* Status Details */}
-        <View style={styles.statusDetails}>
-          {/* Connection Status */}
-          <View style={styles.connectionStatus}>
-            <View style={[
-              styles.connectionDot, 
-              { backgroundColor: isConnected ? '#4CAF50' : '#f44336' }
-            ]} />
-            <Text style={styles.connectionText}>
-              {isConnected ? 'Connected' : 'Disconnected'}
+      {/* Smart Expandable Content */}
+      <Animated.View
+        style={[
+          styles.expandedContent,
+          {
+            opacity: collapseAnim,
+            height: collapseAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 54],
+            }),
+          }
+        ]}
+      >
+        {/* Metrics Row */}
+        <View style={styles.metricsRow}>
+          <View style={styles.metric}>
+            <Text style={styles.metricValue}>
+              {agentStatus.conversationContext 
+                ? `${Math.round(agentStatus.conversationContext.userSatisfaction * 100)}%`
+                : 'N/A'
+              }
             </Text>
+            <Text style={styles.metricLabel}>SATISFACTION</Text>
           </View>
 
-          {/* Goal State */}
-          {agentStatus.goalState && (
-            <View style={styles.goalInfo}>
-              <Text style={styles.goalStateText}>
-                State: {agentStatus.goalState.currentState}
+          <View style={styles.metricDivider} />
+
+          <View style={styles.metric}>
+            <View style={styles.goalMetric}>
+              <Text style={styles.metricValue}>
+                {agentStatus.goalState?.currentState || 'Idle'}
               </Text>
-              {agentStatus.goalState.activeGoals.length > 0 && (
-                <Badge 
-                  style={styles.goalBadge}
-                  size={16}
-                >
-                  {agentStatus.goalState.activeGoals.length}
-                </Badge>
+              {agentStatus.goalState?.activeGoals && agentStatus.goalState.activeGoals.length > 0 && (
+                <View style={styles.goalCount}>
+                  <Text style={styles.goalCountText}>
+                    {agentStatus.goalState.activeGoals.length}
+                  </Text>
+                </View>
               )}
             </View>
-          )}
+            <Text style={styles.metricLabel}>STATE</Text>
+          </View>
 
-          {/* Conversation Context */}
-          {agentStatus.conversationContext && (
-            <View style={styles.contextInfo}>
-              <Text style={styles.contextText}>
-                Satisfaction: {Math.round(agentStatus.conversationContext.userSatisfaction * 100)}%
-              </Text>
-              <Text style={styles.contextText}>
-                Depth: {agentStatus.conversationContext.conversationDepth}
-              </Text>
-            </View>
-          )}
+          <View style={styles.metricDivider} />
 
-          {/* Handoff Indicator */}
-          {agentStatus.conversationContext?.shouldHandoff && (
-            <Chip
-              mode="outlined"
-              compact
-              textStyle={styles.handoffText}
-              style={styles.handoffChip}
-            >
-              🔄 Handoff to {getAgentDisplayName(agentStatus.conversationContext.handoffTarget!)}
-            </Chip>
-          )}
+          <View style={styles.metric}>
+            <Text style={styles.metricValue}>
+              {agentStatus.conversationContext?.conversationDepth || 0}
+            </Text>
+            <Text style={styles.metricLabel}>DEPTH</Text>
+          </View>
         </View>
 
-        {/* Last Updated */}
-        <Text style={styles.timestamp}>
-          Updated: {new Date(agentStatus.timestamp).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-          })}
-        </Text>
-      </View>
+        {/* Handoff Alert */}
+        {agentStatus.conversationContext?.shouldHandoff && (
+          <View style={styles.handoffAlert}>
+            <Text style={styles.handoffAlertText}>
+              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget!)}
+            </Text>
+          </View>
+        )}
+      </Animated.View>
+
+      {/* Dynamic Accent Line */}
+      <Animated.View
+        style={[
+          styles.accentLine,
+          {
+            backgroundColor: agentStatus.isActive ? ForestColors.brandPrimary : ForestColors.borderLight,
+            scaleX: collapseAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.3, 1],
+            }),
+          }
+        ]}
+      />
     </Animated.View>
   );
 };
@@ -249,91 +296,168 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  // Modern Mobile-First Container
   container: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    backgroundColor: ForestColors.backgroundSecondary,
+    borderBottomWidth: 0.5,
+    borderBottomColor: ForestColors.borderLight,
+    shadowColor: ForestColors.backgroundTertiary,
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 2,
+    elevation: 2,
+    overflow: 'hidden',
   },
-  statusContainer: {
-    padding: 12,
-  },
-  agentInfo: {
+  
+  // Ultra-Compact Header (Mobile Optimized)
+  compactHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 36,
   },
-  agentChip: {
-    height: 32,
-    borderWidth: 1,
+  
+  // Animated Status Pulse
+  statusPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
+    opacity: 0.8,
   },
-  chipText: {
-    fontSize: 12,
+  
+  // Compact Agent Name
+  compactAgentName: {
+    flex: 1,
+    fontSize: 13,
     fontWeight: '600',
+    color: ForestColors.textNormal,
+    letterSpacing: 0.2,
   },
-  activeBadge: {
-    position: 'absolute',
-    right: -4,
-    top: -4,
-  },
-  statusDetails: {
+  
+  // Right Side Controls
+  rightControls: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
   },
-  connectionStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  connectionDot: {
+  
+  // Minimal Connection Indicator  
+  connectionIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginRight: 4,
   },
-  connectionText: {
-    fontSize: 10,
-    color: '#666',
+  
+  // Modern Expand Icon
+  expandIcon: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    backgroundColor: ForestColors.backgroundAccent,
   },
-  goalInfo: {
+  
+  chevronText: {
+    fontSize: 12,
+    color: ForestColors.textMuted,
+    fontWeight: '600',
+  },
+  
+  // Smart Expandable Content
+  expandedContent: {
+    paddingHorizontal: 12,
+    paddingBottom: 6,
+    overflow: 'hidden',
+  },
+  
+  // Metrics Grid Layout
+  metricsRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  
+  metric: {
+    flex: 1,
     alignItems: 'center',
   },
-  goalStateText: {
-    fontSize: 10,
-    color: '#666',
-    marginRight: 4,
+  
+  metricValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: ForestColors.textNormal,
+    marginBottom: 2,
   },
-  goalBadge: {
-    backgroundColor: '#2196F3',
+  
+  metricLabel: {
+    fontSize: 8,
+    fontWeight: '600',
+    color: ForestColors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  contextInfo: {
+  
+  // Elegant Dividers
+  metricDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: ForestColors.borderLight,
+    marginHorizontal: 8,
+    opacity: 0.5,
+  },
+  
+  // Goal Metric Container
+  goalMetric: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
   },
-  contextText: {
-    fontSize: 10,
-    color: '#666',
+  
+  goalCount: {
+    backgroundColor: ForestColors.brandPrimary,
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
-  handoffChip: {
-    height: 24,
-    borderColor: '#FF9800',
-  },
-  handoffText: {
-    fontSize: 10,
-    color: '#FF9800',
-  },
-  timestamp: {
+  
+  goalCountText: {
     fontSize: 9,
-    color: '#999',
-    textAlign: 'right',
+    fontWeight: '700',
+    color: '#fff',
+  },
+  
+  // Inline Handoff Alert
+  handoffAlert: {
+    backgroundColor: ForestColors.loadingBackground,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'center',
+  },
+  
+  handoffAlertText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: ForestColors.warning,
+    textAlign: 'center',
+  },
+  
+  // Dynamic Accent Line
+  accentLine: {
+    height: 1.5,
+    backgroundColor: ForestColors.brandPrimary,
+    position: 'absolute',
+    bottom: 0,
+    left: 12,
+    right: 12,
+    borderRadius: 1,
   },
 });
 

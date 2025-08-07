@@ -7,10 +7,13 @@ import {
   Dimensions,
   ActivityIndicator,
   Animated,
+  TouchableOpacity,
 } from 'react-native';
 import { Avatar, Chip } from 'react-native-paper';
 import Markdown from 'react-native-markdown-display';
-import type { Conversation, Message } from '../types';
+import { ForestColors } from '../constants/Colors';
+import { socketService } from '../services/socketService';
+import type { Conversation, Message, AgentStatus, AgentType } from '../types';
 
 interface ChatScreenProps {
   conversation: Conversation | null;
@@ -19,6 +22,14 @@ interface ChatScreenProps {
 const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+  const headerAnimValue = useRef(new Animated.Value(1)).current;
+  
+  // Combined Agent Status & Menu Integration
+  const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const agentPulseAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -28,6 +39,56 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
       }, 100);
     }
   }, [conversation?.messages]);
+
+  // Combined Agent Status & Menu Setup
+  useEffect(() => {
+    const handleAgentStatusUpdate = (status: AgentStatus) => {
+      setAgentStatus(status);
+      
+      // Trigger slide animation when agent status changes
+      Animated.sequence([
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        })
+      ]).start();
+    };
+
+    socketService.onAgentStatusUpdate(handleAgentStatusUpdate);
+    setIsConnected(socketService.isSocketConnected());
+
+    return () => {
+      socketService.removeListener('agent_status_update');
+    };
+  }, [slideAnim]);
+
+  // Enhanced agent pulse animation
+  useEffect(() => {
+    if (agentStatus?.isActive) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(agentPulseAnim, {
+            toValue: 1.1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(agentPulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      agentPulseAnim.setValue(1);
+    }
+  }, [agentStatus?.isActive, agentPulseAnim]);
 
   // Pulsing animation for streaming messages
   useEffect(() => {
@@ -61,48 +122,114 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
     };
   }, [conversation?.messages, pulseAnim]);
 
+  const toggleHeaderCollapse = () => {
+    const newCollapsedState = !isHeaderCollapsed;
+    setIsHeaderCollapsed(newCollapsedState);
+    
+    Animated.timing(headerAnimValue, {
+      toValue: newCollapsedState ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
   const formatTimestamp = (timestamp: Date) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getAgentColor = (agentUsed?: string) => {
+  const getAgentInfo = (agentUsed?: string) => {
     switch (agentUsed) {
-      case 'hold_agent': return '#FF9800';
-      case 'account_support': return '#2196F3';
-      case 'billing_support': return '#4CAF50';
-      case 'website_support': return '#9C27B0';
-      case 'operator_support': return '#607D8B';
-      case 'joke': return '#FF5722';
-      case 'trivia': return '#795548';
-      case 'gif': return '#E91E63';
-      case 'story_teller': return '#3F51B5';
-      case 'riddle_master': return '#FF9800';
-      case 'quote_master': return '#009688';
-      case 'game_host': return '#8BC34A';
-      case 'music_guru': return '#673AB7';
-      case 'general': return '#4CAF50';
-      default: return '#757575';
-    }
-  };
-
-  const getAgentLabel = (agentUsed?: string) => {
-    switch (agentUsed) {
-      case 'hold_agent': return '⏳ Hold Agent';
-      case 'account_support': return '👤 Account Support';
-      case 'billing_support': return '💳 Billing Support';
-      case 'website_support': return '🌐 Website Support';
-      case 'operator_support': return '📞 Customer Service';
-      case 'joke': return '🎭 Adaptive Joke Master';
-      case 'trivia': return '🧠 Trivia Master';
-      case 'gif': return '🎬 GIF Master';
-      case 'story_teller': return '📖 Story Teller';
-      case 'riddle_master': return '🧩 Riddle Master';
-      case 'quote_master': return '💭 Quote Master';
-      case 'game_host': return '🎮 Game Host';
-      case 'music_guru': return '🎵 Music Guru';
-      case 'general': return '💬 General Agent';
-      default: return '🤖 AI Agent';
+      case 'hold_agent': 
+        return { 
+          name: 'Hold Agent', 
+          avatar: 'clock-outline', 
+          color: '#FF9800' 
+        };
+      case 'account_support': 
+        return { 
+          name: 'Account Support', 
+          avatar: 'account-circle', 
+          color: '#2196F3' 
+        };
+      case 'billing_support': 
+        return { 
+          name: 'Billing Support', 
+          avatar: 'credit-card', 
+          color: '#4CAF50' 
+        };
+      case 'website_support': 
+        return { 
+          name: 'Website Support', 
+          avatar: 'web', 
+          color: '#9C27B0' 
+        };
+      case 'operator_support': 
+        return { 
+          name: 'Customer Service', 
+          avatar: 'headphones', 
+          color: '#607D8B' 
+        };
+      case 'joke': 
+        return { 
+          name: 'Comedy Bot', 
+          avatar: 'emoticon-happy', 
+          color: '#FF5722' 
+        };
+      case 'trivia': 
+        return { 
+          name: 'Trivia Master', 
+          avatar: 'head-question', 
+          color: '#795548' 
+        };
+      case 'gif': 
+        return { 
+          name: 'GIF Master', 
+          avatar: 'movie', 
+          color: '#E91E63' 
+        };
+      case 'story_teller': 
+        return { 
+          name: 'Story Teller', 
+          avatar: 'book-open', 
+          color: '#3F51B5' 
+        };
+      case 'riddle_master': 
+        return { 
+          name: 'Riddle Master', 
+          avatar: 'puzzle', 
+          color: '#FF9800' 
+        };
+      case 'quote_master': 
+        return { 
+          name: 'Quote Master', 
+          avatar: 'format-quote-close', 
+          color: '#009688' 
+        };
+      case 'game_host': 
+        return { 
+          name: 'Game Host', 
+          avatar: 'controller-classic', 
+          color: '#8BC34A' 
+        };
+      case 'music_guru': 
+        return { 
+          name: 'Music Guru', 
+          avatar: 'music', 
+          color: '#673AB7' 
+        };
+      case 'general': 
+        return { 
+          name: 'AI Assistant', 
+          avatar: 'robot', 
+          color: '#4CAF50' 
+        };
+      default: 
+        return { 
+          name: 'AI Assistant', 
+          avatar: 'robot', 
+          color: '#757575' 
+        };
     }
   };
 
@@ -111,6 +238,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
     isStreamingMessage?: boolean;
   }> = ({ message, isStreamingMessage = false }) => {
     const isUser = message.role === 'user';
+    const agentInfo = !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
     
     return (
       <View style={[
@@ -118,15 +246,18 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         isUser ? styles.userMessageContainer : styles.assistantMessageContainer
       ]}>
         <Avatar.Icon
-          size={32}
-          icon={isUser ? 'account' : 'robot'}
+          size={40}
+          icon={isUser ? 'account' : (agentInfo?.avatar || 'robot')}
           style={[
             styles.avatar,
-            { backgroundColor: isUser ? '#2196F3' : '#4CAF50' }
+            { backgroundColor: isUser ? ForestColors.brandTertiary : (agentInfo?.color || ForestColors.brandPrimary) }
           ]}
         />
         
-        <View style={styles.messageContentContainer}>
+        <View style={[
+          styles.messageContentContainer,
+          isUser ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }
+        ]}>
           <Animated.View
             style={[
               styles.messageBubble,
@@ -139,33 +270,29 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             ]}
           >
             {/* Agent indicator for assistant messages */}
-            {!isUser && message.agentUsed && (
-              <View style={styles.agentIndicatorContainer}>
-                <Chip
-                  mode="outlined"
-                  compact
-                  textStyle={styles.chipText}
-                  style={[styles.agentChip, { borderColor: getAgentColor(message.agentUsed) }]}
-                >
-                  {getAgentLabel(message.agentUsed)}
-                </Chip>
-                {message.isProactive && (
-                  <Chip
-                    mode="flat"
-                    compact
-                    textStyle={styles.chipText}
-                    style={styles.proactiveChip}
-                  >
-                    🎯 Proactive
-                  </Chip>
-                )}
-                {message.confidence && (
-                  <Text style={styles.confidenceText}>
-                    {Math.round(message.confidence * 100)}% confidence
-                  </Text>
-                )}
-              </View>
-            )}
+            {!isUser && message.agentUsed && (() => {
+              const agentInfo = getAgentInfo(message.agentUsed);
+              return (
+                <View style={styles.agentIndicatorContainer}>
+                  <Text style={styles.agentName}>{agentInfo.name}</Text>
+                  {message.isProactive && (
+                    <Chip
+                      mode="flat"
+                      compact
+                      textStyle={styles.chipText}
+                      style={styles.proactiveChip}
+                    >
+                      🎯 Proactive
+                    </Chip>
+                  )}
+                  {message.confidence && (
+                    <Text style={styles.confidenceText}>
+                      {Math.round(message.confidence * 100)}% confidence
+                    </Text>
+                  )}
+                </View>
+              );
+            })()}
             
             {isUser ? (
               <Text style={[styles.messageText, styles.userMessageText]}>
@@ -179,8 +306,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                   </Markdown>
                 ) : (
                   <View style={styles.thinkingContainer}>
-                    <ActivityIndicator size="small" color="#666" />
-                    <Text style={styles.thinkingText}>AI is thinking...</Text>
+                    <ActivityIndicator 
+                      size="small" 
+                      color={message.status === 'pending' ? ForestColors.loadingPrimary : ForestColors.loadingSecondary}
+                    />
+                    <Text style={[
+                      styles.thinkingText, 
+                      { color: message.status === 'pending' ? ForestColors.textMuted : ForestColors.textFaint }
+                    ]}>
+                      {message.status === 'pending' ? 'Processing your request...' : 'Generating response...'}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -224,13 +359,158 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Conversation Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{conversation.title}</Text>
-        <Text style={styles.headerSubtitle}>
-          {conversation.messages.length} messages
-        </Text>
-      </View>
+      {/* Ultra-Compact Mobile Header */}
+      <Animated.View 
+        style={[
+          styles.header,
+          {
+            height: headerAnimValue.interpolate({
+              inputRange: [0, 1],
+              outputRange: [42, 64],
+            }),
+          }
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.headerTouchable}
+          onPress={toggleHeaderCollapse}
+          activeOpacity={0.7}
+        >
+          <View style={styles.headerMain}>
+            <View style={styles.headerLeft}>
+              <Animated.View 
+                style={[
+                  styles.activityPulse,
+                  {
+                    backgroundColor: agentStatus?.isActive ? ForestColors.success : ForestColors.textMuted,
+                    transform: [{ scale: agentStatus?.isActive ? agentPulseAnim : 1 }]
+                  }
+                ]} 
+              />
+              <View style={styles.connectionDot}>
+                <View style={[
+                  styles.connectionIndicator,
+                  { backgroundColor: isConnected ? ForestColors.success : ForestColors.error }
+                ]} />
+              </View>
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerTitle} numberOfLines={1}>
+                  {conversation.title}
+                </Text>
+                <Animated.View
+                  style={{
+                    opacity: headerAnimValue,
+                    height: headerAnimValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 14],
+                    }),
+                  }}
+                >
+                  <Text style={styles.headerSubtitle}>
+                    {conversation.messages.length} msgs • {agentStatus ? getAgentInfo(agentStatus.currentAgent).name : 'AI Assistant'}
+                  </Text>
+                </Animated.View>
+              </View>
+            </View>
+            
+            <View style={styles.headerRight}>
+              <View style={styles.messageBadge}>
+                <Text style={styles.messageBadgeText}>
+                  {conversation.messages.length}
+                </Text>
+              </View>
+              <Animated.View
+                style={[
+                  styles.expandToggle,
+                  {
+                    transform: [{
+                      rotate: headerAnimValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0deg', '180deg'],
+                      }),
+                    }],
+                  }
+                ]}
+              >
+                <Text style={styles.chevronSymbol}>⌄</Text>
+              </Animated.View>
+            </View>
+          </View>
+        </TouchableOpacity>
+        
+        {/* Expanded Agent Metrics */}
+        <Animated.View
+          style={[
+            styles.expandedMetrics,
+            {
+              opacity: headerAnimValue,
+              height: headerAnimValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 22],
+              }),
+            }
+          ]}
+        >
+          {agentStatus && (
+            <View style={styles.metricsRow}>
+              <View style={styles.metric}>
+                <Text style={styles.metricValue}>
+                  {agentStatus.conversationContext 
+                    ? `${Math.round(agentStatus.conversationContext.userSatisfaction * 100)}%`
+                    : 'N/A'
+                  }
+                </Text>
+                <Text style={styles.metricLabel}>SAT</Text>
+              </View>
+
+              <View style={styles.metricDivider} />
+
+              <View style={styles.metric}>
+                <View style={styles.goalMetric}>
+                  <Text style={styles.metricValue}>
+                    {agentStatus.goalState?.currentState || 'Idle'}
+                  </Text>
+                  {agentStatus.goalState?.activeGoals && agentStatus.goalState.activeGoals.length > 0 && (
+                    <View style={styles.goalCount}>
+                      <Text style={styles.goalCountText}>
+                        {agentStatus.goalState.activeGoals.length}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.metricLabel}>STATE</Text>
+              </View>
+
+              <View style={styles.metricDivider} />
+
+              <View style={styles.metric}>
+                <Text style={styles.metricValue}>
+                  {agentStatus.conversationContext?.conversationDepth || 0}
+                </Text>
+                <Text style={styles.metricLabel}>DEPTH</Text>
+              </View>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Progress Accent */}
+        <Animated.View
+          style={[
+            styles.progressAccent,
+            {
+              backgroundColor: agentStatus?.isActive ? ForestColors.brandPrimary : ForestColors.borderLight,
+              opacity: headerAnimValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.4, 1],
+              }),
+              scaleX: headerAnimValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.6, 1],
+              }),
+            }
+          ]}
+        />
+      </Animated.View>
 
       {/* Messages */}
       <ScrollView
@@ -261,118 +541,280 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: ForestColors.backgroundPrimary,
   },
   header: {
-    padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: ForestColors.backgroundSecondary,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: ForestColors.borderMedium,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  headerTouchable: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 32,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  headerAvatar: {
+    backgroundColor: ForestColors.brandPrimary,
+    marginRight: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '600',
+    color: ForestColors.headerPrimary,
+    lineHeight: 22,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    fontSize: 12,
+    color: ForestColors.headerSecondary,
+    fontWeight: '400',
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  // Modern Mobile Header Elements
+  activityPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ForestColors.success,
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  connectionDot: {
+    marginRight: 8,
+  },
+  connectionIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  messageBadge: {
+    backgroundColor: ForestColors.brandPrimary,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  messageBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  expandToggle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: ForestColors.backgroundAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevronSymbol: {
+    fontSize: 12,
+    color: ForestColors.textMuted,
+    fontWeight: '600',
+  },
+  progressAccent: {
+    height: 2,
+    backgroundColor: ForestColors.brandPrimary,
+    position: 'absolute',
+    bottom: 0,
+    left: 12,
+    right: 12,
+    borderRadius: 1,
+  },
+  
+  // Expanded Metrics Section
+  expandedMetrics: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+    overflow: 'hidden',
+  },
+  
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  
+  metric: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  
+  metricValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: ForestColors.textNormal,
+    marginBottom: 1,
+  },
+  
+  metricLabel: {
+    fontSize: 7,
+    fontWeight: '600',
+    color: ForestColors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  
+  metricDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: ForestColors.borderLight,
+    marginHorizontal: 6,
+    opacity: 0.5,
+  },
+  
+  goalMetric: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  goalCount: {
+    backgroundColor: ForestColors.brandPrimary,
+    borderRadius: 6,
+    minWidth: 12,
+    height: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 3,
+  },
+  
+  goalCountText: {
+    fontSize: 7,
+    fontWeight: '700',
+    color: '#fff',
   },
   messagesContainer: {
     flex: 1,
   },
   messagesContent: {
-    padding: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   messageBubbleContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
     alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 2,
+    marginBottom: 2,
+    minHeight: 44,
   },
   userMessageContainer: {
-    justifyContent: 'flex-end',
-    flexDirection: 'row-reverse',
+    backgroundColor: 'transparent',
   },
   assistantMessageContainer: {
-    justifyContent: 'flex-start',
+    backgroundColor: 'transparent',
   },
   avatar: {
-    marginHorizontal: 8,
+    marginRight: 16,
+    marginTop: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   messageContentContainer: {
     flex: 1,
-    maxWidth: width * 0.7,
+    paddingTop: 2,
   },
   messageBubble: {
-    padding: 12,
-    borderRadius: 16,
-    marginHorizontal: 4,
+    backgroundColor: 'transparent',
   },
   userBubble: {
-    backgroundColor: '#2196F3',
-    borderTopRightRadius: 4,
+    backgroundColor: 'transparent',
   },
   assistantBubble: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: 'transparent',
   },
   agentIndicatorContainer: {
-    marginBottom: 8,
+    marginBottom: 6,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   agentChip: {
     height: 24,
+    backgroundColor: ForestColors.backgroundAccent,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 8,
   },
   proactiveChip: {
     height: 20,
-    backgroundColor: '#2196F3',
+    backgroundColor: ForestColors.brandPrimary,
+    borderRadius: 10,
   },
   chipText: {
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: '500',
+    color: ForestColors.textNormal,
   },
   confidenceText: {
     fontSize: 10,
-    color: '#666',
+    color: ForestColors.textMuted,
     marginLeft: 4,
   },
   messageText: {
     fontSize: 16,
-    lineHeight: 20,
+    lineHeight: 22,
+    color: ForestColors.textNormal,
+    fontWeight: '400',
+    marginBottom: 2,
   },
   userMessageText: {
-    color: '#fff',
+    color: ForestColors.textNormal,
   },
   markdownContainer: {
-    minHeight: 20,
+    minHeight: 22,
   },
   thinkingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
+    opacity: 0.8,
   },
   thinkingText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#666',
+    color: ForestColors.textMuted,
     fontStyle: 'italic',
   },
   timestamp: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-    marginHorizontal: 4,
+    fontSize: 11,
+    color: ForestColors.textMuted,
+    marginTop: 2,
+    marginLeft: 0,
+    opacity: 0.6,
   },
   userTimestamp: {
-    textAlign: 'right',
+    textAlign: 'left',
   },
   assistantTimestamp: {
     textAlign: 'left',
@@ -381,65 +823,137 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
-    backgroundColor: '#f5f5f5',
+    padding: 40,
+    backgroundColor: ForestColors.backgroundPrimary,
   },
   emptyAvatar: {
-    backgroundColor: '#4CAF50',
-    marginBottom: 16,
+    backgroundColor: ForestColors.brandPrimary,
+    marginBottom: 24,
+    width: 80,
+    height: 80,
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: '600',
+    color: ForestColors.headerPrimary,
+    marginBottom: 12,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: ForestColors.headerSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: 24,
+    marginBottom: 32,
+    paddingHorizontal: 20,
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
+    gap: 10,
+    paddingHorizontal: 20,
   },
   featureChip: {
-    marginHorizontal: 2,
+    backgroundColor: ForestColors.backgroundSecondary,
+    borderColor: ForestColors.borderLight,
+    marginHorizontal: 0,
+  },
+  agentAvatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  agentAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  agentName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: ForestColors.headerPrimary,
   },
 });
 
 const markdownStyles = {
   body: {
     fontSize: 16,
-    lineHeight: 20,
-    color: '#333',
+    lineHeight: 22,
+    color: ForestColors.textNormal,
   },
   paragraph: {
     marginTop: 0,
     marginBottom: 8,
+    color: ForestColors.textNormal,
   },
   strong: {
     fontWeight: 'bold' as const,
+    color: ForestColors.headerPrimary,
   },
   em: {
     fontStyle: 'italic' as const,
+    color: ForestColors.textNormal,
   },
   code_inline: {
-    backgroundColor: '#f0f0f0',
-    padding: 2,
+    backgroundColor: ForestColors.backgroundSecondary,
+    color: ForestColors.textNormal,
+    padding: 4,
     borderRadius: 3,
-    fontFamily: 'monospace',
+    fontFamily: 'Consolas, Monaco, monospace',
+    fontSize: 14,
   },
   code_block: {
-    backgroundColor: '#f0f0f0',
-    padding: 8,
-    borderRadius: 6,
-    fontFamily: 'monospace',
+    backgroundColor: ForestColors.backgroundTertiary,
+    color: ForestColors.textNormal,
+    padding: 12,
+    borderRadius: 4,
+    fontFamily: 'Consolas, Monaco, monospace',
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: ForestColors.borderLight,
+    marginVertical: 4,
+  },
+  text: {
+    color: ForestColors.textNormal,
+  },
+  link: {
+    color: ForestColors.brandPrimary,
+    textDecorationLine: 'underline' as const,
+  },
+  heading1: {
+    color: ForestColors.headerPrimary,
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  heading2: {
+    color: ForestColors.headerPrimary,
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  heading3: {
+    color: ForestColors.headerPrimary,
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  list_item: {
+    color: ForestColors.textNormal,
+    marginBottom: 4,
+  },
+  blockquote: {
+    backgroundColor: ForestColors.backgroundTertiary,
+    borderLeftWidth: 4,
+    borderLeftColor: ForestColors.borderLight,
+    paddingLeft: 12,
+    paddingVertical: 8,
+    marginVertical: 4,
+    fontStyle: 'italic' as const,
   },
 };
 

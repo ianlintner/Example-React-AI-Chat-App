@@ -7,8 +7,10 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { IconButton, ActivityIndicator } from 'react-native-paper';
+import { DiscordColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { Conversation, ChatRequest, Message } from '../types';
 
@@ -65,6 +67,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
       console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
+      // Auto-focus the input for easy multiple message sending
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -97,8 +103,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
-            placeholder="Type your message..."
-            placeholderTextColor="#999"
+            placeholder="Message #ai-assistant"
+            placeholderTextColor={DiscordColors.inputPlaceholder}
             value={message}
             onChangeText={handleTyping}
             multiline
@@ -148,31 +154,39 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   keyboardAvoidingView: {
-    backgroundColor: '#fff',
+    backgroundColor: DiscordColors.backgroundPrimary,
   },
   container: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    backgroundColor: DiscordColors.backgroundPrimary,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
+    borderTopWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 5,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 48,
+    backgroundColor: DiscordColors.inputBackground,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     lineHeight: 20,
-    color: '#333',
+    color: DiscordColors.textNormal,
     maxHeight: 120,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    textAlignVertical: 'center',
   },
   sendButtonContainer: {
     marginLeft: 8,
@@ -184,18 +198,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   sendButtonEnabled: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: DiscordColors.brandExperiment,
+    borderRadius: 20,
   },
   characterCount: {
     alignItems: 'flex-end',
-    marginTop: 4,
+    marginTop: 8,
+    paddingHorizontal: 4,
   },
   characterCountText: {
     fontSize: 12,
-    color: '#666',
+    color: DiscordColors.textMuted,
   },
   characterCountWarning: {
-    color: '#f44336',
+    color: DiscordColors.red,
   },
 });
 

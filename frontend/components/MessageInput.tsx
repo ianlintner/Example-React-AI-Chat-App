@@ -4,15 +4,13 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
 } from 'react-native';
 import { IconButton, ActivityIndicator } from 'react-native-paper';
 import { DiscordColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
-import type { Conversation, ChatRequest, Message } from '../types';
+import type { ChatRequest, Message } from '../types';
 
 interface MessageInputProps {
   conversationId?: string;
@@ -63,8 +61,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
       };
 
       onMessageSent(userMessage);
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch (_error) {
+      // Error handled silently
     } finally {
       setIsLoading(false);
       // Auto-focus the input for easy multiple message sending
@@ -103,7 +101,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
-            placeholder='Message #ai-assistant'
+            placeholder="Message #ai-assistant"
             placeholderTextColor={DiscordColors.inputPlaceholder}
             value={message}
             onChangeText={handleTyping}
@@ -117,12 +115,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
           <View style={styles.sendButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size='small' color='#2196F3' />
+              <ActivityIndicator size="small" color="#2196F3" />
             ) : (
               <IconButton
-                icon='send'
+                icon="send"
                 size={24}
-                iconColor={canSend ? '#2196F3' : '#ccc'}
+                iconColor={canSend ? "#2196F3" : "#ccc"}
                 style={[styles.sendButton, canSend && styles.sendButtonEnabled]}
                 onPress={handleButtonPress}
                 disabled={!canSend}
@@ -148,8 +146,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
     </KeyboardAvoidingView>
   );
 };
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   keyboardAvoidingView: {

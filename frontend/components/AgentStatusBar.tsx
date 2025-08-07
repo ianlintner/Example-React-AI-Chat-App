@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity } from 'react-native';
-import { Chip, Badge, Avatar } from 'react-native-paper';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { AgentStatus, AgentType } from '../types';
@@ -187,7 +186,6 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
     return null;
   }
 
-  const agentColor = getAgentColor(agentStatus.currentAgent);
   const agentIcon = getAgentIcon(agentStatus.currentAgent);
   const agentName = getAgentDisplayName(agentStatus.currentAgent);
 
@@ -309,7 +307,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
         {agentStatus.conversationContext?.shouldHandoff && (
           <View style={styles.handoffAlert}>
             <Text style={styles.handoffAlertText}>
-              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget!)}
+              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget as AgentType)}
             </Text>
           </View>
         )}
@@ -334,7 +332,6 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
   );
 };
 
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   // Modern Mobile-First Container

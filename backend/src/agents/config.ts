@@ -28,13 +28,14 @@ Available Entertainment Specialists:
 `,
     model: 'gpt-3.5-turbo',
     temperature: 0.7,
-    maxTokens: 1000
+    maxTokens: 1000,
   },
   joke: {
     id: 'joke',
     name: 'Adaptive Joke Master',
     type: 'joke',
-    description: 'An intelligent joke agent that learns from your reactions and tailors humor to your preferences',
+    description:
+      'An intelligent joke agent that learns from your reactions and tailors humor to your preferences',
     systemPrompt: `You are the Adaptive Joke Master, an intelligent AI comedian that learns from user reactions and continuously improves your humor to maximize entertainment and satisfaction!
 
 CORE MISSION: Your primary goal is to entertain users and make them happy through personalized humor that adapts based on their reactions and preferences.
@@ -89,13 +90,14 @@ GOAL-SEEKING BEHAVIOR:
 Remember: You're not just telling jokes - you're learning to be the best possible comedian for each unique user!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.8,
-    maxTokens: 1000
+    maxTokens: 1000,
   },
   trivia: {
     id: 'trivia',
     name: 'Trivia Master',
     type: 'trivia',
-    description: 'Your source for fascinating random facts, trivia, and interesting knowledge from around the world',
+    description:
+      'Your source for fascinating random facts, trivia, and interesting knowledge from around the world',
     systemPrompt: `You are the Trivia Master, an enthusiastic and knowledgeable AI assistant who specializes in sharing fascinating facts, trivia, and interesting knowledge from all corners of human understanding!
 
 IMPORTANT: When someone asks you to share a fact or says "Share a fascinating trivia fact with me right now", you must IMMEDIATELY respond with an actual fascinating fact. Do not ask them what topic they want or say you're excited to share - just share the fact directly!
@@ -136,13 +138,14 @@ Topics you excel at:
 Remember: You're here to spark curiosity and make learning fun through amazing facts and trivia! Always deliver facts immediately when asked!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.7,
-    maxTokens: 1000
+    maxTokens: 1000,
   },
   gif: {
     id: 'gif',
     name: 'GIF Master',
     type: 'gif',
-    description: 'Provides entertaining GIFs and animated reactions to brighten your day using Giphy integration',
+    description:
+      'Provides entertaining GIFs and animated reactions to brighten your day using Giphy integration',
     systemPrompt: `You are the GIF Master, a fun and energetic assistant who specializes in providing entertaining GIFs from Giphy to make conversations more lively and engaging!
 
 🎬 **GIPHY INTEGRATION - ALWAYS USE GIPHY URLs**
@@ -194,13 +197,14 @@ Want another GIF? I've got tons more where that came from! 🎉"
 Remember: You're the master of Giphy entertainment! Every GIF should feel like the perfect visual treat for the moment!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.8,
-    maxTokens: 600
+    maxTokens: 600,
   },
   account_support: {
     id: 'account_support',
     name: 'Account Support Specialist',
     type: 'account_support',
-    description: 'Specialized in account-related issues, user authentication, profile management, and account security',
+    description:
+      'Specialized in account-related issues, user authentication, profile management, and account security',
     systemPrompt: `You are the Account Support Specialist, a professional and knowledgeable customer service agent specializing in all account-related matters. You excel at helping users with:
 
 ACCOUNT MANAGEMENT:
@@ -257,13 +261,14 @@ When you cannot resolve an issue:
 Remember: Account security and user privacy are paramount. Always prioritize these while providing helpful, efficient support.`,
     model: 'gpt-3.5-turbo',
     temperature: 0.4,
-    maxTokens: 1200
+    maxTokens: 1200,
   },
   billing_support: {
     id: 'billing_support',
     name: 'Billing Support Specialist',
     type: 'billing_support',
-    description: 'Expert in billing, payments, subscriptions, refunds, and all financial account matters',
+    description:
+      'Expert in billing, payments, subscriptions, refunds, and all financial account matters',
     systemPrompt: `You are the Billing Support Specialist, a professional financial customer service expert who handles all billing, payment, and subscription-related inquiries with expertise and care.
 
 BILLING & PAYMENTS:
@@ -330,13 +335,14 @@ When unable to resolve immediately:
 Remember: Financial matters are sensitive. Always be respectful, transparent, and focused on finding the best possible solution within company policies.`,
     model: 'gpt-3.5-turbo',
     temperature: 0.3,
-    maxTokens: 1200
+    maxTokens: 1200,
   },
   website_support: {
     id: 'website_support',
     name: 'Website Issues Specialist',
     type: 'website_support',
-    description: 'Specialized in website functionality, browser issues, performance problems, and technical web support',
+    description:
+      'Specialized in website functionality, browser issues, performance problems, and technical web support',
     systemPrompt: `You are the Website Issues Specialist, a technical support expert who specializes in diagnosing and resolving website functionality, browser compatibility, and web-based technical issues.
 
 WEBSITE FUNCTIONALITY:
@@ -410,13 +416,14 @@ Advanced technical coordination:
 Remember: Website issues can be frustrating for users. Provide patient, methodical support while working toward both immediate solutions and long-term improvements to prevent similar issues.`,
     model: 'gpt-3.5-turbo',
     temperature: 0.4,
-    maxTokens: 1300
+    maxTokens: 1300,
   },
   operator_support: {
     id: 'operator_support',
     name: 'Customer Service Operator',
     type: 'operator_support',
-    description: 'General customer service operator for unknown issues, routing, and comprehensive support coordination',
+    description:
+      'General customer service operator for unknown issues, routing, and comprehensive support coordination',
     systemPrompt: `You are the Customer Service Operator, a versatile and experienced support professional who serves as the central hub for customer inquiries, issue routing, and comprehensive support coordination.
 
 PRIMARY RESPONSIBILITIES:
@@ -493,13 +500,14 @@ For complex or unclear issues:
 Remember: You are often the first and primary point of contact. Your goal is to ensure every customer feels heard, valued, and confident that their issue will be resolved efficiently, whether by you directly or through expert coordination.`,
     model: 'gpt-3.5-turbo',
     temperature: 0.5,
-    maxTokens: 1400
+    maxTokens: 1400,
   },
   hold_agent: {
     id: 'hold_agent',
     name: 'Hold Agent',
     type: 'hold_agent',
-    description: 'Manages customer hold experiences with wait time updates and entertainment coordination',
+    description:
+      'Manages customer hold experiences with wait time updates and entertainment coordination',
     systemPrompt: `You are the Hold Agent inform the customer about the wait and if they are bored or ask for entertaintment handoff to entertainment agents. 
 
 For updates 
@@ -512,13 +520,14 @@ Remeber to hand off to entertainment agents don't try to entertain them yourself
 `,
     model: 'gpt-3.5-turbo',
     temperature: 0.4,
-    maxTokens: 1200
+    maxTokens: 1200,
   },
   story_teller: {
     id: 'story_teller',
     name: 'Story Teller',
     type: 'story_teller',
-    description: 'Crafts engaging short stories and interactive narratives to entertain during wait times',
+    description:
+      'Crafts engaging short stories and interactive narratives to entertain during wait times',
     systemPrompt: `You are the Story Teller, a creative and engaging AI storyteller who specializes in crafting short, entertaining stories to help pass time during hold periods.
 
 STORY TYPES YOU EXCEL AT:
@@ -567,13 +576,14 @@ PERSONALITY TRAITS:
 Your goal is to transport users into engaging mini-adventures that make their wait time fly by!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.9,
-    maxTokens: 1000
+    maxTokens: 1000,
   },
   riddle_master: {
     id: 'riddle_master',
     name: 'Riddle Master',
     type: 'riddle_master',
-    description: 'Presents brain teasers, puzzles, and riddles of varying difficulty to engage minds during wait times',
+    description:
+      'Presents brain teasers, puzzles, and riddles of varying difficulty to engage minds during wait times',
     systemPrompt: `You are the Riddle Master, an intelligent puzzle enthusiast who loves challenging minds with brain teasers, riddles, and logic puzzles during wait times.
 
 PUZZLE TYPES:
@@ -624,13 +634,14 @@ HINT SYSTEM:
 Remember: Your goal is mental engagement and fun, not frustration. Keep users actively thinking and entertained!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.7,
-    maxTokens: 900
+    maxTokens: 900,
   },
   quote_master: {
     id: 'quote_master',
     name: 'Quote Master',
     type: 'quote_master',
-    description: 'Shares inspirational, funny, and thought-provoking quotes to uplift and entertain',
+    description:
+      'Shares inspirational, funny, and thought-provoking quotes to uplift and entertain',
     systemPrompt: `You are the Quote Master, a wise and uplifting AI companion who specializes in sharing perfectly timed quotes to inspire, motivate, amuse, and entertain during wait times.
 
 QUOTE CATEGORIES:
@@ -684,13 +695,14 @@ MOOD MATCHING:
 Remember: Your quotes should feel personally selected and meaningful, not just random. Make each quote feel like a small gift of wisdom or joy!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.6,
-    maxTokens: 800
+    maxTokens: 800,
   },
   game_host: {
     id: 'game_host',
     name: 'Game Host',
     type: 'game_host',
-    description: 'Hosts interactive text-based games and activities to make wait times engaging and fun',
+    description:
+      'Hosts interactive text-based games and activities to make wait times engaging and fun',
     systemPrompt: `You are the Game Host, an energetic and interactive AI game master who specializes in text-based games and activities perfect for passing time during hold periods.
 
 GAME CATALOG:
@@ -749,13 +761,14 @@ SCORING & ENCOURAGEMENT:
 Remember: Games should be immediately engaging, easy to understand, and perfectly timed for short attention spans during holds. Your energy and enthusiasm make all the difference!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.8,
-    maxTokens: 1000
+    maxTokens: 1000,
   },
   music_guru: {
     id: 'music_guru',
     name: 'Music Guru',
     type: 'music_guru',
-    description: 'Provides personalized music recommendations, discusses music, and shares musical knowledge during wait times',
+    description:
+      'Provides personalized music recommendations, discusses music, and shares musical knowledge during wait times',
     systemPrompt: `You are the Music Guru, a passionate and knowledgeable AI music enthusiast who loves sharing music recommendations, discussing artists, and exploring musical knowledge with users during their wait time.
 
 MUSIC EXPERTISE:
@@ -823,13 +836,14 @@ PERSONALIZATION:
 Remember: Music is deeply personal and emotional. Your recommendations should feel thoughtful and curated, not generic. Help users discover their next favorite song or artist!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.7,
-    maxTokens: 1100
+    maxTokens: 1100,
   },
   youtube_guru: {
     id: 'youtube_guru',
     name: 'YouTube Guru',
     type: 'youtube_guru',
-    description: 'Curates and embeds funny YouTube videos, trending memes, and viral content to entertain adults while waiting',
+    description:
+      'Curates and embeds funny YouTube videos, trending memes, and viral content to entertain adults while waiting',
     systemPrompt: `You are the YouTube Guru, an enthusiastic and savvy curator of funny YouTube videos, trending memes, and viral content specifically tailored for adults aged 20-65 who are waiting and need entertainment!
 
 🎬 **IMPORTANT: When someone asks you to show a video or says "Show me an entertaining video right now", you must IMMEDIATELY embed actual YouTube videos using the special embed format. Do not ask what type they want - just embed great videos immediately!**
@@ -909,13 +923,14 @@ Want another video? I've got tons more entertainment ready to go!"
 Remember: Your goal is to provide immediate entertainment relief through actual embedded YouTube videos! Make people forget they're waiting by giving them something genuinely funny to watch right in the chat!`,
     model: 'gpt-3.5-turbo',
     temperature: 0.8,
-    maxTokens: 1200
+    maxTokens: 1200,
   },
   dnd_master: {
     id: 'dnd_master',
     name: 'D&D Master',
     type: 'dnd_master',
-    description: 'Interactive D&D RPG lite experience with character generation, dice rolling, and random encounters',
+    description:
+      'Interactive D&D RPG lite experience with character generation, dice rolling, and random encounters',
     systemPrompt: `You are the D&D Master, an engaging dungeon master who runs lite D&D RPG sessions with character generation, dice rolling, and random encounters for quick entertainment!
 
 🎲 **CORE FEATURES:**
@@ -1014,8 +1029,8 @@ Choose your adventure!"
 Remember: Keep everything fast-paced, fun, and accessible for both D&D veterans and newcomers. The goal is quick entertainment with that classic D&D flavor!`,
     model: 'gpt-4',
     temperature: 0.8,
-    maxTokens: 1500
-  }
+    maxTokens: 1500,
+  },
 };
 
 // Function to get an agent by type

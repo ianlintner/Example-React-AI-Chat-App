@@ -7,22 +7,26 @@ This document explains the GitHub Actions CI/CD workflows configured for this pr
 ### 1. Main CI Workflow (`.github/workflows/ci.yml`)
 
 **Triggers:**
+
 - Push to any branch (`**`)
 - Pull requests targeting any branch
 - Manual triggering (`workflow_dispatch`)
 
 **Jobs:**
+
 - `backend-test`: Runs backend tests, linting, and build
-- `frontend-test`: Runs frontend tests, linting, and build  
+- `frontend-test`: Runs frontend tests, linting, and build
 - `integration-test`: Runs integration tests after backend and frontend tests pass
 
 ### 2. PR Checks Workflow (`.github/workflows/pr-checks.yml`)
 
 **Triggers:**
+
 - Pull request events (opened, synchronized, reopened)
 - Pull request review submissions
 
 **Features:**
+
 - Matrix strategy for parallel backend/frontend testing
 - Automated PR comments with test results using GitHub CLI
 - Build artifact uploads
@@ -34,6 +38,7 @@ This document explains the GitHub Actions CI/CD workflows configured for this pr
 **Purpose:** Helps configure branch protection rules via GitHub CLI
 
 **Usage:**
+
 1. Go to Actions → Branch Protection Helper → Run workflow
 2. Specify branch name (default: main)
 3. Choose to enable/disable protection
@@ -41,21 +46,25 @@ This document explains the GitHub Actions CI/CD workflows configured for this pr
 ## Key Features
 
 ### ✅ Comprehensive Testing
+
 - Backend: Jest tests + build verification
 - Frontend: React Native tests + ESLint + build verification
 - Integration: Full build pipeline validation
 
 ### 🔧 GitHub CLI Integration
+
 - Automated PR comments with test results
 - Branch protection management
 - Status checks and reviews integration
 
 ### 🛡️ Security Features
+
 - NPM audit for vulnerabilities
 - Basic secrets scanning
 - Configurable security thresholds
 
 ### 🚀 Developer Experience
+
 - Clear status indicators in PRs
 - Build artifacts for debugging
 - Manual workflow triggers
@@ -79,6 +88,7 @@ gh api --method PUT "repos/OWNER/REPO/branches/main/protection" \
 ## Required Status Checks
 
 When branch protection is enabled, the following checks must pass:
+
 - `backend-test` - Backend tests and build
 - `frontend-test` - Frontend tests and build
 - `integration-test` - Integration testing
@@ -95,7 +105,7 @@ cd backend
 npm test
 npm run build
 
-# Frontend  
+# Frontend
 cd frontend
 npm run test:ci
 npm run lint
@@ -108,16 +118,19 @@ npm run test:ci  # If available in root package.json
 ## PR Workflow
 
 1. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Make Changes & Test Locally**
+
    ```bash
    # Run tests as shown above
    ```
 
 3. **Push & Create PR**
+
    ```bash
    git push origin feature/your-feature-name
    gh pr create --title "Your PR Title" --body "Description"
@@ -140,16 +153,19 @@ npm run test:ci  # If available in root package.json
 ### Common Issues
 
 **Tests failing on CI but passing locally:**
+
 - Ensure all dependencies are committed
 - Check for environment-specific code
 - Verify CI environment matches local Node version
 
 **PR checks not running:**
+
 - Ensure workflows are in `.github/workflows/`
 - Check branch protection settings
 - Verify GitHub Actions are enabled for the repo
 
 **Branch protection setup fails:**
+
 - Repository admin permissions required
 - Some settings may need to be configured via GitHub UI
 
@@ -162,13 +178,14 @@ gh run list
 # View specific workflow run
 gh run view <run-id>
 
-# Re-run failed workflows  
+# Re-run failed workflows
 gh run rerun <run-id>
 ```
 
 ## Advanced Configuration
 
 ### Custom Status Checks
+
 Edit `.github/workflows/ci.yml` to add custom validation steps:
 
 ```yaml
@@ -179,6 +196,7 @@ Edit `.github/workflows/ci.yml` to add custom validation steps:
 ```
 
 ### Notification Integration
+
 Add Slack/Discord notifications by adding steps to workflows:
 
 ```yaml
@@ -189,6 +207,7 @@ Add Slack/Discord notifications by adding steps to workflows:
 ```
 
 ### Performance Monitoring
+
 Add performance benchmarks:
 
 ```yaml

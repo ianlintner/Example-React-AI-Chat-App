@@ -11,41 +11,39 @@ processors:
     timeout: 1s
     send_batch_size: 1024
     send_batch_max_size: 2048
-  
+
   memory_limiter:
     limit_mib: 512
     spike_limit_mib: 128
     check_interval: 5s
-  
+
   resource:
     attributes:
       - key: deployment.environment
-        value: "development"
+        value: 'development'
         action: upsert
       - key: sampling.enabled
-        value: "true"
+        value: 'true'
         action: upsert
       - key: sampling.rate
-        value: "1.0"
+        value: '1.0'
         action: upsert
 
 exporters:
   zipkin:
     endpoint: http://zipkin:9411/api/v2/spans
     format: json
-  
+
   debug:
     verbosity: detailed
-
-    
 
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
-  
+
   pprof:
     endpoint: 0.0.0.0:1777
-  
+
   zpages:
     endpoint: 0.0.0.0:55679
 
@@ -56,14 +54,14 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
       exporters: [zipkin, debug]
-    
+
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
       exporters: [debug]
-  
+
   telemetry:
     logs:
-      level: "debug"
+      level: 'debug'
     metrics:
-      level: "basic"
+      level: 'basic'

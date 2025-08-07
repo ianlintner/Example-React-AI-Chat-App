@@ -11,6 +11,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
 ### Agent Testing
 
 #### Test Individual Agent
+
 - **Endpoint**: `POST /api/test-bench/agent/{agentType}/test`
 - **Purpose**: Test a specific agent with a custom message
 - **Request Body**:
@@ -23,6 +24,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Bulk Test All Agents
+
 - **Endpoint**: `POST /api/test-bench/bulk-test`
 - **Purpose**: Test all agents with the same message
 - **Request Body**:
@@ -37,6 +39,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
 ### Feature Testing
 
 #### Message Classification
+
 - **Endpoint**: `POST /api/test-bench/classifier/test`
 - **Purpose**: Test message classification system
 - **Request Body**:
@@ -47,6 +50,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### RAG Service
+
 - **Endpoint**: `POST /api/test-bench/rag/test`
 - **Purpose**: Test RAG (Retrieval-Augmented Generation) service
 - **Request Body**:
@@ -59,6 +63,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Response Validation
+
 - **Endpoint**: `POST /api/test-bench/validator/test`
 - **Purpose**: Test response validation system
 - **Request Body**:
@@ -74,6 +79,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Joke Learning System
+
 - **Endpoint**: `POST /api/test-bench/joke-learning/test`
 - **Purpose**: Test adaptive joke learning system
 - **Request Body**:
@@ -89,6 +95,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Goal-Seeking System
+
 - **Endpoint**: `POST /api/test-bench/goal-seeking/test`
 - **Purpose**: Test proactive goal-seeking behavior
 - **Request Body**:
@@ -101,6 +108,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Conversation Manager
+
 - **Endpoint**: `POST /api/test-bench/conversation-manager/test`
 - **Purpose**: Test conversation flow and agent handoffs
 - **Request Body**:
@@ -113,6 +121,7 @@ All test bench endpoints are prefixed with `/api/test-bench`:
   ```
 
 #### Comprehensive System Test
+
 - **Endpoint**: `POST /api/test-bench/comprehensive/test`
 - **Purpose**: Test full system integration (goal-seeking + conversation management)
 - **Request Body**:
@@ -128,11 +137,13 @@ All test bench endpoints are prefixed with `/api/test-bench`:
 ### System Information
 
 #### Get Available Agents
+
 - **Endpoint**: `GET /api/test-bench/agents/list`
 - **Purpose**: Retrieve list of all available agents
 - **Response**: Returns agent metadata including names and descriptions
 
 #### System Health Check
+
 - **Endpoint**: `GET /api/test-bench/health`
 - **Purpose**: Check health status of all system components
 - **Response**: Returns operational status of each service
@@ -181,17 +192,20 @@ The Developer Test Bench provides a comprehensive web interface for testing all 
 ### Test Categories
 
 #### Agent Testing Tab
+
 - Test individual agents with custom messages
 - Bulk test all agents simultaneously
 - Configure user ID and conversation history
 - View agent-specific responses and confidence levels
 
 #### Classifier Tab
+
 - Test message classification accuracy
 - See which agent type is selected for different messages
 - View classification confidence and reasoning
 
 #### System Health Tab
+
 - Monitor operational status of all services
 - View OpenAI API key configuration status
 - Browse available agents and their descriptions
@@ -200,6 +214,7 @@ The Developer Test Bench provides a comprehensive web interface for testing all 
 ## Testing Best Practices
 
 ### 1. Agent Response Testing
+
 ```bash
 # Test joke agent
 curl -X POST http://localhost:5001/api/test-bench/agent/joke/test \
@@ -208,6 +223,7 @@ curl -X POST http://localhost:5001/api/test-bench/agent/joke/test \
 ```
 
 ### 2. Classification Testing
+
 ```bash
 # Test message classification
 curl -X POST http://localhost:5001/api/test-bench/classifier/test \
@@ -216,12 +232,14 @@ curl -X POST http://localhost:5001/api/test-bench/classifier/test \
 ```
 
 ### 3. System Health Check
+
 ```bash
 # Check system health
 curl -X GET http://localhost:5001/api/test-bench/health
 ```
 
 ### 4. Bulk Agent Testing
+
 ```bash
 # Test all agents with same message
 curl -X POST http://localhost:5001/api/test-bench/bulk-test \
@@ -234,26 +252,27 @@ curl -X POST http://localhost:5001/api/test-bench/bulk-test \
 The test bench can be integrated into continuous integration pipelines:
 
 ### Example Test Script
+
 ```javascript
 // test-agents.js
 const testAllAgents = async () => {
   const agents = ['general', 'joke', 'trivia', 'gif'];
   const results = [];
-  
+
   for (const agent of agents) {
     const response = await fetch(`/api/test-bench/agent/${agent}/test`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: 'Hello, test message',
-        userId: 'ci-test-user'
-      })
+        userId: 'ci-test-user',
+      }),
     });
-    
+
     const result = await response.json();
     results.push({ agent, success: result.success });
   }
-  
+
   return results;
 };
 ```
@@ -274,6 +293,7 @@ All test endpoints return consistent error responses:
 ## Performance Monitoring
 
 The test bench tracks:
+
 - Response times for each endpoint
 - Success/failure rates
 - Agent performance comparisons

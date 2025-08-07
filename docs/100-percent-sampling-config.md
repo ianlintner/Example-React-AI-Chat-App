@@ -5,6 +5,7 @@ This document outlines all configurations that ensure 100% trace sampling across
 ## Backend Tracer Configuration (`backend/src/tracing/tracer.ts`)
 
 ### Key Changes Made:
+
 - ✅ **AlwaysOnSampler**: Explicitly configured `new AlwaysOnSampler()` in the NodeSDK
 - ✅ **Immediate Export**: BatchSpanProcessor configured with:
   - `maxExportBatchSize: 1` - Export every single span immediately
@@ -14,6 +15,7 @@ This document outlines all configurations that ensure 100% trace sampling across
 - ✅ **Enhanced Logging**: Detailed debug logs for trace export verification
 
 ### Code Verification:
+
 ```typescript
 return new NodeSDK({
   serviceName: serviceName,
@@ -26,6 +28,7 @@ return new NodeSDK({
 ## Environment Variables
 
 ### Backend Environment (`backend/.env`):
+
 ```bash
 # Tracing Configuration - 100% Sampling
 ENABLE_TRACING=true
@@ -36,6 +39,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 ```
 
 ### Docker Compose Environment (`docker-compose.yml`):
+
 ```yaml
 environment:
   - OTEL_TRACES_SAMPLER=always_on
@@ -47,21 +51,23 @@ environment:
 ## OpenTelemetry Collector Configuration (`otel-collector-config.yaml`)
 
 ### Resource Processor:
+
 ```yaml
 resource:
   attributes:
     - key: deployment.environment
-      value: "development"
+      value: 'development'
       action: upsert
     - key: sampling.enabled
-      value: "true"
+      value: 'true'
       action: upsert
     - key: sampling.rate
-      value: "1.0"
+      value: '1.0'
       action: upsert
 ```
 
 ### Service Pipeline:
+
 ```yaml
 service:
   pipelines:
@@ -71,13 +77,15 @@ service:
       exporters: [zipkin, debug]
   telemetry:
     logs:
-      level: "debug"  # Enhanced logging
+      level: 'debug' # Enhanced logging
 ```
 
 ## Verification Steps
 
 ### 1. Backend Logs to Monitor:
+
 Look for these log messages when the backend starts:
+
 - `🔍 Configuring 100% trace sampling (AlwaysOnSampler)`
 - `🔍 Adding batch span processor for main exporter`
 - `✅ Test span created successfully`
@@ -85,17 +93,21 @@ Look for these log messages when the backend starts:
 - `✅ OTLP EXPORT: Successfully sent spans to collector`
 
 ### 2. Collector Logs:
+
 - Monitor collector logs for incoming traces
 - Verify debug output shows all received spans
 - Check for successful exports to Zipkin
 
 ### 3. Zipkin UI Verification:
+
 - Access Zipkin at `http://localhost:9411`
 - Verify all traces are visible
 - Check trace completion rates (should be 100%)
 
 ### 4. Console Output:
+
 The backend will output every span to console for debugging:
+
 ```
 📊 Span 1: conversation.process
   - Trace ID: abc123...
@@ -106,6 +118,7 @@ The backend will output every span to console for debugging:
 ## Sampling Rate Verification Commands
 
 ### Check Environment Variables:
+
 ```bash
 # In running backend container
 echo $OTEL_TRACES_SAMPLER          # Should be: always_on
@@ -113,6 +126,7 @@ echo $OTEL_TRACES_SAMPLER_ARG      # Should be: 1.0
 ```
 
 ### Test Trace Generation:
+
 ```bash
 # Generate test traces
 curl -X POST http://localhost:5001/api/chat \
@@ -143,6 +157,7 @@ If traces are missing:
 ## Performance Considerations
 
 With 100% sampling:
+
 - **Increased CPU usage** due to trace processing
 - **Higher memory usage** for span storage
 - **Network overhead** from trace export

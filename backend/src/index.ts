@@ -31,20 +31,38 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178", "http://localhost:8080"],
-    methods: ["GET", "POST", "PUT", "DELETE"]
-  }
+    origin: process.env.FRONTEND_URL || [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176',
+      'http://localhost:5177',
+      'http://localhost:5178',
+      'http://localhost:8080',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
 });
 
 const PORT = process.env.PORT || 5001;
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177", "http://localhost:5178", "http://localhost:8080"],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176',
+      'http://localhost:5177',
+      'http://localhost:5178',
+      'http://localhost:8080',
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(express.json());
 
 // Prometheus metrics middleware
@@ -63,34 +81,34 @@ app.use('/docs', swaggerDocsRoutes);
 app.get('/health', (req, res) => {
   const { tracer } = require('./tracing/tracer');
   const span = tracer.startSpan('health_check');
-  
+
   span.setAttributes({
     'http.method': 'GET',
     'http.route': '/health',
-    'http.status_code': 200
+    'http.status_code': 200,
   });
-  
+
   span.addEvent('health_check_performed');
   span.setStatus({ code: 1 }); // OK
   span.end();
-  
+
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/health', (req, res) => {
   const { tracer } = require('./tracing/tracer');
   const span = tracer.startSpan('api_health_check');
-  
+
   span.setAttributes({
     'http.method': 'GET',
     'http.route': '/api/health',
-    'http.status_code': 200
+    'http.status_code': 200,
   });
-  
+
   span.addEvent('api_health_check_performed');
   span.setStatus({ code: 1 }); // OK
   span.end();
-  
+
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
@@ -113,13 +131,17 @@ const queueService = createQueueService(io);
 // Start server
 server.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:5173"}`);
+  console.log(
+    `🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`
+  );
   console.log(`💾 Using in-memory storage for demo purposes`);
-  
+
   // Initialize queue service
   try {
     await queueService.initialize();
-    console.log(`📨 Message Queue System initialized (${queueService.getProviderType()} provider)`);
+    console.log(
+      `📨 Message Queue System initialized (${queueService.getProviderType()} provider)`
+    );
   } catch (error) {
     console.error('❌ Failed to initialize message queue system:', error);
   }
@@ -128,11 +150,11 @@ server.listen(PORT, async () => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Received SIGINT, shutting down gracefully...');
-  
+
   try {
     // Shutdown queue service
     await queueService.shutdown();
-    
+
     // Close server
     server.close(() => {
       console.log('👋 Server shut down complete');
@@ -146,11 +168,11 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
-  
+
   try {
     // Shutdown queue service
     await queueService.shutdown();
-    
+
     // Close server
     server.close(() => {
       console.log('👋 Server shut down complete');

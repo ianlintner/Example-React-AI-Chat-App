@@ -9,12 +9,14 @@ This document provides a comprehensive overview of our AI Goal-Seeking Chat Syst
 ### Primary Objective: Entertainment While On Hold
 
 **Implementation:**
+
 - **Automatic State Management**: Users are automatically placed in "on_hold" state upon connection
 - **Entertainment Goal Activation**: Entertainment goals are immediately activated for all connected users
 - **Proactive Entertainment**: System proactively offers jokes, trivia, stories, and games when users appear idle or disengaged
 - **Preference Learning**: System adapts entertainment content based on user interactions and preferences
 
 **Code Location:**
+
 ```typescript
 // backend/src/socket/socketHandlers.ts
 userState.currentState = 'on_hold';
@@ -30,18 +32,32 @@ if (entertainmentGoal) {
 ### Secondary Objective: Technical Question Answering
 
 **Implementation:**
+
 - **Intelligent Classification**: Messages are analyzed to detect technical questions
 - **Technical Agent**: Specialized agent for handling programming, system administration, and technical queries
 - **Context Awareness**: Technical agent maintains conversation context for follow-up questions
 - **High Confidence Responses**: Technical responses include confidence scores and validation
 
 **Code Location:**
+
 ```typescript
 // backend/src/agents/classifier.ts
 const technicalKeywords = [
-  'code', 'programming', 'bug', 'error', 'api', 'database',
-  'algorithm', 'debug', 'function', 'variable', 'server',
-  'deployment', 'framework', 'library', 'syntax'
+  'code',
+  'programming',
+  'bug',
+  'error',
+  'api',
+  'database',
+  'algorithm',
+  'debug',
+  'function',
+  'variable',
+  'server',
+  'deployment',
+  'framework',
+  'library',
+  'syntax',
 ];
 ```
 
@@ -85,6 +101,7 @@ User Message → Classifier → Goal-Seeking System → Agent Selection → Resp
 ### 1. Intelligent Agent Selection
 
 The system automatically selects the most appropriate agent based on:
+
 - **Message content analysis**: Technical keywords trigger technical agent
 - **User context**: Previous conversation history influences selection
 - **Goal state**: Active entertainment goals bias toward entertainment agent
@@ -93,12 +110,14 @@ The system automatically selects the most appropriate agent based on:
 ### 2. Proactive Entertainment
 
 When users are on hold, the system proactively:
+
 - **Offers Jokes**: Delivers appropriate humor based on user preferences
 - **Shares Trivia**: Engaging facts and questions to maintain interest
 - **Tells Stories**: Interactive storytelling with user participation
 - **Suggests Games**: Word games, riddles, and quick puzzles
 
 **Example Proactive Actions:**
+
 ```typescript
 {
   type: 'entertainment_joke',
@@ -112,6 +131,7 @@ When users are on hold, the system proactively:
 ### 3. Technical Support Excellence
 
 For technical questions, the system provides:
+
 - **Accurate Information**: Leverages technical knowledge base
 - **Code Examples**: Provides relevant code snippets and solutions
 - **Step-by-Step Guidance**: Breaks down complex technical processes
@@ -120,6 +140,7 @@ For technical questions, the system provides:
 ### 4. Adaptive Learning
 
 The system continuously learns and adapts:
+
 - **User Preferences**: Tracks entertainment preferences (jokes vs trivia vs stories)
 - **Engagement Patterns**: Monitors user interaction patterns
 - **Success Metrics**: Measures goal achievement and user satisfaction
@@ -236,22 +257,25 @@ The system continuously learns and adapts:
 ### Quick Setup
 
 1. **Install dependencies**:
+
    ```bash
    cd backend && npm install
    cd frontend && npm install
    ```
 
 2. **Configure environment**:
+
    ```bash
    cp backend/.env.example backend/.env
    cp frontend/.env.example frontend/.env
    ```
 
 3. **Start the system**:
+
    ```bash
    # Terminal 1: Backend
    cd backend && npm run dev
-   
+
    # Terminal 2: Frontend
    cd frontend && npm run dev
    ```
@@ -276,6 +300,7 @@ Our AI Goal-Seeking Chat System successfully achieves the dual objectives of ent
 The combination of entertainment and technical capabilities ensures users have a positive experience whether they're waiting for support, seeking technical help, or simply looking for engaging conversation. The system's observability features provide insights into user behavior and system performance, enabling continuous improvement and optimization.
 
 **Key Success Factors:**
+
 - ✅ Automatic entertainment activation for users on hold
 - ✅ Intelligent technical question detection and handling
 - ✅ Proactive engagement to maintain user interest

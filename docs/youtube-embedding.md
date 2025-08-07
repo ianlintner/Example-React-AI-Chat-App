@@ -1,19 +1,21 @@
 # YouTube Video Embedding
 
-The YouTube Guru agent can now embed actual YouTube videos directly in chat messages! 
+The YouTube Guru agent can now embed actual YouTube videos directly in chat messages!
 
 ## How It Works
 
 ### Backend (Agent Configuration)
+
 - The YouTube Guru agent has been updated to use a special markdown-like format for embedding videos
 - When a user requests entertainment, the agent responds with embedded YouTube videos using the format:
 
-```
+````
 ```youtube
 VIDEO_ID
 TITLE
 DURATION
-```
+````
+
 ```
 
 ### Frontend (React Native Implementation)
@@ -26,6 +28,7 @@ DURATION
 When a user says "Show me an entertaining video right now", the YouTube Guru will respond with something like:
 
 ```
+
 🎥 **Here's a hilarious video that's perfect for you right now!**
 
 ```youtube
@@ -37,7 +40,8 @@ Rick Astley - Never Gonna Give You Up (Official Video)
 This classic never gets old! Sometimes you just need a good rickroll to brighten your day. Rick's dancing and that unforgettable chorus will definitely put a smile on your face! 😄
 
 Want another video? I've got tons more entertainment ready to go!
-```
+
+````
 
 ## Features
 
@@ -52,7 +56,7 @@ Want another video? I've got tons more entertainment ready to go!
 
 The YouTube Guru has access to a curated collection of:
 - Classic internet memes (Rickroll, Keyboard Cat, Dramatic Hamster)
-- Viral sensations (David After Dentist, Grumpy Cat, Sneezing Panda) 
+- Viral sensations (David After Dentist, Grumpy Cat, Sneezing Panda)
 - Music hits (Gangnam Style, Baby Shark, Chocolate Rain)
 - Gaming legends (Leroy Jenkins)
 - Feel-good content and animal comedy
@@ -61,11 +65,11 @@ The YouTube Guru has access to a curated collection of:
 
 ### YouTube Embed Component
 ```typescript
-const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string }> = ({ 
-  videoId, title, duration 
+const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string }> = ({
+  videoId, title, duration
 }) => {
   const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1`;
-  
+
   return (
     <View style={styles.youtubeContainer}>
       <View style={styles.youtubeHeader}>
@@ -85,19 +89,22 @@ const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string 
     </View>
   );
 };
-```
+````
 
 ### Message Parsing
+
 The system uses regex to detect YouTube embed blocks:
-```typescript
+
+````typescript
 const youtubeRegex = /```youtube\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g;
-```
+````
 
 This allows for seamless integration of videos within regular text messages, enabling the agent to provide both commentary and embedded videos in a single response.
 
 ## User Experience
 
 Users can now:
+
 1. Ask the YouTube Guru for entertainment videos
 2. Receive immediate video recommendations with embedded players
 3. Watch videos directly in the chat interface

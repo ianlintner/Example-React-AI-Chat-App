@@ -1,4 +1,10 @@
-import { UserReaction, JokePerformance, UserJokeProfile, JokeCategory, LearningMetrics } from './learningTypes';
+import {
+  UserReaction,
+  JokePerformance,
+  UserJokeProfile,
+  JokeCategory,
+  LearningMetrics,
+} from './learningTypes';
 
 export class JokeLearningSystem {
   private userProfiles: Map<string, UserJokeProfile> = new Map();
@@ -8,45 +14,53 @@ export class JokeLearningSystem {
     {
       name: 'dad_jokes',
       description: 'Classic groan-worthy puns and wordplay',
-      examples: ['Why don\'t scientists trust atoms? Because they make up everything!'],
+      examples: [
+        "Why don't scientists trust atoms? Because they make up everything!",
+      ],
       difficulty: 'easy',
-      appropriateness: 'family'
+      appropriateness: 'family',
     },
     {
       name: 'observational',
       description: 'Humor about everyday situations and life',
-      examples: ['Why do they call it rush hour when nobody\'s moving?'],
+      examples: ["Why do they call it rush hour when nobody's moving?"],
       difficulty: 'medium',
-      appropriateness: 'family'
+      appropriateness: 'family',
     },
     {
       name: 'wordplay',
       description: 'Clever puns and linguistic humor',
       examples: ['I used to be a banker, but I lost interest.'],
       difficulty: 'medium',
-      appropriateness: 'family'
+      appropriateness: 'family',
     },
     {
       name: 'absurd',
       description: 'Surreal and unexpected humor',
-      examples: ['A man walks into a library and asks for books on paranoia. The librarian whispers, "They\'re right behind you!"'],
+      examples: [
+        'A man walks into a library and asks for books on paranoia. The librarian whispers, "They\'re right behind you!"',
+      ],
       difficulty: 'hard',
-      appropriateness: 'family'
+      appropriateness: 'family',
     },
     {
       name: 'self_deprecating',
       description: 'Humor that pokes fun at oneself',
-      examples: ['I told my wife she was drawing her eyebrows too high. She looked surprised.'],
+      examples: [
+        'I told my wife she was drawing her eyebrows too high. She looked surprised.',
+      ],
       difficulty: 'medium',
-      appropriateness: 'family'
+      appropriateness: 'family',
     },
     {
       name: 'tech_humor',
       description: 'Jokes about technology and programming',
-      examples: ['Why do programmers prefer dark mode? Because light attracts bugs!'],
+      examples: [
+        'Why do programmers prefer dark mode? Because light attracts bugs!',
+      ],
       difficulty: 'medium',
-      appropriateness: 'workplace'
-    }
+      appropriateness: 'workplace',
+    },
   ];
 
   constructor() {
@@ -56,7 +70,7 @@ export class JokeLearningSystem {
       overallSuccessRate: 0,
       categoryPerformance: new Map(),
       userSatisfactionTrend: [],
-      adaptationAccuracy: 0
+      adaptationAccuracy: 0,
     };
 
     // Initialize category performance tracking
@@ -79,7 +93,9 @@ export class JokeLearningSystem {
 
     // Update average reaction score
     const reactionScore = this.getReactionScore(reaction.reactionType);
-    const totalScore = userProfile.averageReactionScore * (userProfile.totalJokesHeard - 1) + reactionScore;
+    const totalScore =
+      userProfile.averageReactionScore * (userProfile.totalJokesHeard - 1) +
+      reactionScore;
     userProfile.averageReactionScore = totalScore / userProfile.totalJokesHeard;
 
     // Update preferences based on reaction
@@ -104,14 +120,14 @@ export class JokeLearningSystem {
     avoidCategories: string[];
   } {
     const userProfile = this.userProfiles.get(userId);
-    
+
     if (!userProfile || userProfile.reactionHistory.length < 3) {
       // New user or insufficient data - use balanced approach
       return {
         category: 'dad_jokes',
         type: 'pun',
         style: 'mixed',
-        avoidCategories: []
+        avoidCategories: [],
       };
     }
 
@@ -121,12 +137,12 @@ export class JokeLearningSystem {
 
     userProfile.reactionHistory.forEach(reaction => {
       const score = this.getReactionScore(reaction.reactionType);
-      
+
       if (reaction.jokeCategory) {
         const currentScore = categoryScores.get(reaction.jokeCategory) || 0;
         categoryScores.set(reaction.jokeCategory, currentScore + score);
       }
-      
+
       if (reaction.jokeType) {
         const currentScore = typeScores.get(reaction.jokeType) || 0;
         typeScores.set(reaction.jokeType, currentScore + score);
@@ -134,14 +150,20 @@ export class JokeLearningSystem {
     });
 
     // Find best performing categories and types
-    const bestCategory = this.getBestPerforming(categoryScores, userProfile.preferredCategories);
-    const bestType = this.getBestPerforming(typeScores, userProfile.preferredTypes);
+    const bestCategory = this.getBestPerforming(
+      categoryScores,
+      userProfile.preferredCategories
+    );
+    const bestType = this.getBestPerforming(
+      typeScores,
+      userProfile.preferredTypes
+    );
 
     return {
       category: bestCategory || 'dad_jokes',
       type: bestType || 'pun',
       style: userProfile.humorStyle,
-      avoidCategories: userProfile.dislikedCategories
+      avoidCategories: userProfile.dislikedCategories,
     };
   }
 
@@ -149,7 +171,7 @@ export class JokeLearningSystem {
   generateAdaptivePrompt(userId: string, basePrompt: string): string {
     const recommendation = this.getPersonalizedJokeRecommendation(userId);
     const userProfile = this.userProfiles.get(userId);
-    
+
     let adaptivePrompt = basePrompt;
 
     // Add personalization instructions
@@ -212,24 +234,33 @@ export class JokeLearningSystem {
       reactionHistory: [],
       lastInteraction: new Date(),
       totalJokesHeard: 0,
-      averageReactionScore: 0.5
+      averageReactionScore: 0.5,
     };
   }
 
   private getReactionScore(reactionType: string): number {
     switch (reactionType) {
-      case 'love': return 1.0;
-      case 'laugh': return 0.8;
-      case 'groan': return 0.6; // Groans are actually positive for dad jokes!
-      case 'meh': return 0.4;
-      case 'dislike': return 0.1;
-      default: return 0.5;
+      case 'love':
+        return 1.0;
+      case 'laugh':
+        return 0.8;
+      case 'groan':
+        return 0.6; // Groans are actually positive for dad jokes!
+      case 'meh':
+        return 0.4;
+      case 'dislike':
+        return 0.1;
+      default:
+        return 0.5;
     }
   }
 
-  private updateUserPreferences(profile: UserJokeProfile, reaction: UserReaction): void {
+  private updateUserPreferences(
+    profile: UserJokeProfile,
+    reaction: UserReaction
+  ): void {
     const score = this.getReactionScore(reaction.reactionType);
-    
+
     if (reaction.jokeCategory) {
       if (score >= 0.7) {
         // Positive reaction - add to preferred
@@ -237,14 +268,18 @@ export class JokeLearningSystem {
           profile.preferredCategories.push(reaction.jokeCategory);
         }
         // Remove from disliked if present
-        profile.dislikedCategories = profile.dislikedCategories.filter(cat => cat !== reaction.jokeCategory);
+        profile.dislikedCategories = profile.dislikedCategories.filter(
+          cat => cat !== reaction.jokeCategory
+        );
       } else if (score <= 0.3) {
         // Negative reaction - add to disliked
         if (!profile.dislikedCategories.includes(reaction.jokeCategory)) {
           profile.dislikedCategories.push(reaction.jokeCategory);
         }
         // Remove from preferred if present
-        profile.preferredCategories = profile.preferredCategories.filter(cat => cat !== reaction.jokeCategory);
+        profile.preferredCategories = profile.preferredCategories.filter(
+          cat => cat !== reaction.jokeCategory
+        );
       }
     }
 
@@ -253,12 +288,16 @@ export class JokeLearningSystem {
         if (!profile.preferredTypes.includes(reaction.jokeType)) {
           profile.preferredTypes.push(reaction.jokeType);
         }
-        profile.dislikedTypes = profile.dislikedTypes.filter(type => type !== reaction.jokeType);
+        profile.dislikedTypes = profile.dislikedTypes.filter(
+          type => type !== reaction.jokeType
+        );
       } else if (score <= 0.3) {
         if (!profile.dislikedTypes.includes(reaction.jokeType)) {
           profile.dislikedTypes.push(reaction.jokeType);
         }
-        profile.preferredTypes = profile.preferredTypes.filter(type => type !== reaction.jokeType);
+        profile.preferredTypes = profile.preferredTypes.filter(
+          type => type !== reaction.jokeType
+        );
       }
     }
 
@@ -286,7 +325,10 @@ export class JokeLearningSystem {
       .slice(0, 2)
       .map(entry => entry[0]);
 
-    if (topCategories.includes('wordplay') || topCategories.includes('tech_humor')) {
+    if (
+      topCategories.includes('wordplay') ||
+      topCategories.includes('tech_humor')
+    ) {
       profile.humorStyle = 'clever';
     } else if (topCategories.includes('absurd')) {
       profile.humorStyle = 'absurd';
@@ -315,7 +357,7 @@ export class JokeLearningSystem {
         neutralReactions: 0,
         successRate: 0,
         lastUsed: new Date(),
-        userSpecificPerformance: new Map()
+        userSpecificPerformance: new Map(),
       };
     }
 
@@ -331,12 +373,18 @@ export class JokeLearningSystem {
       performance.neutralReactions++;
     }
 
-    performance.successRate = performance.positiveReactions / performance.totalShows;
+    performance.successRate =
+      performance.positiveReactions / performance.totalShows;
 
     // Update user-specific performance
     let userPerf = performance.userSpecificPerformance.get(reaction.userId);
     if (!userPerf) {
-      userPerf = { shows: 0, positiveReactions: 0, negativeReactions: 0, successRate: 0 };
+      userPerf = {
+        shows: 0,
+        positiveReactions: 0,
+        negativeReactions: 0,
+        successRate: 0,
+      };
     }
 
     userPerf.shows++;
@@ -353,16 +401,25 @@ export class JokeLearningSystem {
 
   private updateLearningMetrics(reaction: UserReaction): void {
     this.learningMetrics.totalReactions++;
-    
+
     const score = this.getReactionScore(reaction.reactionType);
-    const totalScore = this.learningMetrics.overallSuccessRate * (this.learningMetrics.totalReactions - 1) + score;
-    this.learningMetrics.overallSuccessRate = totalScore / this.learningMetrics.totalReactions;
+    const totalScore =
+      this.learningMetrics.overallSuccessRate *
+        (this.learningMetrics.totalReactions - 1) +
+      score;
+    this.learningMetrics.overallSuccessRate =
+      totalScore / this.learningMetrics.totalReactions;
 
     // Update category performance
     if (reaction.jokeCategory) {
-      const currentPerf = this.learningMetrics.categoryPerformance.get(reaction.jokeCategory) || 0.5;
-      const newPerf = (currentPerf * 0.9) + (score * 0.1); // Weighted average
-      this.learningMetrics.categoryPerformance.set(reaction.jokeCategory, newPerf);
+      const currentPerf =
+        this.learningMetrics.categoryPerformance.get(reaction.jokeCategory) ||
+        0.5;
+      const newPerf = currentPerf * 0.9 + score * 0.1; // Weighted average
+      this.learningMetrics.categoryPerformance.set(
+        reaction.jokeCategory,
+        newPerf
+      );
     }
 
     // Update satisfaction trend (keep last 100 reactions)
@@ -372,7 +429,10 @@ export class JokeLearningSystem {
     }
   }
 
-  private getBestPerforming(scores: Map<string, number>, preferences: string[]): string | null {
+  private getBestPerforming(
+    scores: Map<string, number>,
+    preferences: string[]
+  ): string | null {
     if (scores.size === 0) return null;
 
     // Prefer user's known preferences
@@ -383,12 +443,12 @@ export class JokeLearningSystem {
     }
 
     // Otherwise, return highest scoring
-    return Array.from(scores.entries())
-      .sort((a, b) => b[1] - a[1])[0][0];
+    return Array.from(scores.entries()).sort((a, b) => b[1] - a[1])[0][0];
   }
 
   // Clean up old data
-  cleanupOldData(maxAge: number = 30 * 24 * 60 * 60 * 1000): void { // 30 days default
+  cleanupOldData(maxAge: number = 30 * 24 * 60 * 60 * 1000): void {
+    // 30 days default
     const cutoff = new Date(Date.now() - maxAge);
 
     // Clean up user profiles

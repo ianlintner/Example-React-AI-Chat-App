@@ -38,13 +38,17 @@ describe('Agent Classifier', () => {
   });
 
   test('should prioritize GIF requests over other types', async () => {
-    const result = await classifyMessage('Send me a reaction gif that is funny');
+    const result = await classifyMessage(
+      'Send me a reaction gif that is funny'
+    );
     expect(result.agentType).toBe('gif');
     expect(result.confidence).toBeGreaterThan(0.7);
   });
 
   test('should handle complex technical queries', async () => {
-    const result = await classifyMessage('I need help with API integration and database queries');
+    const result = await classifyMessage(
+      'I need help with API integration and database queries'
+    );
     expect(result.agentType).toBe('website_support');
     expect(result.confidence).toBeGreaterThan(0.5);
   });

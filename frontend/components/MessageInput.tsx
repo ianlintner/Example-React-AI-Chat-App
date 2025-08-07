@@ -76,7 +76,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleTyping = (text: string) => {
     setMessage(text);
-    
+
     // Send typing indicators
     if (conversationId) {
       if (text.length > 0) {
@@ -94,7 +94,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const canSend = message.trim().length > 0 && !isLoading && !disabled;
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoidingView}
     >
@@ -103,7 +103,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
-            placeholder="Message #ai-assistant"
+            placeholder='Message #ai-assistant'
             placeholderTextColor={DiscordColors.inputPlaceholder}
             value={message}
             onChangeText={handleTyping}
@@ -112,35 +112,34 @@ const MessageInput: React.FC<MessageInputProps> = ({
             editable={!disabled && !isLoading}
             onSubmitEditing={handleSend}
             blurOnSubmit={true}
-            returnKeyType="send"
+            returnKeyType='send'
           />
-          
+
           <View style={styles.sendButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#2196F3" />
+              <ActivityIndicator size='small' color='#2196F3' />
             ) : (
               <IconButton
-                icon="send"
+                icon='send'
                 size={24}
                 iconColor={canSend ? '#2196F3' : '#ccc'}
-                style={[
-                  styles.sendButton,
-                  canSend && styles.sendButtonEnabled
-                ]}
+                style={[styles.sendButton, canSend && styles.sendButtonEnabled]}
                 onPress={handleButtonPress}
                 disabled={!canSend}
               />
             )}
           </View>
         </View>
-        
+
         {/* Character count */}
         {message.length > 1800 && (
           <View style={styles.characterCount}>
-            <Text style={[
-              styles.characterCountText,
-              message.length >= 2000 && styles.characterCountWarning
-            ]}>
+            <Text
+              style={[
+                styles.characterCountText,
+                message.length >= 2000 && styles.characterCountWarning,
+              ]}
+            >
               {message.length}/2000
             </Text>
           </View>

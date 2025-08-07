@@ -91,7 +91,7 @@ const ValidationDashboard: React.FC = () => {
       const [statsResponse, logsResponse, summaryResponse] = await Promise.all([
         apiCall('/api/validation/stats'),
         apiCall('/api/validation/logs?limit=50'),
-        apiCall('/api/validation/summary')
+        apiCall('/api/validation/summary'),
       ]);
 
       setStats(statsResponse.data);
@@ -107,7 +107,7 @@ const ValidationDashboard: React.FC = () => {
   const fetchFilteredLogs = useCallback(async () => {
     try {
       let endpoint = '/api/validation/logs?limit=50';
-      
+
       if (showFailedOnly) {
         endpoint = '/api/validation/failed?limit=50';
       } else if (selectedAgent !== 'all') {
@@ -133,14 +133,16 @@ const ValidationDashboard: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await fetch(`${API_BASE_URL}/api/validation/clear`, { method: 'POST' });
+              await fetch(`${API_BASE_URL}/api/validation/clear`, {
+                method: 'POST',
+              });
               await fetchValidationData();
             } catch (err) {
               console.error('Error clearing logs:', err);
               Alert.alert('Error', 'Failed to clear validation logs');
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -183,10 +185,14 @@ const ValidationDashboard: React.FC = () => {
 
   const getSeverityColor = (severity: string): string => {
     switch (severity) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#6b7280';
-      default: return '#6b7280';
+      case 'high':
+        return '#ef4444';
+      case 'medium':
+        return '#f59e0b';
+      case 'low':
+        return '#6b7280';
+      default:
+        return '#6b7280';
     }
   };
 
@@ -196,11 +202,11 @@ const ValidationDashboard: React.FC = () => {
 
   const getAgentColor = (agentType: string): string => {
     const colors: { [key: string]: string } = {
-      'technical': '#3b82f6',
-      'dad_joke': '#f59e0b',
-      'trivia': '#8b5cf6',
-      'general': '#6b7280',
-      'gif': '#ec4899'
+      technical: '#3b82f6',
+      dad_joke: '#f59e0b',
+      trivia: '#8b5cf6',
+      general: '#6b7280',
+      gif: '#ec4899',
     };
     return colors[agentType] || '#6b7280';
   };
@@ -208,7 +214,7 @@ const ValidationDashboard: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size='large' color='#3b82f6' />
         <Text style={styles.loadingText}>Loading validation data...</Text>
       </View>
     );
@@ -219,11 +225,14 @@ const ValidationDashboard: React.FC = () => {
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Error</Text>
         <Text style={styles.errorMessage}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => {
-          setError(null);
-          setLoading(true);
-          fetchValidationData().finally(() => setLoading(false));
-        }}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setError(null);
+            setLoading(true);
+            fetchValidationData().finally(() => setLoading(false));
+          }}
+        >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
@@ -233,12 +242,16 @@ const ValidationDashboard: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>AI Response Validation</Text>
-        <Text style={styles.headerSubtitle}>Monitor and analyze AI response quality</Text>
+        <Text style={styles.headerSubtitle}>
+          Monitor and analyze AI response quality
+        </Text>
       </View>
 
       {/* Stats Cards */}
@@ -253,13 +266,17 @@ const ValidationDashboard: React.FC = () => {
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>✅</Text>
             <Text style={styles.statLabel}>Success Rate</Text>
-            <Text style={styles.statValue}>{(stats.validationRate * 100).toFixed(1)}%</Text>
+            <Text style={styles.statValue}>
+              {(stats.validationRate * 100).toFixed(1)}%
+            </Text>
           </View>
 
           <View style={styles.statCard}>
             <Text style={styles.statEmoji}>⭐</Text>
             <Text style={styles.statLabel}>Average Score</Text>
-            <Text style={styles.statValue}>{stats.averageScore.toFixed(3)}</Text>
+            <Text style={styles.statValue}>
+              {stats.averageScore.toFixed(3)}
+            </Text>
           </View>
 
           <View style={styles.statCard}>
@@ -280,19 +297,32 @@ const ValidationDashboard: React.FC = () => {
             {Object.entries(summary).map(([agentType, data]) => (
               <View key={agentType} style={styles.agentCard}>
                 <View style={styles.agentHeader}>
-                  <View 
-                    style={[styles.agentColorDot, { backgroundColor: getAgentColor(agentType) }]}
+                  <View
+                    style={[
+                      styles.agentColorDot,
+                      { backgroundColor: getAgentColor(agentType) },
+                    ]}
                   />
                   <Text style={styles.agentName}>{agentType}</Text>
                 </View>
                 <View style={styles.agentStats}>
                   <Text style={styles.agentStatText}>Total: {data.total}</Text>
-                  <Text style={styles.agentStatText}>Success: {(data.validationRate * 100).toFixed(1)}%</Text>
-                  <Text style={styles.agentStatText}>Score: {data.averageScore.toFixed(3)}</Text>
+                  <Text style={styles.agentStatText}>
+                    Success: {(data.validationRate * 100).toFixed(1)}%
+                  </Text>
+                  <Text style={styles.agentStatText}>
+                    Score: {data.averageScore.toFixed(3)}
+                  </Text>
                   <View style={styles.issueRow}>
-                    <Text style={[styles.issueText, { color: '#ef4444' }]}>{data.issues.high}</Text>
-                    <Text style={[styles.issueText, { color: '#f59e0b' }]}>{data.issues.medium}</Text>
-                    <Text style={[styles.issueText, { color: '#6b7280' }]}>{data.issues.low}</Text>
+                    <Text style={[styles.issueText, { color: '#ef4444' }]}>
+                      {data.issues.high}
+                    </Text>
+                    <Text style={[styles.issueText, { color: '#f59e0b' }]}>
+                      {data.issues.medium}
+                    </Text>
+                    <Text style={[styles.issueText, { color: '#6b7280' }]}>
+                      {data.issues.low}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -304,7 +334,7 @@ const ValidationDashboard: React.FC = () => {
       {/* Controls */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Validation Logs</Text>
-        
+
         <View style={styles.controls}>
           <View style={styles.pickerContainer}>
             <Text style={styles.controlLabel}>Agent Type:</Text>
@@ -313,20 +343,28 @@ const ValidationDashboard: React.FC = () => {
               style={styles.picker}
               onValueChange={(value: string) => setSelectedAgent(value)}
             >
-              <Picker.Item label="All Agents" value="all" />
-              <Picker.Item label="Technical" value="technical" />
-              <Picker.Item label="Dad Joke" value="dad_joke" />
-              <Picker.Item label="Trivia" value="trivia" />
-              <Picker.Item label="General" value="general" />
-              <Picker.Item label="GIF" value="gif" />
+              <Picker.Item label='All Agents' value='all' />
+              <Picker.Item label='Technical' value='technical' />
+              <Picker.Item label='Dad Joke' value='dad_joke' />
+              <Picker.Item label='Trivia' value='trivia' />
+              <Picker.Item label='General' value='general' />
+              <Picker.Item label='GIF' value='gif' />
             </Picker>
           </View>
 
           <TouchableOpacity
-            style={[styles.toggleButton, showFailedOnly && styles.toggleButtonActive]}
+            style={[
+              styles.toggleButton,
+              showFailedOnly && styles.toggleButtonActive,
+            ]}
             onPress={() => setShowFailedOnly(!showFailedOnly)}
           >
-            <Text style={[styles.toggleButtonText, showFailedOnly && styles.toggleButtonTextActive]}>
+            <Text
+              style={[
+                styles.toggleButtonText,
+                showFailedOnly && styles.toggleButtonTextActive,
+              ]}
+            >
               Failed Only
             </Text>
           </TouchableOpacity>
@@ -343,32 +381,52 @@ const ValidationDashboard: React.FC = () => {
 
         {/* Validation Logs */}
         <View style={styles.logsList}>
-          {logs.map((log) => (
+          {logs.map(log => (
             <View key={log.id} style={styles.logItem}>
               <View style={styles.logHeader}>
                 <Text style={styles.logTimestamp}>
                   {formatTimestamp(log.timestamp)}
                 </Text>
                 <View style={styles.logAgent}>
-                  <View 
-                    style={[styles.agentColorDot, { backgroundColor: getAgentColor(log.agentType) }]}
+                  <View
+                    style={[
+                      styles.agentColorDot,
+                      { backgroundColor: getAgentColor(log.agentType) },
+                    ]}
                   />
                   <Text style={styles.logAgentText}>{log.agentType}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.logMetrics}>
-                <Text style={[styles.logScore, { color: getScoreColor(log.validationResult.score) }]}>
+                <Text
+                  style={[
+                    styles.logScore,
+                    { color: getScoreColor(log.validationResult.score) },
+                  ]}
+                >
                   Score: {log.validationResult.score.toFixed(3)}
                 </Text>
-                <View style={[
-                  styles.statusBadge,
-                  { backgroundColor: log.validationResult.isValid ? '#dcfce7' : '#fee2e2' }
-                ]}>
-                  <Text style={[
-                    styles.statusText,
-                    { color: log.validationResult.isValid ? '#166534' : '#dc2626' }
-                  ]}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    {
+                      backgroundColor: log.validationResult.isValid
+                        ? '#dcfce7'
+                        : '#fee2e2',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      {
+                        color: log.validationResult.isValid
+                          ? '#166534'
+                          : '#dc2626',
+                      },
+                    ]}
+                  >
                     {log.validationResult.isValid ? 'Valid' : 'Invalid'}
                   </Text>
                 </View>
@@ -376,33 +434,43 @@ const ValidationDashboard: React.FC = () => {
 
               {log.validationResult.issues.length > 0 && (
                 <View style={styles.issues}>
-                  {log.validationResult.issues.slice(0, 3).map((issue, index) => (
-                    <View 
-                      key={index}
-                      style={[
-                        styles.issueBadge,
-                        { backgroundColor: `${getSeverityColor(issue.severity)}20` }
-                      ]}
-                    >
-                      <Text style={[
-                        styles.issueText,
-                        { color: getSeverityColor(issue.severity) }
-                      ]}>
-                        {issue.severity}
-                      </Text>
-                    </View>
-                  ))}
+                  {log.validationResult.issues
+                    .slice(0, 3)
+                    .map((issue, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.issueBadge,
+                          {
+                            backgroundColor: `${getSeverityColor(issue.severity)}20`,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.issueText,
+                            { color: getSeverityColor(issue.severity) },
+                          ]}
+                        >
+                          {issue.severity}
+                        </Text>
+                      </View>
+                    ))}
                 </View>
               )}
 
-              <View style={[
-                styles.typeBadge,
-                { backgroundColor: log.isProactive ? '#f3e8ff' : '#f3f4f6' }
-              ]}>
-                <Text style={[
-                  styles.typeText,
-                  { color: log.isProactive ? '#7c3aed' : '#6b7280' }
-                ]}>
+              <View
+                style={[
+                  styles.typeBadge,
+                  { backgroundColor: log.isProactive ? '#f3e8ff' : '#f3f4f6' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.typeText,
+                    { color: log.isProactive ? '#7c3aed' : '#6b7280' },
+                  ]}
+                >
                   {log.isProactive ? 'Proactive' : 'Regular'}
                 </Text>
               </View>

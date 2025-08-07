@@ -1,4 +1,10 @@
-import { MessageQueueProvider, QueueMessage, MessageHandler, QueueOptions, QueueStats } from '../types';
+import {
+  MessageQueueProvider,
+  QueueMessage,
+  MessageHandler,
+  QueueOptions,
+  QueueStats,
+} from '../types';
 import { EventEmitter } from 'events';
 import { createClient, RedisClientType } from 'redis';
 
@@ -18,7 +24,10 @@ interface RedisQueueData {
 
 const DEFAULT_PRIORITY = 5;
 
-export class RedisMessageQueueProvider extends EventEmitter implements MessageQueueProvider {
+export class RedisMessageQueueProvider
+  extends EventEmitter
+  implements MessageQueueProvider
+{
   private client: RedisClientType | null = null;
   private subscriber: RedisClientType | null = null;
   private queues = new Map<string, RedisQueueData>();
@@ -29,8 +38,10 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
   constructor(redisUrl?: string) {
     super();
-    const urlToUse = redisUrl || process.env.REDIS_URL || 'redis://localhost:6379';
-    const redisUrlPattern = /^redis:\/\/([^\s:@]+(:[^\s:@]*)?@)?([^\s:@]+)(:\d+)?(\/\d+)?$/;
+    const urlToUse =
+      redisUrl || process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrlPattern =
+      /^redis:\/\/([^\s:@]+(:[^\s:@]*)?@)?([^\s:@]+)(:\d+)?(\/\d+)?$/;
     if (!redisUrlPattern.test(urlToUse)) {
       throw new Error(`Invalid Redis connection string: ${urlToUse}`);
     }
@@ -92,8 +103,8 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
           processingMessages: 0,
           completedMessages: 0,
           failedMessages: 0,
-          processingTimes: []
-        }
+          processingTimes: [],
+        },
       });
     }
     return this.queues.get(queueName)!;
@@ -104,11 +115,15 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
       queue: `mq:${queueName}:queue`,
       processing: `mq:${queueName}:processing`,
       stats: `mq:${queueName}:stats`,
-      notify: `mq:${queueName}:notify`
+      notify: `mq:${queueName}:notify`,
     };
   }
 
-  async enqueue(queueName: string, message: QueueMessage, options?: QueueOptions): Promise<void> {
+  async enqueue(
+    queueName: string,
+    message: QueueMessage,
+    options?: QueueOptions
+  ): Promise<void> {
     if (!this.client || !this.isConnected) {
       throw new Error('Redis client is not connected');
     }
@@ -118,7 +133,8 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
     // Apply options to message
     if (options) {
-      if (options.maxRetries !== undefined) message.maxRetries = options.maxRetries;
+      if (options.maxRetries !== undefined)
+        message.maxRetries = options.maxRetries;
       if (options.priority !== undefined) message.priority = options.priority;
     }
     message.maxRetries = message.maxRetries || 3;
@@ -129,29 +145,37 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
     if (message.delayMs && message.delayMs > 0) {
       // Schedule delayed message using Redis sorted set with timestamp
       const executeAt = Date.now() + message.delayMs;
-      await this.client.zAdd(`${keys.queue}:delayed`, { score: executeAt, value: messageData });
-      
+      await this.client.zAdd(`${keys.queue}:delayed`, {
+        score: executeAt,
+        value: messageData,
+      });
+
       // Schedule processing of delayed messages
       setTimeout(() => {
         this.processDelayedMessages(queueName);
       }, message.delayMs);
-      
+
       // Update stats for delayed message
       await this.client.hIncrBy(keys.stats, 'totalMessages', 1);
       await this.client.hIncrBy(keys.stats, 'pendingMessages', 1);
     } else {
       // Add to priority queue using sorted set (higher priority = higher score)
-      await this.client.zAdd(keys.queue, { score: message.priority || DEFAULT_PRIORITY, value: messageData });
-      
+      await this.client.zAdd(keys.queue, {
+        score: message.priority || DEFAULT_PRIORITY,
+        value: messageData,
+      });
+
       // Update stats
       await this.client.hIncrBy(keys.stats, 'totalMessages', 1);
       await this.client.hIncrBy(keys.stats, 'pendingMessages', 1);
-      
+
       // Notify subscribers
       await this.client.publish(keys.notify, 'new_message');
     }
 
-    console.log(`📨 Enqueued message ${message.id} to Redis queue ${queueName} (priority: ${message.priority})`);
+    console.log(
+      `📨 Enqueued message ${message.id} to Redis queue ${queueName} (priority: ${message.priority})`
+    );
   }
 
   private async processDelayedMessages(queueName: string): Promise<void> {
@@ -162,24 +186,34 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
     try {
       // Get messages that are ready to be processed
-      const delayedMessages = await this.client.zRangeByScore(`${keys.queue}:delayed`, 0, now);
-      
+      const delayedMessages = await this.client.zRangeByScore(
+        `${keys.queue}:delayed`,
+        0,
+        now
+      );
+
       for (const messageData of delayedMessages) {
         const message = JSON.parse(messageData);
-        
+
         // Move from delayed to main queue
         await this.client.zRem(`${keys.queue}:delayed`, messageData);
-        await this.client.zAdd(keys.queue, { score: message.priority || 5, value: messageData });
-        
+        await this.client.zAdd(keys.queue, {
+          score: message.priority || 5,
+          value: messageData,
+        });
+
         // Update stats
         await this.client.hIncrBy(keys.stats, 'totalMessages', 1);
         await this.client.hIncrBy(keys.stats, 'pendingMessages', 1);
-        
+
         // Notify subscribers
         await this.client.publish(keys.notify, 'new_message');
       }
     } catch (error) {
-      console.error(`Error processing delayed messages for ${queueName}:`, error);
+      console.error(
+        `Error processing delayed messages for ${queueName}:`,
+        error
+      );
     }
   }
 
@@ -201,15 +235,21 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
       const message: QueueMessage = JSON.parse(result.value);
 
       // Move to processing set with expiry (for reliability)
-      await this.client.setEx(`${keys.processing}:${message.id}`, MESSAGE_PROCESSING_EXPIRY_SECONDS, JSON.stringify(message));
-      
+      await this.client.setEx(
+        `${keys.processing}:${message.id}`,
+        MESSAGE_PROCESSING_EXPIRY_SECONDS,
+        JSON.stringify(message)
+      );
+
       // Update stats
       await this.client.hIncrBy(keys.stats, 'pendingMessages', -1);
       await this.client.hIncrBy(keys.stats, 'processingMessages', 1);
-      
+
       this.processingMessages.set(message.id, message);
-      
-      console.log(`📨 Dequeued message ${message.id} from Redis queue ${queueName}`);
+
+      console.log(
+        `📨 Dequeued message ${message.id} from Redis queue ${queueName}`
+      );
       return message;
     } catch (error) {
       console.error(`Error dequeuing from ${queueName}:`, error);
@@ -244,18 +284,23 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
     const queue = this.ensureQueue(queueName);
     const keys = this.getRedisKeys(queueName);
-    
+
     const handlerId = Math.random().toString(36).substring(7);
     queue.subscribers.set(handlerId, handler);
 
     // Subscribe to notifications for this queue
-    await this.subscriber.subscribe(keys.notify, async (message: string, channel: string) => {
-      if (message === 'new_message') {
-        await this.processNextMessage(queueName);
+    await this.subscriber.subscribe(
+      keys.notify,
+      async (message: string, channel: string) => {
+        if (message === 'new_message') {
+          await this.processNextMessage(queueName);
+        }
       }
-    });
+    );
 
-    console.log(`📨 Subscribed to Redis queue ${queueName} (${queue.subscribers.size} subscribers)`);
+    console.log(
+      `📨 Subscribed to Redis queue ${queueName} (${queue.subscribers.size} subscribers)`
+    );
 
     // Process any existing messages
     this.processNextMessage(queueName);
@@ -267,10 +312,10 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
     const queue = this.queues.get(queueName);
     if (queue) {
       queue.subscribers.clear();
-      
+
       const keys = this.getRedisKeys(queueName);
       await this.subscriber.unsubscribe(keys.notify);
-      
+
       console.log(`📨 Unsubscribed from Redis queue ${queueName}`);
     }
   }
@@ -309,10 +354,14 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
       this.processingMessages.delete(message.id);
 
-      console.log(`✅ Successfully processed message ${message.id} from Redis queue ${queueName} (${processingTime}ms)`);
-
+      console.log(
+        `✅ Successfully processed message ${message.id} from Redis queue ${queueName} (${processingTime}ms)`
+      );
     } catch (error) {
-      console.error(`❌ Error processing message ${message.id} from Redis queue ${queueName}:`, error);
+      console.error(
+        `❌ Error processing message ${message.id} from Redis queue ${queueName}:`,
+        error
+      );
 
       if (this.client) {
         await this.client.hIncrBy(keys.stats, 'processingMessages', -1);
@@ -325,10 +374,15 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
       message.retryCount = (message.retryCount || 0) + 1;
 
       if (message.retryCount < (message.maxRetries || 3)) {
-        console.log(`🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`);
+        console.log(
+          `🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`
+        );
 
         // Exponential backoff
-        const retryDelay = Math.min(1000 * Math.pow(2, message.retryCount - 1), 30000);
+        const retryDelay = Math.min(
+          1000 * Math.pow(2, message.retryCount - 1),
+          30000
+        );
 
         const timeout = setTimeout(async () => {
           await this.enqueue(queueName, message);
@@ -337,7 +391,9 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
 
         this.retryTimeouts.set(message.id, timeout);
       } else {
-        console.error(`💀 Message ${message.id} failed permanently after ${message.retryCount} retries`);
+        console.error(
+          `💀 Message ${message.id} failed permanently after ${message.retryCount} retries`
+        );
 
         if (this.client) {
           await this.client.hIncrBy(keys.stats, 'failedMessages', 1);
@@ -369,12 +425,12 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
     }
 
     const keys = this.getRedisKeys(queueName);
-    
+
     try {
       await this.client.del(keys.queue);
       await this.client.del(`${keys.queue}:delayed`);
       await this.client.hSet(keys.stats, 'pendingMessages', 0);
-      
+
       console.log(`🧹 Purged Redis queue ${queueName}`);
     } catch (error) {
       console.error(`Error purging queue ${queueName}:`, error);
@@ -387,22 +443,22 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
     }
 
     const keys = this.getRedisKeys(queueName);
-    
+
     try {
       // Delete all queue data
       await this.client.del(keys.queue);
       await this.client.del(`${keys.queue}:delayed`);
       await this.client.del(keys.stats);
-      
+
       // Clean up processing messages
       const processingKeys = await this.client.keys(`${keys.processing}:*`);
       if (processingKeys.length > 0) {
         await this.client.del(processingKeys);
       }
-      
+
       // Clean up local state
       this.queues.delete(queueName);
-      
+
       console.log(`🗑️ Deleted Redis queue ${queueName}`);
     } catch (error) {
       console.error(`Error deleting queue ${queueName}:`, error);
@@ -432,18 +488,19 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
         completedMessages: 0,
         failedMessages: 0,
         avgProcessingTime: 0,
-        queues: []
+        queues: [],
       };
     }
 
     if (queueName) {
       const keys = this.getRedisKeys(queueName);
       const queue = this.queues.get(queueName);
-      
+
       try {
         const stats = await this.client.hGetAll(keys.stats);
         const avgProcessingTime = queue?.stats.processingTimes.length
-          ? queue.stats.processingTimes.reduce((a, b) => a + b, 0) / queue.stats.processingTimes.length
+          ? queue.stats.processingTimes.reduce((a, b) => a + b, 0) /
+            queue.stats.processingTimes.length
           : 0;
 
         return {
@@ -453,7 +510,7 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
           completedMessages: parseInt(stats.completedMessages || '0'),
           failedMessages: parseInt(stats.failedMessages || '0'),
           avgProcessingTime,
-          queues: [queueName]
+          queues: [queueName],
         };
       } catch (error) {
         console.error(`Error getting stats for ${queueName}:`, error);
@@ -464,7 +521,7 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
           completedMessages: 0,
           failedMessages: 0,
           avgProcessingTime: 0,
-          queues: []
+          queues: [],
         };
       }
     }
@@ -497,9 +554,11 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
         }
       }
 
-      const avgProcessingTime = allProcessingTimes.length > 0
-        ? allProcessingTimes.reduce((a, b) => a + b, 0) / allProcessingTimes.length
-        : 0;
+      const avgProcessingTime =
+        allProcessingTimes.length > 0
+          ? allProcessingTimes.reduce((a, b) => a + b, 0) /
+            allProcessingTimes.length
+          : 0;
 
       return {
         totalMessages,
@@ -508,7 +567,7 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
         completedMessages,
         failedMessages,
         avgProcessingTime,
-        queues
+        queues,
       };
     } catch (error) {
       console.error('Error getting aggregate stats:', error);
@@ -519,7 +578,7 @@ export class RedisMessageQueueProvider extends EventEmitter implements MessageQu
         completedMessages: 0,
         failedMessages: 0,
         avgProcessingTime: 0,
-        queues: []
+        queues: [],
       };
     }
   }

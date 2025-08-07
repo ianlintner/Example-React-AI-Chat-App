@@ -22,31 +22,37 @@ interface ChatScreenProps {
 }
 
 // YouTube Embed Component
-const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string }> = ({ 
-  videoId, 
-  title, 
-  duration 
-}) => {
+const YouTubeEmbed: React.FC<{
+  videoId: string;
+  title: string;
+  duration: string;
+}> = ({ videoId, title, duration }) => {
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  
+
   const handlePress = async () => {
     await WebBrowser.openBrowserAsync(youtubeUrl, {
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
     });
   };
-  
+
   return (
-    <TouchableOpacity style={styles.youtubeContainer} onPress={handlePress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.youtubeContainer}
+      onPress={handlePress}
+      activeOpacity={0.8}
+    >
       <View style={styles.youtubeHeader}>
-        <Text style={styles.youtubeTitle} numberOfLines={2}>🎬 {title}</Text>
+        <Text style={styles.youtubeTitle} numberOfLines={2}>
+          🎬 {title}
+        </Text>
         <Text style={styles.youtubeDuration}>⏱️ {duration}</Text>
       </View>
       <View style={styles.youtubeThumbnailContainer}>
         <Image
           source={{ uri: thumbnailUrl }}
           style={styles.youtubeThumbnailImage}
-          resizeMode="cover"
+          resizeMode='cover'
         />
         <View style={styles.youtubeOverlay}>
           <View style={styles.youtubePlayButton}>
@@ -64,11 +70,15 @@ const YouTubeEmbed: React.FC<{ videoId: string; title: string; duration: string 
 // Function to parse YouTube embeds from message content
 const parseMessageContent = (content: string) => {
   const youtubeRegex = /```youtube\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g;
-  const parts: Array<{ type: 'text' | 'youtube'; content: string; videoData?: { id: string; title: string; duration: string } }> = [];
-  
+  const parts: Array<{
+    type: 'text' | 'youtube';
+    content: string;
+    videoData?: { id: string; title: string; duration: string };
+  }> = [];
+
   let lastIndex = 0;
   let match;
-  
+
   while ((match = youtubeRegex.exec(content)) !== null) {
     // Add text before YouTube embed
     if (match.index > lastIndex) {
@@ -77,18 +87,18 @@ const parseMessageContent = (content: string) => {
         parts.push({ type: 'text', content: textContent });
       }
     }
-    
+
     // Add YouTube embed
     const [, videoId, title, duration] = match;
     parts.push({
       type: 'youtube',
       content: match[0],
-      videoData: { id: videoId, title, duration }
+      videoData: { id: videoId, title, duration },
     });
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text
   if (lastIndex < content.length) {
     const textContent = content.substring(lastIndex);
@@ -96,12 +106,12 @@ const parseMessageContent = (content: string) => {
       parts.push({ type: 'text', content: textContent });
     }
   }
-  
+
   // If no YouTube embeds found, return original content as text
   if (parts.length === 0) {
     return [{ type: 'text' as const, content }];
   }
-  
+
   return parts;
 };
 
@@ -110,7 +120,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const headerAnimValue = useRef(new Animated.Value(1)).current;
-  
+
   // Combined Agent Status & Menu Integration
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -130,7 +140,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   useEffect(() => {
     const handleAgentStatusUpdate = (status: AgentStatus) => {
       setAgentStatus(status);
-      
+
       // Trigger slide animation when agent status changes
       Animated.sequence([
         Animated.timing(slideAnim, {
@@ -142,7 +152,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
-        })
+        }),
       ]).start();
     };
 
@@ -211,7 +221,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   const toggleHeaderCollapse = () => {
     const newCollapsedState = !isHeaderCollapsed;
     setIsHeaderCollapsed(newCollapsedState);
-    
+
     Animated.timing(headerAnimValue, {
       toValue: newCollapsedState ? 0 : 1,
       duration: 300,
@@ -226,172 +236,186 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
 
   const getAgentInfo = (agentUsed?: string) => {
     switch (agentUsed) {
-      case 'hold_agent': 
-        return { 
-          name: 'Hold Agent', 
-          avatar: 'clock-outline', 
-          color: '#FF9800' 
+      case 'hold_agent':
+        return {
+          name: 'Hold Agent',
+          avatar: 'clock-outline',
+          color: '#FF9800',
         };
-      case 'account_support': 
-        return { 
-          name: 'Account Support', 
-          avatar: 'account-circle', 
-          color: '#2196F3' 
+      case 'account_support':
+        return {
+          name: 'Account Support',
+          avatar: 'account-circle',
+          color: '#2196F3',
         };
-      case 'billing_support': 
-        return { 
-          name: 'Billing Support', 
-          avatar: 'credit-card', 
-          color: '#4CAF50' 
+      case 'billing_support':
+        return {
+          name: 'Billing Support',
+          avatar: 'credit-card',
+          color: '#4CAF50',
         };
-      case 'website_support': 
-        return { 
-          name: 'Website Support', 
-          avatar: 'web', 
-          color: '#9C27B0' 
+      case 'website_support':
+        return {
+          name: 'Website Support',
+          avatar: 'web',
+          color: '#9C27B0',
         };
-      case 'operator_support': 
-        return { 
-          name: 'Customer Service', 
-          avatar: 'headphones', 
-          color: '#607D8B' 
+      case 'operator_support':
+        return {
+          name: 'Customer Service',
+          avatar: 'headphones',
+          color: '#607D8B',
         };
-      case 'joke': 
-        return { 
-          name: 'Comedy Bot', 
-          avatar: 'emoticon-happy', 
-          color: '#FF5722' 
+      case 'joke':
+        return {
+          name: 'Comedy Bot',
+          avatar: 'emoticon-happy',
+          color: '#FF5722',
         };
-      case 'trivia': 
-        return { 
-          name: 'Trivia Master', 
-          avatar: 'head-question', 
-          color: '#795548' 
+      case 'trivia':
+        return {
+          name: 'Trivia Master',
+          avatar: 'head-question',
+          color: '#795548',
         };
-      case 'gif': 
-        return { 
-          name: 'GIF Master', 
-          avatar: 'movie', 
-          color: '#E91E63' 
+      case 'gif':
+        return {
+          name: 'GIF Master',
+          avatar: 'movie',
+          color: '#E91E63',
         };
-      case 'story_teller': 
-        return { 
-          name: 'Story Teller', 
-          avatar: 'book-open', 
-          color: '#3F51B5' 
+      case 'story_teller':
+        return {
+          name: 'Story Teller',
+          avatar: 'book-open',
+          color: '#3F51B5',
         };
-      case 'riddle_master': 
-        return { 
-          name: 'Riddle Master', 
-          avatar: 'puzzle', 
-          color: '#FF9800' 
+      case 'riddle_master':
+        return {
+          name: 'Riddle Master',
+          avatar: 'puzzle',
+          color: '#FF9800',
         };
-      case 'quote_master': 
-        return { 
-          name: 'Quote Master', 
-          avatar: 'format-quote-close', 
-          color: '#009688' 
+      case 'quote_master':
+        return {
+          name: 'Quote Master',
+          avatar: 'format-quote-close',
+          color: '#009688',
         };
-      case 'game_host': 
-        return { 
-          name: 'Game Host', 
-          avatar: 'controller-classic', 
-          color: '#8BC34A' 
+      case 'game_host':
+        return {
+          name: 'Game Host',
+          avatar: 'controller-classic',
+          color: '#8BC34A',
         };
-      case 'music_guru': 
-        return { 
-          name: 'Music Guru', 
-          avatar: 'music', 
-          color: '#673AB7' 
+      case 'music_guru':
+        return {
+          name: 'Music Guru',
+          avatar: 'music',
+          color: '#673AB7',
         };
-      case 'youtube_guru': 
-        return { 
-          name: 'YouTube Guru', 
-          avatar: 'youtube', 
-          color: '#FF0000' 
+      case 'youtube_guru':
+        return {
+          name: 'YouTube Guru',
+          avatar: 'youtube',
+          color: '#FF0000',
         };
-      case 'dnd_master': 
-        return { 
-          name: 'D&D Master', 
-          avatar: 'dice-6', 
-          color: '#6B46C1' 
+      case 'dnd_master':
+        return {
+          name: 'D&D Master',
+          avatar: 'dice-6',
+          color: '#6B46C1',
         };
-      case 'general': 
-        return { 
-          name: 'AI Assistant', 
-          avatar: 'robot', 
-          color: '#4CAF50' 
+      case 'general':
+        return {
+          name: 'AI Assistant',
+          avatar: 'robot',
+          color: '#4CAF50',
         };
-      default: 
-        return { 
-          name: 'AI Assistant', 
-          avatar: 'robot', 
-          color: '#757575' 
+      default:
+        return {
+          name: 'AI Assistant',
+          avatar: 'robot',
+          color: '#757575',
         };
     }
   };
 
-  const MessageBubble: React.FC<{ 
-    message: Message; 
+  const MessageBubble: React.FC<{
+    message: Message;
     isStreamingMessage?: boolean;
   }> = ({ message, isStreamingMessage = false }) => {
     const isUser = message.role === 'user';
-    const agentInfo = !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
-    
+    const agentInfo =
+      !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
+
     return (
-      <View style={[
-        styles.messageBubbleContainer,
-        isUser ? styles.userMessageContainer : styles.assistantMessageContainer
-      ]}>
+      <View
+        style={[
+          styles.messageBubbleContainer,
+          isUser
+            ? styles.userMessageContainer
+            : styles.assistantMessageContainer,
+        ]}
+      >
         <Avatar.Icon
           size={40}
-          icon={isUser ? 'account' : (agentInfo?.avatar || 'robot')}
+          icon={isUser ? 'account' : agentInfo?.avatar || 'robot'}
           style={[
             styles.avatar,
-            { backgroundColor: isUser ? ForestColors.brandTertiary : (agentInfo?.color || ForestColors.brandPrimary) }
+            {
+              backgroundColor: isUser
+                ? ForestColors.brandTertiary
+                : agentInfo?.color || ForestColors.brandPrimary,
+            },
           ]}
         />
-        
-        <View style={[
-          styles.messageContentContainer,
-          isUser ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }
-        ]}>
+
+        <View
+          style={[
+            styles.messageContentContainer,
+            isUser ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' },
+          ]}
+        >
           <Animated.View
             style={[
               styles.messageBubble,
               isUser ? styles.userBubble : styles.assistantBubble,
-              isStreamingMessage && !isUser && {
-                transform: [{ scale: pulseAnim }],
-                shadowOpacity: 0.3,
-                elevation: 5,
-              }
+              isStreamingMessage &&
+                !isUser && {
+                  transform: [{ scale: pulseAnim }],
+                  shadowOpacity: 0.3,
+                  elevation: 5,
+                },
             ]}
           >
             {/* Agent indicator for assistant messages */}
-            {!isUser && message.agentUsed && (() => {
-              const agentInfo = getAgentInfo(message.agentUsed);
-              return (
-                <View style={styles.agentIndicatorContainer}>
-                  <Text style={styles.agentName}>{agentInfo.name}</Text>
-                  {message.isProactive && (
-                    <Chip
-                      mode="flat"
-                      compact
-                      textStyle={styles.chipText}
-                      style={styles.proactiveChip}
-                    >
-                      🎯 Proactive
-                    </Chip>
-                  )}
-                  {message.confidence && (
-                    <Text style={styles.confidenceText}>
-                      {Math.round(message.confidence * 100)}% confidence
-                    </Text>
-                  )}
-                </View>
-              );
-            })()}
-            
+            {!isUser &&
+              message.agentUsed &&
+              (() => {
+                const agentInfo = getAgentInfo(message.agentUsed);
+                return (
+                  <View style={styles.agentIndicatorContainer}>
+                    <Text style={styles.agentName}>{agentInfo.name}</Text>
+                    {message.isProactive && (
+                      <Chip
+                        mode='flat'
+                        compact
+                        textStyle={styles.chipText}
+                        style={styles.proactiveChip}
+                      >
+                        🎯 Proactive
+                      </Chip>
+                    )}
+                    {message.confidence && (
+                      <Text style={styles.confidenceText}>
+                        {Math.round(message.confidence * 100)}% confidence
+                      </Text>
+                    )}
+                  </View>
+                );
+              })()}
+
             {isUser ? (
               <Text style={[styles.messageText, styles.userMessageText]}>
                 {message.content}
@@ -401,7 +425,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                 {message.content ? (
                   (() => {
                     const parsedContent = parseMessageContent(message.content);
-                    
+
                     return parsedContent.map((part, index) => {
                       if (part.type === 'youtube' && part.videoData) {
                         return (
@@ -424,15 +448,28 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                   })()
                 ) : (
                   <View style={styles.thinkingContainer}>
-                    <ActivityIndicator 
-                      size="small" 
-                      color={message.status === 'pending' ? ForestColors.loadingPrimary : ForestColors.loadingSecondary}
+                    <ActivityIndicator
+                      size='small'
+                      color={
+                        message.status === 'pending'
+                          ? ForestColors.loadingPrimary
+                          : ForestColors.loadingSecondary
+                      }
                     />
-                    <Text style={[
-                      styles.thinkingText, 
-                      { color: message.status === 'pending' ? ForestColors.textMuted : ForestColors.textFaint }
-                    ]}>
-                      {message.status === 'pending' ? 'Processing your request...' : 'Generating response...'}
+                    <Text
+                      style={[
+                        styles.thinkingText,
+                        {
+                          color:
+                            message.status === 'pending'
+                              ? ForestColors.textMuted
+                              : ForestColors.textFaint,
+                        },
+                      ]}
+                    >
+                      {message.status === 'pending'
+                        ? 'Processing your request...'
+                        : 'Generating response...'}
                     </Text>
                   </View>
                 )}
@@ -441,7 +478,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               <View style={styles.markdownContainer}>
                 {(() => {
                   const parsedContent = parseMessageContent(message.content);
-                  
+
                   return parsedContent.map((part, index) => {
                     if (part.type === 'youtube' && part.videoData) {
                       return (
@@ -465,11 +502,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               </View>
             )}
           </Animated.View>
-          
-          <Text style={[
-            styles.timestamp,
-            isUser ? styles.userTimestamp : styles.assistantTimestamp
-          ]}>
+
+          <Text
+            style={[
+              styles.timestamp,
+              isUser ? styles.userTimestamp : styles.assistantTimestamp,
+            ]}
+          >
             {formatTimestamp(message.timestamp)}
           </Text>
         </View>
@@ -480,16 +519,25 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   if (!conversation) {
     return (
       <View style={styles.emptyContainer}>
-        <Avatar.Icon size={64} icon="robot" style={styles.emptyAvatar} />
+        <Avatar.Icon size={64} icon='robot' style={styles.emptyAvatar} />
         <Text style={styles.emptyTitle}>Welcome to AI Chat Assistant</Text>
         <Text style={styles.emptySubtitle}>
-          Start a conversation by typing a message below. I&apos;m here to help you with anything you need!
+          Start a conversation by typing a message below. I&apos;m here to help
+          you with anything you need!
         </Text>
         <View style={styles.chipContainer}>
-          <Chip mode="outlined" style={styles.featureChip}>Ask questions</Chip>
-          <Chip mode="outlined" style={styles.featureChip}>Get coding help</Chip>
-          <Chip mode="outlined" style={styles.featureChip}>Creative writing</Chip>
-          <Chip mode="outlined" style={styles.featureChip}>Analysis & research</Chip>
+          <Chip mode='outlined' style={styles.featureChip}>
+            Ask questions
+          </Chip>
+          <Chip mode='outlined' style={styles.featureChip}>
+            Get coding help
+          </Chip>
+          <Chip mode='outlined' style={styles.featureChip}>
+            Creative writing
+          </Chip>
+          <Chip mode='outlined' style={styles.featureChip}>
+            Analysis & research
+          </Chip>
         </View>
       </View>
     );
@@ -498,7 +546,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
   return (
     <View style={styles.container}>
       {/* Minimal Mobile Header */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.header,
           {
@@ -506,10 +554,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               inputRange: [0, 1],
               outputRange: [48, 72],
             }),
-          }
+          },
         ]}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.headerTouchable}
           onPress={toggleHeaderCollapse}
           activeOpacity={0.7}
@@ -517,14 +565,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           <View style={styles.headerMain}>
             <View style={styles.headerLeft}>
               {/* Single status indicator combining connection and activity */}
-              <View style={[
-                styles.statusIndicator,
-                { 
-                  backgroundColor: !isConnected ? ForestColors.error : 
-                                  agentStatus?.isActive ? ForestColors.success : ForestColors.textMuted 
-                }
-              ]} />
-              
+              <View
+                style={[
+                  styles.statusIndicator,
+                  {
+                    backgroundColor: !isConnected
+                      ? ForestColors.error
+                      : agentStatus?.isActive
+                        ? ForestColors.success
+                        : ForestColors.textMuted,
+                  },
+                ]}
+              />
+
               <View style={styles.headerTextContainer}>
                 <Text style={styles.headerTitle} numberOfLines={1}>
                   {conversation.title}
@@ -539,24 +592,28 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                   }}
                 >
                   <Text style={styles.headerSubtitle}>
-                    {agentStatus ? getAgentInfo(agentStatus.currentAgent).name : 'AI Assistant'}
+                    {agentStatus
+                      ? getAgentInfo(agentStatus.currentAgent).name
+                      : 'AI Assistant'}
                   </Text>
                 </Animated.View>
               </View>
             </View>
-            
+
             <View style={styles.headerRight}>
               <Animated.View
                 style={[
                   styles.expandToggle,
                   {
-                    transform: [{
-                      rotate: headerAnimValue.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    }],
-                  }
+                    transform: [
+                      {
+                        rotate: headerAnimValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '180deg'],
+                        }),
+                      },
+                    ],
+                  },
                 ]}
               >
                 <Text style={styles.chevronSymbol}>⌄</Text>
@@ -564,7 +621,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             </View>
           </View>
         </TouchableOpacity>
-        
+
         {/* Simplified Expanded Info */}
         <Animated.View
           style={[
@@ -575,7 +632,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                 inputRange: [0, 1],
                 outputRange: [0, 24],
               }),
-            }
+            },
           ]}
         >
           <View style={styles.expandedContent}>
@@ -589,12 +646,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         </Animated.View>
 
         {/* Subtle bottom accent */}
-        <View style={[
-          styles.bottomAccent,
-          {
-            backgroundColor: agentStatus?.isActive ? ForestColors.success : ForestColors.borderLight,
-          }
-        ]} />
+        <View
+          style={[
+            styles.bottomAccent,
+            {
+              backgroundColor: agentStatus?.isActive
+                ? ForestColors.success
+                : ForestColors.borderLight,
+            },
+          ]}
+        />
       </Animated.View>
 
       {/* Messages */}
@@ -604,14 +665,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         contentContainerStyle={styles.messagesContent}
         showsVerticalScrollIndicator={false}
       >
-        {conversation.messages.map((message) => {
+        {conversation.messages.map(message => {
           const isStreaming = message.status === 'streaming';
           const isPending = message.status === 'pending';
-          
+
           return (
-            <MessageBubble 
-              key={message.id} 
-              message={message} 
+            <MessageBubble
+              key={message.id}
+              message={message}
               isStreamingMessage={isStreaming || isPending}
             />
           );
@@ -768,32 +829,32 @@ const styles = StyleSheet.create({
     right: 12,
     borderRadius: 1,
   },
-  
+
   // Expanded Metrics Section
   expandedMetrics: {
     paddingHorizontal: 16,
     paddingBottom: 4,
     overflow: 'hidden',
   },
-  
+
   metricsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
-  
+
   metric: {
     flex: 1,
     alignItems: 'center',
   },
-  
+
   metricValue: {
     fontSize: 12,
     fontWeight: '700',
     color: ForestColors.textNormal,
     marginBottom: 1,
   },
-  
+
   metricLabel: {
     fontSize: 7,
     fontWeight: '600',
@@ -801,7 +862,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  
+
   metricDivider: {
     width: 1,
     height: 16,
@@ -809,13 +870,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     opacity: 0.5,
   },
-  
+
   goalMetric: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   goalCount: {
     backgroundColor: ForestColors.brandPrimary,
     borderRadius: 6,
@@ -825,7 +886,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 3,
   },
-  
+
   goalCountText: {
     fontSize: 7,
     fontWeight: '700',
@@ -994,7 +1055,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: ForestColors.headerPrimary,
   },
-  
+
   // YouTube Embed Styles
   youtubeContainer: {
     marginVertical: 8,

@@ -1,9 +1,11 @@
 import OpenAI from 'openai';
 import { MessageClassification, AgentType } from './types';
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 const CLASSIFICATION_PROMPT = `You are a message classifier that determines which type of AI agent should handle a user's message.
 
@@ -47,56 +49,233 @@ Examples:
 
 Message to classify: "{message}"`;
 
-export async function classifyMessage(message: string): Promise<MessageClassification> {
+export async function classifyMessage(
+  message: string
+): Promise<MessageClassification> {
   // Fallback classification using simple keyword matching
   const fallbackClassification = (): MessageClassification => {
     const technicalKeywords = [
-      'code', 'programming', 'debug', 'error', 'bug', 'api', 'database', 'sql',
-      'javascript', 'python', 'react', 'node', 'css', 'html', 'function',
-      'variable', 'array', 'object', 'class', 'method', 'framework', 'library',
-      'algorithm', 'data structure', 'server', 'client', 'frontend', 'backend',
-      'deployment', 'git', 'github', 'repository', 'commit', 'merge', 'branch',
-      'typescript', 'npm', 'yarn', 'package', 'dependency', 'import', 'export',
-      'component', 'props', 'state', 'hook', 'redux', 'axios', 'fetch', 'async',
-      'await', 'promise', 'callback', 'event', 'listener', 'dom', 'element',
-      'selector', 'query', 'database', 'schema', 'table', 'index', 'join',
-      'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'cloud', 'microservice',
-      'rest', 'graphql', 'websocket', 'http', 'https', 'ssl', 'tls', 'cors',
-      'authentication', 'authorization', 'jwt', 'oauth', 'session', 'cookie',
-      'webpack', 'babel', 'eslint', 'prettier', 'jest', 'testing', 'unit test',
-      'integration test', 'ci/cd', 'devops', 'linux', 'unix', 'bash', 'shell',
-      'terminal', 'command line', 'regex', 'json', 'xml', 'yaml', 'markdown'
+      'code',
+      'programming',
+      'debug',
+      'error',
+      'bug',
+      'api',
+      'database',
+      'sql',
+      'javascript',
+      'python',
+      'react',
+      'node',
+      'css',
+      'html',
+      'function',
+      'variable',
+      'array',
+      'object',
+      'class',
+      'method',
+      'framework',
+      'library',
+      'algorithm',
+      'data structure',
+      'server',
+      'client',
+      'frontend',
+      'backend',
+      'deployment',
+      'git',
+      'github',
+      'repository',
+      'commit',
+      'merge',
+      'branch',
+      'typescript',
+      'npm',
+      'yarn',
+      'package',
+      'dependency',
+      'import',
+      'export',
+      'component',
+      'props',
+      'state',
+      'hook',
+      'redux',
+      'axios',
+      'fetch',
+      'async',
+      'await',
+      'promise',
+      'callback',
+      'event',
+      'listener',
+      'dom',
+      'element',
+      'selector',
+      'query',
+      'database',
+      'schema',
+      'table',
+      'index',
+      'join',
+      'docker',
+      'kubernetes',
+      'aws',
+      'azure',
+      'gcp',
+      'cloud',
+      'microservice',
+      'rest',
+      'graphql',
+      'websocket',
+      'http',
+      'https',
+      'ssl',
+      'tls',
+      'cors',
+      'authentication',
+      'authorization',
+      'jwt',
+      'oauth',
+      'session',
+      'cookie',
+      'webpack',
+      'babel',
+      'eslint',
+      'prettier',
+      'jest',
+      'testing',
+      'unit test',
+      'integration test',
+      'ci/cd',
+      'devops',
+      'linux',
+      'unix',
+      'bash',
+      'shell',
+      'terminal',
+      'command line',
+      'regex',
+      'json',
+      'xml',
+      'yaml',
+      'markdown',
     ];
 
     const dadJokeKeywords = [
-      'dad joke', 'dad jokes', 'pun', 'puns', 'joke', 'jokes', 'funny',
-      'humor', 'cheesy', 'groan', 'laugh', 'make me laugh', 'tell me a joke',
-      'funny joke', 'corny', 'silly', 'witty', 'punchline', 'one-liner',
-      'wordplay', 'play on words', 'dad humor', 'family friendly joke'
+      'dad joke',
+      'dad jokes',
+      'pun',
+      'puns',
+      'joke',
+      'jokes',
+      'funny',
+      'humor',
+      'cheesy',
+      'groan',
+      'laugh',
+      'make me laugh',
+      'tell me a joke',
+      'funny joke',
+      'corny',
+      'silly',
+      'witty',
+      'punchline',
+      'one-liner',
+      'wordplay',
+      'play on words',
+      'dad humor',
+      'family friendly joke',
     ];
 
     const triviaKeywords = [
-      'trivia', 'fact', 'facts', 'fun fact', 'fun facts', 'random fact',
-      'random facts', 'did you know', 'interesting fact', 'tell me about',
-      'what is', 'history', 'science', 'nature', 'space', 'animals',
-      'geography', 'culture', 'amazing', 'fascinating', 'incredible',
-      'knowledge', 'learn', 'discovery', 'invention', 'record', 'world record',
-      'ancient', 'historical', 'scientific', 'curiosity', 'wonder', 'mystery',
-      'phenomenon', 'unusual', 'weird', 'strange', 'bizarre', 'cool fact',
-      'share knowledge', 'tell me something', 'educate me', 'information'
+      'trivia',
+      'fact',
+      'facts',
+      'fun fact',
+      'fun facts',
+      'random fact',
+      'random facts',
+      'did you know',
+      'interesting fact',
+      'tell me about',
+      'what is',
+      'history',
+      'science',
+      'nature',
+      'space',
+      'animals',
+      'geography',
+      'culture',
+      'amazing',
+      'fascinating',
+      'incredible',
+      'knowledge',
+      'learn',
+      'discovery',
+      'invention',
+      'record',
+      'world record',
+      'ancient',
+      'historical',
+      'scientific',
+      'curiosity',
+      'wonder',
+      'mystery',
+      'phenomenon',
+      'unusual',
+      'weird',
+      'strange',
+      'bizarre',
+      'cool fact',
+      'share knowledge',
+      'tell me something',
+      'educate me',
+      'information',
     ];
 
     const gifKeywords = [
-      'gif', 'gifs', 'animated', 'animation', 'funny gif', 'reaction gif',
-      'meme', 'memes', 'funny image', 'visual', 'show me', 'picture',
-      'image', 'cute gif', 'cat gif', 'dog gif', 'excited gif', 'happy gif',
-      'sad gif', 'surprised gif', 'celebration gif', 'party gif', 'dance gif',
-      'thumbs up', 'applause', 'clapping', 'facepalm', 'eye roll', 'shrug',
-      'giphy', 'tenor', 'reaction', 'emotion', 'feeling', 'mood', 'vibe'
+      'gif',
+      'gifs',
+      'animated',
+      'animation',
+      'funny gif',
+      'reaction gif',
+      'meme',
+      'memes',
+      'funny image',
+      'visual',
+      'show me',
+      'picture',
+      'image',
+      'cute gif',
+      'cat gif',
+      'dog gif',
+      'excited gif',
+      'happy gif',
+      'sad gif',
+      'surprised gif',
+      'celebration gif',
+      'party gif',
+      'dance gif',
+      'thumbs up',
+      'applause',
+      'clapping',
+      'facepalm',
+      'eye roll',
+      'shrug',
+      'giphy',
+      'tenor',
+      'reaction',
+      'emotion',
+      'feeling',
+      'mood',
+      'vibe',
     ];
 
     const lowerMessage = message.toLowerCase();
-    
+
     const technicalScore = technicalKeywords.reduce((score, keyword) => {
       return score + (lowerMessage.includes(keyword) ? 1 : 0);
     }, 0);
@@ -117,8 +296,8 @@ export async function classifyMessage(message: string): Promise<MessageClassific
     if (gifScore > 0) {
       return {
         agentType: 'gif',
-        confidence: Math.min(0.95, 0.7 + (gifScore * 0.15)),
-        reasoning: `Detected ${gifScore} GIF/visual content keywords in the message`
+        confidence: Math.min(0.95, 0.7 + gifScore * 0.15),
+        reasoning: `Detected ${gifScore} GIF/visual content keywords in the message`,
       };
     }
 
@@ -126,8 +305,8 @@ export async function classifyMessage(message: string): Promise<MessageClassific
     if (dadJokeScore > 0) {
       return {
         agentType: 'joke',
-        confidence: Math.min(0.9, 0.6 + (dadJokeScore * 0.15)),
-        reasoning: `Detected ${dadJokeScore} joke keywords in the message`
+        confidence: Math.min(0.9, 0.6 + dadJokeScore * 0.15),
+        reasoning: `Detected ${dadJokeScore} joke keywords in the message`,
       };
     }
 
@@ -135,8 +314,8 @@ export async function classifyMessage(message: string): Promise<MessageClassific
     if (triviaScore > 0) {
       return {
         agentType: 'trivia',
-        confidence: Math.min(0.85, 0.55 + (triviaScore * 0.1)),
-        reasoning: `Detected ${triviaScore} trivia keywords in the message`
+        confidence: Math.min(0.85, 0.55 + triviaScore * 0.1),
+        reasoning: `Detected ${triviaScore} trivia keywords in the message`,
       };
     }
 
@@ -144,8 +323,8 @@ export async function classifyMessage(message: string): Promise<MessageClassific
     if (technicalScore > 0) {
       return {
         agentType: 'website_support',
-        confidence: Math.min(0.8, 0.5 + (technicalScore * 0.1)),
-        reasoning: `Detected ${technicalScore} technical keywords in the message - routing to website support`
+        confidence: Math.min(0.8, 0.5 + technicalScore * 0.1),
+        reasoning: `Detected ${technicalScore} technical keywords in the message - routing to website support`,
       };
     }
 
@@ -153,7 +332,7 @@ export async function classifyMessage(message: string): Promise<MessageClassific
     return {
       agentType: 'general',
       confidence: 0.5,
-      reasoning: 'No specific keywords detected, classifying as general'
+      reasoning: 'No specific keywords detected, classifying as general',
     };
   };
 
@@ -165,8 +344,8 @@ export async function classifyMessage(message: string): Promise<MessageClassific
         messages: [
           {
             role: 'system',
-            content: CLASSIFICATION_PROMPT.replace('{message}', message)
-          }
+            content: CLASSIFICATION_PROMPT.replace('{message}', message),
+          },
         ],
         max_tokens: 200,
         temperature: 0.1,
@@ -179,10 +358,13 @@ export async function classifyMessage(message: string): Promise<MessageClassific
           return {
             agentType: classification.agentType,
             confidence: classification.confidence,
-            reasoning: classification.reasoning
+            reasoning: classification.reasoning,
           };
         } catch (parseError) {
-          console.warn('Failed to parse AI classification response:', parseError);
+          console.warn(
+            'Failed to parse AI classification response:',
+            parseError
+          );
         }
       }
     } catch (error) {

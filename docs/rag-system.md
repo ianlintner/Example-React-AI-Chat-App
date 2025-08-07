@@ -16,6 +16,7 @@ The RAG system provides curated, high-quality content for entertainment agents, 
 ## Content Database
 
 ### Current Content Statistics
+
 - **10 Premium Jokes** (Dad jokes, tech humor, story jokes)
 - **10 Fascinating Trivia Facts** (Science, animals, space, history)
 - **10 Curated GIFs** (Reactions, emotions, celebrations)
@@ -27,24 +28,26 @@ The RAG system provides curated, high-quality content for entertainment agents, 
 
 ```typescript
 interface ContentItem {
-  id: string;                    // Unique identifier
+  id: string; // Unique identifier
   type: 'joke' | 'trivia' | 'gif'; // Content type
-  content: string;               // Main content (joke text, fact, GIF URL)
-  category?: string;             // Content category
-  tags: string[];               // Searchable tags
-  rating?: number;              // Quality rating (1-5)
-  metadata?: any;               // Additional data (alt text, descriptions)
+  content: string; // Main content (joke text, fact, GIF URL)
+  category?: string; // Content category
+  tags: string[]; // Searchable tags
+  rating?: number; // Quality rating (1-5)
+  metadata?: any; // Additional data (alt text, descriptions)
 }
 ```
 
 ### Content Categories
 
 #### Jokes
+
 - `dad_joke` - Classic dad humor and puns
-- `tech_joke` - Programming and technology humor  
+- `tech_joke` - Programming and technology humor
 - `story_joke` - Narrative-style jokes
 
 #### Trivia
+
 - `animals` - Animal facts and biology
 - `space` - Astronomy and space exploration
 - `science` - Scientific discoveries and phenomena
@@ -54,6 +57,7 @@ interface ContentItem {
 - `mathematics` - Mathematical concepts and paradoxes
 
 #### GIFs
+
 - `funny` - General humor and comedy
 - `cute` - Adorable and heartwarming content
 - `excited` - Celebration and joy reactions
@@ -70,39 +74,47 @@ interface ContentItem {
 ### RAGService Methods
 
 #### `search(query: SearchQuery): SearchResult[]`
+
 Searches for content based on query parameters.
 
 **Parameters:**
+
 ```typescript
 interface SearchQuery {
-  text: string;                  // Search text
+  text: string; // Search text
   type?: 'joke' | 'trivia' | 'gif'; // Content type filter
-  category?: string;             // Category filter
-  tags?: string[];              // Tag filters
-  limit?: number;               // Result limit (default: 10)
+  category?: string; // Category filter
+  tags?: string[]; // Tag filters
+  limit?: number; // Result limit (default: 10)
 }
 ```
 
 **Returns:** Array of SearchResult objects with relevance scores.
 
 #### `searchForAgent(agentType: AgentType, query: string, fallbackToRandom?: boolean): ContentItem | null`
+
 Simplified search for specific agent types.
 
 **Parameters:**
+
 - `agentType` - Agent requesting content ('joke', 'trivia', 'gif')
 - `query` - User's message for context
 - `fallbackToRandom` - Whether to return random content if no matches (default: true)
 
 #### `getRandomContent(type: 'joke' | 'trivia' | 'gif', category?: string): ContentItem | null`
+
 Retrieves random content of specified type.
 
 #### `addContent(item: ContentItem): void`
+
 Dynamically adds new content to the database.
 
 #### `getStats(): { [type: string]: number }`
+
 Returns content statistics by type.
 
 #### `getTopRated(type?: string, limit?: number): ContentItem[]`
+
 Gets highest-rated content, optionally filtered by type.
 
 ### Search Algorithm
@@ -155,17 +167,18 @@ ragService.addContent({
   content: "Why don't programmers like nature? It has too many bugs!",
   category: 'tech_joke',
   tags: ['programming', 'tech', 'bugs', 'nature', 'pun'],
-  rating: 4
+  rating: 4,
 });
 
 // Add a new trivia fact
 ragService.addContent({
   id: 'trivia_011',
   type: 'trivia',
-  content: "Did you know that butterflies taste with their feet? They have chemoreceptors on their feet that help them identify suitable host plants!",
+  content:
+    'Did you know that butterflies taste with their feet? They have chemoreceptors on their feet that help them identify suitable host plants!',
   category: 'animals',
   tags: ['butterflies', 'insects', 'taste', 'biology', 'nature'],
-  rating: 5
+  rating: 5,
 });
 
 // Add a new GIF
@@ -176,16 +189,17 @@ ragService.addContent({
   category: 'celebration',
   tags: ['celebrate', 'happy', 'success', 'achievement', 'joy'],
   rating: 4,
-  metadata: { 
-    description: 'Victory celebration dance', 
-    alt: 'Person celebrating with victory dance' 
-  }
+  metadata: {
+    description: 'Victory celebration dance',
+    alt: 'Person celebrating with victory dance',
+  },
 });
 ```
 
 ### Content Guidelines
 
 #### Quality Standards
+
 - **Rating 4-5**: Only high-quality, tested content
 - **Family Friendly**: All content appropriate for general audiences
 - **Engaging**: Content should entertain and delight users
@@ -193,6 +207,7 @@ ragService.addContent({
 - **Accessible**: GIFs should include alt text and descriptions
 
 #### Tag Strategy
+
 - **Descriptive Tags**: Clear, searchable keywords
 - **Multiple Contexts**: Include various relevant tags
 - **Consistent Naming**: Use standardized tag formats
@@ -217,6 +232,7 @@ const topJokes = ragService.getTopRated('joke', 5);
 ### Usage Analytics
 
 The system automatically logs:
+
 - Search queries and result counts
 - Content relevance scores
 - Agent usage patterns
@@ -245,16 +261,19 @@ The system automatically logs:
 ### Common Issues
 
 **No Search Results:**
+
 - Check minimum relevance threshold (0.1)
 - Verify tag spelling and categories
 - Use broader search terms
 
 **Poor Content Relevance:**
+
 - Review and improve tag assignments
 - Add more contextual tags
 - Consider content categorization
 
 **Performance Issues:**
+
 - Monitor database size (current: 30 items)
 - Consider search result limits
 - Review complex query patterns
@@ -262,6 +281,7 @@ The system automatically logs:
 ### Debug Mode
 
 Enable detailed logging:
+
 ```typescript
 // Search logs include query details and result counts
 // Check console for: "🔍 RAG Search: 'query' found X results"
@@ -272,7 +292,7 @@ Enable detailed logging:
 ### Planned Features
 
 1. **Vector Embeddings** - Semantic search capabilities
-2. **Machine Learning** - Personalized content recommendations  
+2. **Machine Learning** - Personalized content recommendations
 3. **Content Analytics** - Detailed usage and performance metrics
 4. **Dynamic Learning** - Content rating based on user reactions
 5. **External Integration** - API connections to content services

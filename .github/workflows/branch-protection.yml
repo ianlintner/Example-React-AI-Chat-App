@@ -20,61 +20,59 @@ jobs:
   setup-branch-protection:
     runs-on: ubuntu-latest
     if: github.event.inputs.enable_protection == 'true'
-    
+
     steps:
-    - name: Setup GitHub CLI
-      run: |
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt update
-        sudo apt install gh
-        
-    - name: Configure Branch Protection
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        BRANCH=${{ github.event.inputs.branch }}
-        REPO=${{ github.repository }}
-        
-        echo "Setting up branch protection for: $BRANCH"
-        
-        # Enable branch protection with required status checks
-        gh api --method PUT "repos/$REPO/branches/$BRANCH/protection" \
-          --field required_status_checks='{"strict":true,"contexts":["backend-test","frontend-test","integration-test","PR Checks / test-and-build (backend)","PR Checks / test-and-build (frontend)"]}' \
-          --field enforce_admins=true \
-          --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true,"require_code_owner_reviews":false}' \
-          --field restrictions=null \
-          --field allow_force_pushes=false \
-          --field allow_deletions=false || echo "Branch protection setup completed (some settings may require admin privileges)"
-        
-        echo "✅ Branch protection configured for $BRANCH"
-        echo "Required status checks:"
-        echo "  - backend-test"
-        echo "  - frontend-test" 
-        echo "  - integration-test"
-        echo "  - PR Checks workflows"
+      - name: Setup GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: Configure Branch Protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=${{ github.event.inputs.branch }}
+          REPO=${{ github.repository }}
+
+          echo "Setting up branch protection for: $BRANCH"
+
+          # Enable branch protection with required status checks
+          gh api --method PUT "repos/$REPO/branches/$BRANCH/protection" \
+            --field required_status_checks='{"strict":true,"contexts":["ci-success"]}' \
+            --field enforce_admins=true \
+            --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true,"require_code_owner_reviews":false}' \
+            --field restrictions=null \
+            --field allow_force_pushes=false \
+            --field allow_deletions=false || echo "Branch protection setup completed (some settings may require admin privileges)"
+
+          echo "✅ Branch protection configured for $BRANCH"
+          echo "Required status checks:"
+          echo "  - ci-success (consolidated CI/CD pipeline)"
+          echo "  - Includes: backend, frontend, security, integration tests"
 
   disable-branch-protection:
     runs-on: ubuntu-latest
     if: github.event.inputs.enable_protection == 'false'
-    
+
     steps:
-    - name: Setup GitHub CLI
-      run: |
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt update
-        sudo apt install gh
-        
-    - name: Disable Branch Protection
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        BRANCH=${{ github.event.inputs.branch }}
-        REPO=${{ github.repository }}
-        
-        echo "Disabling branch protection for: $BRANCH"
-        
-        gh api --method DELETE "repos/$REPO/branches/$BRANCH/protection" || echo "Branch protection disabled (or was already disabled)"
-        
-        echo "✅ Branch protection disabled for $BRANCH"
+      - name: Setup GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: Disable Branch Protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=${{ github.event.inputs.branch }}
+          REPO=${{ github.repository }}
+
+          echo "Disabling branch protection for: $BRANCH"
+
+          gh api --method DELETE "repos/$REPO/branches/$BRANCH/protection" || echo "Branch protection disabled (or was already disabled)"
+
+          echo "✅ Branch protection disabled for $BRANCH"

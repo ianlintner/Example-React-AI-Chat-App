@@ -1,12 +1,12 @@
 import { Server as SocketServer } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { MessageQueue, QUEUE_NAMES, createMessageQueue } from './messageQueue';
-import { 
-  QueueMessage, 
-  ChatMessagePayload, 
-  AgentResponsePayload, 
-  ProactiveActionPayload, 
-  StreamChunkPayload 
+import {
+  QueueMessage,
+  ChatMessagePayload,
+  AgentResponsePayload,
+  ProactiveActionPayload,
+  StreamChunkPayload,
 } from './types';
 
 const DEFAULT_PRIORITY = 5;
@@ -22,14 +22,21 @@ export class QueueService {
 
   async initialize(): Promise<void> {
     await this.messageQueue.connect();
-    console.log('📨 Queue Service initialized with provider:', this.messageQueue.getProviderType());
-    
+    console.log(
+      '📨 Queue Service initialized with provider:',
+      this.messageQueue.getProviderType()
+    );
+
     // Set up queue handlers
     await this.setupQueueHandlers();
-    
+
     // Listen for dead letter queue events
     this.messageQueue.on('deadLetter', ({ queueName, message, error }) => {
-      console.error(`💀 Dead letter message in ${queueName}:`, message.id, error);
+      console.error(
+        `💀 Dead letter message in ${queueName}:`,
+        message.id,
+        error
+      );
       // You could integrate with external monitoring systems here
     });
   }
@@ -41,61 +48,81 @@ export class QueueService {
 
   private async setupQueueHandlers(): Promise<void> {
     // Chat message processing
-    await this.messageQueue.subscribe(QUEUE_NAMES.CHAT_MESSAGES, async (message: QueueMessage) => {
-      const payload = message.payload as ChatMessagePayload;
-      console.log(`🔄 Processing chat message from queue: ${message.id}`);
-      
-      // This is where you'd integrate with your existing agent service
-      // For now, we'll just emit to the socket as an example
-      this.io.to(payload.conversationId).emit('queue_processed_chat', {
-        messageId: message.id,
-        userId: payload.userId,
-        message: payload.message,
-        timestamp: message.timestamp
-      });
-    });
+    await this.messageQueue.subscribe(
+      QUEUE_NAMES.CHAT_MESSAGES,
+      async (message: QueueMessage) => {
+        const payload = message.payload as ChatMessagePayload;
+        console.log(`🔄 Processing chat message from queue: ${message.id}`);
+
+        // This is where you'd integrate with your existing agent service
+        // For now, we'll just emit to the socket as an example
+        this.io.to(payload.conversationId).emit('queue_processed_chat', {
+          messageId: message.id,
+          userId: payload.userId,
+          message: payload.message,
+          timestamp: message.timestamp,
+        });
+      }
+    );
 
     // Agent response processing
-    await this.messageQueue.subscribe(QUEUE_NAMES.AGENT_RESPONSES, async (message: QueueMessage) => {
-      const payload = message.payload as AgentResponsePayload;
-      console.log(`🤖 Processing agent response from queue: ${message.id}`);
-      
-      this.io.to(payload.conversationId).emit('queue_processed_agent_response', {
-        messageId: payload.messageId,
-        content: payload.content,
-        agentUsed: payload.agentUsed,
-        confidence: payload.confidence,
-        timestamp: message.timestamp
-      });
-    });
+    await this.messageQueue.subscribe(
+      QUEUE_NAMES.AGENT_RESPONSES,
+      async (message: QueueMessage) => {
+        const payload = message.payload as AgentResponsePayload;
+        console.log(`🤖 Processing agent response from queue: ${message.id}`);
 
-    // Proactive action processing  
-    await this.messageQueue.subscribe(QUEUE_NAMES.PROACTIVE_ACTIONS, async (message: QueueMessage) => {
-      const payload = message.payload as ProactiveActionPayload;
-      console.log(`🎯 Processing proactive action from queue: ${message.id} (${payload.actionType})`);
-      
-      // Emit proactive action to specific user
-      this.io.to(payload.conversationId).emit('queue_processed_proactive_action', {
-        actionType: payload.actionType,
-        agentType: payload.agentType,
-        message: payload.message,
-        priority: message.priority,
-        timestamp: message.timestamp
-      });
-    });
+        this.io
+          .to(payload.conversationId)
+          .emit('queue_processed_agent_response', {
+            messageId: payload.messageId,
+            content: payload.content,
+            agentUsed: payload.agentUsed,
+            confidence: payload.confidence,
+            timestamp: message.timestamp,
+          });
+      }
+    );
+
+    // Proactive action processing
+    await this.messageQueue.subscribe(
+      QUEUE_NAMES.PROACTIVE_ACTIONS,
+      async (message: QueueMessage) => {
+        const payload = message.payload as ProactiveActionPayload;
+        console.log(
+          `🎯 Processing proactive action from queue: ${message.id} (${payload.actionType})`
+        );
+
+        // Emit proactive action to specific user
+        this.io
+          .to(payload.conversationId)
+          .emit('queue_processed_proactive_action', {
+            actionType: payload.actionType,
+            agentType: payload.agentType,
+            message: payload.message,
+            priority: message.priority,
+            timestamp: message.timestamp,
+          });
+      }
+    );
 
     // Stream chunk processing
-    await this.messageQueue.subscribe(QUEUE_NAMES.STREAM_CHUNKS, async (message: QueueMessage) => {
-      const payload = message.payload as StreamChunkPayload;
-      console.log(`📝 Processing stream chunk from queue: ${message.id}`);
-      
-      this.io.to(payload.conversationId).emit('queue_processed_stream_chunk', {
-        messageId: payload.messageId,
-        content: payload.content,
-        isComplete: payload.isComplete,
-        timestamp: message.timestamp
-      });
-    });
+    await this.messageQueue.subscribe(
+      QUEUE_NAMES.STREAM_CHUNKS,
+      async (message: QueueMessage) => {
+        const payload = message.payload as StreamChunkPayload;
+        console.log(`📝 Processing stream chunk from queue: ${message.id}`);
+
+        this.io
+          .to(payload.conversationId)
+          .emit('queue_processed_stream_chunk', {
+            messageId: payload.messageId,
+            content: payload.content,
+            isComplete: payload.isComplete,
+            timestamp: message.timestamp,
+          });
+      }
+    );
 
     console.log('📨 Queue handlers set up for all queues');
   }
@@ -103,9 +130,9 @@ export class QueueService {
   // Public methods to enqueue different types of messages
 
   async enqueueChatMessage(
-    userId: string, 
-    conversationId: string, 
-    message: string, 
+    userId: string,
+    conversationId: string,
+    message: string,
     forceAgent?: string,
     priority?: number
   ): Promise<string> {
@@ -116,12 +143,12 @@ export class QueueService {
         userId,
         conversationId,
         forceAgent,
-        timestamp: new Date()
+        timestamp: new Date(),
       } as ChatMessagePayload,
       {
         userId,
         conversationId,
-        priority: priority || DEFAULT_PRIORITY
+        priority: priority || DEFAULT_PRIORITY,
       }
     );
 
@@ -148,12 +175,12 @@ export class QueueService {
         userId,
         conversationId,
         messageId,
-        timestamp: new Date()
+        timestamp: new Date(),
       } as AgentResponsePayload,
       {
         userId,
         conversationId,
-        priority: priority || 6 // Agent responses have higher priority
+        priority: priority || 6, // Agent responses have higher priority
       }
     );
 
@@ -182,17 +209,20 @@ export class QueueService {
         conversationId,
         timing,
         delayMs,
-        priority: priority || 7 // Proactive actions have high priority
+        priority: priority || 7, // Proactive actions have high priority
       } as ProactiveActionPayload,
       {
         userId,
         conversationId,
         priority: priority || 7,
-        delayMs: timing === 'delayed' ? delayMs : undefined
+        delayMs: timing === 'delayed' ? delayMs : undefined,
       }
     );
 
-    await this.messageQueue.enqueue(QUEUE_NAMES.PROACTIVE_ACTIONS, queueMessage);
+    await this.messageQueue.enqueue(
+      QUEUE_NAMES.PROACTIVE_ACTIONS,
+      queueMessage
+    );
     console.log(`📨 Enqueued proactive action: ${queueMessage.id} (${timing})`);
     return queueMessage.id;
   }
@@ -212,12 +242,12 @@ export class QueueService {
         conversationId,
         content,
         isComplete,
-        userId
+        userId,
       } as StreamChunkPayload,
       {
         userId,
         conversationId,
-        priority: priority || 8 // Stream chunks have very high priority for real-time feel
+        priority: priority || 8, // Stream chunks have very high priority for real-time feel
       }
     );
 
@@ -246,13 +276,34 @@ export class QueueService {
 
   // Demo methods to show queue functionality
 
-  async demonstrateQueueFeatures(userId: string, conversationId: string): Promise<void> {
+  async demonstrateQueueFeatures(
+    userId: string,
+    conversationId: string
+  ): Promise<void> {
     console.log('🎭 Demonstrating message queue features...');
 
     // Enqueue messages with different priorities
-    await this.enqueueChatMessage(userId, conversationId, 'Low priority message', undefined, 3);
-    await this.enqueueChatMessage(userId, conversationId, 'High priority message', undefined, 9);
-    await this.enqueueChatMessage(userId, conversationId, 'Normal priority message', undefined, DEFAULT_PRIORITY);
+    await this.enqueueChatMessage(
+      userId,
+      conversationId,
+      'Low priority message',
+      undefined,
+      3
+    );
+    await this.enqueueChatMessage(
+      userId,
+      conversationId,
+      'High priority message',
+      undefined,
+      9
+    );
+    await this.enqueueChatMessage(
+      userId,
+      conversationId,
+      'Normal priority message',
+      undefined,
+      DEFAULT_PRIORITY
+    );
 
     // Enqueue delayed proactive action (will be processed after delay)
     await this.enqueueProactiveAction(
@@ -287,22 +338,27 @@ export class QueueService {
   }
 
   // Method to switch providers (useful for testing)
-  async switchProvider(providerType: 'memory' | 'redis', redisUrl?: string): Promise<void> {
-    console.log(`🔄 Switching from ${this.messageQueue.getProviderType()} to ${providerType}`);
-    
+  async switchProvider(
+    providerType: 'memory' | 'redis',
+    redisUrl?: string
+  ): Promise<void> {
+    console.log(
+      `🔄 Switching from ${this.messageQueue.getProviderType()} to ${providerType}`
+    );
+
     // Gracefully shutdown current provider
     await this.messageQueue.disconnect();
-    
+
     // Create new provider
     this.messageQueue = createMessageQueue({
       provider: providerType,
-      redis: { url: redisUrl }
+      redis: { url: redisUrl },
     });
-    
+
     // Initialize new provider
     await this.messageQueue.connect();
     await this.setupQueueHandlers();
-    
+
     console.log(`✅ Successfully switched to ${providerType} provider`);
   }
 }

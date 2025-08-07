@@ -2,13 +2,13 @@
 
 set -e
 
-JAEGER_URL=${JAEGER_URL:-"http://jaeger:16686"}
+ZIPKIN_URL=${ZIPKIN_URL:-"http://zipkin:9411"}
 BACKEND_URL=${BACKEND_URL:-"http://backend:5001"}
 MAX_RETRIES=30
 RETRY_INTERVAL=10
 
 echo "🔍 Starting trace validation..."
-echo "Jaeger UI: $JAEGER_URL"
+echo "Zipkin UI: $ZIPKIN_URL"
 echo "Backend API: $BACKEND_URL"
 
 # Wait for services to be ready
@@ -55,24 +55,24 @@ generate_test_traces() {
     echo "✅ Test traces generated"
 }
 
-# Function to query Jaeger for traces
-validate_traces_in_jaeger() {
-    echo "🔍 Validating traces in Jaeger..."
+# Function to query Zipkin for traces
+validate_traces_in_zipkin() {
+    echo "🔍 Validating traces in Zipkin..."
     
     # Wait a bit for traces to be processed
     echo "⏳ Waiting for traces to be processed..."
     sleep 30
     
-    # Query Jaeger API for services
+    # Query Zipkin API for services
     local services_response
-    services_response=$(curl -f -s "$JAEGER_URL/api/services" | grep -o '"ai-goal-seeking-backend"' | head -1 || echo "")
+    services_response=$(curl -f -s "$ZIPKIN_URL/api/v2/services" | grep -o '"ai-goal-seeking-backend"' | head -1 || echo "")
     
     if [ -n "$services_response" ]; then
-        echo "✅ Found ai-goal-seeking-backend service in Jaeger"
+        echo "✅ Found ai-goal-seeking-backend service in Zipkin"
         
         # Query for traces
         local traces_response
-        traces_response=$(curl -f -s "$JAEGER_URL/api/traces?service=ai-goal-seeking-backend&limit=10" | grep -o '"traceID"' | wc -l || echo "0")
+        traces_response=$(curl -f -s "$ZIPKIN_URL/api/v2/traces?serviceName=ai-goal-seeking-backend&limit=10" | grep -o '"traceId"' | wc -l || echo "0")
         
         if [ "$traces_response" -gt 0 ]; then
             echo "✅ Found $traces_response traces for ai-goal-seeking-backend"
@@ -82,7 +82,7 @@ validate_traces_in_jaeger() {
             return 1
         fi
     else
-        echo "⚠️ ai-goal-seeking-backend service not found in Jaeger"
+        echo "⚠️ ai-goal-seeking-backend service not found in Zipkin"
         return 1
     fi
 }
@@ -90,24 +90,24 @@ validate_traces_in_jaeger() {
 # Main validation workflow
 main() {
     # Wait for services
-    wait_for_service "$JAEGER_URL" "Jaeger"
+    wait_for_service "$ZIPKIN_URL/health" "Zipkin"
     wait_for_service "$BACKEND_URL/health" "Backend"
     
     # Generate test traces
     generate_test_traces
     
-    # Validate traces in Jaeger
-    if validate_traces_in_jaeger; then
+    # Validate traces in Zipkin
+    if validate_traces_in_zipkin; then
         echo "🎉 Trace validation completed successfully!"
         exit 0
     else
-        echo "❌ Trace validation failed - traces not found in Jaeger"
-        echo "💡 Check OpenTelemetry configuration and Jaeger connectivity"
+        echo "❌ Trace validation failed - traces not found in Zipkin"
+        echo "💡 Check OpenTelemetry configuration and Zipkin connectivity"
         
         # Print some debug info
         echo "🔧 Debug information:"
-        echo "Services in Jaeger:"
-        curl -f -s "$JAEGER_URL/api/services" || echo "Failed to get services"
+        echo "Services in Zipkin:"
+        curl -f -s "$ZIPKIN_URL/api/v2/services" || echo "Failed to get services"
         
         exit 1
     fi

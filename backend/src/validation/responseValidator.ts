@@ -1,5 +1,12 @@
 import { AgentType } from '../agents/types';
 import { Message } from '../types';
+import {
+  createValidationSpan,
+  addSpanEvent,
+  setSpanStatus,
+  endSpan
+} from '../tracing/tracer';
+import { tracingContextManager } from '../tracing/contextManager';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -49,48 +56,111 @@ export class ResponseValidator {
     userId: string,
     isProactive: boolean = false
   ): ValidationResult {
-    const issues: ValidationIssue[] = [];
-    const metrics = this.calculateMetrics(aiResponse);
-
-    // Content validation
-    this.validateContent(aiResponse, issues);
+    const validationSpan = createValidationSpan(conversationId, agentType, userId);
     
-    // Technical accuracy validation
-    this.validateTechnicalAccuracy(agentType, userMessage, aiResponse, issues);
-    
-    // Appropriateness validation
-    this.validateAppropriateness(aiResponse, issues);
-    
-    // Length validation
-    this.validateLength(aiResponse, agentType, issues);
-    
-    // Coherence validation
-    this.validateCoherence(aiResponse, issues);
-
-    // Calculate overall score
-    const score = this.calculateOverallScore(metrics, issues);
-
-    const validationResult: ValidationResult = {
-      isValid: score >= 0.7 && !issues.some(i => i.severity === 'high'),
-      score,
-      issues,
-      metrics
-    };
-
-    // Log the validation
-    this.logValidation({
-      id: this.generateId(),
-      timestamp: new Date(),
-      agentType,
-      userMessage,
-      aiResponse,
-      validationResult,
-      conversationId,
-      userId,
-      isProactive
+    addSpanEvent(validationSpan, 'validation.start', {
+      'agent.type': agentType,
+      'user.id': userId,
+      'conversation.id': conversationId,
+      'response.length': aiResponse.length,
+      'message.length': userMessage.length,
+      'validation.is_proactive': isProactive
     });
 
-    return validationResult;
+    try {
+      const issues: ValidationIssue[] = [];
+      const metrics = this.calculateMetrics(aiResponse);
+
+      // Content validation
+      addSpanEvent(validationSpan, 'validation.content_check_start');
+      this.validateContent(aiResponse, issues);
+      
+      // Technical accuracy validation
+      addSpanEvent(validationSpan, 'validation.technical_check_start');
+      this.validateTechnicalAccuracy(agentType, userMessage, aiResponse, issues);
+      
+      // Appropriateness validation
+      addSpanEvent(validationSpan, 'validation.appropriateness_check_start');
+      this.validateAppropriateness(aiResponse, issues);
+      
+      // Length validation
+      addSpanEvent(validationSpan, 'validation.length_check_start');
+      this.validateLength(aiResponse, agentType, issues);
+      
+      // Coherence validation
+      addSpanEvent(validationSpan, 'validation.coherence_check_start');
+      this.validateCoherence(aiResponse, issues);
+
+      // Calculate overall score
+      addSpanEvent(validationSpan, 'validation.score_calculation_start');
+      const score = this.calculateOverallScore(metrics, issues);
+
+      const validationResult: ValidationResult = {
+        isValid: score >= 0.7 && !issues.some(i => i.severity === 'high'),
+        score,
+        issues,
+        metrics
+      };
+
+      // Set final span attributes
+      validationSpan.setAttributes({
+        'validation.score': score,
+        'validation.is_valid': validationResult.isValid,
+        'validation.issues_count': issues.length,
+        'validation.high_severity_issues': issues.filter(i => i.severity === 'high').length,
+        'validation.metrics.readability': metrics.readabilityScore,
+        'validation.metrics.technical_accuracy': metrics.technicalAccuracy,
+        'validation.metrics.appropriateness': metrics.appropriatenessScore,
+        'validation.metrics.coherence': metrics.coherenceScore
+      });
+
+      addSpanEvent(validationSpan, 'validation.complete', {
+        'final.score': score,
+        'final.is_valid': validationResult.isValid,
+        'final.issues_count': issues.length
+      });
+
+      // Log the validation
+      this.logValidation({
+        id: this.generateId(),
+        timestamp: new Date(),
+        agentType,
+        userMessage,
+        aiResponse,
+        validationResult,
+        conversationId,
+        userId,
+        isProactive
+      });
+
+      setSpanStatus(validationSpan, true);
+      endSpan(validationSpan);
+
+      return validationResult;
+    } catch (error) {
+      console.error('Error during validation:', error);
+      
+      addSpanEvent(validationSpan, 'validation.error', {
+        'error.message': (error as Error).message,
+        'error.stack': (error as Error).stack
+      });
+      
+      setSpanStatus(validationSpan, false, (error as Error).message);
+      endSpan(validationSpan);
+
+      // Return fallback validation result
+      return {
+        isValid: false,
+        score: 0,
+        issues: [{
+          type: 'technical',
+          severity: 'high',
+          message: 'Validation system error',
+          suggestion: 'System encountered an error during validation'
+        }],
+        metrics: this.calculateMetrics(aiResponse)
+      };
+    }
   }
 
   private calculateMetrics(response: string): ValidationMetrics {

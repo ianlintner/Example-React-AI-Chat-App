@@ -6,7 +6,7 @@ This document describes how to set up and use the comprehensive observability st
 
 The observability stack includes:
 
-- **Jaeger** - Distributed tracing UI and storage
+- **Zipkin** - Distributed tracing UI and storage
 - **OpenTelemetry Collector** - Trace and metrics collection
 - **Prometheus** - Metrics storage and alerting
 - **Grafana** - Visualization and dashboards
@@ -52,7 +52,7 @@ cd frontend && npm run dev
 ### 4. Access Observability Tools
 
 - **Application**: http://localhost:5173
-- **Jaeger UI**: http://localhost:16686 (Distributed tracing)
+- **Zipkin UI**: http://localhost:9411 (Distributed tracing)
 - **Grafana**: http://localhost:3000 (Dashboards) - admin/admin
 - **Prometheus**: http://localhost:9090 (Metrics)
 - **OpenTelemetry Collector**: http://localhost:13133 (Health)
@@ -63,21 +63,21 @@ cd frontend && npm run dev
 
 The collector is configured to:
 - Receive traces via OTLP HTTP (port 4318) and gRPC (port 4317)
-- Export traces to Jaeger
+- Export traces to Zipkin
 - Export metrics to Prometheus
 - Provide health checks and monitoring
 
 **Configuration file**: `otel-collector-config.yaml`
 
-### Jaeger
+### Zipkin
 
-Jaeger provides:
+Zipkin provides:
 - Distributed tracing visualization
 - Trace search and filtering
 - Service dependency maps
 - Performance analysis
 
-**Access**: http://localhost:16686
+**Access**: http://localhost:9411
 
 ### Prometheus
 
@@ -92,7 +92,7 @@ Prometheus scrapes metrics from:
 
 Grafana is pre-configured with:
 - Prometheus datasource
-- Jaeger datasource
+- Zipkin datasource
 - Custom dashboards for the AI system
 
 **Access**: http://localhost:3000 (admin/admin)
@@ -101,9 +101,9 @@ Grafana is pre-configured with:
 
 ### 1. Viewing Traces
 
-1. Open Jaeger UI: http://localhost:16686
-2. Select service: `ai-goal-seeking-system`
-3. Click "Find Traces"
+1. Open Zipkin UI: http://localhost:9411
+2. Search for traces by service name: `ai-goal-seeking-backend`
+3. Click on traces to explore details
 4. Explore conversation flows, agent selections, and goal-seeking processes
 
 **Key Trace Operations**:
@@ -203,11 +203,11 @@ Grafana is pre-configured with:
 1. **Services not starting**
    ```bash
    # Check service logs
-   docker-compose logs jaeger
+   docker-compose logs zipkin
    docker-compose logs otel-collector
    
    # Restart specific service
-   docker-compose restart jaeger
+   docker-compose restart zipkin
    ```
 
 2. **No traces appearing**
@@ -226,8 +226,8 @@ Grafana is pre-configured with:
 # Check OpenTelemetry Collector health
 curl http://localhost:13133/
 
-# Check Jaeger health
-curl http://localhost:16686/
+# Check Zipkin health
+curl http://localhost:9411/health
 
 # Check Prometheus metrics
 curl http://localhost:9090/metrics
@@ -237,7 +237,7 @@ docker-compose exec otel-collector cat /etc/otel-collector-config.yaml
 
 # Check logs
 docker-compose logs -f otel-collector
-docker-compose logs -f jaeger
+docker-compose logs -f zipkin
 ```
 
 ## Advanced Configuration
@@ -294,12 +294,12 @@ Configure Prometheus alerting:
 # docker-compose.prod.yml
 version: '3.8'
 services:
-  jaeger:
+  zipkin:
     environment:
-      - SPAN_STORAGE_TYPE=elasticsearch
-      - ES_SERVER_URLS=https://elasticsearch:9200
-      - ES_USERNAME=jaeger
-      - ES_PASSWORD=${JAEGER_ES_PASSWORD}
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=https://elasticsearch:9200
+      - ES_USERNAME=zipkin
+      - ES_PASSWORD=${ZIPKIN_ES_PASSWORD}
   
   grafana:
     environment:
@@ -337,7 +337,7 @@ processors:
 
 ### Regular Tasks
 
-1. **Clean up old traces**: Jaeger retention policies
+1. **Clean up old traces**: Zipkin retention policies
 2. **Monitor disk usage**: Prometheus and Grafana storage
 3. **Update configurations**: Keep collectors and exporters current
 4. **Review dashboards**: Ensure metrics remain relevant

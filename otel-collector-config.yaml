@@ -22,17 +22,22 @@ processors:
       - key: deployment.environment
         value: "development"
         action: upsert
+      - key: sampling.enabled
+        value: "true"
+        action: upsert
+      - key: sampling.rate
+        value: "1.0"
+        action: upsert
 
 exporters:
-  otlp/jaeger:
-    endpoint: jaeger:4317
-    tls:
-      insecure: true
+  zipkin:
+    endpoint: http://zipkin:9411/api/v2/spans
+    format: json
   
   debug:
     verbosity: detailed
-    sampling_initial: 5
-    sampling_thereafter: 200
+
+    
 
 extensions:
   health_check:
@@ -49,16 +54,16 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, batch, resource]
-      exporters: [otlp/jaeger, debug]
+      processors: [memory_limiter, resource, batch]
+      exporters: [zipkin, debug]
     
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch, resource]
+      processors: [memory_limiter, resource, batch]
       exporters: [debug]
   
   telemetry:
     logs:
-      level: "info"
+      level: "debug"
     metrics:
-      level: none
+      level: "basic"

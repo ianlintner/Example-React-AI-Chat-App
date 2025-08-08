@@ -2,9 +2,18 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { HapticTab } from '../../components/HapticTab';
 
-describe('HapticTab', () => {
-  const mockImpactAsync = (global as any).mockImpactAsync || jest.fn();
+// Mock expo-haptics
+const mockImpactAsync = jest.fn();
+jest.mock('expo-haptics', () => ({
+  impactAsync: mockImpactAsync,
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium',
+    Heavy: 'heavy',
+  },
+}));
 
+describe('HapticTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockImpactAsync.mockClear();

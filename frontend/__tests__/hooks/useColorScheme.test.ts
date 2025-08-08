@@ -1,14 +1,15 @@
 import { renderHook } from '@testing-library/react-native';
 import { useColorScheme } from '../../hooks/useColorScheme';
 
+// Create mock function
+const mockUseColorScheme = jest.fn();
+
 // Mock react-native's useColorScheme
 jest.mock('react-native', () => ({
-  useColorScheme: jest.fn(),
+  useColorScheme: mockUseColorScheme,
 }));
 
 describe('useColorScheme', () => {
-  const mockUseColorScheme = require('react-native').useColorScheme;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });

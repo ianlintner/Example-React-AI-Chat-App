@@ -92,6 +92,7 @@ describe('Socket Handlers', () => {
 
   afterEach(() => {
     jest.clearAllTimers();
+    jest.clearAllMocks();
     jest.useRealTimers();
   });
 
@@ -309,7 +310,6 @@ describe('Socket Handlers', () => {
     let streamChatHandler: Function;
 
     beforeEach(() => {
-      jest.useFakeTimers();
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
         call => call[0] === 'connection'
@@ -382,9 +382,6 @@ describe('Socket Handlers', () => {
       const data = { message: 'test message' };
       
       await streamChatHandler(data);
-      
-      // Advance timers to complete streaming
-      jest.advanceTimersByTime(1000);
       
       expect(agentService.processMessageWithBothSystems).toHaveBeenCalledWith(
         'test-socket-id',

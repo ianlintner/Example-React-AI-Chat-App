@@ -1,23 +1,24 @@
 import { renderHook } from '@testing-library/react-native';
 import { useColorScheme } from '../../hooks/useColorScheme.web';
 
-// Mock react-native's useColorScheme
-jest.mock('react-native', () => ({
-  useColorScheme: jest.fn(),
-}));
+const mockUseColorScheme = jest.fn();
+const mockUseState = jest.fn();
+const mockUseEffect = jest.fn();
 
-// Mock React hooks
+// Mock React hooks for this specific test file
 jest.mock('react', () => ({
   ...jest.requireActual('react'),
-  useEffect: jest.fn(),
-  useState: jest.fn(),
+  useEffect: mockUseEffect,
+  useState: mockUseState,
+}));
+
+// Mock react-native's useColorScheme for this specific test
+jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
+  __esModule: true,
+  default: mockUseColorScheme,
 }));
 
 describe('useColorScheme.web', () => {
-  const mockUseColorScheme = require('react-native').useColorScheme;
-  const mockUseState = require('react').useState;
-  const mockUseEffect = require('react').useEffect;
-
   beforeEach(() => {
     jest.clearAllMocks();
     // Default mock implementations

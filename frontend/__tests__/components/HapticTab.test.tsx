@@ -50,7 +50,7 @@ describe('HapticTab', () => {
       </HapticTab>,
     );
 
-    const tab = getByTestId('haptic-tab');
+    const tab = getByTestId('platform-pressable');
     fireEvent(tab, 'pressIn');
 
     expect(onPressInMock).toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe('HapticTab', () => {
       <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
     );
 
-    const tab = getByTestId('haptic-tab');
+    const tab = getByTestId('platform-pressable');
     fireEvent(tab, 'pressIn');
 
     // Note: In test environment, haptic feedback is always triggered

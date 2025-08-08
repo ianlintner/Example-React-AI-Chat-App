@@ -17,7 +17,7 @@ describe('ExternalLink', () => {
 
   it('renders correctly with children', () => {
     const { getByTestId } = render(
-      <ExternalLink href="https://example.com">Visit Example</ExternalLink>,
+      <ExternalLink href='https://example.com'>Visit Example</ExternalLink>,
     );
 
     const link = getByTestId('external-link');
@@ -27,7 +27,7 @@ describe('ExternalLink', () => {
 
   it('renders correctly with href prop', () => {
     const { getByTestId } = render(
-      <ExternalLink href="https://example.com">Visit Example</ExternalLink>,
+      <ExternalLink href='https://example.com'>Visit Example</ExternalLink>,
     );
 
     const link = getByTestId('external-link');
@@ -38,9 +38,9 @@ describe('ExternalLink', () => {
   it('passes through additional props', () => {
     const { getByTestId } = render(
       <ExternalLink
-        href="https://example.com"
-        accessibilityLabel="Custom link"
-        testID="custom-link"
+        href='https://example.com'
+        accessibilityLabel='Custom link'
+        testID='custom-link'
       >
         Visit Example
       </ExternalLink>,
@@ -53,13 +53,13 @@ describe('ExternalLink', () => {
 
   it('handles different href formats', () => {
     const { rerender, getByTestId } = render(
-      <ExternalLink href="mailto:test@example.com">Send Email</ExternalLink>,
+      <ExternalLink href='mailto:test@example.com'>Send Email</ExternalLink>,
     );
 
     expect(getByTestId('external-link')).toBeTruthy();
     expect(getByTestId('external-link').props.href).toBe('mailto:test@example.com');
 
-    rerender(<ExternalLink href="tel:+1234567890">Call Phone</ExternalLink>);
+    rerender(<ExternalLink href='tel:+1234567890'>Call Phone</ExternalLink>);
 
     expect(getByTestId('external-link').props.href).toBe('tel:+1234567890');
   });

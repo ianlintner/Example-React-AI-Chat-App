@@ -7,6 +7,7 @@ import {
   endSpan,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
+import { metrics } from '../metrics/prometheus';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -585,6 +586,60 @@ export class ResponseValidator {
     if (this.validationLogs.length > this.maxLogSize) {
       this.validationLogs = this.validationLogs.slice(-this.maxLogSize);
     }
+
+    // Emit Prometheus metrics
+    const { agentType, validationResult, isProactive } = log;
+    const proactiveLabel = isProactive ? 'true' : 'false';
+    const resultLabel = validationResult.isValid ? 'pass' : 'fail';
+
+    // Validation checks counter
+    metrics.validationChecks.inc({
+      agent_type: agentType,
+      result: resultLabel,
+      proactive: proactiveLabel,
+    });
+
+    // Validation score histogram
+    metrics.validationScores.observe(
+      {
+        agent_type: agentType,
+        proactive: proactiveLabel,
+      },
+      validationResult.score
+    );
+
+    // Response length histogram
+    metrics.validationResponseLength.observe(
+      { agent_type: agentType },
+      validationResult.metrics.responseLength
+    );
+
+    // Quality metrics histograms
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'readability' },
+      validationResult.metrics.readabilityScore
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'technical_accuracy' },
+      validationResult.metrics.technicalAccuracy
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'appropriateness' },
+      validationResult.metrics.appropriatenessScore
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'coherence' },
+      validationResult.metrics.coherenceScore
+    );
+
+    // Issues counter - count each issue by type and severity
+    validationResult.issues.forEach(issue => {
+      metrics.validationIssues.inc({
+        agent_type: agentType,
+        severity: issue.severity,
+        issue_type: issue.type,
+      });
+    });
 
     // Console log for monitoring
     console.log(

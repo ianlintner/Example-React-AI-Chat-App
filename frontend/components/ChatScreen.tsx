@@ -15,7 +15,7 @@ import Markdown from 'react-native-markdown-display';
 import * as WebBrowser from 'expo-web-browser';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
-import type { Conversation, Message, AgentStatus, AgentType } from '../types';
+import type { Conversation, Message, AgentStatus } from '../types';
 
 interface ChatScreenProps {
   conversation: Conversation | null;
@@ -715,10 +715,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  headerAvatar: {
-    backgroundColor: ForestColors.brandPrimary,
-    marginRight: 12,
   },
   headerTextContainer: {
     flex: 1,

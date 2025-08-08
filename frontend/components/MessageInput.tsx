@@ -61,7 +61,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       };
 
       onMessageSent(userMessage);
-    } catch (_error) {
+    } catch {
       // Error handled silently
     } finally {
       setIsLoading(false);

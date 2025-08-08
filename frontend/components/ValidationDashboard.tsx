@@ -62,7 +62,7 @@ interface ValidationSummary {
   };
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001';
+const API_BASE_URL = (process.env as any).EXPO_PUBLIC_API_URL || 'http://localhost:5001';
 
 const ValidationDashboard: React.FC = () => {
   const [stats, setStats] = useState<ValidationStats | null>(null);
@@ -214,7 +214,7 @@ const ValidationDashboard: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' color='#3b82f6' />
+        <ActivityIndicator size='large' color='#3b82f6' testID='activity-indicator' />
         <Text style={styles.loadingText}>Loading validation data...</Text>
       </View>
     );
@@ -242,6 +242,7 @@ const ValidationDashboard: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
+      testID='validation-scroll-view'
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       {/* Header */}

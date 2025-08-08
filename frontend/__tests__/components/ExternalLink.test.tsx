@@ -3,12 +3,16 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import { ExternalLink } from '../../components/ExternalLink';
 
+declare const global: any;
+
 describe('ExternalLink', () => {
-  const mockOpenBrowserAsync = (global as any).mockOpenBrowserAsync || jest.fn();
+  const mockOpenBrowserAsync = global.mockOpenBrowserAsync;
 
   beforeEach(() => {
-    mockOpenBrowserAsync.mockClear();
     jest.clearAllMocks();
+    if (mockOpenBrowserAsync) {
+      mockOpenBrowserAsync.mockClear();
+    }
   });
 
   it('renders correctly with children', () => {

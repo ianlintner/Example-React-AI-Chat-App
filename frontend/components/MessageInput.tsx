@@ -124,6 +124,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 style={[styles.sendButton, canSend && styles.sendButtonEnabled]}
                 onPress={handleButtonPress}
                 disabled={!canSend}
+                testID="send-button"
               />
             )}
           </View>

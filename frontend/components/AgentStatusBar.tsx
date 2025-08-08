@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { AgentStatus, AgentType } from '../types';
@@ -83,7 +83,7 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
     }).start();
   };
 
-  const getAgentColor = (agentType: AgentType): string => {
+  const _getAgentColor = (agentType: AgentType): string => {
     switch (agentType) {
       case 'hold_agent':
         return '#FF9800';
@@ -194,10 +194,6 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
       style={[
         styles.container,
         {
-          height: collapseAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [36, 90],
-          }),
           transform: [{ scale: pulseAnim }],
         },
       ]}
@@ -256,11 +252,13 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
           styles.expandedContent,
           {
             opacity: collapseAnim,
-            height: collapseAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 54],
-            }),
+            transform: [
+              {
+                scaleY: collapseAnim,
+              },
+            ],
           },
+          isCollapsed && styles.expandedContentCollapsed,
         ]}
       >
         {/* Metrics Row */}
@@ -345,6 +343,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     overflow: 'hidden',
+    minHeight: 36,
   },
 
   // Ultra-Compact Header (Mobile Optimized)
@@ -409,6 +408,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 6,
     overflow: 'hidden',
+    height: 54,
+  },
+
+  expandedContentCollapsed: {
+    height: 0,
   },
 
   // Metrics Grid Layout

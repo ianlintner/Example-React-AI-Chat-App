@@ -15,7 +15,7 @@ describe('HapticTab', () => {
       <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
     );
 
-    expect(getByTestId('haptic-tab')).toBeTruthy();
+    expect(getByTestId('platform-pressable')).toBeTruthy();
   });
 
   it('passes through props to PlatformPressable', () => {
@@ -26,7 +26,7 @@ describe('HapticTab', () => {
       </HapticTab>,
     );
 
-    const tab = getByTestId('haptic-tab');
+    const tab = getByTestId('platform-pressable');
     expect(tab).toBeTruthy();
     expect(tab.props.accessibilityLabel).toBe('Test tab');
   });
@@ -36,7 +36,7 @@ describe('HapticTab', () => {
       <HapticTab onPress={() => {}}>Test Content</HapticTab>,
     );
 
-    const hapticTab = getByTestId('haptic-tab');
+    const hapticTab = getByTestId('platform-pressable');
     expect(hapticTab).toBeTruthy();
     // Since our mock renders children as text inside the View, we check for the component
     expect(hapticTab.children).toBeDefined();

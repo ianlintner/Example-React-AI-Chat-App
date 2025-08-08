@@ -76,6 +76,95 @@ jest.mock('react-native', () => ({
   Switch: 'Switch',
   Slider: 'Slider',
   StatusBar: 'StatusBar',
+
+  // Animated API
+  Animated: {
+    View: 'AnimatedView',
+    Text: 'AnimatedText',
+    ScrollView: 'AnimatedScrollView',
+    FlatList: 'AnimatedFlatList',
+    Image: 'AnimatedImage',
+    Value: jest.fn().mockImplementation((value) => ({
+      setValue: jest.fn(),
+      addListener: jest.fn(() => 'listenerId'),
+      removeListener: jest.fn(),
+      removeAllListeners: jest.fn(),
+      stopAnimation: jest.fn(),
+      resetAnimation: jest.fn(),
+      interpolate: jest.fn(() => ({ interpolate: jest.fn() })),
+      animate: jest.fn(),
+      _value: value,
+    })),
+    ValueXY: jest.fn().mockImplementation((value) => ({
+      x: { _value: value?.x || 0 },
+      y: { _value: value?.y || 0 },
+      setValue: jest.fn(),
+      setOffset: jest.fn(),
+      flattenOffset: jest.fn(),
+      extractOffset: jest.fn(),
+      addListener: jest.fn(() => 'listenerId'),
+      removeListener: jest.fn(),
+      removeAllListeners: jest.fn(),
+      stopAnimation: jest.fn(),
+      resetAnimation: jest.fn(),
+      getLayout: jest.fn(() => ({ left: 0, top: 0 })),
+      getTranslateTransform: jest.fn(() => []),
+    })),
+    timing: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    spring: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    decay: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    sequence: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    parallel: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    stagger: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    loop: jest.fn().mockImplementation(() => ({
+      start: jest.fn((callback) => callback && callback({ finished: true })),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    })),
+    event: jest.fn(),
+    createAnimatedComponent: jest.fn((Component) => Component),
+    Easing: {
+      linear: jest.fn(),
+      ease: jest.fn(),
+      quad: jest.fn(),
+      cubic: jest.fn(),
+      poly: jest.fn(),
+      sin: jest.fn(),
+      circle: jest.fn(),
+      exp: jest.fn(),
+      elastic: jest.fn(),
+      back: jest.fn(),
+      bounce: jest.fn(),
+      bezier: jest.fn(),
+      in: jest.fn(),
+      out: jest.fn(),
+      inOut: jest.fn(),
+    },
+  },
 }));
 
 // Mock @react-native-picker/picker
@@ -112,19 +201,98 @@ jest.mock('@react-native-picker/picker', () => {
 });
 
 // Mock react-native-paper components
-jest.mock('react-native-paper', () => ({
-  Avatar: 'Avatar',
-  Chip: 'Chip',
-  Button: 'Button',
-  Card: 'Card',
-  Text: 'Text',
-  Surface: 'Surface',
-  Appbar: {
-    Header: 'AppbarHeader',
-    Content: 'AppbarContent',
-    Action: 'AppbarAction',
-  },
-}));
+jest.mock('react-native-paper', () => {
+  const React = require('react');
+  
+  const createMockComponent = (displayName, testID) => {
+    const MockComponent = React.forwardRef(({ children, ...props }, ref) => {
+      return React.createElement('View', { 
+        ref,
+        testID: testID || displayName.toLowerCase(),
+        ...props
+      }, children);
+    });
+    MockComponent.displayName = displayName;
+    return MockComponent;
+  };
+
+  const MockAvatar = createMockComponent('Avatar', 'avatar');
+  MockAvatar.Icon = React.forwardRef(({ icon, size, style, ...props }, ref) => {
+    return React.createElement('View', { 
+      ref,
+      testID: 'avatar-icon',
+      style: [{ width: size || 40, height: size || 40 }, style],
+      ...props
+    }, React.createElement('Text', { testID: 'avatar-icon-text' }, typeof icon === 'string' ? icon : 'icon'));
+  });
+  MockAvatar.Icon.displayName = 'Avatar.Icon';
+
+  const MockChip = React.forwardRef(({ children, mode, compact, textStyle, style, ...props }, ref) => {
+    return React.createElement('View', { 
+      ref,
+      testID: 'chip',
+      style: style,
+      ...props
+    }, React.createElement('Text', { 
+      testID: 'chip-text',
+      style: textStyle 
+    }, children));
+  });
+  MockChip.displayName = 'Chip';
+
+  const MockButton = React.forwardRef(({ children, ...props }, ref) => {
+    return React.createElement('TouchableOpacity', { 
+      ref,
+      testID: 'button',
+      ...props 
+    }, React.createElement('Text', { testID: 'button-text' }, children));
+  });
+  MockButton.displayName = 'Button';
+
+  const MockIconButton = React.forwardRef(({ icon, size, iconColor, style, onPress, disabled, testID, ...props }, ref) => {
+    return React.createElement('TouchableOpacity', { 
+      ref,
+      testID: testID || 'icon-button',
+      style: [{ width: size || 24, height: size || 24 }, style],
+      onPress: disabled ? undefined : onPress,
+      disabled,
+      ...props
+    }, React.createElement('Text', { 
+      testID: 'icon-button-text',
+      style: { color: iconColor }
+    }, typeof icon === 'string' ? icon : 'icon'));
+  });
+  MockIconButton.displayName = 'IconButton';
+
+  const MockActivityIndicator = React.forwardRef(({ size, color, ...props }, ref) => {
+    return React.createElement('View', { 
+      ref,
+      testID: 'activity-indicator',
+      style: { 
+        width: size === 'small' ? 20 : 36, 
+        height: size === 'small' ? 20 : 36 
+      },
+      ...props
+    });
+  });
+  MockActivityIndicator.displayName = 'ActivityIndicator';
+
+  return {
+    Avatar: MockAvatar,
+    Chip: MockChip,
+    Button: MockButton,
+    IconButton: MockIconButton,
+    ActivityIndicator: MockActivityIndicator,
+    Card: createMockComponent('Card'),
+    Text: createMockComponent('Text'),
+    Surface: createMockComponent('Surface'),
+    Appbar: {
+      Header: createMockComponent('AppbarHeader'),
+      Content: createMockComponent('AppbarContent'),
+      Action: createMockComponent('AppbarAction'),
+    },
+  };
+});
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
@@ -135,7 +303,17 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 // Mock react-native-markdown-display
-jest.mock('react-native-markdown-display', () => 'Markdown');
+jest.mock('react-native-markdown-display', () => {
+  const React = require('react');
+  return React.forwardRef(({ children, style, ...props }, ref) => {
+    return React.createElement('Text', { 
+      ref,
+      testID: 'markdown',
+      style,
+      ...props
+    }, children);
+  });
+});
 
 // Mock expo-web-browser
 const mockOpenBrowserAsync = jest.fn();
@@ -202,6 +380,23 @@ jest.mock('react-native/Libraries/Utilities/useColorScheme', () => {
   };
 });
 
+// Mock the hooks/useColorScheme files
+jest.mock('./hooks/useColorScheme', () => {
+  return {
+    __esModule: true,
+    default: jest.fn(() => 'light'),
+    useColorScheme: jest.fn(() => 'light'),
+  };
+});
+
+jest.mock('./hooks/useColorScheme.web', () => {
+  return {
+    __esModule: true,
+    default: jest.fn(() => 'light'),
+    useColorScheme: jest.fn(() => 'light'),
+  };
+});
+
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
   const mockCreateAnimatedComponent = (Component) => Component;
@@ -243,15 +438,28 @@ jest.mock('react-native-reanimated', () => {
 });
 
 // Mock @react-navigation/elements
-jest.mock('@react-navigation/elements', () => ({
-  PlatformPressable: 'PlatformPressable',
-  Button: 'Button',
-  Header: 'Header',
-  HeaderButton: 'HeaderButton',
-  HeaderTitle: 'HeaderTitle',
-  HeaderBackground: 'HeaderBackground',
-  useHeaderHeight: jest.fn(() => 0),
-}));
+jest.mock('@react-navigation/elements', () => {
+  const React = require('react');
+  
+  const MockPlatformPressable = React.forwardRef(({ children, testID, ...props }, ref) => {
+    return React.createElement('TouchableOpacity', { 
+      ref,
+      testID: testID || 'platform-pressable',
+      ...props 
+    }, children);
+  });
+  MockPlatformPressable.displayName = 'PlatformPressable';
+
+  return {
+    PlatformPressable: MockPlatformPressable,
+    Button: 'Button',
+    Header: 'Header',
+    HeaderButton: 'HeaderButton',
+    HeaderTitle: 'HeaderTitle',
+    HeaderBackground: 'HeaderBackground',
+    useHeaderHeight: jest.fn(() => 0),
+  };
+});
 
 // Mock @react-navigation/native-stack
 jest.mock('@react-navigation/native-stack', () => ({

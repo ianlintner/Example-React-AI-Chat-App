@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, AppState, ActivityIndicator, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  AppState,
+  ActivityIndicator,
+  Text,
+} from 'react-native';
 import { DiscordColors } from '../../constants/Colors';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
@@ -30,7 +36,7 @@ export default function HomeScreen() {
             forceAgent: undefined,
           });
         }, 1000); // Send after 1 second to ensure connection is established
-      } catch (error) {
+      } catch {
         setError('Failed to connect to server. Please check your connection.');
         setIsConnected(false);
       } finally {
@@ -48,7 +54,10 @@ export default function HomeScreen() {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
 
     // Cleanup on unmount
     return () => {
@@ -87,14 +96,20 @@ export default function HomeScreen() {
 
         const updatedConversation = {
           ...prev,
-          messages: [...prev.messages, { ...message, status: 'complete' as const }],
+          messages: [
+            ...prev.messages,
+            { ...message, status: 'complete' as const },
+          ],
           updatedAt: new Date(),
         };
         return updatedConversation;
       });
     };
 
-    const handleStreamStart = (data: { messageId: string; conversationId: string }) => {
+    const handleStreamStart = (data: {
+      messageId: string;
+      conversationId: string;
+    }) => {
       // Add streaming message placeholder
       setConversation(prev => {
         if (!prev) {
@@ -149,13 +164,17 @@ export default function HomeScreen() {
         }
 
         // Check if message already exists
-        const existingMessage = prev.messages.find(m => m.id === data.messageId);
+        const existingMessage = prev.messages.find(
+          m => m.id === data.messageId,
+        );
         if (existingMessage) {
           // Update existing message to streaming
           return {
             ...prev,
             messages: prev.messages.map(m =>
-              m.id === data.messageId ? { ...m, status: 'streaming' as const } : m,
+              m.id === data.messageId
+                ? { ...m, status: 'streaming' as const }
+                : m,
             ),
             updatedAt: new Date(),
           };
@@ -196,7 +215,9 @@ export default function HomeScreen() {
               ? {
                   ...m,
                   content: chunk.content,
-                  status: chunk.isComplete ? ('complete' as const) : ('streaming' as const),
+                  status: chunk.isComplete
+                    ? ('complete' as const)
+                    : ('streaming' as const),
                 }
               : m,
           ),
@@ -259,7 +280,9 @@ export default function HomeScreen() {
         }
 
         // Check if message already exists to prevent duplicates
-        const existingMessage = prev.messages.find(m => m.id === data.message.id);
+        const existingMessage = prev.messages.find(
+          m => m.id === data.message.id,
+        );
         if (existingMessage) {
           return prev;
         }
@@ -267,7 +290,10 @@ export default function HomeScreen() {
         // Add proactive message
         return {
           ...prev,
-          messages: [...prev.messages, { ...data.message, status: 'complete' as const }],
+          messages: [
+            ...prev.messages,
+            { ...data.message, status: 'complete' as const },
+          ],
           updatedAt: new Date(),
         };
       });
@@ -303,7 +329,9 @@ export default function HomeScreen() {
       }
 
       // Merge with existing conversation
-      const messageExists = prevConversation.messages.some(m => m.id === newMessage.id);
+      const messageExists = prevConversation.messages.some(
+        m => m.id === newMessage.id,
+      );
       if (messageExists) {
         return prevConversation;
       }
@@ -321,7 +349,9 @@ export default function HomeScreen() {
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Connection Error</Text>
         <Text style={styles.errorMessage}>{error}</Text>
-        <Text style={styles.errorSubtext}>Please check your connection and restart the app.</Text>
+        <Text style={styles.errorSubtext}>
+          Please check your connection and restart the app.
+        </Text>
       </View>
     );
   }
@@ -329,7 +359,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size='large' />
         <Text style={styles.loadingText}>Connecting to AI Assistant...</Text>
       </View>
     );

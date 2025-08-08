@@ -51,14 +51,18 @@ describe('ChatScreen', () => {
   describe('Rendering', () => {
     it('should show empty state when no conversation provided', () => {
       render(<ChatScreen conversation={null} />);
-      
+
       expect(screen.getByText('Welcome to AI Chat Assistant')).toBeTruthy();
-      expect(screen.getByText('Start a conversation by typing a message below. I\'m here to help you with anything you need!')).toBeTruthy();
+      expect(
+        screen.getByText(
+          "Start a conversation by typing a message below. I'm here to help you with anything you need!",
+        ),
+      ).toBeTruthy();
     });
 
     it('should render conversation with messages', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(screen.getByText('Test Conversation')).toBeTruthy();
       expect(screen.getByText('Hello')).toBeTruthy();
       expect(screen.getByText('Hi there!')).toBeTruthy();
@@ -66,13 +70,13 @@ describe('ChatScreen', () => {
 
     it('should display conversation title in header', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(screen.getByText('Test Conversation')).toBeTruthy();
     });
 
     it('should show message count in expanded header', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(screen.getByText('2 messages')).toBeTruthy();
     });
   });
@@ -80,19 +84,19 @@ describe('ChatScreen', () => {
   describe('Message Display', () => {
     it('should display user messages correctly', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(screen.getByText('Hello')).toBeTruthy();
     });
 
     it('should display assistant messages correctly', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(screen.getByText('Hi there!')).toBeTruthy();
     });
 
     it('should display timestamps for messages', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       // Check for timestamp format - should show as 4:00 AM and 4:01 AM based on UTC-6 timezone conversion
       expect(screen.getByText(/04:00 AM/)).toBeTruthy();
       expect(screen.getByText(/04:01 AM/)).toBeTruthy();
@@ -100,7 +104,7 @@ describe('ChatScreen', () => {
 
     it('should show agent name for assistant messages', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       // Use getAllByText since "AI Assistant" appears multiple times
       expect(screen.getAllByText('AI Assistant').length).toBeGreaterThan(0);
     });
@@ -109,21 +113,25 @@ describe('ChatScreen', () => {
   describe('Agent Status', () => {
     it('should setup agent status listener on mount', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(socketService.onAgentStatusUpdate).toHaveBeenCalled();
     });
 
     it('should cleanup listeners on unmount', () => {
-      const { unmount } = render(<ChatScreen conversation={mockConversation} />);
-      
+      const { unmount } = render(
+        <ChatScreen conversation={mockConversation} />,
+      );
+
       unmount();
-      
-      expect(socketService.removeListener).toHaveBeenCalledWith('agent_status_update');
+
+      expect(socketService.removeListener).toHaveBeenCalledWith(
+        'agent_status_update',
+      );
     });
 
     it('should check socket connection status', () => {
       render(<ChatScreen conversation={mockConversation} />);
-      
+
       expect(socketService.isSocketConnected).toHaveBeenCalled();
     });
   });
@@ -144,7 +152,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={streamingConversation} />);
-      
+
       expect(screen.getByText('Loading…')).toBeTruthy();
     });
 
@@ -163,7 +171,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={pendingConversation} />);
-      
+
       expect(screen.getByText('Processing your request...')).toBeTruthy();
     });
   });
@@ -183,7 +191,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={conversationWithYoutube} />);
-      
+
       expect(screen.getByText('🎬 Test Video')).toBeTruthy();
       expect(screen.getByText('⏱️ 5:30')).toBeTruthy();
     });
@@ -205,7 +213,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={conversationWithJokeAgent} />);
-      
+
       expect(screen.getByText('Comedy Bot')).toBeTruthy();
     });
 
@@ -225,7 +233,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={conversationWithProactive} />);
-      
+
       expect(screen.getByText('🎯 Proactive')).toBeTruthy();
     });
 
@@ -245,7 +253,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={conversationWithConfidence} />);
-      
+
       expect(screen.getByText('95% confidence')).toBeTruthy();
     });
   });
@@ -253,7 +261,7 @@ describe('ChatScreen', () => {
   describe('Empty State', () => {
     it('should show feature chips in empty state', () => {
       render(<ChatScreen conversation={null} />);
-      
+
       expect(screen.getByText('Ask questions')).toBeTruthy();
       expect(screen.getByText('Get coding help')).toBeTruthy();
       expect(screen.getByText('Creative writing')).toBeTruthy();
@@ -276,7 +284,7 @@ describe('ChatScreen', () => {
       };
 
       render(<ChatScreen conversation={conversationWithMarkdown} />);
-      
+
       // The markdown renderer should handle the formatting
       expect(screen.getByText(/Bold text/)).toBeTruthy();
       expect(screen.getByText(/italic text/)).toBeTruthy();

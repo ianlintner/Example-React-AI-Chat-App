@@ -101,7 +101,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
-            placeholder="Message #ai-assistant"
+            placeholder='Message #ai-assistant'
             placeholderTextColor={DiscordColors.inputPlaceholder}
             value={message}
             onChangeText={handleTyping}
@@ -115,16 +115,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
           <View style={styles.sendButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#2196F3" />
+              <ActivityIndicator size='small' color='#2196F3' />
             ) : (
               <IconButton
-                icon="send"
+                icon='send'
                 size={24}
-                iconColor={canSend ? "#2196F3" : "#ccc"}
+                iconColor={canSend ? '#2196F3' : '#ccc'}
                 style={[styles.sendButton, canSend && styles.sendButtonEnabled]}
                 onPress={handleButtonPress}
                 disabled={!canSend}
-                testID="send-button"
+                testID='send-button'
               />
             )}
           </View>

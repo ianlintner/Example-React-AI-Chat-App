@@ -11,7 +11,9 @@ describe('HapticTab', () => {
   });
 
   it('renders correctly', () => {
-    const { getByTestId } = render(<HapticTab onPress={() => {}}>Tab Content</HapticTab>);
+    const { getByTestId } = render(
+      <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
+    );
 
     expect(getByTestId('haptic-tab')).toBeTruthy();
   });
@@ -19,7 +21,7 @@ describe('HapticTab', () => {
   it('passes through props to PlatformPressable', () => {
     const onPressMock = jest.fn();
     const { getByTestId } = render(
-      <HapticTab onPress={onPressMock} accessibilityLabel="Test tab">
+      <HapticTab onPress={onPressMock} accessibilityLabel='Test tab'>
         Tab Content
       </HapticTab>,
     );
@@ -30,7 +32,9 @@ describe('HapticTab', () => {
   });
 
   it('renders children correctly', () => {
-    const { getByTestId } = render(<HapticTab onPress={() => {}}>Test Content</HapticTab>);
+    const { getByTestId } = render(
+      <HapticTab onPress={() => {}}>Test Content</HapticTab>,
+    );
 
     const hapticTab = getByTestId('haptic-tab');
     expect(hapticTab).toBeTruthy();
@@ -53,7 +57,9 @@ describe('HapticTab', () => {
   });
 
   it('triggers haptic feedback on press in', () => {
-    const { getByTestId } = render(<HapticTab onPress={() => {}}>Tab Content</HapticTab>);
+    const { getByTestId } = render(
+      <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
+    );
 
     const tab = getByTestId('haptic-tab');
     fireEvent(tab, 'pressIn');

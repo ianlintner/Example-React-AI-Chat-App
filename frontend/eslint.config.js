@@ -43,6 +43,11 @@ module.exports = [
       },
       globals: {
         __DEV__: 'readonly',
+        process: 'readonly',
+        global: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
         ...globals.browser,
         ...globals.es2022,
       },
@@ -94,28 +99,33 @@ module.exports = [
       'no-console': 'warn',
       'no-debugger': 'error',
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
+      'no-undef': 'off', // Handled by TypeScript
       'prefer-const': 'error',
       'no-var': 'error',
       'object-shorthand': 'error',
       'prefer-template': 'error',
       'template-curly-spacing': ['error', 'never'],
       'arrow-spacing': 'error',
-      'comma-dangle': ['error', 'always-multiline'],
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
-      'jsx-quotes': ['error', 'prefer-double'],
+      // Remove conflicting comma-dangle rule - handled by Prettier
+      'semi': 'off', // Handled by Prettier
+      'quotes': 'off', // Handled by Prettier
+      'jsx-quotes': 'off', // Handled by Prettier
 
-      // Prettier integration
+      // Prettier integration - let Prettier handle all formatting
       'prettier/prettier': [
         'error',
         {
           singleQuote: true,
+          jsxSingleQuote: true,
           trailingComma: 'all',
           semi: true,
-          printWidth: 100,
+          printWidth: 80,
           tabWidth: 2,
           useTabs: false,
           endOfLine: 'lf',
+          bracketSpacing: true,
+          bracketSameLine: false,
+          arrowParens: 'avoid',
         },
       ],
     },
@@ -123,15 +133,29 @@ module.exports = [
   
   // Test files configuration
   {
-    files: ['**/__tests__/**/*', '**/*.test.{js,jsx,ts,tsx}'],
+    files: ['**/__tests__/**/*', '**/*.test.{js,jsx,ts,tsx}', '**/__mocks__/**/*'],
     languageOptions: {
       globals: {
         ...globals.jest,
+        global: 'writable',
+        process: 'readonly',
+        require: 'readonly',
+        jest: 'readonly',
+        expect: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
       },
     },
     rules: {
       'react-native/no-raw-text': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   
@@ -141,11 +165,17 @@ module.exports = [
     languageOptions: {
       globals: {
         ...globals.node,
+        require: 'readonly',
+        module: 'writable',
+        exports: 'writable',
+        process: 'readonly',
+        global: 'writable',
       },
     },
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       'no-undef': 'off',
+      'no-console': 'off',
     },
   },
 ];

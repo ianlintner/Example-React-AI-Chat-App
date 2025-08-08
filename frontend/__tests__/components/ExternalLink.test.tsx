@@ -57,7 +57,9 @@ describe('ExternalLink', () => {
     );
 
     expect(getByTestId('external-link')).toBeTruthy();
-    expect(getByTestId('external-link').props.href).toBe('mailto:test@example.com');
+    expect(getByTestId('external-link').props.href).toBe(
+      'mailto:test@example.com',
+    );
 
     rerender(<ExternalLink href='tel:+1234567890'>Call Phone</ExternalLink>);
 
@@ -75,7 +77,9 @@ describe('ExternalLink', () => {
 
     it('opens browser on native when pressed and prevents default', async () => {
       const href = 'https://example.com';
-      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
+      const { getByTestId } = render(
+        <ExternalLink href={href}>Visit Example</ExternalLink>,
+      );
 
       const link = getByTestId('external-link');
 
@@ -104,7 +108,9 @@ describe('ExternalLink', () => {
       });
 
       const href = 'https://example.com';
-      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
+      const { getByTestId } = render(
+        <ExternalLink href={href}>Visit Example</ExternalLink>,
+      );
 
       const link = getByTestId('external-link');
 
@@ -135,7 +141,9 @@ describe('ExternalLink', () => {
 
     it('does not call openBrowserAsync on web platform', async () => {
       const href = 'https://example.com';
-      const { getByTestId } = render(<ExternalLink href={href}>Visit Example</ExternalLink>);
+      const { getByTestId } = render(
+        <ExternalLink href={href}>Visit Example</ExternalLink>,
+      );
 
       const link = getByTestId('external-link');
 

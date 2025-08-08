@@ -24,7 +24,9 @@ jest.mock('@/constants/Colors', () => ({
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-const mockUseColorScheme = useColorScheme as jest.MockedFunction<typeof useColorScheme>;
+const mockUseColorScheme = useColorScheme as jest.MockedFunction<
+  typeof useColorScheme
+>;
 
 describe('useThemeColor', () => {
   beforeEach(() => {
@@ -72,7 +74,9 @@ describe('useThemeColor', () => {
   it('prioritizes prop colors over Colors constant', () => {
     mockUseColorScheme.mockReturnValue('light');
 
-    const { result } = renderHook(() => useThemeColor({ light: '#FF0000' }, 'background'));
+    const { result } = renderHook(() =>
+      useThemeColor({ light: '#FF0000' }, 'background'),
+    );
 
     expect(result.current).toBe('#FF0000');
   });

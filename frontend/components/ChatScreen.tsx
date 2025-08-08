@@ -37,7 +37,11 @@ const YouTubeEmbed: React.FC<{
   };
 
   return (
-    <TouchableOpacity style={styles.youtubeContainer} onPress={handlePress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.youtubeContainer}
+      onPress={handlePress}
+      activeOpacity={0.8}
+    >
       <View style={styles.youtubeHeader}>
         <Text style={styles.youtubeTitle} numberOfLines={2}>
           🎬 {title}
@@ -342,13 +346,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
     isStreamingMessage?: boolean;
   }> = ({ message, isStreamingMessage = false }) => {
     const isUser = message.role === 'user';
-    const agentInfo = !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
+    const agentInfo =
+      !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
 
     return (
       <View
         style={[
           styles.messageBubbleContainer,
-          isUser ? styles.userMessageContainer : styles.assistantMessageContainer,
+          isUser
+            ? styles.userMessageContainer
+            : styles.assistantMessageContainer,
         ]}
       >
         <Avatar.Icon
@@ -410,7 +417,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               })()}
 
             {isUser ? (
-              <Text style={[styles.messageText, styles.userMessageText]}>{message.content}</Text>
+              <Text style={[styles.messageText, styles.userMessageText]}>
+                {message.content}
+              </Text>
             ) : isStreamingMessage ? (
               <View style={styles.markdownContainer}>
                 {message.content ? (
@@ -495,7 +504,10 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           </Animated.View>
 
           <Text
-            style={[styles.timestamp, isUser ? styles.userTimestamp : styles.assistantTimestamp]}
+            style={[
+              styles.timestamp,
+              isUser ? styles.userTimestamp : styles.assistantTimestamp,
+            ]}
           >
             {formatTimestamp(message.timestamp)}
           </Text>
@@ -510,8 +522,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         <Avatar.Icon size={64} icon='robot' style={styles.emptyAvatar} />
         <Text style={styles.emptyTitle}>Welcome to AI Chat Assistant</Text>
         <Text style={styles.emptySubtitle}>
-          Start a conversation by typing a message below. I&apos;m here to help you with anything
-          you need!
+          Start a conversation by typing a message below. I&apos;m here to help
+          you with anything you need!
         </Text>
         <View style={styles.chipContainer}>
           <Chip mode='outlined' style={styles.featureChip}>
@@ -580,7 +592,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                   }}
                 >
                   <Text style={styles.headerSubtitle}>
-                    {agentStatus ? getAgentInfo(agentStatus.currentAgent).name : 'AI Assistant'}
+                    {agentStatus
+                      ? getAgentInfo(agentStatus.currentAgent).name
+                      : 'AI Assistant'}
                   </Text>
                 </Animated.View>
               </View>
@@ -622,8 +636,12 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
           ]}
         >
           <View style={styles.expandedContent}>
-            <Text style={styles.expandedText}>{conversation.messages.length} messages</Text>
-            {agentStatus?.isActive && <Text style={styles.statusText}>• Active</Text>}
+            <Text style={styles.expandedText}>
+              {conversation.messages.length} messages
+            </Text>
+            {agentStatus?.isActive && (
+              <Text style={styles.statusText}>• Active</Text>
+            )}
           </View>
         </Animated.View>
 

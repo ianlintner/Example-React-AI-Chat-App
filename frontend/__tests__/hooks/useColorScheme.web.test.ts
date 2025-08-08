@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 import { useColorScheme } from '../../hooks/useColorScheme.web';
 
 // Mock react-native's useColorScheme

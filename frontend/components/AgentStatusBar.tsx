@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+} from 'react-native';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
 import type { AgentStatus, AgentType } from '../types';
@@ -8,7 +14,9 @@ interface AgentStatusBarProps {
   isVisible?: boolean;
 }
 
-const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => {
+const AgentStatusBar: React.FC<AgentStatusBarProps> = ({
+  isVisible = true,
+}) => {
   const [agentStatus, setAgentStatus] = useState<AgentStatus | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -199,13 +207,19 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
       ]}
     >
       {/* Ultra-Compact Header */}
-      <TouchableOpacity style={styles.compactHeader} onPress={toggleCollapse} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.compactHeader}
+        onPress={toggleCollapse}
+        activeOpacity={0.7}
+      >
         {/* Status Pulse Indicator */}
         <Animated.View
           style={[
             styles.statusPulse,
             {
-              backgroundColor: agentStatus.isActive ? ForestColors.success : ForestColors.textMuted,
+              backgroundColor: agentStatus.isActive
+                ? ForestColors.success
+                : ForestColors.textMuted,
               transform: [{ scale: agentStatus.isActive ? pulseAnim : 1 }],
             },
           ]}
@@ -222,7 +236,9 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
             style={[
               styles.connectionIndicator,
               {
-                backgroundColor: isConnected ? ForestColors.success : ForestColors.error,
+                backgroundColor: isConnected
+                  ? ForestColors.success
+                  : ForestColors.error,
               },
             ]}
           />
@@ -305,7 +321,10 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
         {agentStatus.conversationContext?.shouldHandoff && (
           <View style={styles.handoffAlert}>
             <Text style={styles.handoffAlertText}>
-              → {getAgentDisplayName(agentStatus.conversationContext.handoffTarget as AgentType)}
+              →{' '}
+              {getAgentDisplayName(
+                agentStatus.conversationContext.handoffTarget as AgentType,
+              )}
             </Text>
           </View>
         )}
@@ -329,7 +348,6 @@ const AgentStatusBar: React.FC<AgentStatusBarProps> = ({ isVisible = true }) => 
     </Animated.View>
   );
 };
-
 
 const styles = StyleSheet.create({
   // Modern Mobile-First Container

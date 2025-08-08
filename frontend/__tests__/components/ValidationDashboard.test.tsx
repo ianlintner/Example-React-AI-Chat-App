@@ -1,5 +1,11 @@
 import React from 'react';
-import { render, fireEvent, waitFor, screen, act } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+  act,
+} from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ValidationDashboard from '../../components/ValidationDashboard';
 
@@ -149,7 +155,7 @@ describe('ValidationDashboard', () => {
       await act(async () => {
         render(<ValidationDashboard />);
       });
-      
+
       expect(screen.getByText('Loading validation data...')).toBeTruthy();
       expect(screen.getByTestId('activity-indicator')).toBeTruthy();
     });
@@ -160,7 +166,7 @@ describe('ValidationDashboard', () => {
       await act(async () => {
         render(<ValidationDashboard />);
       });
-      
+
       await waitFor(() => {
         expect(screen.getByText('AI Response Validation')).toBeTruthy();
       });
@@ -174,7 +180,7 @@ describe('ValidationDashboard', () => {
 
     it('should display agent performance summary', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Agent Performance Summary')).toBeTruthy();
       });
@@ -189,7 +195,7 @@ describe('ValidationDashboard', () => {
 
     it('should display validation logs', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Validation Logs')).toBeTruthy();
       });
@@ -206,18 +212,24 @@ describe('ValidationDashboard', () => {
 
   describe('Error Handling', () => {
     it('should display error message when API fails', async () => {
-      ((global as any).fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      ((global as any).fetch as jest.Mock).mockRejectedValue(
+        new Error('Network error'),
+      );
 
       render(<ValidationDashboard />);
 
       await waitFor(() => {
         expect(screen.getByText('Error')).toBeTruthy();
-        expect(screen.getByText('Failed to fetch validation data')).toBeTruthy();
+        expect(
+          screen.getByText('Failed to fetch validation data'),
+        ).toBeTruthy();
       });
     });
 
     it('should handle retry button click', async () => {
-      ((global as any).fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      ((global as any).fetch as jest.Mock).mockRejectedValueOnce(
+        new Error('Network error'),
+      );
 
       render(<ValidationDashboard />);
 
@@ -259,7 +271,7 @@ describe('ValidationDashboard', () => {
   describe('Filtering', () => {
     it('should handle agent type filter changes', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Agent Type:')).toBeTruthy();
       });
@@ -270,7 +282,7 @@ describe('ValidationDashboard', () => {
 
     it('should handle failed only toggle', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Failed Only')).toBeTruthy();
       });
@@ -290,7 +302,7 @@ describe('ValidationDashboard', () => {
   describe('Actions', () => {
     it('should handle refresh action', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Refresh')).toBeTruthy();
       });
@@ -308,7 +320,7 @@ describe('ValidationDashboard', () => {
 
     it('should handle clear logs action', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Clear Logs')).toBeTruthy();
       });
@@ -331,7 +343,7 @@ describe('ValidationDashboard', () => {
 
     it('should execute clear logs when confirmed', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Clear Logs')).toBeTruthy();
       });
@@ -347,7 +359,7 @@ describe('ValidationDashboard', () => {
       // Get the alert call and execute the clear action
       const alertCall = mockAlert.mock.calls[0];
       expect(alertCall).toBeDefined();
-      
+
       const clearAction = alertCall[2]?.[1]; // Second button (Clear)
       expect(clearAction).toBeDefined();
       expect(clearAction?.onPress).toBeDefined();
@@ -359,7 +371,7 @@ describe('ValidationDashboard', () => {
       if (clearAction?.onPress) {
         await clearAction.onPress();
       }
-      
+
       // Verify clear API was called
       await waitFor(() => {
         expect((global as any).fetch).toHaveBeenCalledWith(
@@ -373,7 +385,7 @@ describe('ValidationDashboard', () => {
   describe('Helper Functions', () => {
     it('should format timestamps correctly', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         // Check that timestamps are displayed (exact format may vary by locale)
         expect(screen.getAllByText(/1\/1\/2023/)).toHaveLength(2); // Two log entries
@@ -382,7 +394,7 @@ describe('ValidationDashboard', () => {
 
     it('should display appropriate colors for scores', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         // High score should be green, low score should be red
         const scoreElements = screen.getAllByText(/Score: /);
@@ -392,7 +404,7 @@ describe('ValidationDashboard', () => {
 
     it('should show issue badges for failed validations', async () => {
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         // Should show medium severity issue for the failed validation
         expect(screen.getByText('medium')).toBeTruthy();
@@ -425,7 +437,7 @@ describe('ValidationDashboard', () => {
       });
 
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('No validation logs found')).toBeTruthy();
       });
@@ -435,9 +447,9 @@ describe('ValidationDashboard', () => {
   describe('Auto-refresh', () => {
     it('should set up auto-refresh interval', async () => {
       jest.useFakeTimers();
-      
+
       render(<ValidationDashboard />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('AI Response Validation')).toBeTruthy();
       });

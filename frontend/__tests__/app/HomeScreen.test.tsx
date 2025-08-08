@@ -8,7 +8,11 @@ import type { Message, Conversation, StreamChunk } from '../../types';
 // Mock dependencies
 jest.mock('../../services/socketService');
 jest.mock('../../components/ChatScreen', () => {
-  const MockChatScreen = ({ conversation }: { conversation: Conversation | null }) => {
+  const MockChatScreen = ({
+    conversation,
+  }: {
+    conversation: Conversation | null;
+  }) => {
     const React = jest.requireActual('react');
     return React.createElement(
       'View',
@@ -16,8 +20,10 @@ jest.mock('../../components/ChatScreen', () => {
       React.createElement(
         'Text',
         null,
-        conversation ? `Conversation: ${conversation.title}` : 'No conversation'
-      )
+        conversation
+          ? `Conversation: ${conversation.title}`
+          : 'No conversation',
+      ),
     );
   };
   return MockChatScreen;
@@ -28,7 +34,11 @@ jest.mock('../../components/MessageInput', () => {
     return React.createElement(
       'View',
       { testID: 'message-input' },
-      React.createElement('Text', null, disabled ? 'Input disabled' : 'Input enabled'),
+      React.createElement(
+        'Text',
+        null,
+        disabled ? 'Input disabled' : 'Input enabled',
+      ),
       React.createElement(
         'TouchableOpacity',
         {
@@ -42,8 +52,8 @@ jest.mock('../../components/MessageInput', () => {
               conversationId: 'test-conversation-id',
             }),
         },
-        React.createElement('Text', null, 'Send Test Message')
-      )
+        React.createElement('Text', null, 'Send Test Message'),
+      ),
     );
   };
   return MockMessageInput;
@@ -76,14 +86,14 @@ describe('HomeScreen', () => {
   describe('Initialization', () => {
     it('should show loading state initially', async () => {
       render(<HomeScreen />);
-      
+
       expect(screen.getByText('Connecting to AI Assistant...')).toBeTruthy();
       expect(screen.getByTestId('activity-indicator')).toBeTruthy();
     });
 
     it('should connect to socket service on mount', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.connect).toHaveBeenCalled();
       });
@@ -91,16 +101,16 @@ describe('HomeScreen', () => {
 
     it('should automatically send support request after connection', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.connect).toHaveBeenCalled();
       });
-      
+
       // Fast forward past the 1 second delay
       act(() => {
         jest.advanceTimersByTime(1000);
       });
-      
+
       expect(mockSocketService.sendStreamingMessage).toHaveBeenCalledWith({
         message: expect.stringContaining('Hello, I need technical support'),
         conversationId: null,
@@ -110,7 +120,7 @@ describe('HomeScreen', () => {
 
     it('should show chat screen after successful connection', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('chat-screen')).toBeTruthy();
         expect(screen.getByTestId('message-input')).toBeTruthy();
@@ -119,7 +129,7 @@ describe('HomeScreen', () => {
 
     it('should setup socket event listeners', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.onNewMessage).toHaveBeenCalled();
         expect(mockSocketService.onStreamStart).toHaveBeenCalled();
@@ -132,28 +142,50 @@ describe('HomeScreen', () => {
 
   describe('Error Handling', () => {
     it('should show error state when connection fails', async () => {
-      mockSocketService.connect.mockRejectedValue(new Error('Connection failed'));
-      
+      mockSocketService.connect.mockRejectedValue(
+        new Error('Connection failed'),
+      );
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Connection Error')).toBeTruthy();
-        expect(screen.getByText('Failed to connect to server. Please check your connection.')).toBeTruthy();
-        expect(screen.getByText('Please check your connection and restart the app.')).toBeTruthy();
+        expect(
+          screen.getByText(
+            'Failed to connect to server. Please check your connection.',
+          ),
+        ).toBeTruthy();
+        expect(
+          screen.getByText('Please check your connection and restart the app.'),
+        ).toBeTruthy();
       });
     });
   });
 
   describe('Message Handling', () => {
     let onNewMessage: (message: Message) => void;
-    let onStreamStart: (data: { messageId: string; conversationId: string }) => void;
+    let onStreamStart: (data: {
+      messageId: string;
+      conversationId: string;
+    }) => void;
     let onStreamChunk: (chunk: StreamChunk) => void;
-    let onStreamComplete: (data: { messageId: string; conversationId: string; conversation: Conversation; agentUsed?: string; confidence?: number }) => void;
-    let onProactiveMessage: (data: { message: Message; actionType: string; agentUsed: string; confidence: number }) => void;
+    let onStreamComplete: (data: {
+      messageId: string;
+      conversationId: string;
+      conversation: Conversation;
+      agentUsed?: string;
+      confidence?: number;
+    }) => void;
+    let onProactiveMessage: (data: {
+      message: Message;
+      actionType: string;
+      agentUsed: string;
+      confidence: number;
+    }) => void;
 
     beforeEach(async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.onNewMessage).toHaveBeenCalled();
       });
@@ -163,7 +195,8 @@ describe('HomeScreen', () => {
       onStreamStart = mockSocketService.onStreamStart.mock.calls[0][0];
       onStreamChunk = mockSocketService.onStreamChunk.mock.calls[0][0];
       onStreamComplete = mockSocketService.onStreamComplete.mock.calls[0][0];
-      onProactiveMessage = mockSocketService.onProactiveMessage.mock.calls[0][0];
+      onProactiveMessage =
+        mockSocketService.onProactiveMessage.mock.calls[0][0];
     });
 
     it('should handle new messages and create conversation', async () => {
@@ -180,7 +213,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -190,7 +225,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -202,27 +239,29 @@ describe('HomeScreen', () => {
 
       // Then send chunks
       act(() => {
-        onStreamChunk({ 
+        onStreamChunk({
           id: 'msg-1',
-          messageId: 'msg-1', 
+          messageId: 'msg-1',
           conversationId: 'conv-1',
-          content: 'Hello', 
-          isComplete: false 
+          content: 'Hello',
+          isComplete: false,
         });
       });
 
       act(() => {
-        onStreamChunk({ 
+        onStreamChunk({
           id: 'msg-1',
-          messageId: 'msg-1', 
+          messageId: 'msg-1',
           conversationId: 'conv-1',
-          content: 'Hello world!', 
-          isComplete: true 
+          content: 'Hello world!',
+          isComplete: true,
         });
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -252,7 +291,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -276,7 +317,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -295,7 +338,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
@@ -320,7 +365,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
   });
@@ -328,49 +375,53 @@ describe('HomeScreen', () => {
   describe('Message Sending', () => {
     it('should handle message sent from input', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('send-message-button')).toBeTruthy();
       });
 
       const sendButton = screen.getByTestId('send-message-button');
-      
+
       act(() => {
         sendButton.props.onPress();
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
     it('should create new conversation when none exists', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('send-message-button')).toBeTruthy();
       });
 
       const sendButton = screen.getByTestId('send-message-button');
-      
+
       act(() => {
         sendButton.props.onPress();
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
 
     it('should prevent duplicate messages when sending', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('send-message-button')).toBeTruthy();
       });
 
       const sendButton = screen.getByTestId('send-message-button');
-      
+
       // Send same message multiple times
       act(() => {
         sendButton.props.onPress();
@@ -378,7 +429,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
   });
@@ -386,9 +439,9 @@ describe('HomeScreen', () => {
   describe('App State Handling', () => {
     it('should reconnect when app becomes active and socket is disconnected', async () => {
       mockSocketService.isSocketConnected.mockReturnValue(false);
-      
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.connect).toHaveBeenCalledTimes(1);
       });
@@ -400,7 +453,8 @@ describe('HomeScreen', () => {
       // Simulate app state change to active
       act(() => {
         // Trigger app state change event
-        const appStateListener = (AppState.addEventListener as jest.Mock).mock.calls[0][1];
+        const appStateListener = (AppState.addEventListener as jest.Mock).mock
+          .calls[0][1];
         appStateListener('active');
       });
 
@@ -411,9 +465,9 @@ describe('HomeScreen', () => {
 
     it('should not reconnect when app becomes active and socket is already connected', async () => {
       mockSocketService.isSocketConnected.mockReturnValue(true);
-      
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.connect).toHaveBeenCalledTimes(1);
       });
@@ -423,7 +477,8 @@ describe('HomeScreen', () => {
 
       // Simulate app state change to active
       act(() => {
-        const appStateListener = (AppState.addEventListener as jest.Mock).mock.calls[0][1];
+        const appStateListener = (AppState.addEventListener as jest.Mock).mock
+          .calls[0][1];
         appStateListener('active');
       });
 
@@ -434,10 +489,12 @@ describe('HomeScreen', () => {
 
   describe('Connection Status', () => {
     it('should show input as disabled when not connected', async () => {
-      mockSocketService.connect.mockRejectedValue(new Error('Connection failed'));
-      
+      mockSocketService.connect.mockRejectedValue(
+        new Error('Connection failed'),
+      );
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Connection Error')).toBeTruthy();
       });
@@ -445,7 +502,7 @@ describe('HomeScreen', () => {
 
     it('should show input as enabled when connected', async () => {
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Input enabled')).toBeTruthy();
       });
@@ -455,33 +512,45 @@ describe('HomeScreen', () => {
   describe('Cleanup', () => {
     it('should cleanup socket listeners on unmount', async () => {
       const { unmount } = render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.onNewMessage).toHaveBeenCalled();
       });
-      
+
       unmount();
-      
-      expect(mockSocketService.removeListener).toHaveBeenCalledWith('new_message');
-      expect(mockSocketService.removeListener).toHaveBeenCalledWith('stream_start');
-      expect(mockSocketService.removeListener).toHaveBeenCalledWith('stream_chunk');
-      expect(mockSocketService.removeListener).toHaveBeenCalledWith('stream_complete');
-      expect(mockSocketService.removeListener).toHaveBeenCalledWith('proactive_message');
+
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith(
+        'new_message',
+      );
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith(
+        'stream_start',
+      );
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith(
+        'stream_chunk',
+      );
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith(
+        'stream_complete',
+      );
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith(
+        'proactive_message',
+      );
       expect(mockSocketService.disconnect).toHaveBeenCalled();
     });
 
     it('should remove app state listener on unmount', async () => {
       const mockRemove = jest.fn();
-      (AppState.addEventListener as jest.Mock).mockReturnValue({ remove: mockRemove });
-      
+      (AppState.addEventListener as jest.Mock).mockReturnValue({
+        remove: mockRemove,
+      });
+
       const { unmount } = render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(AppState.addEventListener).toHaveBeenCalled();
       });
-      
+
       unmount();
-      
+
       expect(mockRemove).toHaveBeenCalled();
     });
   });
@@ -489,11 +558,15 @@ describe('HomeScreen', () => {
   describe('Error Recovery', () => {
     it('should handle connection errors gracefully', async () => {
       mockSocketService.connect.mockRejectedValue(new Error('Network error'));
-      
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
-        expect(screen.getByText('Failed to connect to server. Please check your connection.')).toBeTruthy();
+        expect(
+          screen.getByText(
+            'Failed to connect to server. Please check your connection.',
+          ),
+        ).toBeTruthy();
       });
     });
 
@@ -502,18 +575,18 @@ describe('HomeScreen', () => {
       mockSocketService.sendStreamingMessage.mockImplementation(() => {
         throw sendError;
       });
-      
+
       render(<HomeScreen />);
-      
+
       await waitFor(() => {
         expect(mockSocketService.connect).toHaveBeenCalled();
       });
-      
+
       // Fast forward past the delay for automatic message
       act(() => {
         jest.advanceTimersByTime(1000);
       });
-      
+
       // Should still continue normally even if automatic message fails
       expect(screen.getByTestId('chat-screen')).toBeTruthy();
     });
@@ -522,9 +595,9 @@ describe('HomeScreen', () => {
   describe('Message Filtering', () => {
     it('should filter messages from different conversations', async () => {
       render(<HomeScreen />);
-      
+
       const onNewMessage = mockSocketService.onNewMessage.mock.calls[0][0];
-      
+
       // Send message to create first conversation
       act(() => {
         onNewMessage({
@@ -548,7 +621,9 @@ describe('HomeScreen', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Conversation: AI Assistant Chat')).toBeTruthy();
+        expect(
+          screen.getByText('Conversation: AI Assistant Chat'),
+        ).toBeTruthy();
       });
     });
   });

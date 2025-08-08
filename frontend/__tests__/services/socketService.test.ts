@@ -57,7 +57,9 @@ describe('SocketService', () => {
         }
       });
 
-      await expect(socketService.connect()).rejects.toThrow('Connection failed');
+      await expect(socketService.connect()).rejects.toThrow(
+        'Connection failed',
+      );
     });
 
     it('should use environment variable for API URL', async () => {
@@ -72,7 +74,10 @@ describe('SocketService', () => {
 
       await socketService.connect();
 
-      expect(mockIo).toHaveBeenCalledWith('http://custom-url:3000', expect.any(Object));
+      expect(mockIo).toHaveBeenCalledWith(
+        'http://custom-url:3000',
+        expect.any(Object),
+      );
 
       process.env.EXPO_PUBLIC_API_URL = originalEnv;
     });
@@ -105,7 +110,10 @@ describe('SocketService', () => {
 
       socketService.joinConversation(conversationId);
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('join_conversation', conversationId);
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'join_conversation',
+        conversationId,
+      );
     });
 
     it('should leave conversation', () => {
@@ -113,7 +121,10 @@ describe('SocketService', () => {
 
       socketService.leaveConversation(conversationId);
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('leave_conversation', conversationId);
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'leave_conversation',
+        conversationId,
+      );
     });
   });
 
@@ -196,7 +207,10 @@ describe('SocketService', () => {
 
       socketService.onProactiveMessage(callback);
 
-      expect(mockSocket.on).toHaveBeenCalledWith('proactive_message', expect.any(Function));
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'proactive_message',
+        expect.any(Function),
+      );
 
       consoleSpy.mockRestore();
     });
@@ -207,7 +221,10 @@ describe('SocketService', () => {
 
       socketService.onAgentStatusUpdate(callback);
 
-      expect(mockSocket.on).toHaveBeenCalledWith('agent_status_update', expect.any(Function));
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'agent_status_update',
+        expect.any(Function),
+      );
 
       consoleSpy.mockRestore();
     });

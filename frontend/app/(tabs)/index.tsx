@@ -359,7 +359,7 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size='large' />
+        <ActivityIndicator size='large' testID='activity-indicator' />
         <Text style={styles.loadingText}>Connecting to AI Assistant...</Text>
       </View>
     );

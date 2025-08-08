@@ -288,12 +288,12 @@ jest.mock('@react-navigation/native', () => ({
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
-  Link: ({ children, href, testID = 'external-link', onPress, ...props }) => {
+  Link: ({ children, href, testID, onPress, ...props }) => {
     const React = require('react');
     return React.createElement('Text', { 
       ...props, 
       href, 
-      testID,
+      testID: testID || 'external-link', // Don't override testID if explicitly provided
       onPress: (event) => {
         if (onPress) {
           onPress(event);

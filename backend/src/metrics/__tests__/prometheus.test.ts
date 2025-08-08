@@ -1,39 +1,45 @@
-import promClient from 'prom-client';
-import { metrics, register, httpMetricsMiddleware } from '../prometheus';
+// Mock prom-client before imports
+const mockHistogram = {
+  observe: jest.fn(),
+};
+const mockCounter = {
+  inc: jest.fn(),
+};
+const mockGauge = {
+  set: jest.fn(),
+  inc: jest.fn(),
+  dec: jest.fn(),
+};
+const mockRegistry = {
+  registerMetric: jest.fn(),
+  metrics: jest.fn().mockResolvedValue('mocked metrics'),
+};
 
-// Mock prom-client
-jest.mock('prom-client', () => {
-  const mockHistogram = {
-    observe: jest.fn(),
-  };
-  const mockCounter = {
-    inc: jest.fn(),
-  };
-  const mockGauge = {
-    set: jest.fn(),
-    inc: jest.fn(),
-    dec: jest.fn(),
-  };
-  const mockRegistry = {
-    registerMetric: jest.fn(),
-    metrics: jest.fn().mockResolvedValue('mocked metrics'),
-  };
+const mockRegistryConstructor = jest.fn(() => mockRegistry);
+const mockHistogramConstructor = jest.fn(() => mockHistogram);
+const mockCounterConstructor = jest.fn(() => mockCounter);
+const mockGaugeConstructor = jest.fn(() => mockGauge);
+const mockCollectDefaultMetrics = jest.fn();
 
-  return {
-    Registry: jest.fn(() => mockRegistry),
-    Histogram: jest.fn(() => mockHistogram),
-    Counter: jest.fn(() => mockCounter),
-    Gauge: jest.fn(() => mockGauge),
-    collectDefaultMetrics: jest.fn(),
-    default: {
-      Registry: jest.fn(() => mockRegistry),
-      Histogram: jest.fn(() => mockHistogram),
-      Counter: jest.fn(() => mockCounter),
-      Gauge: jest.fn(() => mockGauge),
-      collectDefaultMetrics: jest.fn(),
-    },
-  };
-});
+jest.mock('prom-client', () => ({
+  Registry: mockRegistryConstructor,
+  Histogram: mockHistogramConstructor,
+  Counter: mockCounterConstructor,
+  Gauge: mockGaugeConstructor,
+  collectDefaultMetrics: mockCollectDefaultMetrics,
+  default: {
+    Registry: mockRegistryConstructor,
+    Histogram: mockHistogramConstructor,
+    Counter: mockCounterConstructor,
+    Gauge: mockGaugeConstructor,
+    collectDefaultMetrics: mockCollectDefaultMetrics,
+  },
+}));
+
+// Import the module which will trigger constructor calls
+const prometheusModule = require('../prometheus');
+const { metrics, register, httpMetricsMiddleware } = prometheusModule;
+const promClient = require('prom-client');
 
 describe('Prometheus Metrics', () => {
   beforeEach(() => {

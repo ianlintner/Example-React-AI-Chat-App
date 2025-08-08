@@ -1,22 +1,81 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { HapticTab } from '../../components/HapticTab';
 
-// Mock expo-haptics
+// Mock expo-haptics first before any imports
 const mockImpactAsync = jest.fn();
-jest.mock('expo-haptics', () => ({
+
+// Create the mock as a default export that can be used with * as Haptics
+const mockHaptics = {
   impactAsync: mockImpactAsync,
+  impact: jest.fn(),
+  notification: jest.fn(),
+  notificationAsync: jest.fn(),
+  selection: jest.fn(),
+  selectionAsync: jest.fn(),
   ImpactFeedbackStyle: {
     Light: 'light',
     Medium: 'medium',
     Heavy: 'heavy',
   },
-}));
+  NotificationFeedbackType: {
+    Success: 'success',
+    Warning: 'warning',
+    Error: 'error',
+  },
+};
+
+jest.mock('expo-haptics', () => mockHaptics);
+
+import { HapticTab } from '../../components/HapticTab';
+
+// Mock @react-navigation/elements with proper Text handling
+jest.mock('@react-navigation/elements', () => {
+  const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
+
+  const MockPlatformPressable = React.forwardRef((props: any, ref: any) => {
+    const { children, testID, onPressIn, ...otherProps } = props;
+
+    // Handle string children by wrapping in Text
+    const renderChildren = () => {
+      if (typeof children === 'string') {
+        return React.createElement(Text, {}, children);
+      }
+      return children;
+    };
+
+    return React.createElement(
+      TouchableOpacity,
+      {
+        ref,
+        testID: testID || 'platform-pressable',
+        onPressIn,
+        ...otherProps,
+      },
+      renderChildren(),
+    );
+  });
+
+  MockPlatformPressable.displayName = 'PlatformPressable';
+
+  return {
+    PlatformPressable: MockPlatformPressable,
+  };
+});
 
 describe('HapticTab', () => {
+  const originalEnv = process.env.EXPO_OS;
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockImpactAsync.mockClear();
+    // Reset environment variable
+    process.env.EXPO_OS = originalEnv;
+  });
+
+  afterEach(() => {
+    // Restore environment variable
+    process.env.EXPO_OS = originalEnv;
   });
 
   it('renders correctly', () => {
@@ -41,14 +100,11 @@ describe('HapticTab', () => {
   });
 
   it('renders children correctly', () => {
-    const { getByTestId } = render(
+    const { getByText } = render(
       <HapticTab onPress={() => {}}>Test Content</HapticTab>,
     );
 
-    const hapticTab = getByTestId('platform-pressable');
-    expect(hapticTab).toBeTruthy();
-    // Since our mock renders children as text inside the View, we check for the component
-    expect(hapticTab.children).toBeDefined();
+    expect(getByText('Test Content')).toBeTruthy();
   });
 
   it('calls onPressIn handler', () => {
@@ -65,7 +121,9 @@ describe('HapticTab', () => {
     expect(onPressInMock).toHaveBeenCalled();
   });
 
-  it('triggers haptic feedback on press in', () => {
+  it('triggers haptic feedback on iOS', () => {
+    process.env.EXPO_OS = 'ios';
+
     const { getByTestId } = render(
       <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
     );
@@ -73,8 +131,19 @@ describe('HapticTab', () => {
     const tab = getByTestId('platform-pressable');
     fireEvent(tab, 'pressIn');
 
-    // Note: In test environment, haptic feedback is always triggered
-    // regardless of platform due to mocking limitations
-    expect(mockImpactAsync).toHaveBeenCalled();
+    expect(mockImpactAsync).toHaveBeenCalledWith('light');
+  });
+
+  it('does not trigger haptic feedback on non-iOS platforms', () => {
+    process.env.EXPO_OS = 'android';
+
+    const { getByTestId } = render(
+      <HapticTab onPress={() => {}}>Tab Content</HapticTab>,
+    );
+
+    const tab = getByTestId('platform-pressable');
+    fireEvent(tab, 'pressIn');
+
+    expect(mockImpactAsync).not.toHaveBeenCalled();
   });
 });

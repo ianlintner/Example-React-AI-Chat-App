@@ -90,7 +90,7 @@ describe('ResponseValidator', () => {
     });
 
     it('should detect repetitive content', () => {
-      const aiResponse = 'Hello hello hello hello hello hello. This is a test test test test test test.';
+      const aiResponse = 'testing testing testing testing testing testing testing. Another another another another another another another.';
       
       const result = validator.validateResponse(
         defaultParams.agentType,
@@ -131,7 +131,7 @@ describe('ResponseValidator', () => {
     });
 
     it('should detect overly casual tone', () => {
-      const aiResponse = 'Hey bro, that is totally awesome dude! Cool stuff mate, this is totally amazing buddy!';
+      const aiResponse = 'Hey bro, that is totally awesome dude! This is so cool buddy and totally amazing mate!';
       
       const result = validator.validateResponse(
         defaultParams.agentType,
@@ -563,8 +563,8 @@ describe('ResponseValidator', () => {
     it('should calculate coherence score', () => {
       const calculateCoherenceScore = (validator as any).calculateCoherenceScore.bind(validator);
       
-      const coherentText = 'This is a coherent response. It flows well and makes sense.';
-      const incoherentText = 'A'.repeat(200); // Very long sentence
+      const coherentText = 'This is a coherent response. However, it also flows well and makes sense. Therefore, it should score higher.';
+      const incoherentText = 'This is a very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long sentence without any proper structure or transitions and it just goes on and on and on without making much sense or having any logical flow which makes it very hard to read and understand.';
       
       const coherentScore = calculateCoherenceScore(coherentText);
       const incoherentScore = calculateCoherenceScore(incoherentText);

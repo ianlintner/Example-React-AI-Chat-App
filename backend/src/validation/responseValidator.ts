@@ -203,10 +203,14 @@ export class ResponseValidator {
     }
 
     // Check for repetitive content
-    const words = response.toLowerCase().split(/\s+/);
+    const words = response.toLowerCase().split(/\s+/).filter(w => w.length > 3);
     const wordCounts = new Map<string, number>();
     words.forEach(word => {
-      wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+      // Clean word of punctuation
+      const cleanWord = word.replace(/[^\w]/g, '');
+      if (cleanWord.length > 3) {
+        wordCounts.set(cleanWord, (wordCounts.get(cleanWord) || 0) + 1);
+      }
     });
 
     const repeatedWords = Array.from(wordCounts.entries()).filter(
@@ -301,15 +305,18 @@ export class ResponseValidator {
     });
 
     // Check for overly casual tone in support context
-    const overlyFamiliarPatterns = [
-      /\b(bro|dude|buddy|mate)\b/i,
-      /\b(totally|awesome|cool)\b/i,
+    const overlyFamiliarWords = [
+      'bro', 'dude', 'buddy', 'mate', 'totally', 'awesome', 'cool'
     ];
 
     let casualCount = 0;
-    overlyFamiliarPatterns.forEach(pattern => {
-      if (pattern.test(response)) {
-        casualCount++;
+    const lowerResponse = response.toLowerCase();
+    
+    overlyFamiliarWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'g');
+      const matches = lowerResponse.match(regex);
+      if (matches) {
+        casualCount += matches.length;
       }
     });
 
@@ -521,7 +528,7 @@ export class ResponseValidator {
     if (sentences.length === 0) return 0;
     if (sentences.length === 1) return 1;
 
-    let coherenceScore = 1;
+    let coherenceScore = 0.8; // Start with base score
 
     // Check for transition words/phrases
     const transitions = [
@@ -540,11 +547,32 @@ export class ResponseValidator {
       response.toLowerCase().includes(transition)
     );
 
-    if (hasTransitions) coherenceScore += 0.1;
+    if (hasTransitions) coherenceScore += 0.2;
 
     // Penalize for very long sentences (may indicate run-on)
     const avgSentenceLength = response.length / sentences.length;
-    if (avgSentenceLength > 150) coherenceScore -= 0.2;
+    if (avgSentenceLength > 150) coherenceScore -= 0.4;
+
+    // Penalize for excessive repetition within the response
+    const words = response.toLowerCase().split(/\s+/);
+    const uniqueWords = new Set(words);
+    const repetitionRatio = words.length / uniqueWords.size;
+    
+    if (repetitionRatio > 2) {
+      coherenceScore -= 0.3;
+    }
+
+    // Reward proper sentence structure
+    let properSentences = 0;
+    sentences.forEach(sentence => {
+      const trimmed = sentence.trim();
+      if (trimmed.match(/^[A-Z]/) && trimmed.length > 5) {
+        properSentences++;
+      }
+    });
+    
+    const properSentenceRatio = properSentences / sentences.length;
+    coherenceScore += (properSentenceRatio - 0.5) * 0.2;
 
     return Math.max(0, Math.min(1, coherenceScore));
   }

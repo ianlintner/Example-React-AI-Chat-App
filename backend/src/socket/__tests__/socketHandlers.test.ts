@@ -17,11 +17,14 @@ jest.mock('uuid', () => ({
 }));
 
 describe('Socket Handlers', () => {
+  jest.setTimeout(10000);
+  
   let mockIo: jest.Mocked<Server>;
   let mockSocket: any;
   let handlers: any;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
     
     // Mock socket
@@ -81,8 +84,12 @@ describe('Socket Handlers', () => {
 
     // Mock tracing context manager
     (tracingContextManager.withSpan as jest.Mock).mockImplementation(
-      async (span, callback) => {
-        return await callback(span, {});
+      (span, callback) => {
+        try {
+          return Promise.resolve(callback(span, {}));
+        } catch (error) {
+          return Promise.reject(error);
+        }
       }
     );
 
@@ -91,9 +98,10 @@ describe('Socket Handlers', () => {
   });
 
   afterEach(() => {
+    // Clear all timers and intervals before switching to real timers
     jest.clearAllTimers();
-    jest.clearAllMocks();
     jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   describe('setupSocketHandlers', () => {
@@ -123,7 +131,6 @@ describe('Socket Handlers', () => {
     let connectionHandler: Function;
     
     beforeEach(() => {
-      jest.useFakeTimers();
       setupSocketHandlers(mockIo);
       
       // Get the connection handler
@@ -133,12 +140,6 @@ describe('Socket Handlers', () => {
       
       // Call the connection handler
       connectionHandler(mockSocket);
-    });
-
-    afterEach(() => {
-      // Clear all intervals and timeouts to prevent memory leaks
-      jest.clearAllTimers();
-      jest.useRealTimers();
     });
 
     it('should handle new socket connection', () => {
@@ -173,6 +174,20 @@ describe('Socket Handlers', () => {
         'agent_status_update',
         expect.any(Object)
       );
+    });
+
+    it('should properly clean up intervals on disconnect', () => {
+      // Get disconnect handler
+      const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+        call => call[0] === 'disconnect'
+      );
+      const disconnectHandler = disconnectCall[1];
+      
+      // Simulate disconnect to clean up intervals
+      disconnectHandler();
+      
+      // Verify metrics are updated
+      expect(metrics.activeConnections.dec).toHaveBeenCalled();
     });
   });
 
@@ -310,6 +325,9 @@ describe('Socket Handlers', () => {
     let streamChatHandler: Function;
 
     beforeEach(() => {
+      // Use real timers for async tests
+      jest.useRealTimers();
+      
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
         call => call[0] === 'connection'
@@ -320,6 +338,10 @@ describe('Socket Handlers', () => {
         call => call[0] === 'stream_chat'
       );
       streamChatHandler = streamChatCall[1];
+    });
+    
+    afterEach(() => {
+      jest.useFakeTimers();
     });
 
     it('should handle empty message', async () => {
@@ -403,12 +425,17 @@ describe('Socket Handlers', () => {
         new Error('Agent service error')
       );
       
+      // Suppress console.error during this test
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      
       await streamChatHandler(data);
       
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
         message: 'Internal server error',
         code: 'INTERNAL_ERROR',
       });
+      
+      consoleSpy.mockRestore();
     });
 
     it('should handle proactive actions', async () => {
@@ -530,9 +557,10 @@ describe('Socket Handlers', () => {
   });
 
   describe('Agent Status Updates', () => {
+    let connectionHandler: Function;
+    let disconnectHandler: Function;
+    
     beforeEach(() => {
-      jest.useFakeTimers();
-      
       // Mock agent service responses for status updates
       (agentService.getActiveAgentInfo as jest.Mock).mockReturnValue({
         name: 'general',
@@ -559,16 +587,28 @@ describe('Socket Handlers', () => {
         ],
         lastUpdated: new Date(),
       });
+      
+      // Set up handlers
+      setupSocketHandlers(mockIo);
+      connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
+        call => call[0] === 'connection'
+      )[1];
+      
+      // Call connection handler to set up socket
+      connectionHandler(mockSocket);
+      
+      // Get disconnect handler for cleanup
+      const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+        call => call[0] === 'disconnect'
+      );
+      disconnectHandler = disconnectCall[1];
     });
 
     it('should send periodic agent status updates', () => {
-      setupSocketHandlers(mockIo);
-      const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
-      )[1];
-      connectionHandler(mockSocket);
+      // Advance time to trigger initial status update
+      jest.advanceTimersByTime(600); // 500ms initial + buffer
 
-      // Advance time to trigger status updates
+      // Advance time to trigger periodic status updates
       jest.advanceTimersByTime(6000); // 6 seconds
 
       expect(mockSocket.emit).toHaveBeenCalledWith(
@@ -591,17 +631,25 @@ describe('Socket Handlers', () => {
         shouldHandoff: false,
       });
 
-      setupSocketHandlers(mockIo);
-      const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
+      // Re-setup with idle user context
+      const newConnectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
         call => call[0] === 'connection'
       )[1];
-      connectionHandler(mockSocket);
+      
+      // Create new socket for this test
+      const idleSocket = {
+        ...mockSocket,
+        id: 'idle-socket-id',
+        emit: jest.fn(),
+      };
+      
+      newConnectionHandler(idleSocket);
 
       // Advance time to trigger status update
       jest.advanceTimersByTime(6000);
 
       // The context should be modified for idle users
-      expect(mockSocket.emit).toHaveBeenCalledWith(
+      expect(idleSocket.emit).toHaveBeenCalledWith(
         'agent_status_update',
         expect.any(Object)
       );

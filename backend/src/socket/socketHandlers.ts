@@ -299,10 +299,8 @@ export const setupSocketHandlers = (io: Server) => {
       sendAgentStatus();
     }, 5000);
 
-    // Clear interval on disconnect
-    socket.on('disconnect', () => {
-      clearInterval(statusInterval);
-    });
+    // Store intervals for cleanup
+    const intervals = [statusInterval];
 
     // Initialize user state for goal-seeking system and hold agent
     setTimeout(async () => {
@@ -371,13 +369,8 @@ export const setupSocketHandlers = (io: Server) => {
           10 * 60 * 1000
         ); // 10 minutes
 
-        // Clear interval when user disconnects
-        socket.on('disconnect', () => {
-          clearInterval(holdUpdateInterval);
-          console.log(
-            `⏰ Cleared hold update interval for disconnected user ${socket.id}`
-          );
-        });
+        // Store the holdUpdateInterval for cleanup
+        intervals.push(holdUpdateInterval);
       } catch (error) {
         console.error('Error initializing user state:', error);
       }
@@ -741,6 +734,9 @@ export const setupSocketHandlers = (io: Server) => {
     // Handle disconnection
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
+
+      // Clear all intervals
+      intervals.forEach(clearInterval);
 
       // Track WebSocket disconnection metrics
       metrics.activeConnections.dec();

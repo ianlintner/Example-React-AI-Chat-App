@@ -74,7 +74,15 @@ export class ResponseValidator {
 
     try {
       const issues: ValidationIssue[] = [];
-      const metrics = this.calculateMetrics(aiResponse);
+      let metrics: ValidationMetrics;
+      
+      // Calculate metrics first and handle potential errors
+      try {
+        metrics = this.calculateMetrics(aiResponse);
+      } catch (error) {
+        console.error('Error calculating metrics:', error);
+        throw error; // Re-throw to be caught by outer catch
+      }
 
       // Content validation
       addSpanEvent(validationSpan, 'validation.content_check_start');
@@ -160,7 +168,22 @@ export class ResponseValidator {
       setSpanStatus(validationSpan, false, (error as Error).message);
       endSpan(validationSpan);
 
-      // Return fallback validation result
+      // Return fallback validation result with fallback metrics
+      let fallbackMetrics: ValidationMetrics;
+      try {
+        fallbackMetrics = this.calculateMetrics(aiResponse);
+      } catch (metricsError) {
+        // If even metrics calculation fails, return default metrics
+        fallbackMetrics = {
+          responseLength: aiResponse.length,
+          sentenceCount: 0,
+          readabilityScore: 0,
+          technicalAccuracy: 0,
+          appropriatenessScore: 0,
+          coherenceScore: 0,
+        };
+      }
+
       return {
         isValid: false,
         score: 0,
@@ -172,7 +195,7 @@ export class ResponseValidator {
             suggestion: 'System encountered an error during validation',
           },
         ],
-        metrics: this.calculateMetrics(aiResponse),
+        metrics: fallbackMetrics,
       };
     }
   }
@@ -526,7 +549,6 @@ export class ResponseValidator {
     const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
 
     if (sentences.length === 0) return 0;
-    if (sentences.length === 1) return 1;
 
     let coherenceScore = 0.8; // Start with base score
 
@@ -551,7 +573,14 @@ export class ResponseValidator {
 
     // Penalize for very long sentences (may indicate run-on)
     const avgSentenceLength = response.length / sentences.length;
-    if (avgSentenceLength > 150) coherenceScore -= 0.4;
+    if (avgSentenceLength > 150) {
+      coherenceScore -= 0.4;
+    }
+
+    // For very long single sentences, apply additional penalty
+    if (sentences.length === 1 && avgSentenceLength > 100) {
+      coherenceScore -= 0.3;
+    }
 
     // Penalize for excessive repetition within the response
     const words = response.toLowerCase().split(/\s+/);
@@ -573,6 +602,15 @@ export class ResponseValidator {
     
     const properSentenceRatio = properSentences / sentences.length;
     coherenceScore += (properSentenceRatio - 0.5) * 0.2;
+
+    // For single sentences, be more strict about coherence
+    if (sentences.length === 1) {
+      // Check if the sentence is overly complex or has poor structure
+      const words = sentences[0].trim().split(/\s+/);
+      if (words.length > 50) { // Very long sentences tend to be less coherent
+        coherenceScore -= 0.2;
+      }
+    }
 
     return Math.max(0, Math.min(1, coherenceScore));
   }

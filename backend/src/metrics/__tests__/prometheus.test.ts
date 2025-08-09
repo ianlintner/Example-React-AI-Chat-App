@@ -60,19 +60,19 @@ describe('Prometheus Metrics', () => {
     });
 
     it('should create registry and register metrics', () => {
-      expect(promClient.Registry).toHaveBeenCalled();
-      expect(promClient.collectDefaultMetrics).toHaveBeenCalled();
+      expect(mockRegistryConstructor).toHaveBeenCalled();
+      expect(mockCollectDefaultMetrics).toHaveBeenCalled();
     });
 
     it('should create histograms with correct configuration', () => {
-      expect(promClient.Histogram).toHaveBeenCalledWith({
+      expect(mockHistogramConstructor).toHaveBeenCalledWith({
         name: 'http_request_duration_seconds',
         help: 'Duration of HTTP requests in seconds',
         labelNames: ['method', 'route', 'status_code'],
         buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
       });
 
-      expect(promClient.Histogram).toHaveBeenCalledWith({
+      expect(mockHistogramConstructor).toHaveBeenCalledWith({
         name: 'agent_response_time_seconds',
         help: 'Time taken for agent to respond to messages',
         labelNames: ['agent_type', 'success'],
@@ -81,37 +81,37 @@ describe('Prometheus Metrics', () => {
     });
 
     it('should create counters with correct configuration', () => {
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'http_requests_total',
         help: 'Total number of HTTP requests',
         labelNames: ['method', 'route', 'status_code'],
       });
 
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'chat_messages_total',
         help: 'Total number of chat messages processed',
         labelNames: ['type', 'agent_type'],
       });
 
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'ai_model_requests_total',
         help: 'Total number of AI model requests',
         labelNames: ['model', 'success'],
       });
 
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'ai_model_tokens_used_total',
         help: 'Total number of tokens used by AI models',
         labelNames: ['model', 'type'],
       });
 
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'validation_checks_total',
         help: 'Total number of validation checks performed',
-        labelNames: ['type', 'result'],
+        labelNames: ['agent_type', 'result', 'proactive'],
       });
 
-      expect(promClient.Counter).toHaveBeenCalledWith({
+      expect(mockCounterConstructor).toHaveBeenCalledWith({
         name: 'memory_storage_operations_total',
         help: 'Total number of memory storage operations',
         labelNames: ['operation'],
@@ -119,7 +119,7 @@ describe('Prometheus Metrics', () => {
     });
 
     it('should create gauge with correct configuration', () => {
-      expect(promClient.Gauge).toHaveBeenCalledWith({
+      expect(mockGaugeConstructor).toHaveBeenCalledWith({
         name: 'websocket_connections_active',
         help: 'Number of active WebSocket connections',
       });

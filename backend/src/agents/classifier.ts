@@ -85,14 +85,10 @@ export async function classifyMessage(
       'data structure',
       'frontend development',
       'backend development',
-      'frontend',
-      'backend',
       'git repository',
       'github',
       'code repository',
-      'repository',
       'git commit',
-      'commit',
       'typescript',
       'npm package',
       'npm install',
@@ -104,7 +100,6 @@ export async function classifyMessage(
       'promise',
       'callback function',
       'dom manipulation',
-      'dom',
       'webpack',
       'babel',
       'eslint',
@@ -115,14 +110,12 @@ export async function classifyMessage(
       'ci/cd',
       'devops',
       'docker container',
+      'docker',
       'kubernetes',
       'rest api',
       'api endpoint',
       'graphql',
       'websocket',
-      'user authentication',
-      'authentication',
-      'authorization',
       'jwt token',
       'oauth',
       'regex pattern',
@@ -176,7 +169,7 @@ export async function classifyMessage(
       'give me a fact',
       'share a fact',
       'educate me with facts',
-      'tell me something I don\'t know',
+      'tell me something i don\'t know',
       'fascinating knowledge',
       'share fascinating knowledge',
       'share interesting history',
@@ -221,22 +214,31 @@ export async function classifyMessage(
       'vibe',
     ];
 
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = message.toLowerCase().trim();
+
+    // Handle empty or whitespace-only messages
+    if (!lowerMessage) {
+      return {
+        agentType: 'general',
+        confidence: 0.5,
+        reasoning: 'No specific keywords detected, classifying as general',
+      };
+    }
 
     const technicalScore = technicalKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const dadJokeScore = dadJokeKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const triviaScore = triviaKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const gifScore = gifKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     // GIF has highest priority if detected
@@ -257,7 +259,7 @@ export async function classifyMessage(
       };
     }
 
-    // Technical has higher priority than trivia - route to website support
+    // Technical support for programming-related queries - higher priority than trivia
     if (technicalScore > 0) {
       return {
         agentType: 'website_support',
@@ -266,7 +268,7 @@ export async function classifyMessage(
       };
     }
 
-    // Trivia has lower priority to avoid false positives
+    // Trivia has lower priority to reduce false positives
     if (triviaScore > 0) {
       return {
         agentType: 'trivia',

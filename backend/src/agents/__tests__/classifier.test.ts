@@ -1,24 +1,22 @@
-// Mock OpenAI first
-jest.mock('openai');
+// Mock OpenAI first, before any imports
+const mockOpenAICreate = jest.fn();
+
+// Mock the entire OpenAI module
+jest.mock('openai', () => {
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => ({
+      chat: {
+        completions: {
+          create: mockOpenAICreate,
+        },
+      },
+    })),
+  };
+});
 
 import { classifyMessage } from '../classifier';
 import { AgentType, MessageClassification } from '../types';
-
-// Import the mocked module
-import OpenAI from 'openai';
-
-// Get mock functions
-const MockedOpenAI = OpenAI as jest.MockedClass<typeof OpenAI>;
-const mockOpenAICreate = jest.fn();
-
-// Set up the mock implementation
-MockedOpenAI.mockImplementation(() => ({
-  chat: {
-    completions: {
-      create: mockOpenAICreate,
-    },
-  },
-} as any));
 
 describe('Message Classifier', () => {
   let originalEnv: string | undefined;

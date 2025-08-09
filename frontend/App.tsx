@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  StatusBar,
-  Alert,
-  AppState,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, StatusBar, AppState } from 'react-native';
 import {
   Provider as PaperProvider,
   Appbar,
@@ -22,7 +15,7 @@ export default function App() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+  const [_lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
 
   // Initialize socket connection on app start
@@ -66,7 +59,7 @@ export default function App() {
 
     const subscription = AppState.addEventListener(
       'change',
-      handleAppStateChange
+      handleAppStateChange,
     );
 
     // Cleanup on unmount
@@ -94,7 +87,7 @@ export default function App() {
           };
           console.log(
             'New conversation created for new message:',
-            newConversation
+            newConversation,
           );
           return newConversation;
         }
@@ -123,7 +116,7 @@ export default function App() {
         };
         console.log(
           'Updated conversation with new message:',
-          updatedConversation
+          updatedConversation,
         );
         return updatedConversation;
       });
@@ -168,7 +161,7 @@ export default function App() {
 
         // Check if message already exists
         const existingMessage = prev.messages.find(
-          m => m.id === data.messageId
+          m => m.id === data.messageId,
         );
         if (existingMessage) {
           // Update existing message to streaming
@@ -177,7 +170,7 @@ export default function App() {
             messages: prev.messages.map(m =>
               m.id === data.messageId
                 ? { ...m, status: 'streaming' as const }
-                : m
+                : m,
             ),
             updatedAt: new Date(),
           };
@@ -224,7 +217,7 @@ export default function App() {
                     ? ('complete' as const)
                     : ('streaming' as const),
                 }
-              : m
+              : m,
           ),
           updatedAt: new Date(),
         };
@@ -254,7 +247,7 @@ export default function App() {
                   ...(data.confidence && { confidence: data.confidence }),
                   status: 'complete' as const,
                 }
-              : m
+              : m,
           ),
           updatedAt: new Date(),
         };
@@ -269,7 +262,7 @@ export default function App() {
     }) => {
       console.log(
         '🎁 Proactive message received in App:',
-        JSON.stringify(data, null, 2)
+        JSON.stringify(data, null, 2),
       );
 
       // Add proactive message to current conversation or create new one
@@ -293,7 +286,7 @@ export default function App() {
 
         // Check if message already exists to prevent duplicates
         const existingMessage = prev.messages.find(
-          m => m.id === data.message.id
+          m => m.id === data.message.id,
         );
         if (existingMessage) {
           return prev;
@@ -345,7 +338,9 @@ export default function App() {
       }
 
       // Check if message already exists
-      const messageExists = prevConversation.messages.some(m => m.id === newMessage.id);
+      const messageExists = prevConversation.messages.some(
+        m => m.id === newMessage.id,
+      );
       if (messageExists) {
         return prevConversation;
       }

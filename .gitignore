@@ -4,3 +4,4 @@ node_modules
 
 backend/coverage
 frontend/coverage
+.DS_Store

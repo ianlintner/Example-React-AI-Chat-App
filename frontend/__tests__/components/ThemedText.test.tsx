@@ -12,7 +12,7 @@ describe('ThemedText', () => {
   it('applies custom style prop', () => {
     const customStyle = { fontSize: 20 };
     const { getByText } = render(
-      <ThemedText style={customStyle}>Styled Text</ThemedText>
+      <ThemedText style={customStyle}>Styled Text</ThemedText>,
     );
 
     const textElement = getByText('Styled Text');
@@ -21,7 +21,7 @@ describe('ThemedText', () => {
 
   it('applies theme-based styling', () => {
     const { getByText } = render(
-      <ThemedText type='title'>Title Text</ThemedText>
+      <ThemedText type='title'>Title Text</ThemedText>,
     );
 
     expect(getByText('Title Text')).toBeTruthy();
@@ -38,7 +38,7 @@ describe('ThemedText', () => {
 
     textTypes.forEach(type => {
       const { getByText } = render(
-        <ThemedText type={type}>{`${type} text`}</ThemedText>
+        <ThemedText type={type}>{`${type} text`}</ThemedText>,
       );
 
       expect(getByText(`${type} text`)).toBeTruthy();

@@ -85,7 +85,7 @@ class SocketService {
   }
 
   onStreamStart(
-    callback: (data: { messageId: string; conversationId: string }) => void
+    callback: (data: { messageId: string; conversationId: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_start', callback);
@@ -105,7 +105,7 @@ class SocketService {
       conversation: Conversation;
       agentUsed?: string;
       confidence?: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_complete', callback);
@@ -113,7 +113,7 @@ class SocketService {
   }
 
   onStreamError(
-    callback: (error: { message: string; code: string }) => void
+    callback: (error: { message: string; code: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_error', callback);
@@ -125,7 +125,7 @@ class SocketService {
       userId: string;
       userName?: string;
       isTyping: boolean;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('user_typing', callback);
@@ -137,7 +137,7 @@ class SocketService {
       messageId: string;
       status: string;
       readBy: string;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('message_status', callback);
@@ -151,13 +151,13 @@ class SocketService {
       actionType: string;
       agentUsed: string;
       confidence: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_message', data => {
         console.log(
           '🎁 Proactive message received in mobile socket service:',
-          JSON.stringify(data, null, 2)
+          JSON.stringify(data, null, 2),
         );
         callback(data);
       });
@@ -169,7 +169,7 @@ class SocketService {
       message: string;
       actionType: string;
       error: string;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);

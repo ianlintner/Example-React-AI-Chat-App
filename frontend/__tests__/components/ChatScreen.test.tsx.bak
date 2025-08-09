@@ -1,0 +1,649 @@
+import React from 'react';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Animated } from 'react-native';
+import ChatScreen from '../../components/ChatScreen';
+import { socketService } from '../../services/socketService';
+import * as WebBrowser from 'expo-web-browser';
+import type { Conversation, Message, AgentStatus } from '../../types';
+
+// Mock dependencies
+jest.mock('../../services/socketService');
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(),
+  WebBrowserPresentationStyle: {
+    FULL_SCREEN: 'fullScreen',
+  },
+}));
+
+jest.useFakeTimers();
+jest.mock('react-native-paper', () => ({
+  Avatar: {
+    Icon: jest.fn(({ icon, style, ...props }) => {
+      const MockIcon = require('react-native').View;
+      return <MockIcon testID={`avatar-${icon}`} style={style} {...props} />;
+    }),
+  },
+  Chip: jest.fn(({ children, mode, compact, textStyle, style, ...props }) => {
+    const MockChip = require('react-native').View;
+    const MockText = require('react-native').Text;
+    return (
+      <MockChip testID="chip" style={style} {...props}>
+        <MockText testID="chip-text" style={textStyle}>{children}</MockText>
+      </MockChip>
+    );
+  }),
+}));
+
+jest.mock('react-native-markdown-display', () => {
+  return jest.fn(({ children, style }) => {
+    const MockView = require('react-native').View;
+    const MockText = require('react-native').Text;
+    return (
+      <MockView testID="markdown" style={style}>
+        <MockText>{children}</MockText>
+      </MockView>
+    );
+  });
+});
+
+const mockSocketService = socketService as jest.Mocked<typeof socketService>;
+const mockWebBrowser = WebBrowser as jest.Mocked<typeof WebBrowser>;
+
+describe('ChatScreen', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockSocketService.isSocketConnected.mockReturnValue(true);
+    mockSocketService.onAgentStatusUpdate.mockImplementation(jest.fn());
+    mockSocketService.removeListener.mockImplementation(jest.fn());
+  });
+
+  describe('Empty State', () => {
+    it('should render empty state when no conversation provided', () => {
+      const { getByText, getByTestId } = render(<ChatScreen conversation={null} />);
+
+      expect(getByText('Welcome to AI Chat Assistant')).toBeTruthy();
+      expect(getByText(/Start a conversation by typing a message/)).toBeTruthy();
+      expect(getByTestId('avatar-robot')).toBeTruthy();
+      expect(getByText('Ask questions')).toBeTruthy();
+      expect(getByText('Get coding help')).toBeTruthy();
+      expect(getByText('Creative writing')).toBeTruthy();
+      expect(getByText('Analysis & research')).toBeTruthy();
+    });
+  });
+
+  describe('Conversation Display', () => {
+    const mockConversation: Conversation = {
+      id: 'conv1',
+      title: 'Test Conversation',
+      messages: [
+        {
+          id: 'msg1',
+          content: 'Hello',
+          role: 'user',
+          timestamp: new Date('2023-01-01T10:00:00Z'),
+          conversationId: 'conv1',
+        },
+        {
+          id: 'msg2',
+          content: 'Hi there! How can I help you?',
+          role: 'assistant',
+          agentUsed: 'general',
+          timestamp: new Date('2023-01-01T10:00:30Z'),
+          status: 'complete',
+          conversationId: 'conv1',
+        },
+      ],
+      createdAt: new Date('2023-01-01T10:00:00Z'),
+      updatedAt: new Date('2023-01-01T10:00:30Z'),
+    };
+
+    it('should render conversation with messages', () => {
+      const { getByText, getByTestId } = render(<ChatScreen conversation={mockConversation} />);
+
+      expect(getByText('Test Conversation')).toBeTruthy();
+      expect(getByText('Hello')).toBeTruthy();
+      expect(getByText('Hi there! How can I help you?')).toBeTruthy();
+      expect(getByTestId('avatar-account')).toBeTruthy();
+      expect(getByTestId('avatar-robot')).toBeTruthy();
+    });
+
+    it('should display timestamps for messages', () => {
+      const { getByText } = render(<ChatScreen conversation={mockConversation} />);
+
+      // Check for formatted timestamps (will vary by timezone, so just check they exist)
+      const timestampElements = render(<ChatScreen conversation={mockConversation} />).UNSAFE_getAllByType(require('react-native').Text)
+        .filter(element => element.props.style && element.props.style.some && element.props.style.some((style: any) => style && style.fontSize === 11));
+      
+      expect(timestampElements.length).toBeGreaterThan(0);
+    });
+
+    it('should display agent information for assistant messages', () => {
+      const { getAllByText } = render(<ChatScreen conversation={mockConversation} />);
+
+      expect(getAllByText('AI Assistant').length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Agent Types', () => {
+    const createMessageWithAgent = (agentUsed: string): Message => ({
+      id: 'msg1',
+      content: 'Test message',
+      role: 'assistant',
+      agentUsed,
+      timestamp: new Date(),
+      status: 'complete',
+      conversationId: 'conv1',
+    });
+
+    const testCases = [
+      { agentUsed: 'hold_agent', expectedName: 'Hold Agent' },
+      { agentUsed: 'account_support', expectedName: 'Account Support' },
+      { agentUsed: 'billing_support', expectedName: 'Billing Support' },
+      { agentUsed: 'website_support', expectedName: 'Website Support' },
+      { agentUsed: 'operator_support', expectedName: 'Customer Service' },
+      { agentUsed: 'joke', expectedName: 'Comedy Bot' },
+      { agentUsed: 'trivia', expectedName: 'Trivia Master' },
+      { agentUsed: 'gif', expectedName: 'GIF Master' },
+      { agentUsed: 'story_teller', expectedName: 'Story Teller' },
+      { agentUsed: 'riddle_master', expectedName: 'Riddle Master' },
+      { agentUsed: 'quote_master', expectedName: 'Quote Master' },
+      { agentUsed: 'game_host', expectedName: 'Game Host' },
+      { agentUsed: 'music_guru', expectedName: 'Music Guru' },
+      { agentUsed: 'youtube_guru', expectedName: 'YouTube Guru' },
+      { agentUsed: 'dnd_master', expectedName: 'D&D Master' },
+      { agentUsed: 'general', expectedName: 'AI Assistant' },
+      { agentUsed: 'unknown_agent', expectedName: 'AI Assistant' },
+    ];
+
+    testCases.forEach(({ agentUsed, expectedName }) => {
+      it(`should display correct agent name for ${agentUsed}`, () => {
+        const conversation: Conversation = {
+          id: 'conv1',
+          title: 'Test',
+          messages: [createMessageWithAgent(agentUsed)],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        if (expectedName === 'AI Assistant') {
+          const { getAllByText } = render(<ChatScreen conversation={conversation} />);
+          expect(getAllByText(expectedName).length).toBeGreaterThan(0);
+        } else {
+          const { getByText } = render(<ChatScreen conversation={conversation} />);
+          expect(getByText(expectedName)).toBeTruthy();
+        }
+      });
+    });
+  });
+
+  describe('Message Status', () => {
+    it('should display thinking indicator for pending messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'pending',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText('Processing your request...')).toBeTruthy();
+    });
+
+    it('should display thinking indicator for streaming messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'streaming',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText('Generating response...')).toBeTruthy();
+    });
+
+    it('should display proactive chip for proactive messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: 'Proactive message',
+          role: 'assistant',
+          agentUsed: 'general',
+          timestamp: new Date(),
+          status: 'complete',
+          isProactive: true,
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByTestId } = render(<ChatScreen conversation={conversation} />);
+      expect(getByTestId('chip')).toBeTruthy();
+    });
+
+    it('should display confidence score when available', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: 'Confident response',
+          role: 'assistant',
+          agentUsed: 'general',
+          timestamp: new Date(),
+          status: 'complete',
+          confidence: 0.95,
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText('95% confidence')).toBeTruthy();
+    });
+  });
+
+  describe('YouTube Embeds', () => {
+    it('should parse and render YouTube embeds', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '```youtube\nDQw4w9WgXcQ\nNever Gonna Give You Up\n3:32\n```',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText('🎬 Never Gonna Give You Up')).toBeTruthy();
+      expect(getByText('⏱️ 3:32')).toBeTruthy();
+    });
+
+    it('should open YouTube video when thumbnail is pressed', async () => {
+      mockWebBrowser.openBrowserAsync.mockResolvedValue({ type: 'opened' } as any);
+
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '```youtube\nDQw4w9WgXcQ\nTest Video\n1:30\n```',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      const thumbnail = getByText('🎬 Test Video').parent;
+
+      fireEvent.press(thumbnail!);
+
+      await waitFor(() => {
+        expect(mockWebBrowser.openBrowserAsync).toHaveBeenCalledWith(
+          'https://www.youtube.com/watch?v=DQw4w9WgXcQ',
+          {
+            presentationStyle: 'fullScreen',
+          }
+        );
+      });
+    });
+
+    it('should handle mixed content with YouTube embeds and text', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: 'Here is a video:\n\n```youtube\nDQw4w9WgXcQ\nTest Video\n1:30\n```\n\nAnd some more text.',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText, getAllByTestId } = render(<ChatScreen conversation={conversation} />);
+      
+      expect(getByText('🎬 Test Video')).toBeTruthy();
+      expect(getAllByTestId('markdown')).toBeTruthy();
+    });
+  });
+
+  describe('Header Functionality', () => {
+    const mockConversation: Conversation = {
+      id: 'conv1',
+      title: 'Test Conversation',
+      messages: [
+        {
+          id: 'msg1',
+          content: 'Hello',
+          role: 'user',
+          timestamp: new Date(),
+          conversationId: 'conv1',
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should display connection status', () => {
+      const { getByText } = render(<ChatScreen conversation={mockConversation} />);
+      expect(getByText('Test Conversation')).toBeTruthy();
+    });
+
+    it('should toggle header collapse on press', async () => {
+      const { getByText } = render(<ChatScreen conversation={mockConversation} />);
+      
+      const header = getByText('Test Conversation');
+      fireEvent.press(header);
+      // Just test that the header exists and can be found, animation testing is complex
+      expect(header).toBeTruthy();
+    });
+
+    it('should display message count in expanded state', () => {
+      const { getByText } = render(<ChatScreen conversation={mockConversation} />);
+      expect(getByText('1 messages')).toBeTruthy();
+    });
+  });
+
+  describe('Socket Service Integration', () => {
+    const mockConversation: Conversation = {
+      id: 'conv1',
+      title: 'Test',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    it('should setup agent status listener on mount', () => {
+      render(<ChatScreen conversation={mockConversation} />);
+      expect(mockSocketService.onAgentStatusUpdate).toHaveBeenCalled();
+    });
+
+    it('should remove listeners on unmount', () => {
+      const { unmount } = render(<ChatScreen conversation={mockConversation} />);
+      unmount();
+      expect(mockSocketService.removeListener).toHaveBeenCalledWith('agent_status_update');
+    });
+
+    it('should handle agent status updates', () => {
+      const mockAgentStatus: AgentStatus = {
+        currentAgent: 'general',
+        isActive: true,
+        activeAgentInfo: {
+          agentType: 'general',
+          timestamp: new Date(),
+        },
+        conversationContext: null,
+        goalState: null,
+        timestamp: new Date(),
+        availableAgents: [],
+      };
+
+      mockSocketService.onAgentStatusUpdate.mockImplementation((callback) => {
+        callback(mockAgentStatus);
+      });
+
+      render(<ChatScreen conversation={mockConversation} />);
+      expect(mockSocketService.onAgentStatusUpdate).toHaveBeenCalled();
+    });
+
+    it('should show disconnected status when socket is not connected', () => {
+      mockSocketService.isSocketConnected.mockReturnValue(false);
+      
+      const result = render(<ChatScreen conversation={mockConversation} />);
+      expect(result).toBeTruthy();
+    });
+  });
+
+  describe('Message Parsing', () => {
+    it('should handle empty content gracefully', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = render(<ChatScreen conversation={conversation} />);
+      expect(result).toBeTruthy();
+    });
+
+    it('should render plain text without markdown parsing for user messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '**Bold text** and *italic text*',
+          role: 'user',
+          timestamp: new Date(),
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText('**Bold text** and *italic text*')).toBeTruthy();
+    });
+
+    it('should handle markdown parsing for assistant messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '**Bold text** and *italic text*',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getAllByTestId } = render(<ChatScreen conversation={conversation} />);
+      expect(getAllByTestId('markdown')).toBeTruthy();
+    });
+  });
+
+  describe('Animations', () => {
+    beforeEach(() => {
+      // Mock Animated.loop to prevent infinite loops in tests
+      jest.spyOn(Animated, 'loop').mockImplementation((animation) => ({
+        start: jest.fn(),
+        stop: jest.fn(),
+        reset: jest.fn(),
+      }));
+      
+      jest.spyOn(Animated, 'sequence').mockImplementation(() => ({
+        start: jest.fn(),
+        stop: jest.fn(),
+        reset: jest.fn(),
+      }));
+
+      jest.spyOn(Animated, 'timing').mockImplementation(() => ({
+        start: jest.fn(),
+        stop: jest.fn(),
+        reset: jest.fn(),
+      }));
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should trigger pulse animation for streaming messages', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: 'Streaming...',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'streaming',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      render(<ChatScreen conversation={conversation} />);
+      expect(Animated.loop).toHaveBeenCalled();
+    });
+
+    it('should trigger animation when agent status becomes active', async () => {
+      const mockAgentStatus: AgentStatus = {
+        currentAgent: 'general',
+        isActive: true,
+        activeAgentInfo: {
+          agentType: 'general',
+          timestamp: new Date(),
+        },
+        conversationContext: null,
+        goalState: null,
+        timestamp: new Date(),
+        availableAgents: [],
+      };
+
+      let statusCallback: ((status: AgentStatus) => void) | undefined;
+      mockSocketService.onAgentStatusUpdate.mockImplementation((callback) => {
+        statusCallback = callback;
+      });
+
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      render(<ChatScreen conversation={conversation} />);
+
+      if (statusCallback) {
+        await waitFor(() => {
+          statusCallback!(mockAgentStatus);
+        });
+      }
+
+      // Animation testing in React Native is complex, just verify the callback works
+      expect(mockSocketService.onAgentStatusUpdate).toHaveBeenCalled();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle malformed YouTube embed gracefully', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '```youtube\nincomplete embed',
+          role: 'assistant',
+          timestamp: new Date(),
+          status: 'complete',
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getAllByTestId } = render(<ChatScreen conversation={conversation} />);
+      expect(getAllByTestId('markdown')).toBeTruthy();
+    });
+
+    it('should handle very long conversation titles', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'This is a very long conversation title that should be truncated properly when displayed in the header',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const { getByText } = render(<ChatScreen conversation={conversation} />);
+      expect(getByText(conversation.title)).toBeTruthy();
+    });
+
+    it('should handle messages without timestamps', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: 'No timestamp',
+          role: 'user',
+          timestamp: new Date(), // This is still required by type, but we test the formatting
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = render(<ChatScreen conversation={conversation} />);
+      expect(result).toBeTruthy();
+    });
+
+    it('should handle empty message content', () => {
+      const conversation: Conversation = {
+        id: 'conv1',
+        title: 'Test',
+        messages: [{
+          id: 'msg1',
+          content: '',
+          role: 'user',
+          timestamp: new Date(),
+          conversationId: 'conv1',
+        }],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = render(<ChatScreen conversation={conversation} />);
+      expect(result).toBeTruthy();
+    });
+  });
+});

@@ -15,7 +15,7 @@ import Markdown from 'react-native-markdown-display';
 import * as WebBrowser from 'expo-web-browser';
 import { ForestColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
-import type { Conversation, Message, AgentStatus, AgentType } from '../types';
+import type { Conversation, Message, AgentStatus } from '../types';
 
 interface ChatScreenProps {
   conversation: Conversation | null;
@@ -179,7 +179,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             duration: 1000,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     } else {
       agentPulseAnim.setValue(1);
@@ -201,12 +201,12 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             duration: 1000,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
     };
 
     const hasStreamingMessage = conversation?.messages.some(
-      m => m.status === 'streaming' || m.status === 'pending'
+      m => m.status === 'streaming' || m.status === 'pending',
     );
 
     if (hasStreamingMessage) {
@@ -715,10 +715,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  headerAvatar: {
-    backgroundColor: ForestColors.brandPrimary,
-    marginRight: 12,
   },
   headerTextContainer: {
     flex: 1,

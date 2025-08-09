@@ -7,6 +7,7 @@ import {
   endSpan,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
+import { metrics } from '../metrics/prometheus';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -73,7 +74,15 @@ export class ResponseValidator {
 
     try {
       const issues: ValidationIssue[] = [];
-      const metrics = this.calculateMetrics(aiResponse);
+      let metrics: ValidationMetrics;
+      
+      // Calculate metrics first and handle potential errors
+      try {
+        metrics = this.calculateMetrics(aiResponse);
+      } catch (error) {
+        console.error('Error calculating metrics:', error);
+        throw error; // Re-throw to be caught by outer catch
+      }
 
       // Content validation
       addSpanEvent(validationSpan, 'validation.content_check_start');
@@ -159,7 +168,22 @@ export class ResponseValidator {
       setSpanStatus(validationSpan, false, (error as Error).message);
       endSpan(validationSpan);
 
-      // Return fallback validation result
+      // Return fallback validation result with fallback metrics
+      let fallbackMetrics: ValidationMetrics;
+      try {
+        fallbackMetrics = this.calculateMetrics(aiResponse);
+      } catch (metricsError) {
+        // If even metrics calculation fails, return default metrics
+        fallbackMetrics = {
+          responseLength: aiResponse.length,
+          sentenceCount: 0,
+          readabilityScore: 0,
+          technicalAccuracy: 0,
+          appropriatenessScore: 0,
+          coherenceScore: 0,
+        };
+      }
+
       return {
         isValid: false,
         score: 0,
@@ -171,7 +195,7 @@ export class ResponseValidator {
             suggestion: 'System encountered an error during validation',
           },
         ],
-        metrics: this.calculateMetrics(aiResponse),
+        metrics: fallbackMetrics,
       };
     }
   }
@@ -202,10 +226,14 @@ export class ResponseValidator {
     }
 
     // Check for repetitive content
-    const words = response.toLowerCase().split(/\s+/);
+    const words = response.toLowerCase().split(/\s+/).filter(w => w.length > 3);
     const wordCounts = new Map<string, number>();
     words.forEach(word => {
-      wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+      // Clean word of punctuation
+      const cleanWord = word.replace(/[^\w]/g, '');
+      if (cleanWord.length > 3) {
+        wordCounts.set(cleanWord, (wordCounts.get(cleanWord) || 0) + 1);
+      }
     });
 
     const repeatedWords = Array.from(wordCounts.entries()).filter(
@@ -300,15 +328,18 @@ export class ResponseValidator {
     });
 
     // Check for overly casual tone in support context
-    const overlyFamiliarPatterns = [
-      /\b(bro|dude|buddy|mate)\b/i,
-      /\b(totally|awesome|cool)\b/i,
+    const overlyFamiliarWords = [
+      'bro', 'dude', 'buddy', 'mate', 'totally', 'awesome', 'cool'
     ];
 
     let casualCount = 0;
-    overlyFamiliarPatterns.forEach(pattern => {
-      if (pattern.test(response)) {
-        casualCount++;
+    const lowerResponse = response.toLowerCase();
+    
+    overlyFamiliarWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'g');
+      const matches = lowerResponse.match(regex);
+      if (matches) {
+        casualCount += matches.length;
       }
     });
 
@@ -518,9 +549,8 @@ export class ResponseValidator {
     const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
 
     if (sentences.length === 0) return 0;
-    if (sentences.length === 1) return 1;
 
-    let coherenceScore = 1;
+    let coherenceScore = 0.8; // Start with base score
 
     // Check for transition words/phrases
     const transitions = [
@@ -539,11 +569,48 @@ export class ResponseValidator {
       response.toLowerCase().includes(transition)
     );
 
-    if (hasTransitions) coherenceScore += 0.1;
+    if (hasTransitions) coherenceScore += 0.2;
 
     // Penalize for very long sentences (may indicate run-on)
     const avgSentenceLength = response.length / sentences.length;
-    if (avgSentenceLength > 150) coherenceScore -= 0.2;
+    if (avgSentenceLength > 150) {
+      coherenceScore -= 0.4;
+    }
+
+    // For very long single sentences, apply additional penalty
+    if (sentences.length === 1 && avgSentenceLength > 100) {
+      coherenceScore -= 0.3;
+    }
+
+    // Penalize for excessive repetition within the response
+    const words = response.toLowerCase().split(/\s+/);
+    const uniqueWords = new Set(words);
+    const repetitionRatio = words.length / uniqueWords.size;
+    
+    if (repetitionRatio > 2) {
+      coherenceScore -= 0.3;
+    }
+
+    // Reward proper sentence structure
+    let properSentences = 0;
+    sentences.forEach(sentence => {
+      const trimmed = sentence.trim();
+      if (trimmed.match(/^[A-Z]/) && trimmed.length > 5) {
+        properSentences++;
+      }
+    });
+    
+    const properSentenceRatio = properSentences / sentences.length;
+    coherenceScore += (properSentenceRatio - 0.5) * 0.2;
+
+    // For single sentences, be more strict about coherence
+    if (sentences.length === 1) {
+      // Check if the sentence is overly complex or has poor structure
+      const words = sentences[0].trim().split(/\s+/);
+      if (words.length > 50) { // Very long sentences tend to be less coherent
+        coherenceScore -= 0.2;
+      }
+    }
 
     return Math.max(0, Math.min(1, coherenceScore));
   }
@@ -585,6 +652,60 @@ export class ResponseValidator {
     if (this.validationLogs.length > this.maxLogSize) {
       this.validationLogs = this.validationLogs.slice(-this.maxLogSize);
     }
+
+    // Emit Prometheus metrics
+    const { agentType, validationResult, isProactive } = log;
+    const proactiveLabel = isProactive ? 'true' : 'false';
+    const resultLabel = validationResult.isValid ? 'pass' : 'fail';
+
+    // Validation checks counter
+    metrics.validationChecks.inc({
+      agent_type: agentType,
+      result: resultLabel,
+      proactive: proactiveLabel,
+    });
+
+    // Validation score histogram
+    metrics.validationScores.observe(
+      {
+        agent_type: agentType,
+        proactive: proactiveLabel,
+      },
+      validationResult.score
+    );
+
+    // Response length histogram
+    metrics.validationResponseLength.observe(
+      { agent_type: agentType },
+      validationResult.metrics.responseLength
+    );
+
+    // Quality metrics histograms
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'readability' },
+      validationResult.metrics.readabilityScore
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'technical_accuracy' },
+      validationResult.metrics.technicalAccuracy
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'appropriateness' },
+      validationResult.metrics.appropriatenessScore
+    );
+    metrics.validationMetrics.observe(
+      { agent_type: agentType, metric_type: 'coherence' },
+      validationResult.metrics.coherenceScore
+    );
+
+    // Issues counter - count each issue by type and severity
+    validationResult.issues.forEach(issue => {
+      metrics.validationIssues.inc({
+        agent_type: agentType,
+        severity: issue.severity,
+        issue_type: issue.type,
+      });
+    });
 
     // Console log for monitoring
     console.log(

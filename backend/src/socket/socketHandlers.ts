@@ -102,7 +102,7 @@ const executeProactiveAction = async (
     setTimeout(async () => {
       try {
         const queuedActions = await agentService.getQueuedActions(socket.id);
-        if (queuedActions.length > 0) {
+        if (queuedActions && queuedActions.length > 0) {
           console.log(
             `🎯 Processing ${queuedActions.length} queued actions for user ${socket.id}`
           );

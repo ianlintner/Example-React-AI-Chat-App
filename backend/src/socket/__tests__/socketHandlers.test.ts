@@ -16,6 +16,16 @@ jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid'),
 }));
 
+// Mock inline require for uuid in socket handler
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid'),
+}));
+
+// Store references to cleanup intervals
+const mockIntervals: NodeJS.Timeout[] = [];
+const originalSetInterval = global.setInterval;
+const originalClearInterval = global.clearInterval;
+
 describe('Socket Handlers', () => {
   jest.setTimeout(10000);
   
@@ -56,6 +66,12 @@ describe('Socket Handlers', () => {
     (agentService.getUserGoalState as jest.Mock).mockReturnValue(null);
     (agentService.getCurrentAgent as jest.Mock).mockReturnValue('general');
     (agentService.getAvailableAgents as jest.Mock).mockReturnValue(['general', 'joke']);
+    (agentService.getQueuedActions as jest.Mock).mockResolvedValue([]); // Return empty array to prevent undefined error
+    (agentService.executeProactiveAction as jest.Mock).mockResolvedValue({
+      content: 'Proactive response',
+      agentUsed: 'joke',
+      confidence: 0.9,
+    });
     (agentService.processMessageWithBothSystems as jest.Mock).mockResolvedValue({
       content: 'Test response',
       agentUsed: 'general',
@@ -102,6 +118,14 @@ describe('Socket Handlers', () => {
     jest.clearAllTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
+    
+    // Cleanup any console spy if it exists
+    if (jest.isMockFunction(console.log)) {
+      (console.log as jest.Mock).mockRestore();
+    }
+    if (jest.isMockFunction(console.error)) {
+      (console.error as jest.Mock).mockRestore();
+    }
   });
 
   describe('setupSocketHandlers', () => {

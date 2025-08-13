@@ -3,6 +3,63 @@ import { AgentService } from '../../agents/agentService';
 import { RAGService } from '../../agents/ragService';
 import { ConversationManager } from '../../agents/conversationManager';
 import { Message } from '../../types';
+// Mock the OpenAI module
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      chat: {
+        completions: {
+          create: jest.fn().mockImplementation(async (params: any) => {
+            const message = params.messages[0]?.content || '';
+            let agentType = 'general';
+            if (message.includes('joke')) {
+              agentType = 'joke';
+            } else if (message.includes('debug') || message.includes('React')) {
+              agentType = 'website_support';
+            } else if (message.includes('fact') || message.includes('space')) {
+              agentType = 'trivia';
+            } else if (message.includes('gif')) {
+              agentType = 'gif';
+            }
+
+            // Simulate a classification response
+            if (
+              params.messages.some((m: any) =>
+                m.content.includes('Classify the user message'),
+              )
+            ) {
+              return Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content: JSON.stringify({
+                        agent: agentType,
+                        confidence: 0.9,
+                      }),
+                    },
+                  },
+                ],
+              });
+            }
+
+            // Simulate a content generation response
+            return Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content: `This is a mock response for the ${agentType} agent.`,
+                  },
+                },
+              ],
+            });
+          }),
+        },
+      },
+    };
+  });
+});
 
 describe('Agent Flow Integration Tests', () => {
   let agentService: AgentService;
@@ -37,7 +94,7 @@ describe('Agent Flow Integration Tests', () => {
         [],
         undefined,
         undefined,
-        'user123'
+        'user123',
       );
       expect(response).toHaveProperty('content');
       expect(response).toHaveProperty('agentUsed');
@@ -58,7 +115,7 @@ describe('Agent Flow Integration Tests', () => {
         [],
         undefined,
         undefined,
-        'user123'
+        'user123',
       );
       expect(response).toHaveProperty('content');
       expect(response.agentUsed).toBe('website_support');
@@ -84,7 +141,7 @@ describe('Agent Flow Integration Tests', () => {
         [],
         undefined,
         undefined,
-        'user123'
+        'user123',
       );
       expect(response).toHaveProperty('content');
       // May fall back to general if OpenAI API fails in test environment
@@ -111,7 +168,7 @@ describe('Agent Flow Integration Tests', () => {
         [],
         undefined,
         undefined,
-        'user123'
+        'user123',
       );
       expect(response).toHaveProperty('content');
       expect(response.agentUsed).toBe('gif');
@@ -130,7 +187,7 @@ describe('Agent Flow Integration Tests', () => {
       // Process message with conversation management
       const response = await agentService.processMessageWithConversation(
         userId,
-        'Tell me a joke'
+        'Tell me a joke',
       );
       expect(response).toHaveProperty('content');
       // May fall back to general if OpenAI API fails in test environment
@@ -152,7 +209,7 @@ describe('Agent Flow Integration Tests', () => {
       // Request joke - should trigger handoff
       const response1 = await agentService.processMessageWithConversation(
         userId,
-        'Tell me a joke'
+        'Tell me a joke',
       );
       // May or may not have handoffInfo depending on API availability
       if (response1.handoffInfo) {
@@ -163,7 +220,7 @@ describe('Agent Flow Integration Tests', () => {
       // Process another message - should now use joke agent (or general if API fails)
       const response2 = await agentService.processMessageWithConversation(
         userId,
-        'Make me laugh'
+        'Make me laugh',
       );
       expect(['joke', 'general']).toContain(response2.agentUsed);
     });
@@ -179,7 +236,7 @@ describe('Agent Flow Integration Tests', () => {
         userId,
         'That was great! Thanks!',
         'Glad you enjoyed it!',
-        'joke'
+        'joke',
       );
 
       const context = conversationManager.getContext(userId);
@@ -217,7 +274,7 @@ describe('Agent Flow Integration Tests', () => {
         const ragContent = ragService.searchForAgent(
           testCase.expectedAgent as any,
           testCase.message,
-          true
+          true,
         );
 
         if (ragContent) {
@@ -237,7 +294,7 @@ describe('Agent Flow Integration Tests', () => {
           expect(
             validCategories[
               testCase.expectedCategory as keyof typeof validCategories
-            ] || [testCase.expectedCategory]
+            ] || [testCase.expectedCategory],
           ).toContain(ragContent.category);
         }
       }
@@ -250,14 +307,14 @@ describe('Agent Flow Integration Tests', () => {
       const classification = await classifyMessage(obscureMessage);
       // Classification can vary based on keywords, accept any valid agent type
       expect(['general', 'website_support', 'joke', 'trivia', 'gif']).toContain(
-        classification.agentType
+        classification.agentType,
       );
 
       // Should still get some content (fallback)
       const ragContent = ragService.searchForAgent(
         'joke',
         obscureMessage,
-        true
+        true,
       );
       // May or may not return content depending on search results
       if (ragContent) {
@@ -274,7 +331,7 @@ describe('Agent Flow Integration Tests', () => {
         [],
         undefined,
         undefined,
-        'user123'
+        'user123',
       );
       expect(response).toHaveProperty('content');
       expect(response).toHaveProperty('agentUsed');
@@ -290,7 +347,7 @@ describe('Agent Flow Integration Tests', () => {
           [],
           undefined,
           undefined,
-          'user123'
+          'user123',
         );
         expect(response).toHaveProperty('content');
         expect(response.content).toBeTruthy();
@@ -303,7 +360,7 @@ describe('Agent Flow Integration Tests', () => {
       // Force error condition by trying to use non-existent context
       const response = await agentService.processMessageWithConversation(
         userId,
-        'Hello'
+        'Hello',
       );
       expect(response).toHaveProperty('content');
       expect(response.content).toBeTruthy();
@@ -330,7 +387,7 @@ describe('Agent Flow Integration Tests', () => {
         'I need help with coding',
         [],
         undefined,
-        'conv123'
+        'conv123',
       );
 
       expect(response).toHaveProperty('content');
@@ -352,7 +409,7 @@ describe('Agent Flow Integration Tests', () => {
         userId,
         'Tell me a joke',
         [],
-        'conv456'
+        'conv456',
       );
 
       expect(response).toHaveProperty('content');

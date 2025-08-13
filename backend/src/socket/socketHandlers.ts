@@ -7,12 +7,10 @@ import { GoalAction } from '../agents/goalSeekingSystem';
 import { metrics } from '../metrics/prometheus';
 import {
   createConversationSpan,
-  createAgentSpan,
   createGoalSeekingSpan,
   addSpanEvent,
   setSpanStatus,
   endSpan,
-  context,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
 
@@ -29,18 +27,18 @@ const executeProactiveAction = async (
   action: GoalAction,
   conversation: Conversation,
   socket: any,
-  io: Server
-) => {
+  io: Server,
+): Promise<void> => {
   try {
     console.log(
-      `🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`
+      `🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`,
     );
 
     // Execute the proactive action using the agent service with single-agent control
     const proactiveResponse = await agentService.executeProactiveAction(
       socket.id,
       action,
-      conversation.messages
+      conversation.messages,
     );
 
     // Validate the proactive response
@@ -53,15 +51,15 @@ const executeProactiveAction = async (
         proactiveResponse.content,
         conversation.id,
         socket.id,
-        true // This is a proactive message
-      )
+        true, // This is a proactive message
+      ),
     );
 
     // Log validation for proactive messages
     if (validationResult.issues.length > 0) {
       console.warn(
         `⚠️ Proactive validation issues for ${proactiveResponse.agentUsed}:`,
-        validationResult.issues
+        validationResult.issues,
       );
     }
 
@@ -92,26 +90,26 @@ const executeProactiveAction = async (
 
     console.log(
       `📤 Emitting proactive_message to socket ${socket.id}:`,
-      JSON.stringify(proactiveData, null, 2)
+      JSON.stringify(proactiveData, null, 2),
     );
     socket.emit('proactive_message', proactiveData);
 
     console.log(`✅ Proactive action completed: ${action.type}`);
 
     // Process any queued actions after a delay
-    setTimeout(async () => {
+    const processQueuedTimeout = setTimeout(async () => {
       try {
         const queuedActions = await agentService.getQueuedActions(socket.id);
-        if (queuedActions.length > 0) {
+        if (queuedActions && queuedActions.length > 0) {
           console.log(
-            `🎯 Processing ${queuedActions.length} queued actions for user ${socket.id}`
+            `🎯 Processing ${queuedActions.length} queued actions for user ${socket.id}`,
           );
           for (const queuedAction of queuedActions) {
             await executeProactiveAction(
               queuedAction,
               conversation,
               socket,
-              io
+              io,
             );
           }
         }
@@ -119,6 +117,8 @@ const executeProactiveAction = async (
         console.error('Error processing queued actions:', error);
       }
     }, 2000); // 2 second delay to ensure current action is fully processed
+    // Prevent keeping the event loop alive in tests
+    (processQueuedTimeout as any).unref?.();
   } catch (error) {
     console.error('Error executing proactive action:', error);
 
@@ -138,10 +138,18 @@ const executeProactiveAction = async (
   }
 };
 
-export const setupSocketHandlers = (io: Server) => {
+export const setupSocketHandlers = (
+  io: Server,
+): {
+  emitToConversation: (
+    conversationId: string,
+    event: string,
+    data: any,
+  ) => void;
+} => {
   console.log(
     'OpenAI API Key status:',
-    process.env.OPENAI_API_KEY ? 'Present' : 'Missing'
+    process.env.OPENAI_API_KEY ? 'Present' : 'Missing',
   );
 
   io.on('connection', socket => {
@@ -154,10 +162,10 @@ export const setupSocketHandlers = (io: Server) => {
     agentService.initializeUserGoals(socket.id);
 
     // Enhanced agent status with proactive context polling
-    const sendAgentStatus = () => {
+    const sendAgentStatus = (): void => {
       const activeAgent = agentService.getActiveAgentInfo(socket.id);
       const conversationContext = agentService.getConversationContext(
-        socket.id
+        socket.id,
       );
       const goalState = agentService.getUserGoalState(socket.id);
 
@@ -171,7 +179,7 @@ export const setupSocketHandlers = (io: Server) => {
           // 2 minutes
           conversationContext.userSatisfaction = Math.max(
             0.3,
-            conversationContext.userSatisfaction - 0.02
+            conversationContext.userSatisfaction - 0.02,
           );
         }
 
@@ -187,7 +195,7 @@ export const setupSocketHandlers = (io: Server) => {
             conversationContext.handoffReason =
               'Extended idle time - offering entertainment while waiting';
             console.log(
-              `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`
+              `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`,
             );
           }
         }
@@ -212,13 +220,13 @@ export const setupSocketHandlers = (io: Server) => {
         // Auto-activate entertainment goal if user seems bored (low engagement)
         if (goalState.engagementLevel < 0.4) {
           const entertainmentGoal = goalState.goals.find(
-            g => g.type === 'entertainment'
+            g => g.type === 'entertainment',
           );
           if (entertainmentGoal && !entertainmentGoal.active) {
             entertainmentGoal.active = true;
             entertainmentGoal.lastUpdated = new Date();
             console.log(
-              `🎯 Auto-activated entertainment goal for low-engagement user ${socket.id}`
+              `🎯 Auto-activated entertainment goal for low-engagement user ${socket.id}`,
             );
           }
         }
@@ -231,7 +239,7 @@ export const setupSocketHandlers = (io: Server) => {
           // Gradually increase boredom/decrease engagement if no interaction
           goalState.engagementLevel = Math.max(
             0.1,
-            goalState.engagementLevel - 0.05
+            goalState.engagementLevel - 0.05,
           );
           goalState.lastUpdated = new Date();
         }
@@ -255,7 +263,7 @@ export const setupSocketHandlers = (io: Server) => {
                 Date.now() - conversationContext.lastMessageTime.getTime(),
               idleTime: Math.floor(
                 (Date.now() - conversationContext.lastMessageTime.getTime()) /
-                  1000
+                  1000,
               ),
             }
           : null,
@@ -283,29 +291,35 @@ export const setupSocketHandlers = (io: Server) => {
       };
 
       console.log(
-        `📊 Polling agent status for ${socket.id}: Agent=${agentStatus.currentAgent}, Active=${agentStatus.isActive}, Satisfaction=${agentStatus.conversationContext?.userSatisfaction?.toFixed(2)}, Engagement=${agentStatus.goalState?.engagementLevel?.toFixed(2)}`
+        `📊 Polling agent status for ${socket.id}: Agent=${agentStatus.currentAgent}, Active=${agentStatus.isActive}, Satisfaction=${agentStatus.conversationContext?.userSatisfaction?.toFixed(2)}, Engagement=${agentStatus.goalState?.engagementLevel?.toFixed(2)}`,
       );
 
       socket.emit('agent_status_update', agentStatus);
     };
 
+    // Track timeouts for cleanup
+    const timeouts: NodeJS.Timeout[] = [];
+
     // Send initial status after connection
-    setTimeout(() => {
+    const initialStatusTimeout = setTimeout(() => {
       sendAgentStatus();
     }, 500);
+    // Prevent keeping the event loop alive in tests
+    (initialStatusTimeout as any).unref?.();
+    timeouts.push(initialStatusTimeout);
 
     // Set up periodic agent status updates (every 5 seconds)
     const statusInterval = setInterval(() => {
       sendAgentStatus();
     }, 5000);
+    // Prevent keeping the event loop alive in tests
+    (statusInterval as any).unref?.();
 
-    // Clear interval on disconnect
-    socket.on('disconnect', () => {
-      clearInterval(statusInterval);
-    });
+    // Store intervals for cleanup
+    const intervals = [statusInterval];
 
     // Initialize user state for goal-seeking system and hold agent
-    setTimeout(async () => {
+    const initStateTimeout = setTimeout(async () => {
       try {
         console.log(`🎯 Initializing user state for ${socket.id}`);
 
@@ -320,7 +334,7 @@ export const setupSocketHandlers = (io: Server) => {
 
           // Activate entertainment goal
           const entertainmentGoal = userState.goals.find(
-            g => g.type === 'entertainment'
+            g => g.type === 'entertainment',
           );
           if (entertainmentGoal) {
             entertainmentGoal.active = true;
@@ -361,27 +375,27 @@ export const setupSocketHandlers = (io: Server) => {
                 // User is no longer with hold agent, clear interval
                 clearInterval(holdUpdateInterval);
                 console.log(
-                  `⏰ Clearing hold update interval for ${socket.id} - no longer with hold agent`
+                  `⏰ Clearing hold update interval for ${socket.id} - no longer with hold agent`,
                 );
               }
             } catch (error) {
               console.error('Error sending hold update:', error);
             }
           },
-          10 * 60 * 1000
+          10 * 60 * 1000,
         ); // 10 minutes
+        // Prevent keeping the event loop alive in tests
+        (holdUpdateInterval as any).unref?.();
 
-        // Clear interval when user disconnects
-        socket.on('disconnect', () => {
-          clearInterval(holdUpdateInterval);
-          console.log(
-            `⏰ Cleared hold update interval for disconnected user ${socket.id}`
-          );
-        });
+        // Store the holdUpdateInterval for cleanup
+        intervals.push(holdUpdateInterval);
       } catch (error) {
         console.error('Error initializing user state:', error);
       }
     }, 500); // Initialize state quickly
+    // Prevent keeping the event loop alive in tests
+    (initStateTimeout as any).unref?.();
+    timeouts.push(initStateTimeout);
 
     // Join a conversation room
     socket.on('join_conversation', (conversationId: string) => {
@@ -404,7 +418,7 @@ export const setupSocketHandlers = (io: Server) => {
           userName: data.userName || 'Anonymous',
           isTyping: true,
         });
-      }
+      },
     );
 
     socket.on('typing_stop', (data: { conversationId: string }) => {
@@ -423,7 +437,7 @@ export const setupSocketHandlers = (io: Server) => {
           status: 'read',
           readBy: socket.id,
         });
-      }
+      },
     );
 
     // Handle streaming chat messages
@@ -438,13 +452,13 @@ export const setupSocketHandlers = (io: Server) => {
       const conversationSpan = createConversationSpan(
         data.conversationId || 'new',
         'stream_chat',
-        socket.id
+        socket.id,
       );
 
       // Use context manager to ensure proper trace propagation
       await tracingContextManager.withSpan(
         conversationSpan,
-        async (span, traceContext) => {
+        async (span, _traceContext) => {
           addSpanEvent(span, 'chat_request_received', {
             'user.socket_id': socket.id,
             'message.length': data.message?.length || 0,
@@ -495,7 +509,7 @@ export const setupSocketHandlers = (io: Server) => {
               // Automatically join the socket to the new conversation room
               socket.join(conversation.id);
               console.log(
-                `Socket ${socket.id} joined conversation ${conversation.id}`
+                `Socket ${socket.id} joined conversation ${conversation.id}`,
               );
             }
 
@@ -536,7 +550,7 @@ export const setupSocketHandlers = (io: Server) => {
             const userState = agentService.getUserGoalState(socket.id);
             const goalSeekingSpan = createGoalSeekingSpan(
               conversation.id,
-              userState
+              userState,
             );
             addSpanEvent(goalSeekingSpan, 'goal_seeking_started', {
               'user.socket_id': socket.id,
@@ -548,7 +562,7 @@ export const setupSocketHandlers = (io: Server) => {
 
             // Process message with both conversation management and goal-seeking systems
             console.log(
-              '🤖 Processing message with conversation management and goal-seeking systems...'
+              '🤖 Processing message with conversation management and goal-seeking systems...',
             );
 
             // Track chat message and agent response time
@@ -564,14 +578,14 @@ export const setupSocketHandlers = (io: Server) => {
                 message,
                 conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
                 conversation.id, // Pass conversation ID for validation
-                forceAgent
+                forceAgent,
               );
 
             // Track agent response time and success
             const responseTime = (Date.now() - responseStart) / 1000;
             metrics.agentResponseTime.observe(
               { agent_type: agentResponse.agentUsed, success: 'true' },
-              responseTime
+              responseTime,
             );
             metrics.chatMessagesTotal.inc({
               type: 'assistant',
@@ -592,19 +606,19 @@ export const setupSocketHandlers = (io: Server) => {
             endSpan(goalSeekingSpan);
 
             console.log(
-              `✅ Dual system processing completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`
+              `✅ Dual system processing completed. Agent used: ${agentResponse.agentUsed}, Confidence: ${agentResponse.confidence}`,
             );
 
             // Log conversation context if available
             if (agentResponse.conversationContext) {
               const ctx = agentResponse.conversationContext;
               console.log(
-                `💬 Conversation context - Agent: ${ctx.currentAgent}, Topic: ${ctx.conversationTopic}, Depth: ${ctx.conversationDepth}, Satisfaction: ${ctx.userSatisfaction.toFixed(2)}, Performance: ${ctx.agentPerformance.toFixed(2)}`
+                `💬 Conversation context - Agent: ${ctx.currentAgent}, Topic: ${ctx.conversationTopic}, Depth: ${ctx.conversationDepth}, Satisfaction: ${ctx.userSatisfaction.toFixed(2)}, Performance: ${ctx.agentPerformance.toFixed(2)}`,
               );
 
               if (ctx.shouldHandoff) {
                 console.log(
-                  `🔄 Handoff needed: ${ctx.currentAgent} → ${ctx.handoffTarget} (${ctx.handoffReason})`
+                  `🔄 Handoff needed: ${ctx.currentAgent} → ${ctx.handoffTarget} (${ctx.handoffReason})`,
                 );
               }
             }
@@ -648,9 +662,12 @@ export const setupSocketHandlers = (io: Server) => {
             });
 
             // Send agent status update after message processing
-            setTimeout(() => {
+            const postProcessTimeout = setTimeout(() => {
               sendAgentStatus();
             }, 100);
+            // Prevent keeping the event loop alive in tests
+            (postProcessTimeout as any).unref?.();
+            timeouts.push(postProcessTimeout);
 
             // Handle proactive actions from goal-seeking system
             if (
@@ -658,13 +675,13 @@ export const setupSocketHandlers = (io: Server) => {
               agentResponse.proactiveActions.length > 0
             ) {
               console.log(
-                `🎯 Processing ${agentResponse.proactiveActions.length} proactive actions...`
+                `🎯 Processing ${agentResponse.proactiveActions.length} proactive actions...`,
               );
 
               addSpanEvent(conversationSpan, 'proactive_actions_started', {
                 'actions.count': agentResponse.proactiveActions.length,
                 'actions.types': agentResponse.proactiveActions.map(
-                  a => a.type
+                  a => a.type,
                 ),
               });
 
@@ -675,18 +692,21 @@ export const setupSocketHandlers = (io: Server) => {
                     action,
                     conversation,
                     socket,
-                    io
+                    io,
                   );
                 } else if (action.timing === 'delayed' && action.delayMs) {
                   // Schedule delayed action
-                  setTimeout(async () => {
+                  const delayedActionTimeout = setTimeout(async () => {
                     await executeProactiveAction(
                       action,
                       conversation,
                       socket,
-                      io
+                      io,
                     );
                   }, action.delayMs);
+                  // Prevent keeping the event loop alive in tests
+                  (delayedActionTimeout as any).unref?.();
+                  timeouts.push(delayedActionTimeout);
                 }
               }
             }
@@ -695,12 +715,12 @@ export const setupSocketHandlers = (io: Server) => {
             const userGoalState = agentService.getUserGoalState(socket.id);
             if (userGoalState) {
               console.log(
-                `🎯 User ${socket.id} state: ${userGoalState.currentState}, engagement: ${userGoalState.engagementLevel}, satisfaction: ${userGoalState.satisfactionLevel}`
+                `🎯 User ${socket.id} state: ${userGoalState.currentState}, engagement: ${userGoalState.engagementLevel}, satisfaction: ${userGoalState.satisfactionLevel}`,
               );
               const activeGoals = userGoalState.goals.filter(g => g.active);
               if (activeGoals.length > 0) {
                 console.log(
-                  `🎯 Active goals: ${activeGoals.map(g => g.type).join(', ')}`
+                  `🎯 Active goals: ${activeGoals.map(g => g.type).join(', ')}`,
                 );
               }
             }
@@ -726,7 +746,7 @@ export const setupSocketHandlers = (io: Server) => {
             setSpanStatus(
               span,
               false,
-              error instanceof Error ? error.message : 'Unknown error'
+              error instanceof Error ? error.message : 'Unknown error',
             );
 
             socket.emit('stream_error', {
@@ -734,13 +754,18 @@ export const setupSocketHandlers = (io: Server) => {
               code: 'INTERNAL_ERROR',
             });
           }
-        }
+        },
       );
     });
 
     // Handle disconnection
     socket.on('disconnect', () => {
       console.log(`Client disconnected: ${socket.id}`);
+
+      // Clear all intervals
+      intervals.forEach(clearInterval);
+      // Clear all timeouts
+      timeouts.forEach(clearTimeout);
 
       // Track WebSocket disconnection metrics
       metrics.activeConnections.dec();
@@ -756,8 +781,8 @@ export const setupSocketHandlers = (io: Server) => {
   const emitToConversation = (
     conversationId: string,
     event: string,
-    data: any
-  ) => {
+    data: any,
+  ): void => {
     io.to(conversationId).emit(event, data);
   };
 

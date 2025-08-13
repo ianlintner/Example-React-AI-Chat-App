@@ -33,7 +33,7 @@ export const generateTestTraces = () => {
   setTimeout(() => {
     const conversationSpan = createConversationSpan(
       'test-conversation-123',
-      'test_flow'
+      'test_flow',
     );
     conversationSpan.setAttributes({
       'test.conversation_id': 'test-conversation-123',
@@ -55,7 +55,7 @@ export const generateTestTraces = () => {
     const agentSpan = createAgentSpan(
       'test_agent',
       'test_processing',
-      'test-conversation-789'
+      'test-conversation-789',
     );
     agentSpan.setAttributes({
       'test.agent_type': 'test_agent',
@@ -151,7 +151,7 @@ export const generateTestTraces = () => {
   }, 2000);
 
   console.log(
-    '🔍 All test traces initiated, they will complete over the next few seconds...'
+    '🔍 All test traces initiated, they will complete over the next few seconds...',
   );
 };
 

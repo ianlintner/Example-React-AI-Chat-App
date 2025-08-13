@@ -21,14 +21,14 @@ describe('ThemedView', () => {
 
   it('passes through other props', () => {
     const { getByTestId } = render(
-      <ThemedView testID="themed-view" accessible={true} />
+      <ThemedView testID='themed-view' accessible={true} />,
     );
     expect(getByTestId('themed-view')).toBeTruthy();
   });
 
   it('handles light and dark color props', () => {
     const { toJSON } = render(
-      <ThemedView lightColor="#FFFFFF" darkColor="#000000" />
+      <ThemedView lightColor='#FFFFFF' darkColor='#000000' />,
     );
     expect(toJSON()).toBeTruthy();
   });

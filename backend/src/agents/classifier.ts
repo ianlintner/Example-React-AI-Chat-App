@@ -50,117 +50,76 @@ Examples:
 Message to classify: "{message}"`;
 
 export async function classifyMessage(
-  message: string
+  message: string,
 ): Promise<MessageClassification> {
   // Fallback classification using simple keyword matching
   const fallbackClassification = (): MessageClassification => {
     const technicalKeywords = [
       'code',
+      'coding',
       'programming',
       'debug',
-      'error',
-      'bug',
-      'api',
-      'database',
-      'sql',
+      'debugging',
+      'syntax error',
+      'runtime error',
+      'compilation error',
+      'bug fix',
+      'fix this code',
+      'help me code',
+      'help me debug',
+      'help me program',
       'javascript',
       'python',
+      'react component',
       'react',
-      'node',
+      'node.js',
+      'nodejs',
+      'css styling',
       'css',
       'html',
-      'function',
-      'variable',
-      'array',
-      'object',
-      'class',
-      'method',
+      'web framework',
       'framework',
-      'library',
+      'code library',
+      'programming library',
       'algorithm',
       'data structure',
-      'server',
-      'client',
-      'frontend',
-      'backend',
-      'deployment',
-      'git',
+      'frontend development',
+      'backend development',
+      'git repository',
       'github',
-      'repository',
-      'commit',
-      'merge',
-      'branch',
+      'code repository',
+      'git commit',
       'typescript',
+      'npm package',
+      'npm install',
       'npm',
       'yarn',
-      'package',
-      'dependency',
-      'import',
-      'export',
-      'component',
-      'props',
-      'state',
-      'hook',
       'redux',
       'axios',
-      'fetch',
-      'async',
-      'await',
+      'async await',
       'promise',
-      'callback',
-      'event',
-      'listener',
-      'dom',
-      'element',
-      'selector',
-      'query',
-      'database',
-      'schema',
-      'table',
-      'index',
-      'join',
-      'docker',
-      'kubernetes',
-      'aws',
-      'azure',
-      'gcp',
-      'cloud',
-      'microservice',
-      'rest',
-      'graphql',
-      'websocket',
-      'http',
-      'https',
-      'ssl',
-      'tls',
-      'cors',
-      'authentication',
-      'authorization',
-      'jwt',
-      'oauth',
-      'session',
-      'cookie',
+      'callback function',
+      'dom manipulation',
       'webpack',
       'babel',
       'eslint',
       'prettier',
-      'jest',
-      'testing',
+      'jest testing',
       'unit test',
       'integration test',
       'ci/cd',
       'devops',
-      'linux',
-      'unix',
-      'bash',
-      'shell',
-      'terminal',
-      'command line',
-      'regex',
-      'json',
-      'xml',
-      'yaml',
-      'markdown',
+      'docker container',
+      'docker',
+      'kubernetes',
+      'rest api',
+      'api endpoint',
+      'graphql',
+      'websocket',
+      'jwt token',
+      'oauth',
+      'regex pattern',
+      'regular expression',
     ];
 
     const dadJokeKeywords = [
@@ -191,48 +150,33 @@ export async function classifyMessage(
 
     const triviaKeywords = [
       'trivia',
-      'fact',
-      'facts',
       'fun fact',
       'fun facts',
       'random fact',
       'random facts',
       'did you know',
+      'interesting',
       'interesting fact',
-      'tell me about',
-      'what is',
-      'history',
-      'science',
-      'nature',
-      'space',
-      'animals',
-      'geography',
-      'culture',
-      'amazing',
       'fascinating',
-      'incredible',
-      'knowledge',
-      'learn',
-      'discovery',
-      'invention',
-      'record',
-      'world record',
-      'ancient',
-      'historical',
-      'scientific',
-      'curiosity',
-      'wonder',
-      'mystery',
-      'phenomenon',
-      'unusual',
-      'weird',
-      'strange',
-      'bizarre',
+      'fascinating fact',
+      'something fascinating',
+      'tell me something fascinating',
+      'amazing fact',
       'cool fact',
-      'share knowledge',
-      'tell me something',
-      'educate me',
-      'information',
+      'weird fact',
+      'strange fact',
+      'historical fact',
+      'scientific fact',
+      'world record',
+      'share trivia',
+      'tell me trivia',
+      'give me a fact',
+      'share a fact',
+      'educate me with facts',
+      "tell me something i don't know",
+      'fascinating knowledge',
+      'share fascinating knowledge',
+      'share interesting history',
     ];
 
     const gifKeywords = [
@@ -274,22 +218,31 @@ export async function classifyMessage(
       'vibe',
     ];
 
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = message.toLowerCase().trim();
+
+    // Handle empty or whitespace-only messages
+    if (!lowerMessage) {
+      return {
+        agentType: 'general',
+        confidence: 0.5,
+        reasoning: 'No specific keywords detected, classifying as general',
+      };
+    }
 
     const technicalScore = technicalKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const dadJokeScore = dadJokeKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const triviaScore = triviaKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     const gifScore = gifKeywords.reduce((score, keyword) => {
-      return score + (lowerMessage.includes(keyword) ? 1 : 0);
+      return score + (lowerMessage.includes(keyword.toLowerCase()) ? 1 : 0);
     }, 0);
 
     // GIF has highest priority if detected
@@ -310,21 +263,21 @@ export async function classifyMessage(
       };
     }
 
-    // Trivia second priority
+    // Technical support for programming-related queries - higher priority than trivia
+    if (technicalScore > 0) {
+      return {
+        agentType: 'website_support',
+        confidence: Math.min(0.8, 0.5 + technicalScore * 0.1),
+        reasoning: `Detected ${technicalScore} technical keywords in the message`,
+      };
+    }
+
+    // Trivia has lower priority to reduce false positives
     if (triviaScore > 0) {
       return {
         agentType: 'trivia',
         confidence: Math.min(0.85, 0.55 + triviaScore * 0.1),
         reasoning: `Detected ${triviaScore} trivia keywords in the message`,
-      };
-    }
-
-    // Technical third priority - route to website support
-    if (technicalScore > 0) {
-      return {
-        agentType: 'website_support',
-        confidence: Math.min(0.8, 0.5 + technicalScore * 0.1),
-        reasoning: `Detected ${technicalScore} technical keywords in the message - routing to website support`,
       };
     }
 
@@ -363,7 +316,7 @@ export async function classifyMessage(
         } catch (parseError) {
           console.warn(
             'Failed to parse AI classification response:',
-            parseError
+            parseError,
           );
         }
       }

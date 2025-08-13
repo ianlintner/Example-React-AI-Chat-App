@@ -152,11 +152,11 @@ export class JokeLearningSystem {
     // Find best performing categories and types
     const bestCategory = this.getBestPerforming(
       categoryScores,
-      userProfile.preferredCategories
+      userProfile.preferredCategories,
     );
     const bestType = this.getBestPerforming(
       typeScores,
-      userProfile.preferredTypes
+      userProfile.preferredTypes,
     );
 
     return {
@@ -257,7 +257,7 @@ export class JokeLearningSystem {
 
   private updateUserPreferences(
     profile: UserJokeProfile,
-    reaction: UserReaction
+    reaction: UserReaction,
   ): void {
     const score = this.getReactionScore(reaction.reactionType);
 
@@ -269,7 +269,7 @@ export class JokeLearningSystem {
         }
         // Remove from disliked if present
         profile.dislikedCategories = profile.dislikedCategories.filter(
-          cat => cat !== reaction.jokeCategory
+          cat => cat !== reaction.jokeCategory,
         );
       } else if (score <= 0.3) {
         // Negative reaction - add to disliked
@@ -278,7 +278,7 @@ export class JokeLearningSystem {
         }
         // Remove from preferred if present
         profile.preferredCategories = profile.preferredCategories.filter(
-          cat => cat !== reaction.jokeCategory
+          cat => cat !== reaction.jokeCategory,
         );
       }
     }
@@ -289,14 +289,14 @@ export class JokeLearningSystem {
           profile.preferredTypes.push(reaction.jokeType);
         }
         profile.dislikedTypes = profile.dislikedTypes.filter(
-          type => type !== reaction.jokeType
+          type => type !== reaction.jokeType,
         );
       } else if (score <= 0.3) {
         if (!profile.dislikedTypes.includes(reaction.jokeType)) {
           profile.dislikedTypes.push(reaction.jokeType);
         }
         profile.preferredTypes = profile.preferredTypes.filter(
-          type => type !== reaction.jokeType
+          type => type !== reaction.jokeType,
         );
       }
     }
@@ -306,7 +306,9 @@ export class JokeLearningSystem {
   }
 
   private updateHumorStyle(profile: UserJokeProfile): void {
-    if (profile.reactionHistory.length < 5) return;
+    if (profile.reactionHistory.length < 5) {
+      return;
+    }
 
     const recentReactions = profile.reactionHistory.slice(-10);
     const categoryPreferences = new Map<string, number>();
@@ -418,7 +420,7 @@ export class JokeLearningSystem {
       const newPerf = currentPerf * 0.9 + score * 0.1; // Weighted average
       this.learningMetrics.categoryPerformance.set(
         reaction.jokeCategory,
-        newPerf
+        newPerf,
       );
     }
 
@@ -431,9 +433,11 @@ export class JokeLearningSystem {
 
   private getBestPerforming(
     scores: Map<string, number>,
-    preferences: string[]
+    preferences: string[],
   ): string | null {
-    if (scores.size === 0) return null;
+    if (scores.size === 0) {
+      return null;
+    }
 
     // Prefer user's known preferences
     for (const pref of preferences) {
@@ -458,7 +462,7 @@ export class JokeLearningSystem {
       } else {
         // Clean up old reactions
         profile.reactionHistory = profile.reactionHistory.filter(
-          reaction => reaction.timestamp > cutoff
+          reaction => reaction.timestamp > cutoff,
         );
       }
     }

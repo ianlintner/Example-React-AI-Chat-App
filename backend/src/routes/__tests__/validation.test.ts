@@ -6,7 +6,9 @@ import { responseValidator } from '../../validation/responseValidator';
 // Mock the responseValidator
 jest.mock('../../validation/responseValidator');
 
-const mockResponseValidator = responseValidator as jest.Mocked<typeof responseValidator>;
+const mockResponseValidator = responseValidator as jest.Mocked<
+  typeof responseValidator
+>;
 
 // Create Express app for testing
 const app = express();
@@ -25,9 +27,9 @@ describe('Validation Routes', () => {
         averageScore: 0.82,
         validationRate: 0.85,
         issueBreakdown: {
-          'content_high': 5,
-          'technical_medium': 8,
-          'appropriateness_low': 3,
+          content_high: 5,
+          technical_medium: 8,
+          appropriateness_low: 3,
         },
       };
 
@@ -95,12 +97,14 @@ describe('Validation Routes', () => {
         validationResult: {
           isValid: false,
           score: 0.3,
-          issues: [{ 
-            type: 'content' as const, 
-            severity: 'high' as const, 
-            message: 'Invalid format',
-            suggestion: 'Use proper format'
-          }],
+          issues: [
+            {
+              type: 'content' as const,
+              severity: 'high' as const,
+              message: 'Invalid format',
+              suggestion: 'Use proper format',
+            },
+          ],
           metrics: {
             responseLength: 50,
             sentenceCount: 1,
@@ -160,16 +164,20 @@ describe('Validation Routes', () => {
     it('should handle custom limit and offset parameters', async () => {
       mockResponseValidator.getValidationLogs.mockReturnValue(mockLogs);
 
-      const response = await request(app).get('/api/validation/logs?limit=1&offset=1');
+      const response = await request(app).get(
+        '/api/validation/logs?limit=1&offset=1',
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         success: true,
         data: {
-          logs: [{
-            ...mockLogs[1],
-            timestamp: mockLogs[1].timestamp.toISOString(),
-          }],
+          logs: [
+            {
+              ...mockLogs[1],
+              timestamp: mockLogs[1].timestamp.toISOString(),
+            },
+          ],
           total: 3,
           limit: 1,
           offset: 1,
@@ -229,12 +237,14 @@ describe('Validation Routes', () => {
         validationResult: {
           isValid: false,
           score: 0.3,
-          issues: [{ 
-            type: 'content' as const,
-            severity: 'high' as const, 
-            message: 'Invalid format',
-            suggestion: 'Use proper format'
-          }],
+          issues: [
+            {
+              type: 'content' as const,
+              severity: 'high' as const,
+              message: 'Invalid format',
+              suggestion: 'Use proper format',
+            },
+          ],
           metrics: {
             responseLength: 50,
             sentenceCount: 1,
@@ -298,7 +308,9 @@ describe('Validation Routes', () => {
     it('should handle pagination for filtered logs', async () => {
       mockResponseValidator.getValidationLogs.mockReturnValue(mockLogs);
 
-      const response = await request(app).get('/api/validation/logs/joke?limit=1&offset=0');
+      const response = await request(app).get(
+        '/api/validation/logs/joke?limit=1&offset=0',
+      );
 
       const expectedJokeLogs = mockLogs
         .filter(log => log.agentType === 'joke')
@@ -324,7 +336,9 @@ describe('Validation Routes', () => {
     it('should return empty array for non-existent agent type', async () => {
       mockResponseValidator.getValidationLogs.mockReturnValue(mockLogs);
 
-      const response = await request(app).get('/api/validation/logs/nonexistent');
+      const response = await request(app).get(
+        '/api/validation/logs/nonexistent',
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -391,12 +405,14 @@ describe('Validation Routes', () => {
         validationResult: {
           isValid: false,
           score: 0.3,
-          issues: [{ 
-            type: 'content' as const,
-            severity: 'high' as const, 
-            message: 'Invalid format',
-            suggestion: 'Use proper format'
-          }],
+          issues: [
+            {
+              type: 'content' as const,
+              severity: 'high' as const,
+              message: 'Invalid format',
+              suggestion: 'Use proper format',
+            },
+          ],
           metrics: {
             responseLength: 50,
             sentenceCount: 1,
@@ -419,12 +435,14 @@ describe('Validation Routes', () => {
         validationResult: {
           isValid: false,
           score: 0.4,
-          issues: [{ 
-            type: 'appropriateness' as const,
-            severity: 'medium' as const, 
-            message: 'Poor quality',
-            suggestion: 'Improve response quality'
-          }],
+          issues: [
+            {
+              type: 'appropriateness' as const,
+              severity: 'medium' as const,
+              message: 'Poor quality',
+              suggestion: 'Improve response quality',
+            },
+          ],
           metrics: {
             responseLength: 60,
             sentenceCount: 1,
@@ -464,7 +482,9 @@ describe('Validation Routes', () => {
     it('should handle pagination for failed validations', async () => {
       mockResponseValidator.getValidationLogs.mockReturnValue(mockLogs);
 
-      const response = await request(app).get('/api/validation/failed?limit=1&offset=0');
+      const response = await request(app).get(
+        '/api/validation/failed?limit=1&offset=0',
+      );
 
       const expectedFailedLogs = mockLogs
         .filter(log => !log.validationResult.isValid)
@@ -582,17 +602,17 @@ describe('Validation Routes', () => {
           isValid: false,
           score: 0.3,
           issues: [
-            { 
+            {
               type: 'content' as const,
-              severity: 'high' as const, 
+              severity: 'high' as const,
               message: 'Invalid format',
-              suggestion: 'Use proper format'
+              suggestion: 'Use proper format',
             },
-            { 
+            {
               type: 'appropriateness' as const,
-              severity: 'medium' as const, 
+              severity: 'medium' as const,
               message: 'Poor quality',
-              suggestion: 'Improve quality'
+              suggestion: 'Improve quality',
             },
           ],
           metrics: {
@@ -617,12 +637,14 @@ describe('Validation Routes', () => {
         validationResult: {
           isValid: true,
           score: 0.8,
-          issues: [{ 
-            type: 'technical' as const,
-            severity: 'low' as const, 
-            message: 'Minor issue',
-            suggestion: 'Minor improvement'
-          }],
+          issues: [
+            {
+              type: 'technical' as const,
+              severity: 'low' as const,
+              message: 'Minor issue',
+              suggestion: 'Minor improvement',
+            },
+          ],
           metrics: {
             responseLength: 80,
             sentenceCount: 2,

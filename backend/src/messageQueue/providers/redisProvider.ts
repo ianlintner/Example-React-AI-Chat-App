@@ -122,7 +122,7 @@ export class RedisMessageQueueProvider
   async enqueue(
     queueName: string,
     message: QueueMessage,
-    options?: QueueOptions
+    options?: QueueOptions,
   ): Promise<void> {
     if (!this.client || !this.isConnected) {
       throw new Error('Redis client is not connected');
@@ -133,9 +133,12 @@ export class RedisMessageQueueProvider
 
     // Apply options to message
     if (options) {
-      if (options.maxRetries !== undefined)
+      if (options.maxRetries !== undefined) {
         message.maxRetries = options.maxRetries;
-      if (options.priority !== undefined) message.priority = options.priority;
+      }
+      if (options.priority !== undefined) {
+        message.priority = options.priority;
+      }
     }
     message.maxRetries = message.maxRetries || 3;
     message.priority = message.priority || DEFAULT_PRIORITY;
@@ -174,12 +177,14 @@ export class RedisMessageQueueProvider
     }
 
     console.log(
-      `📨 Enqueued message ${message.id} to Redis queue ${queueName} (priority: ${message.priority})`
+      `📨 Enqueued message ${message.id} to Redis queue ${queueName} (priority: ${message.priority})`,
     );
   }
 
   private async processDelayedMessages(queueName: string): Promise<void> {
-    if (!this.client) return;
+    if (!this.client) {
+      return;
+    }
 
     const keys = this.getRedisKeys(queueName);
     const now = Date.now();
@@ -189,7 +194,7 @@ export class RedisMessageQueueProvider
       const delayedMessages = await this.client.zRangeByScore(
         `${keys.queue}:delayed`,
         0,
-        now
+        now,
       );
 
       for (const messageData of delayedMessages) {
@@ -212,7 +217,7 @@ export class RedisMessageQueueProvider
     } catch (error) {
       console.error(
         `Error processing delayed messages for ${queueName}:`,
-        error
+        error,
       );
     }
   }
@@ -238,7 +243,7 @@ export class RedisMessageQueueProvider
       await this.client.setEx(
         `${keys.processing}:${message.id}`,
         MESSAGE_PROCESSING_EXPIRY_SECONDS,
-        JSON.stringify(message)
+        JSON.stringify(message),
       );
 
       // Update stats
@@ -248,7 +253,7 @@ export class RedisMessageQueueProvider
       this.processingMessages.set(message.id, message);
 
       console.log(
-        `📨 Dequeued message ${message.id} from Redis queue ${queueName}`
+        `📨 Dequeued message ${message.id} from Redis queue ${queueName}`,
       );
       return message;
     } catch (error) {
@@ -295,11 +300,11 @@ export class RedisMessageQueueProvider
         if (message === 'new_message') {
           await this.processNextMessage(queueName);
         }
-      }
+      },
     );
 
     console.log(
-      `📨 Subscribed to Redis queue ${queueName} (${queue.subscribers.size} subscribers)`
+      `📨 Subscribed to Redis queue ${queueName} (${queue.subscribers.size} subscribers)`,
     );
 
     // Process any existing messages
@@ -307,7 +312,9 @@ export class RedisMessageQueueProvider
   }
 
   async unsubscribe(queueName: string): Promise<void> {
-    if (!this.subscriber) return;
+    if (!this.subscriber) {
+      return;
+    }
 
     const queue = this.queues.get(queueName);
     if (queue) {
@@ -327,7 +334,9 @@ export class RedisMessageQueueProvider
     }
 
     const message = await this.dequeue(queueName);
-    if (!message) return;
+    if (!message) {
+      return;
+    }
 
     const startTime = Date.now();
     const keys = this.getRedisKeys(queueName);
@@ -355,12 +364,12 @@ export class RedisMessageQueueProvider
       this.processingMessages.delete(message.id);
 
       console.log(
-        `✅ Successfully processed message ${message.id} from Redis queue ${queueName} (${processingTime}ms)`
+        `✅ Successfully processed message ${message.id} from Redis queue ${queueName} (${processingTime}ms)`,
       );
     } catch (error) {
       console.error(
         `❌ Error processing message ${message.id} from Redis queue ${queueName}:`,
-        error
+        error,
       );
 
       if (this.client) {
@@ -375,13 +384,13 @@ export class RedisMessageQueueProvider
 
       if (message.retryCount < (message.maxRetries || 3)) {
         console.log(
-          `🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`
+          `🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`,
         );
 
         // Exponential backoff
         const retryDelay = Math.min(
           1000 * Math.pow(2, message.retryCount - 1),
-          30000
+          30000,
         );
 
         const timeout = setTimeout(async () => {
@@ -392,7 +401,7 @@ export class RedisMessageQueueProvider
         this.retryTimeouts.set(message.id, timeout);
       } else {
         console.error(
-          `💀 Message ${message.id} failed permanently after ${message.retryCount} retries`
+          `💀 Message ${message.id} failed permanently after ${message.retryCount} retries`,
         );
 
         if (this.client) {
@@ -536,7 +545,7 @@ export class RedisMessageQueueProvider
       let processingMessages = 0;
       let completedMessages = 0;
       let failedMessages = 0;
-      let allProcessingTimes: number[] = [];
+      const allProcessingTimes: number[] = [];
 
       for (const qName of queues) {
         const keys = this.getRedisKeys(qName);

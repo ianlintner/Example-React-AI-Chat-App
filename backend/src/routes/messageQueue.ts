@@ -4,7 +4,7 @@ import { QUEUE_NAMES } from '../messageQueue/messageQueue';
 
 // Type guard to check if a value is a valid queue name
 function isValidQueueName(
-  name: unknown
+  name: unknown,
 ): name is (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES] {
   return (
     typeof name === 'string' && Object.values(QUEUE_NAMES).includes(name as any)
@@ -361,7 +361,7 @@ router.post('/enqueue/chat', async (req, res) => {
       conversationId,
       message,
       forceAgent,
-      priority
+      priority,
     );
 
     return res.json({
@@ -467,7 +467,7 @@ router.post('/enqueue/proactive', async (req, res) => {
       conversationId,
       timing || 'immediate',
       delayMs,
-      priority
+      priority,
     );
 
     return res.json({

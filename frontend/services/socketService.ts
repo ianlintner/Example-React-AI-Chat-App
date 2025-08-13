@@ -6,6 +6,7 @@ import type {
   ChatRequest,
   AgentStatus,
 } from '../types';
+import { logger } from './logger';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -18,7 +19,7 @@ class SocketService {
         process.env.EXPO_PUBLIC_API_URL ||
         process.env.API_URL ||
         'http://localhost:5001';
-      console.log('Connecting to socket server at:', apiUrl);
+      logger.info('Connecting to socket server at:', apiUrl);
 
       this.socket = io(apiUrl, {
         transports: ['websocket', 'polling'],
@@ -27,18 +28,18 @@ class SocketService {
       });
 
       this.socket.on('connect', () => {
-        console.log('Socket connected:', this.socket?.id);
+        logger.info('Socket connected:', this.socket?.id);
         this.isConnected = true;
         resolve();
       });
 
       this.socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+        logger.info('Socket disconnected');
         this.isConnected = false;
       });
 
       this.socket.on('connect_error', error => {
-        console.error('Socket connection error:', error);
+        logger.error('Socket connection error:', error);
         this.isConnected = false;
         reject(error);
       });
@@ -85,7 +86,7 @@ class SocketService {
   }
 
   onStreamStart(
-    callback: (data: { messageId: string; conversationId: string }) => void
+    callback: (data: { messageId: string; conversationId: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_start', callback);
@@ -105,7 +106,7 @@ class SocketService {
       conversation: Conversation;
       agentUsed?: string;
       confidence?: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_complete', callback);
@@ -113,7 +114,7 @@ class SocketService {
   }
 
   onStreamError(
-    callback: (error: { message: string; code: string }) => void
+    callback: (error: { message: string; code: string }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('stream_error', callback);
@@ -125,7 +126,7 @@ class SocketService {
       userId: string;
       userName?: string;
       isTyping: boolean;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('user_typing', callback);
@@ -137,7 +138,7 @@ class SocketService {
       messageId: string;
       status: string;
       readBy: string;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('message_status', callback);
@@ -151,13 +152,13 @@ class SocketService {
       actionType: string;
       agentUsed: string;
       confidence: number;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_message', data => {
-        console.log(
+        logger.info(
           '🎁 Proactive message received in mobile socket service:',
-          JSON.stringify(data, null, 2)
+          data,
         );
         callback(data);
       });
@@ -169,7 +170,7 @@ class SocketService {
       message: string;
       actionType: string;
       error: string;
-    }) => void
+    }) => void,
   ): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);
@@ -180,7 +181,7 @@ class SocketService {
   onAgentStatusUpdate(callback: (status: AgentStatus) => void): void {
     if (this.socket) {
       this.socket.on('agent_status_update', status => {
-        console.log('📊 Agent status update received:', status);
+        logger.info('📊 Agent status update received:', status);
         callback(status);
       });
     }

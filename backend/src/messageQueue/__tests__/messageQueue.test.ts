@@ -30,17 +30,17 @@ describe('Message Queue System', () => {
       const lowPriorityMsg = queue.createMessage(
         'test',
         { order: 1 },
-        { priority: 3 }
+        { priority: 3 },
       );
       const highPriorityMsg = queue.createMessage(
         'test',
         { order: 2 },
-        { priority: 9 }
+        { priority: 9 },
       );
       const medPriorityMsg = queue.createMessage(
         'test',
         { order: 3 },
-        { priority: 6 }
+        { priority: 6 },
       );
 
       // Enqueue in random order
@@ -138,7 +138,7 @@ describe('Message Queue System', () => {
       const message = queue.createMessage(
         'test',
         { content: 'Retry me' },
-        { maxRetries: 5 }
+        { maxRetries: 5 },
       );
       await queue.enqueue('retry_test', message);
 
@@ -162,7 +162,7 @@ describe('Message Queue System', () => {
       const message = queue.createMessage(
         'test',
         { content: 'Kill me' },
-        { maxRetries: 2 }
+        { maxRetries: 2 },
       );
       await queue.enqueue('dead_test', message);
 
@@ -206,7 +206,7 @@ describe('Message Queue System', () => {
     test('should delete queues', async () => {
       await queue.enqueue(
         'delete_test',
-        queue.createMessage('test', { id: 1 })
+        queue.createMessage('test', { id: 1 }),
       );
 
       let size = await queue.getQueueSize('delete_test');
@@ -246,7 +246,7 @@ describe('Message Queue System', () => {
       const message = queue.createMessage(
         'test',
         { content: 'Delayed message' },
-        { delayMs: 1000 } // 1 second delay
+        { delayMs: 1000 }, // 1 second delay
       );
 
       await queue.enqueue('delay_test', message);
@@ -298,7 +298,7 @@ describe('Message Creation', () => {
         maxRetries: 5,
         delayMs: 2000,
         metadata: { source: 'test' },
-      }
+      },
     );
 
     expect(message.type).toBe('test_type');

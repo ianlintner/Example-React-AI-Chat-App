@@ -102,7 +102,7 @@ const validationResult = responseValidator.validateResponse(
   aiResponse,
   conversationId,
   userId,
-  false // Regular response
+  false, // Regular response
 );
 ```
 
@@ -116,7 +116,7 @@ const validationResult = responseValidator.validateResponse(
   proactiveResponse.content,
   conversationId,
   userId,
-  true // Proactive message
+  true, // Proactive message
 );
 ```
 
@@ -301,7 +301,7 @@ const result = responseValidator.validateResponse(
   'How do I fix this JavaScript error?',
   'You can fix this by checking the console...',
   'conv_123',
-  'user_456'
+  'user_456',
 );
 
 if (!result.isValid) {

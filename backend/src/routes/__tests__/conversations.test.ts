@@ -64,7 +64,7 @@ describe('Conversations Routes', () => {
             conversationId: 'conv-123',
             agentUsed: 'general',
             confidence: 0.8,
-          })
+          }),
         ]),
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
@@ -147,15 +147,13 @@ describe('Conversations Routes', () => {
 
   describe('POST /api/conversations', () => {
     it('should create new conversation with valid title', async () => {
-      mockStorage.addConversation.mockImplementation((conv) => {
+      mockStorage.addConversation.mockImplementation(conv => {
         return conv;
       });
 
-      const response = await request(app)
-        .post('/api/conversations')
-        .send({
-          title: 'New Conversation',
-        });
+      const response = await request(app).post('/api/conversations').send({
+        title: 'New Conversation',
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toMatchObject({
@@ -173,18 +171,16 @@ describe('Conversations Routes', () => {
           messages: [],
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('should trim whitespace from title', async () => {
-      mockStorage.addConversation.mockImplementation((conv) => conv);
+      mockStorage.addConversation.mockImplementation(conv => conv);
 
-      const response = await request(app)
-        .post('/api/conversations')
-        .send({
-          title: '  Trimmed Title  ',
-        });
+      const response = await request(app).post('/api/conversations').send({
+        title: '  Trimmed Title  ',
+      });
 
       expect(response.status).toBe(201);
       expect(response.body.title).toBe('Trimmed Title');
@@ -192,16 +188,14 @@ describe('Conversations Routes', () => {
       expect(mockStorage.addConversation).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Trimmed Title',
-        })
+        }),
       );
     });
 
     it('should return 400 when title is empty', async () => {
-      const response = await request(app)
-        .post('/api/conversations')
-        .send({
-          title: '',
-        });
+      const response = await request(app).post('/api/conversations').send({
+        title: '',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
@@ -213,11 +207,9 @@ describe('Conversations Routes', () => {
     });
 
     it('should return 400 when title is whitespace only', async () => {
-      const response = await request(app)
-        .post('/api/conversations')
-        .send({
-          title: '   \n\t   ',
-        });
+      const response = await request(app).post('/api/conversations').send({
+        title: '   \n\t   ',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
@@ -231,11 +223,9 @@ describe('Conversations Routes', () => {
         throw new Error('Storage error');
       });
 
-      const response = await request(app)
-        .post('/api/conversations')
-        .send({
-          title: 'Valid Title',
-        });
+      const response = await request(app).post('/api/conversations').send({
+        title: 'Valid Title',
+      });
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
@@ -273,7 +263,7 @@ describe('Conversations Routes', () => {
         expect.objectContaining({
           title: 'Updated Title',
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -299,7 +289,7 @@ describe('Conversations Routes', () => {
         'conv-123',
         expect.objectContaining({
           title: 'Trimmed Update',
-        })
+        }),
       );
     });
 
@@ -369,7 +359,9 @@ describe('Conversations Routes', () => {
     it('should return 404 when conversation not found', async () => {
       mockStorage.deleteConversation.mockReturnValue(false);
 
-      const response = await request(app).delete('/api/conversations/nonexistent');
+      const response = await request(app).delete(
+        '/api/conversations/nonexistent',
+      );
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({

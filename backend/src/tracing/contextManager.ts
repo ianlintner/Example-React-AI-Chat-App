@@ -59,7 +59,7 @@ export class TracingContextManager {
    */
   async withSpan<T>(
     span: Span,
-    fn: (span: Span, context: any) => Promise<T> | T
+    fn: (span: Span, context: any) => Promise<T> | T,
   ): Promise<T> {
     return context.with(trace.setSpan(context.active(), span), async () => {
       const activeContext = context.active();
@@ -96,7 +96,7 @@ export class TracingContextManager {
    */
   async withContext<T>(
     contextToUse: any,
-    fn: () => Promise<T> | T
+    fn: () => Promise<T> | T,
   ): Promise<T> {
     return context.with(contextToUse || context.active(), fn);
   }
@@ -112,7 +112,7 @@ export class TracingContextManager {
    * Inject context into headers (for outgoing requests)
    */
   injectContextIntoHeaders(
-    headers: Record<string, string> = {}
+    headers: Record<string, string> = {},
   ): Record<string, string> {
     propagation.inject(context.active(), headers);
     return headers;
@@ -131,7 +131,7 @@ export class TracingContextManager {
     // Log trace creation
     const spanContext = span.spanContext();
     console.log(
-      `🔍 TRACE: Created root span '${name}' with trace ID: ${spanContext.traceId}, span ID: ${spanContext.spanId}`
+      `🔍 TRACE: Created root span '${name}' with trace ID: ${spanContext.traceId}, span ID: ${spanContext.spanId}`,
     );
 
     return span;
@@ -163,7 +163,7 @@ export class TracingContextManager {
     const traceInfo = this.getCurrentTraceInfo();
     if (traceInfo) {
       console.log(
-        `🔍 TRACE [${operation}]: trace=${traceInfo.traceId}, span=${traceInfo.spanId}, flags=${traceInfo.traceFlags}`
+        `🔍 TRACE [${operation}]: trace=${traceInfo.traceId}, span=${traceInfo.spanId}, flags=${traceInfo.traceFlags}`,
       );
     } else {
       console.log(`🔍 TRACE [${operation}]: No active trace context`);
@@ -175,7 +175,7 @@ export class TracingContextManager {
    */
   bindTraceToFunction<T extends (...args: any[]) => any>(
     fn: T,
-    span?: Span
+    span?: Span,
   ): T {
     const currentContext = context.active();
     const contextToUse = span
@@ -208,7 +208,7 @@ export class TracingContextManager {
       agentType?: string;
       operation?: string;
       [key: string]: any;
-    }
+    },
   ): void {
     const standardAttrs: Record<string, any> = {
       'service.name': 'ai-goal-seeking-backend',
@@ -216,13 +216,18 @@ export class TracingContextManager {
       timestamp: new Date().toISOString(),
     };
 
-    if (attributes.userId) standardAttrs['user.id'] = attributes.userId;
-    if (attributes.conversationId)
+    if (attributes.userId) {
+      standardAttrs['user.id'] = attributes.userId;
+    }
+    if (attributes.conversationId) {
       standardAttrs['conversation.id'] = attributes.conversationId;
-    if (attributes.agentType)
+    }
+    if (attributes.agentType) {
       standardAttrs['agent.type'] = attributes.agentType;
-    if (attributes.operation)
+    }
+    if (attributes.operation) {
       standardAttrs['operation.name'] = attributes.operation;
+    }
 
     // Add all custom attributes
     Object.keys(attributes).forEach(key => {

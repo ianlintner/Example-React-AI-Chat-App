@@ -44,12 +44,22 @@ jest.mock('openai', () => ({
 }));
 
 // Cast mocked functions for proper typing
-const mockClassifyMessage = classifyMessage as jest.MockedFunction<typeof classifyMessage>;
+const mockClassifyMessage = classifyMessage as jest.MockedFunction<
+  typeof classifyMessage
+>;
 const mockGetAgent = getAgent as jest.MockedFunction<typeof getAgent>;
-const mockCreateAgentSpan = createAgentSpan as jest.MockedFunction<typeof createAgentSpan>;
-const mockCreateValidationSpan = createValidationSpan as jest.MockedFunction<typeof createValidationSpan>;
-const mockAddSpanEvent = addSpanEvent as jest.MockedFunction<typeof addSpanEvent>;
-const mockSetSpanStatus = setSpanStatus as jest.MockedFunction<typeof setSpanStatus>;
+const mockCreateAgentSpan = createAgentSpan as jest.MockedFunction<
+  typeof createAgentSpan
+>;
+const mockCreateValidationSpan = createValidationSpan as jest.MockedFunction<
+  typeof createValidationSpan
+>;
+const mockAddSpanEvent = addSpanEvent as jest.MockedFunction<
+  typeof addSpanEvent
+>;
+const mockSetSpanStatus = setSpanStatus as jest.MockedFunction<
+  typeof setSpanStatus
+>;
 const mockEndSpan = endSpan as jest.MockedFunction<typeof endSpan>;
 
 // Mock instances
@@ -107,14 +117,22 @@ const mockSpan = {
 } as any;
 
 // Mock constructors
-(ConversationManager as jest.MockedClass<typeof ConversationManager>).mockImplementation(() => mockConversationManager);
-(GoalSeekingSystem as jest.MockedClass<typeof GoalSeekingSystem>).mockImplementation(() => mockGoalSeekingSystem);
+(
+  ConversationManager as jest.MockedClass<typeof ConversationManager>
+).mockImplementation(() => mockConversationManager);
+(
+  GoalSeekingSystem as jest.MockedClass<typeof GoalSeekingSystem>
+).mockImplementation(() => mockGoalSeekingSystem);
 
 // Setup module mocks
-Object.defineProperty(require('../../validation/responseValidator'), 'responseValidator', {
-  value: mockResponseValidator,
-  writable: true,
-});
+Object.defineProperty(
+  require('../../validation/responseValidator'),
+  'responseValidator',
+  {
+    value: mockResponseValidator,
+    writable: true,
+  },
+);
 Object.defineProperty(require('../ragService'), 'ragService', {
   value: mockRagService,
   writable: true,
@@ -134,10 +152,10 @@ describe('AgentService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset environment
     delete process.env.OPENAI_API_KEY;
-    
+
     // Create fresh instance for testing
     testAgentService = new AgentService();
 
@@ -149,7 +167,7 @@ describe('AgentService', () => {
         },
       },
     };
-    
+
     const OpenAIMock = require('openai').default;
     OpenAIMock.mockImplementation(() => mockOpenAI);
 
@@ -188,7 +206,9 @@ describe('AgentService', () => {
       issues: [],
     });
 
-    mockJokeLearningSystem.generateAdaptivePrompt.mockReturnValue('Adaptive joke prompt');
+    mockJokeLearningSystem.generateAdaptivePrompt.mockReturnValue(
+      'Adaptive joke prompt',
+    );
 
     mockConversationManager.getContext.mockReturnValue(null);
     mockConversationManager.initializeContext.mockReturnValue({
@@ -220,10 +240,16 @@ describe('AgentService', () => {
       rolls: [15],
       modifier: 0,
     });
-    mockDndService.generateAdventureHook.mockReturnValue('A mysterious letter arrives...');
-    mockDndService.formatCharacter.mockReturnValue('**Thorin Ironbeard** (Level 1 Fighter)');
+    mockDndService.generateAdventureHook.mockReturnValue(
+      'A mysterious letter arrives...',
+    );
+    mockDndService.formatCharacter.mockReturnValue(
+      '**Thorin Ironbeard** (Level 1 Fighter)',
+    );
     mockDndService.formatDiceRoll.mockReturnValue('🎲 **Initiative Roll**: 15');
-    mockDndService.formatEncounter.mockReturnValue('⚔️ **Goblin Ambush** (Easy)');
+    mockDndService.formatEncounter.mockReturnValue(
+      '⚔️ **Goblin Ambush** (Easy)',
+    );
   });
 
   describe('constructor', () => {
@@ -238,22 +264,27 @@ describe('AgentService', () => {
   describe('processMessage', () => {
     it('should process a simple message successfully', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [
           {
             message: {
-              content: 'Why did the chicken cross the road? To get to the other side!',
+              content:
+                'Why did the chicken cross the road? To get to the other side!',
             },
           },
         ],
         usage: { total_tokens: 25 },
       });
 
-      const result = await testAgentService.processMessage('Tell me a joke', []);
+      const result = await testAgentService.processMessage(
+        'Tell me a joke',
+        [],
+      );
 
       expect(result).toMatchObject({
-        content: 'Why did the chicken cross the road? To get to the other side!',
+        content:
+          'Why did the chicken cross the road? To get to the other side!',
         agentUsed: 'joke',
         confidence: 0.9,
       });
@@ -265,7 +296,7 @@ describe('AgentService', () => {
 
     it('should handle forced agent type', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [{ message: { content: 'Trivia response' } }],
         usage: { total_tokens: 20 },
@@ -282,7 +313,11 @@ describe('AgentService', () => {
         temperature: 0.7,
       });
 
-      const result = await testAgentService.processMessage('Tell me a joke', [], 'trivia');
+      const result = await testAgentService.processMessage(
+        'Tell me a joke',
+        [],
+        'trivia',
+      );
 
       expect(result.agentUsed).toBe('trivia');
       expect(mockClassifyMessage).not.toHaveBeenCalled();
@@ -292,7 +327,10 @@ describe('AgentService', () => {
     it('should generate demo response when no API key', async () => {
       delete process.env.OPENAI_API_KEY;
 
-      const result = await testAgentService.processMessage('Tell me a joke', []);
+      const result = await testAgentService.processMessage(
+        'Tell me a joke',
+        [],
+      );
 
       // The demo response uses RAG content first, then falls back to agent name
       expect(result.content).toContain('😄');
@@ -302,8 +340,10 @@ describe('AgentService', () => {
 
     it('should handle OpenAI API errors gracefully', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
-      mockOpenAI.chat.completions.create.mockRejectedValue(new Error('API Error'));
+
+      mockOpenAI.chat.completions.create.mockRejectedValue(
+        new Error('API Error'),
+      );
 
       const result = await testAgentService.processMessage('Test message', []);
 
@@ -313,15 +353,27 @@ describe('AgentService', () => {
 
     it('should handle conversation history correctly', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [{ message: { content: 'Response with history' } }],
         usage: { total_tokens: 30 },
       });
 
       const history: Message[] = [
-        { id: '1', role: 'user', content: 'Hello', timestamp: new Date(), conversationId: 'conv-123' },
-        { id: '2', role: 'assistant', content: 'Hi there!', timestamp: new Date(), conversationId: 'conv-123' },
+        {
+          id: '1',
+          role: 'user',
+          content: 'Hello',
+          timestamp: new Date(),
+          conversationId: 'conv-123',
+        },
+        {
+          id: '2',
+          role: 'assistant',
+          content: 'Hi there!',
+          timestamp: new Date(),
+          conversationId: 'conv-123',
+        },
       ];
 
       await testAgentService.processMessage('Follow up', history);
@@ -335,7 +387,7 @@ describe('AgentService', () => {
 
     it('should limit conversation history to last 10 messages', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [{ message: { content: 'Response' } }],
         usage: { total_tokens: 30 },
@@ -361,29 +413,40 @@ describe('AgentService', () => {
     it('should use adaptive prompt for joke agent with userId', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
       const userId = 'test-user-123';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [{ message: { content: 'Adaptive joke' } }],
         usage: { total_tokens: 25 },
       });
 
-      await testAgentService.processMessage('Tell me a joke', [], 'joke', 'conv-123', userId);
-
-      expect(mockJokeLearningSystem.generateAdaptivePrompt).toHaveBeenCalledWith(
+      await testAgentService.processMessage(
+        'Tell me a joke',
+        [],
+        'joke',
+        'conv-123',
         userId,
-        'You are a joke master'
       );
+
+      expect(
+        mockJokeLearningSystem.generateAdaptivePrompt,
+      ).toHaveBeenCalledWith(userId, 'You are a joke master');
     });
 
     it('should validate response when conversationId and userId provided', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [{ message: { content: 'Test response' } }],
         usage: { total_tokens: 20 },
       });
 
-      await testAgentService.processMessage('Test', [], undefined, 'conv-123', 'user-123');
+      await testAgentService.processMessage(
+        'Test',
+        [],
+        undefined,
+        'conv-123',
+        'user-123',
+      );
 
       expect(mockResponseValidator.validateResponse).toHaveBeenCalledWith(
         'joke',
@@ -391,13 +454,13 @@ describe('AgentService', () => {
         'Test response',
         'conv-123',
         'user-123',
-        false
+        false,
       );
     });
 
     it('should handle malformed OpenAI response', async () => {
       process.env.OPENAI_API_KEY = 'test-key';
-      
+
       mockOpenAI.chat.completions.create.mockResolvedValue({
         choices: [],
       });
@@ -410,7 +473,10 @@ describe('AgentService', () => {
     it('should handle classification failure gracefully', async () => {
       mockClassifyMessage.mockRejectedValue(new Error('Classification failed'));
 
-      const result = await testAgentService.processMessage('Unclear message', []);
+      const result = await testAgentService.processMessage(
+        'Unclear message',
+        [],
+      );
 
       expect(result.agentUsed).toBe('general');
       expect(result.confidence).toBe(0);
@@ -424,7 +490,7 @@ describe('AgentService', () => {
 
       expect(Array.isArray(agents)).toBe(true);
       expect(agents.length).toBeGreaterThan(0);
-      
+
       // Check structure
       agents.forEach(agent => {
         expect(agent).toHaveProperty('id');
@@ -477,15 +543,18 @@ describe('AgentService', () => {
         message,
         [],
         undefined,
-        'conv-123'
+        'conv-123',
       );
 
-      expect(mockGoalSeekingSystem.updateUserState).toHaveBeenCalledWith(userId, message);
+      expect(mockGoalSeekingSystem.updateUserState).toHaveBeenCalledWith(
+        userId,
+        message,
+      );
       expect(mockGoalSeekingSystem.activateGoals).toHaveBeenCalledWith(userId);
       expect(mockGoalSeekingSystem.updateGoalProgress).toHaveBeenCalledWith(
         userId,
         message,
-        'Goal-seeking response'
+        'Goal-seeking response',
       );
       expect(result.proactiveActions).toBeDefined();
       expect(result.proactiveActions).toHaveLength(1);
@@ -512,7 +581,7 @@ describe('AgentService', () => {
         message,
         [],
         undefined,
-        'conv-123'
+        'conv-123',
       );
 
       expect(result.proactiveActions).toHaveLength(1);
@@ -525,7 +594,7 @@ describe('AgentService', () => {
         message,
         [],
         'trivia',
-        'conv-123'
+        'conv-123',
       );
 
       expect(result.agentUsed).toBe('trivia');
@@ -550,7 +619,10 @@ describe('AgentService', () => {
     });
 
     it('should execute proactive action successfully', async () => {
-      const result = await testAgentService.executeProactiveAction(userId, action);
+      const result = await testAgentService.executeProactiveAction(
+        userId,
+        action,
+      );
 
       expect(result.content).toBe('Proactive joke response');
       expect(result.agentUsed).toBe('joke');
@@ -566,7 +638,7 @@ describe('AgentService', () => {
 
       // Try to execute proactive action
       await expect(
-        testAgentService.executeProactiveAction(userId, action)
+        testAgentService.executeProactiveAction(userId, action),
       ).rejects.toThrow('Agent already active');
     });
 
@@ -580,7 +652,7 @@ describe('AgentService', () => {
 
       // Try to execute proactive action (should queue it)
       await expect(
-        testAgentService.executeProactiveAction(userId, action)
+        testAgentService.executeProactiveAction(userId, action),
       ).rejects.toThrow('Agent already active');
 
       // Verify action was queued
@@ -608,10 +680,13 @@ describe('AgentService', () => {
         userId,
         'Hello',
         [],
-        'conv-123'
+        'conv-123',
       );
 
-      expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(userId, 'general');
+      expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(
+        userId,
+        'general',
+      );
       expect(mockConversationManager.updateContext).toHaveBeenCalled();
       expect(result.content).toBe('Conversation response');
     });
@@ -633,7 +708,7 @@ describe('AgentService', () => {
         userId,
         'Tell me another joke',
         [],
-        'conv-123'
+        'conv-123',
       );
 
       expect(mockConversationManager.initializeContext).not.toHaveBeenCalled();
@@ -668,11 +743,14 @@ describe('AgentService', () => {
         userId,
         'I need help with my bill',
         [],
-        'conv-123'
+        'conv-123',
       );
 
       expect(result.handoffInfo).toEqual(handoffInfo);
-      expect(mockConversationManager.completeHandoff).toHaveBeenCalledWith(userId, 'billing_support');
+      expect(mockConversationManager.completeHandoff).toHaveBeenCalledWith(
+        userId,
+        'billing_support',
+      );
     });
 
     it('should handle entertainment agent handoff directly', async () => {
@@ -697,7 +775,7 @@ describe('AgentService', () => {
         userId,
         'Tell me a joke',
         [],
-        'conv-123'
+        'conv-123',
       );
 
       expect(result.agentUsed).toBe('joke');
@@ -733,7 +811,7 @@ describe('AgentService', () => {
         userId,
         'Complex query',
         [],
-        'conv-123'
+        'conv-123',
       );
 
       expect(result.content).toBe('Combined response');
@@ -762,7 +840,7 @@ describe('AgentService', () => {
         'Test message',
         [],
         'conv-123',
-        'trivia'
+        'trivia',
       );
 
       expect(result.agentUsed).toBe('trivia');
@@ -800,9 +878,13 @@ describe('AgentService', () => {
     it('should cleanup inactive users', () => {
       const maxInactiveTime = 60000;
       testAgentService.cleanupInactiveUsers(maxInactiveTime);
-      
-      expect(mockGoalSeekingSystem.cleanupInactiveUsers).toHaveBeenCalledWith(maxInactiveTime);
-      expect(mockConversationManager.cleanup).toHaveBeenCalledWith(maxInactiveTime);
+
+      expect(mockGoalSeekingSystem.cleanupInactiveUsers).toHaveBeenCalledWith(
+        maxInactiveTime,
+      );
+      expect(mockConversationManager.cleanup).toHaveBeenCalledWith(
+        maxInactiveTime,
+      );
     });
 
     it('should get conversation context', () => {
@@ -823,7 +905,11 @@ describe('AgentService', () => {
 
       mockConversationManager.getContext.mockReturnValue(context);
 
-      testAgentService.forceAgentHandoff(userId, 'billing_support', 'Manual override');
+      testAgentService.forceAgentHandoff(
+        userId,
+        'billing_support',
+        'Manual override',
+      );
 
       expect(context.shouldHandoff).toBe(true);
       expect(context.handoffTarget).toBe('billing_support');
@@ -854,8 +940,11 @@ describe('AgentService', () => {
 
     it('should initialize conversation', () => {
       const context = testAgentService.initializeConversation(userId, 'trivia');
-      
-      expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(userId, 'trivia');
+
+      expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(
+        userId,
+        'trivia',
+      );
     });
   });
 });

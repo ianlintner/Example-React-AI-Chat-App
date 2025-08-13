@@ -39,7 +39,9 @@ export class AgentService {
   // Check if an agent is currently active for a user
   private isAgentActive(userId: string): boolean {
     const activeAgent = this.activeAgents.get(userId);
-    if (!activeAgent) return false;
+    if (!activeAgent) {
+      return false;
+    }
 
     // Consider an agent inactive after 30 seconds of no activity
     const thirtySecondsAgo = Date.now() - 30000;
@@ -94,12 +96,12 @@ export class AgentService {
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
     conversationId?: string,
-    userId?: string
+    userId?: string,
   ): Promise<AgentResponse> {
     const span = createAgentSpan(
       'agent_service',
       'process_message',
-      conversationId
+      conversationId,
     );
 
     span.setAttributes({
@@ -135,7 +137,7 @@ export class AgentService {
           reasoning: classification.reasoning,
         });
         console.log(
-          `Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`
+          `Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`,
         );
       }
 
@@ -153,7 +155,7 @@ export class AgentService {
       if (agentType === 'joke' && userId) {
         systemPrompt = jokeLearningSystem.generateAdaptivePrompt(
           userId,
-          agent.systemPrompt
+          agent.systemPrompt,
         );
         addSpanEvent(span, 'agent.adaptive_prompt_generated');
       }
@@ -242,13 +244,13 @@ export class AgentService {
           responseContent,
           conversationId,
           userId,
-          false // Not a proactive message
+          false, // Not a proactive message
         );
 
         validationSpan.setAttributes({
           'validation.issues_count': validationResult.issues.length,
           'validation.has_high_severity': validationResult.issues.some(
-            issue => issue.severity === 'high'
+            issue => issue.severity === 'high',
           ),
         });
 
@@ -256,7 +258,7 @@ export class AgentService {
         if (validationResult.issues.length > 0) {
           console.warn(
             `⚠️ Validation issues for ${agentType} response:`,
-            validationResult.issues
+            validationResult.issues,
           );
           addSpanEvent(validationSpan, 'validation.issues_found', {
             issueCount: validationResult.issues.length,
@@ -267,7 +269,7 @@ export class AgentService {
         // or provide a fallback response
         if (validationResult.issues.some(issue => issue.severity === 'high')) {
           console.error(
-            `❌ High severity validation issues detected for ${agentType} response`
+            `❌ High severity validation issues detected for ${agentType} response`,
           );
           addSpanEvent(validationSpan, 'validation.high_severity_issues');
           // Could implement fallback logic here
@@ -527,7 +529,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
-    conversationId?: string
+    conversationId?: string,
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
     // Set current agent as active for this user
     const agentType =
@@ -546,14 +548,14 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       conversationHistory,
       forcedAgentType,
       conversationId,
-      userId
+      userId,
     );
 
     // Update goal progress based on the response
     this.goalSeekingSystem.updateGoalProgress(
       userId,
       message,
-      response.content
+      response.content,
     );
 
     // Generate proactive actions if goals are active
@@ -563,7 +565,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     // Filter proactive actions to ensure single agent control
     const proactiveActions = this.filterProactiveActions(
       userId,
-      rawProactiveActions
+      rawProactiveActions,
     );
 
     // Clear active agent after processing
@@ -580,12 +582,12 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   async executeProactiveAction(
     userId: string,
     action: GoalAction,
-    conversationHistory: Message[] = []
+    conversationHistory: Message[] = [],
   ): Promise<AgentResponse> {
     // Check if an agent is already active for this user
     if (this.isAgentActive(userId)) {
       console.log(
-        `🚫 Agent ${this.activeAgents.get(userId)?.agentType} is already active for user ${userId}. Queueing action: ${action.type}`
+        `🚫 Agent ${this.activeAgents.get(userId)?.agentType} is already active for user ${userId}. Queueing action: ${action.type}`,
       );
       this.queueAction(userId, action);
       throw new Error('Agent already active');
@@ -602,11 +604,11 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       const response = await this.processMessage(
         proactiveMessage,
         conversationHistory,
-        action.agentType
+        action.agentType,
       );
 
       console.log(
-        `✅ Proactive action executed successfully for user ${userId} with agent ${action.agentType}`
+        `✅ Proactive action executed successfully for user ${userId} with agent ${action.agentType}`,
       );
       return response;
     } finally {
@@ -618,7 +620,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         const queuedActions = await this.processQueuedActions(userId);
         if (queuedActions.length > 0) {
           console.log(
-            `🎯 Processing ${queuedActions.length} queued actions for user ${userId}`
+            `🎯 Processing ${queuedActions.length} queued actions for user ${userId}`,
           );
           // Note: The actual execution of queued actions should be handled by the socket handler
         }
@@ -629,14 +631,20 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   // Filter proactive actions to ensure single agent control
   private filterProactiveActions(
     userId: string,
-    actions: GoalAction[]
+    actions: GoalAction[],
   ): GoalAction[] {
-    if (actions.length === 0) return actions;
+    if (actions.length === 0) {
+      return actions;
+    }
 
     // Sort actions by priority (immediate first, then by type priority)
     const sortedActions = actions.sort((a, b) => {
-      if (a.timing === 'immediate' && b.timing !== 'immediate') return -1;
-      if (a.timing !== 'immediate' && b.timing === 'immediate') return 1;
+      if (a.timing === 'immediate' && b.timing !== 'immediate') {
+        return -1;
+      }
+      if (a.timing !== 'immediate' && b.timing === 'immediate') {
+        return 1;
+      }
 
       // Priority order: technical_support > entertainment > engagement
       const priorityOrder: Record<string, number> = {
@@ -652,12 +660,12 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     // Only return the highest priority action to ensure single agent control
     const selectedAction = sortedActions[0];
     console.log(
-      `🎯 Selected single proactive action for user ${userId}: ${selectedAction.type} (${selectedAction.agentType})`
+      `🎯 Selected single proactive action for user ${userId}: ${selectedAction.type} (${selectedAction.agentType})`,
     );
 
     if (sortedActions.length > 1) {
       console.log(
-        `🚫 Filtered out ${sortedActions.length - 1} additional proactive actions to maintain single agent control`
+        `🚫 Filtered out ${sortedActions.length - 1} additional proactive actions to maintain single agent control`,
       );
     }
 
@@ -676,7 +684,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
 
   // Get active agent info for a user
   getActiveAgentInfo(
-    userId: string
+    userId: string,
   ): { agentType: AgentType; timestamp: Date } | null {
     return this.activeAgents.get(userId) || null;
   }
@@ -709,7 +717,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     userId: string,
     message: string,
     conversationHistory: Message[] = [],
-    conversationId?: string
+    conversationId?: string,
   ): Promise<
     AgentResponse & {
       handoffInfo?: { target: AgentType; reason: string; message: string };
@@ -729,13 +737,13 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     const handoffInfo = this.conversationManager.getHandoffInfo(userId);
     if (handoffInfo) {
       console.log(
-        `🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`
+        `🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`,
       );
 
       // Complete the handoff
       context = this.conversationManager.completeHandoff(
         userId,
-        handoffInfo.target
+        handoffInfo.target,
       );
       currentAgent = handoffInfo.target;
 
@@ -753,7 +761,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       ];
       if (entertainmentAgents.includes(handoffInfo.target)) {
         console.log(
-          `🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`
+          `🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`,
         );
 
         // Process message with the entertainment agent
@@ -762,7 +770,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
           conversationHistory,
           handoffInfo.target,
           conversationId,
-          userId
+          userId,
         );
 
         // Update conversation context with the interaction
@@ -770,7 +778,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
           userId,
           message,
           response.content,
-          handoffInfo.target
+          handoffInfo.target,
         );
 
         return {
@@ -794,7 +802,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       conversationHistory,
       currentAgent,
       conversationId,
-      userId
+      userId,
     );
 
     // Update conversation context with the interaction
@@ -802,7 +810,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       userId,
       message,
       response.content,
-      currentAgent
+      currentAgent,
     );
 
     // Check if handoff is now needed after this interaction
@@ -823,7 +831,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   forceAgentHandoff(
     userId: string,
     targetAgent: AgentType,
-    reason: string = 'Manual override'
+    reason = 'Manual override',
   ): void {
     const context = this.conversationManager.getContext(userId);
     if (context) {
@@ -842,7 +850,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   // Initialize conversation for a user with specific agent
   initializeConversation(
     userId: string,
-    initialAgent: AgentType = 'general'
+    initialAgent: AgentType = 'general',
   ): ConversationContext {
     return this.conversationManager.initializeContext(userId, initialAgent);
   }
@@ -853,7 +861,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     conversationId?: string,
-    forcedAgentType?: AgentType
+    forcedAgentType?: AgentType,
   ): Promise<
     AgentResponse & {
       proactiveActions?: GoalAction[];
@@ -868,7 +876,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         message,
         conversationHistory,
         forcedAgentType,
-        conversationId
+        conversationId,
       );
 
       // Still update conversation context
@@ -876,7 +884,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         userId,
         message,
         goalSeekingResponse.content,
-        forcedAgentType
+        forcedAgentType,
       );
 
       return {
@@ -890,7 +898,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       userId,
       message,
       conversationHistory,
-      conversationId
+      conversationId,
     );
 
     // If no handoff is happening, also process with goal-seeking for proactive actions
@@ -901,7 +909,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       this.goalSeekingSystem.updateGoalProgress(
         userId,
         message,
-        conversationResponse.content
+        conversationResponse.content,
       );
 
       // Generate proactive actions
@@ -909,7 +917,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         await this.goalSeekingSystem.generateProactiveActions(userId);
       const proactiveActions = this.filterProactiveActions(
         userId,
-        rawProactiveActions
+        rawProactiveActions,
       );
 
       return {

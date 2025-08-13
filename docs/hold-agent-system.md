@@ -348,7 +348,7 @@ const response = await agentService.processMessageWithBothSystems(
   'How long is the wait?',
   conversationHistory,
   conversationId,
-  'hold_agent'
+  'hold_agent',
 );
 
 // Handle proactive actions (entertainment offers, updates)
@@ -367,7 +367,7 @@ const entertainmentResponse = await agentService.processMessageWithBothSystems(
   userId,
   "Yes, I'd like some jokes while I wait",
   conversationHistory,
-  conversationId
+  conversationId,
 );
 
 // System automatically transitions to Joke Master

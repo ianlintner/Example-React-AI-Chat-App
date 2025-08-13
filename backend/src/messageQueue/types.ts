@@ -9,7 +9,7 @@ export interface QueueMessage {
   maxRetries?: number;
   delayMs?: number;
   priority?: number; // 1-10, higher is more important
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface QueueOptions {
@@ -29,7 +29,7 @@ export interface MessageQueueProvider {
   enqueue(
     queueName: string,
     message: QueueMessage,
-    options?: QueueOptions
+    options?: QueueOptions,
   ): Promise<void>;
   dequeue(queueName: string): Promise<QueueMessage | null>;
   peek(queueName: string): Promise<QueueMessage | null>;
@@ -52,9 +52,9 @@ export interface MessageQueueProvider {
   disconnect(): Promise<void>;
 
   // Event handling
-  on(event: string, listener: (...args: any[]) => void): this;
-  off(event: string, listener: (...args: any[]) => void): this;
-  emit(event: string, ...args: any[]): boolean;
+  on(event: string, listener: (...args: unknown[]) => void): this;
+  off(event: string, listener: (...args: unknown[]) => void): this;
+  emit(event: string, ...args: unknown[]): boolean;
 }
 
 export interface QueueStats {

@@ -4,3 +4,5 @@ node_modules
 
 backend/coverage
 frontend/coverage
+.DS_Store
+backend/jest-socket-results.json

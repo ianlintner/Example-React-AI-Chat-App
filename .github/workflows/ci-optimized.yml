@@ -180,6 +180,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
 
       - name: Download backend artifact
         if: needs.changes.outputs.backend == 'true'
@@ -197,9 +203,12 @@ jobs:
 
       - name: Start services for testing
         run: |
-          docker-compose -f docker-compose.test.yml up -d --wait
+          # Start only the services required for integration tests to avoid unrelated failures (e.g., Grafana provisioning)
+          docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --wait redis zipkin otel-collector backend
+
+          # Wait for backend health (port 5001 as defined in docker-compose.yml)
           timeout=60
-          while ! curl -s http://localhost:3001/health > /dev/null && [ $timeout -gt 0 ]; do
+          while ! curl -sf http://localhost:5001/health > /dev/null && [ $timeout -gt 0 ]; do
             echo "Waiting for backend to be ready... ($timeout seconds left)"
             sleep 2
             timeout=$((timeout-2))
@@ -207,7 +216,8 @@ jobs:
 
           if [ $timeout -le 0 ]; then
             echo "Backend failed to start within 60 seconds"
-            docker-compose -f docker-compose.test.yml logs
+            docker compose -f docker-compose.yml -f docker-compose.test.yml ps
+            docker compose -f docker-compose.yml -f docker-compose.test.yml logs backend otel-collector redis zipkin
             exit 1
           fi
 
@@ -221,13 +231,13 @@ jobs:
             npm run test:integration
           else
             echo "No integration tests defined, running smoke tests"
-            curl -f http://localhost:3001/health || exit 1
+            curl -f http://localhost:5001/health || exit 1
             echo "✅ Basic smoke test passed"
           fi
 
       - name: Cleanup
         if: always()
-        run: docker-compose -f docker-compose.test.yml down
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml down
 
   # Build Docker images (only on main branch pushes)
   docker:

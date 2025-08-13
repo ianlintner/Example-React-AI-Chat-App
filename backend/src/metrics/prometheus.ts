@@ -50,10 +50,38 @@ const aiModelTokensUsed = new promClient.Counter({
   labelNames: ['model', 'type'], // type: prompt, completion
 });
 
+// Validation metrics - enhanced to match dashboard functionality
 const validationChecks = new promClient.Counter({
   name: 'validation_checks_total',
   help: 'Total number of validation checks performed',
-  labelNames: ['type', 'result'], // result: pass, fail
+  labelNames: ['agent_type', 'result', 'proactive'], // result: pass, fail
+});
+
+const validationScores = new promClient.Histogram({
+  name: 'validation_scores',
+  help: 'Distribution of validation scores',
+  labelNames: ['agent_type', 'proactive'],
+  buckets: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+});
+
+const validationIssues = new promClient.Counter({
+  name: 'validation_issues_total',
+  help: 'Total number of validation issues by severity',
+  labelNames: ['agent_type', 'severity', 'issue_type'],
+});
+
+const validationResponseLength = new promClient.Histogram({
+  name: 'validation_response_length_chars',
+  help: 'Length of responses being validated',
+  labelNames: ['agent_type'],
+  buckets: [50, 100, 200, 500, 1000, 2000, 5000, 10000],
+});
+
+const validationMetrics = new promClient.Histogram({
+  name: 'validation_quality_metrics',
+  help: 'Various quality metrics from validation',
+  labelNames: ['agent_type', 'metric_type'], // metric_type: readability, technical_accuracy, appropriateness, coherence
+  buckets: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
 });
 
 const memoryStorageOperations = new promClient.Counter({
@@ -71,10 +99,14 @@ register.registerMetric(agentResponseTime);
 register.registerMetric(aiModelRequests);
 register.registerMetric(aiModelTokensUsed);
 register.registerMetric(validationChecks);
+register.registerMetric(validationScores);
+register.registerMetric(validationIssues);
+register.registerMetric(validationResponseLength);
+register.registerMetric(validationMetrics);
 register.registerMetric(memoryStorageOperations);
 
 // Middleware for HTTP metrics
-export function httpMetricsMiddleware(req: any, res: any, next: any) {
+export function httpMetricsMiddleware(req: any, res: any, next: any): void {
   const start = Date.now();
 
   res.on('finish', () => {
@@ -85,7 +117,7 @@ export function httpMetricsMiddleware(req: any, res: any, next: any) {
 
     httpRequestDuration.observe(
       { method, route, status_code: statusCode },
-      duration
+      duration,
     );
     httpRequestsTotal.inc({ method, route, status_code: statusCode });
   });
@@ -103,6 +135,10 @@ export const metrics = {
   aiModelRequests,
   aiModelTokensUsed,
   validationChecks,
+  validationScores,
+  validationIssues,
+  validationResponseLength,
+  validationMetrics,
   memoryStorageOperations,
 };
 

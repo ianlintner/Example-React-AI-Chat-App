@@ -7,7 +7,9 @@ import { UserReaction } from '../../agents/learningTypes';
 // Mock the jokeLearningSystem
 jest.mock('../../agents/jokeLearningSystem');
 
-const mockJokeLearningSystem = jokeLearningSystem as jest.Mocked<typeof jokeLearningSystem>;
+const mockJokeLearningSystem = jokeLearningSystem as jest.Mocked<
+  typeof jokeLearningSystem
+>;
 
 // Create Express app for testing
 const app = express();
@@ -49,7 +51,7 @@ describe('Reactions Routes', () => {
           jokeType: 'pun',
           jokeCategory: 'wordplay',
           timestamp: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -125,7 +127,8 @@ describe('Reactions Routes', () => {
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
-        error: 'Invalid reaction type. Must be one of: laugh, groan, love, meh, dislike',
+        error:
+          'Invalid reaction type. Must be one of: laugh, groan, love, meh, dislike',
       });
 
       expect(mockJokeLearningSystem.recordReaction).not.toHaveBeenCalled();
@@ -169,7 +172,7 @@ describe('Reactions Routes', () => {
           jokeType: undefined,
           jokeCategory: undefined,
           timestamp: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -206,7 +209,9 @@ describe('Reactions Routes', () => {
     it('should return user profile successfully', async () => {
       mockJokeLearningSystem.getUserProfile.mockReturnValue(mockProfile);
 
-      const response = await request(app).get('/api/reactions/profile/user-123');
+      const response = await request(app).get(
+        '/api/reactions/profile/user-123',
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
@@ -221,13 +226,17 @@ describe('Reactions Routes', () => {
         totalJokesHeard: 50,
         averageReactionScore: 0.75,
       });
-      expect(mockJokeLearningSystem.getUserProfile).toHaveBeenCalledWith('user-123');
+      expect(mockJokeLearningSystem.getUserProfile).toHaveBeenCalledWith(
+        'user-123',
+      );
     });
 
     it('should return 404 when user profile not found', async () => {
       mockJokeLearningSystem.getUserProfile.mockReturnValue(null);
 
-      const response = await request(app).get('/api/reactions/profile/nonexistent');
+      const response = await request(app).get(
+        '/api/reactions/profile/nonexistent',
+      );
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
@@ -240,7 +249,9 @@ describe('Reactions Routes', () => {
         throw new Error('System error');
       });
 
-      const response = await request(app).get('/api/reactions/profile/user-123');
+      const response = await request(app).get(
+        '/api/reactions/profile/user-123',
+      );
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
@@ -301,7 +312,9 @@ describe('Reactions Routes', () => {
         {
           name: 'dad_jokes',
           description: 'Classic groan-worthy puns and wordplay',
-          examples: ["Why don't scientists trust atoms? Because they make up everything!"],
+          examples: [
+            "Why don't scientists trust atoms? Because they make up everything!",
+          ],
           difficulty: 'easy' as const,
           appropriateness: 'family' as const,
         },
@@ -346,21 +359,31 @@ describe('Reactions Routes', () => {
         avoidCategories: ['dark', 'sarcastic'],
       };
 
-      mockJokeLearningSystem.getPersonalizedJokeRecommendation.mockReturnValue(mockRecommendation);
+      mockJokeLearningSystem.getPersonalizedJokeRecommendation.mockReturnValue(
+        mockRecommendation,
+      );
 
-      const response = await request(app).get('/api/reactions/recommendation/user-123');
+      const response = await request(app).get(
+        '/api/reactions/recommendation/user-123',
+      );
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockRecommendation);
-      expect(mockJokeLearningSystem.getPersonalizedJokeRecommendation).toHaveBeenCalledWith('user-123');
+      expect(
+        mockJokeLearningSystem.getPersonalizedJokeRecommendation,
+      ).toHaveBeenCalledWith('user-123');
     });
 
     it('should return 500 when jokeLearningSystem throws error', async () => {
-      mockJokeLearningSystem.getPersonalizedJokeRecommendation.mockImplementation(() => {
-        throw new Error('System error');
-      });
+      mockJokeLearningSystem.getPersonalizedJokeRecommendation.mockImplementation(
+        () => {
+          throw new Error('System error');
+        },
+      );
 
-      const response = await request(app).get('/api/reactions/recommendation/user-123');
+      const response = await request(app).get(
+        '/api/reactions/recommendation/user-123',
+      );
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({

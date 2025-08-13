@@ -644,6 +644,7 @@ jest.mock('expo-router', () => ({
   },
 }));
 
+/** NOTE: Use a virtual mock so Jest doesn't need the package installed locally in frontend */
 // Mock @react-native-async-storage/async-storage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -654,7 +655,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   multiGet: jest.fn(),
   multiSet: jest.fn(),
   multiRemove: jest.fn(),
-}));
+}), { virtual: true });
 
 // Mock react-native-vector-icons
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcon');

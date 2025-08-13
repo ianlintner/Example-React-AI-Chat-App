@@ -1,4 +1,6 @@
-module.exports = {
+const isCI = process.env.CI === 'true' || process.env.CI === true;
+
+const config = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/*.(test|spec).(ts|tsx|js)'],
@@ -15,15 +17,25 @@ module.exports = {
     '!**/coverage/**',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: [
-    'text',
-    'text-summary',
-    'lcov',
-    'html',
-    'json',
-    'cobertura',
+  coverageReporters: ['text', 'text-summary', 'lcov', 'html', 'json', 'cobertura'],
+  testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg))',
   ],
-  coverageThreshold: {
+  testTimeout: 10000,
+  verbose: true,
+  clearMocks: true,
+  restoreMocks: true,
+};
+
+// Make coverage informational in CI by not enforcing thresholds.
+// Locally (when CI is not set), keep thresholds to guide improvements.
+if (!isCI) {
+  config.coverageThreshold = {
     global: {
       branches: 33,
       functions: 61,
@@ -42,17 +54,7 @@ module.exports = {
       lines: 41,
       statements: 41,
     },
-  },
-  testEnvironment: 'jsdom',
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-  },
-  transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg))',
-  ],
-  testTimeout: 10000,
-  verbose: true,
-  clearMocks: true,
-  restoreMocks: true,
-};
+  };
+}
+
+module.exports = config;

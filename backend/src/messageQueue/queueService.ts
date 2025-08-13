@@ -52,7 +52,7 @@ export class QueueService {
     await this.messageQueue.subscribe(
       QUEUE_NAMES.CHAT_MESSAGES,
       async (message: QueueMessage) => {
-        const payload = message.payload as ChatMessagePayload;
+        const payload = message.payload as unknown as ChatMessagePayload;
         console.log(`🔄 Processing chat message from queue: ${message.id}`);
 
         // This is where you'd integrate with your existing agent service
@@ -70,7 +70,7 @@ export class QueueService {
     await this.messageQueue.subscribe(
       QUEUE_NAMES.AGENT_RESPONSES,
       async (message: QueueMessage) => {
-        const payload = message.payload as AgentResponsePayload;
+        const payload = message.payload as unknown as AgentResponsePayload;
         console.log(`🤖 Processing agent response from queue: ${message.id}`);
 
         this.io
@@ -89,7 +89,7 @@ export class QueueService {
     await this.messageQueue.subscribe(
       QUEUE_NAMES.PROACTIVE_ACTIONS,
       async (message: QueueMessage) => {
-        const payload = message.payload as ProactiveActionPayload;
+        const payload = message.payload as unknown as ProactiveActionPayload;
         console.log(
           `🎯 Processing proactive action from queue: ${message.id} (${payload.actionType})`,
         );
@@ -111,7 +111,7 @@ export class QueueService {
     await this.messageQueue.subscribe(
       QUEUE_NAMES.STREAM_CHUNKS,
       async (message: QueueMessage) => {
-        const payload = message.payload as StreamChunkPayload;
+        const payload = message.payload as unknown as StreamChunkPayload;
         console.log(`📝 Processing stream chunk from queue: ${message.id}`);
 
         this.io

@@ -47,7 +47,7 @@ export interface Enemy {
 
 export class DNDService {
   // Dice rolling system
-  rollDice(diceString: string, description: string = ''): DiceRoll {
+  rollDice(diceString: string, description = ''): DiceRoll {
     // Parse dice string like "d20", "2d6+3", "1d8-1"
     const match = diceString.toLowerCase().match(/^(\d*)d(\d+)([+-]\d+)?$/);
 
@@ -77,7 +77,7 @@ export class DNDService {
   }
 
   // Roll with advantage (roll twice, take higher)
-  rollWithAdvantage(diceString: string, description: string = ''): DiceRoll {
+  rollWithAdvantage(diceString: string, description = ''): DiceRoll {
     const roll1 = this.rollDice(diceString, description);
     const roll2 = this.rollDice(diceString, description);
 
@@ -90,7 +90,7 @@ export class DNDService {
   }
 
   // Roll with disadvantage (roll twice, take lower)
-  rollWithDisadvantage(diceString: string, description: string = ''): DiceRoll {
+  rollWithDisadvantage(diceString: string, description = ''): DiceRoll {
     const roll1 = this.rollDice(diceString, description);
     const roll2 = this.rollDice(diceString, description);
 

@@ -133,9 +133,12 @@ export class RedisMessageQueueProvider
 
     // Apply options to message
     if (options) {
-      if (options.maxRetries !== undefined)
+      if (options.maxRetries !== undefined) {
         message.maxRetries = options.maxRetries;
-      if (options.priority !== undefined) message.priority = options.priority;
+      }
+      if (options.priority !== undefined) {
+        message.priority = options.priority;
+      }
     }
     message.maxRetries = message.maxRetries || 3;
     message.priority = message.priority || DEFAULT_PRIORITY;
@@ -179,7 +182,9 @@ export class RedisMessageQueueProvider
   }
 
   private async processDelayedMessages(queueName: string): Promise<void> {
-    if (!this.client) return;
+    if (!this.client) {
+      return;
+    }
 
     const keys = this.getRedisKeys(queueName);
     const now = Date.now();
@@ -307,7 +312,9 @@ export class RedisMessageQueueProvider
   }
 
   async unsubscribe(queueName: string): Promise<void> {
-    if (!this.subscriber) return;
+    if (!this.subscriber) {
+      return;
+    }
 
     const queue = this.queues.get(queueName);
     if (queue) {
@@ -327,7 +334,9 @@ export class RedisMessageQueueProvider
     }
 
     const message = await this.dequeue(queueName);
-    if (!message) return;
+    if (!message) {
+      return;
+    }
 
     const startTime = Date.now();
     const keys = this.getRedisKeys(queueName);
@@ -536,7 +545,7 @@ export class RedisMessageQueueProvider
       let processingMessages = 0;
       let completedMessages = 0;
       let failedMessages = 0;
-      let allProcessingTimes: number[] = [];
+      const allProcessingTimes: number[] = [];
 
       for (const qName of queues) {
         const keys = this.getRedisKeys(qName);

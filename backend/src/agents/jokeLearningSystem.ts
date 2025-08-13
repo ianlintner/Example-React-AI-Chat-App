@@ -306,7 +306,9 @@ export class JokeLearningSystem {
   }
 
   private updateHumorStyle(profile: UserJokeProfile): void {
-    if (profile.reactionHistory.length < 5) return;
+    if (profile.reactionHistory.length < 5) {
+      return;
+    }
 
     const recentReactions = profile.reactionHistory.slice(-10);
     const categoryPreferences = new Map<string, number>();
@@ -433,7 +435,9 @@ export class JokeLearningSystem {
     scores: Map<string, number>,
     preferences: string[],
   ): string | null {
-    if (scores.size === 0) return null;
+    if (scores.size === 0) {
+      return null;
+    }
 
     // Prefer user's known preferences
     for (const pref of preferences) {

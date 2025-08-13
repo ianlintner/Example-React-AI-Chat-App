@@ -182,7 +182,9 @@ export class GoalSeekingSystem {
   // Entertainment goals should primarily activate when user is on hold with hold agent
   activateGoals(userId: string): Goal[] {
     const userState = this.userStates.get(userId);
-    if (!userState) return [];
+    if (!userState) {
+      return [];
+    }
 
     // Check if user is currently with the hold agent
     const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(
@@ -234,7 +236,9 @@ export class GoalSeekingSystem {
   // ONLY generate proactive actions when user is with the hold agent
   async generateProactiveActions(userId: string): Promise<GoalAction[]> {
     const userState = this.userStates.get(userId);
-    if (!userState) return [];
+    if (!userState) {
+      return [];
+    }
 
     // Check if user is currently with the hold agent
     const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(
@@ -442,7 +446,9 @@ export class GoalSeekingSystem {
     agentResponse: string,
   ): void {
     const userState = this.userStates.get(userId);
-    if (!userState) return;
+    if (!userState) {
+      return;
+    }
 
     const lowerResponse = userResponse.toLowerCase();
     const positiveIndicators = [
@@ -463,7 +469,9 @@ export class GoalSeekingSystem {
     ];
 
     userState.goals.forEach(goal => {
-      if (!goal.active) return;
+      if (!goal.active) {
+        return;
+      }
 
       switch (goal.type) {
         case 'entertainment':
@@ -538,7 +546,7 @@ export class GoalSeekingSystem {
   }
 
   // Clean up inactive users
-  cleanupInactiveUsers(maxInactiveTime: number = 3600000): void {
+  cleanupInactiveUsers(maxInactiveTime = 3600000): void {
     // 1 hour default
     const now = Date.now();
 

@@ -55,7 +55,7 @@ export class ResponseValidator {
     aiResponse: string,
     conversationId: string,
     userId: string,
-    isProactive: boolean = false,
+    isProactive = false,
   ): ValidationResult {
     const validationSpan = createValidationSpan(
       conversationId,
@@ -460,7 +460,9 @@ export class ResponseValidator {
     const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const words = response.split(/\s+/).filter(w => w.length > 0);
 
-    if (sentences.length === 0 || words.length === 0) return 0;
+    if (sentences.length === 0 || words.length === 0) {
+      return 0;
+    }
 
     const avgWordsPerSentence = words.length / sentences.length;
     const avgSyllablesPerWord =
@@ -512,7 +514,9 @@ export class ResponseValidator {
     );
 
     // If no technical terms, assume non-technical response is accurate
-    if (foundTerms.length === 0) return 1;
+    if (foundTerms.length === 0) {
+      return 1;
+    }
 
     // Simple check - if technical terms are used, assume reasonable accuracy
     // In a real system, this would be more sophisticated
@@ -557,7 +561,9 @@ export class ResponseValidator {
     // Basic coherence scoring
     const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
 
-    if (sentences.length === 0) return 0;
+    if (sentences.length === 0) {
+      return 0;
+    }
 
     let coherenceScore = 0.8; // Start with base score
 
@@ -578,7 +584,9 @@ export class ResponseValidator {
       response.toLowerCase().includes(transition),
     );
 
-    if (hasTransitions) coherenceScore += 0.2;
+    if (hasTransitions) {
+      coherenceScore += 0.2;
+    }
 
     // Penalize for very long sentences (may indicate run-on)
     const avgSentenceLength = response.length / sentences.length;

@@ -216,13 +216,18 @@ export class TracingContextManager {
       timestamp: new Date().toISOString(),
     };
 
-    if (attributes.userId) standardAttrs['user.id'] = attributes.userId;
-    if (attributes.conversationId)
+    if (attributes.userId) {
+      standardAttrs['user.id'] = attributes.userId;
+    }
+    if (attributes.conversationId) {
       standardAttrs['conversation.id'] = attributes.conversationId;
-    if (attributes.agentType)
+    }
+    if (attributes.agentType) {
       standardAttrs['agent.type'] = attributes.agentType;
-    if (attributes.operation)
+    }
+    if (attributes.operation) {
       standardAttrs['operation.name'] = attributes.operation;
+    }
 
     // Add all custom attributes
     Object.keys(attributes).forEach(key => {

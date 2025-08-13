@@ -83,10 +83,15 @@ export class InMemoryMessageQueueProvider
 
     // Apply options to message
     if (options) {
-      if (options.maxRetries !== undefined)
+      if (options.maxRetries !== undefined) {
         message.maxRetries = options.maxRetries;
-      if (options.priority !== undefined) message.priority = options.priority;
-      if (options.delayMs !== undefined) message.delayMs = options.delayMs;
+      }
+      if (options.priority !== undefined) {
+        message.priority = options.priority;
+      }
+      if (options.delayMs !== undefined) {
+        message.delayMs = options.delayMs;
+      }
     }
 
     // Set defaults
@@ -185,7 +190,9 @@ export class InMemoryMessageQueueProvider
     // Use a small delay to allow batching
     setTimeout(async () => {
       const message = await this.dequeue(queueName);
-      if (!message) return;
+      if (!message) {
+        return;
+      }
 
       const startTime = Date.now();
 
@@ -328,7 +335,7 @@ export class InMemoryMessageQueueProvider
     let processingMessages = 0;
     let completedMessages = 0;
     let failedMessages = 0;
-    let allProcessingTimes: number[] = [];
+    const allProcessingTimes: number[] = [];
 
     for (const queue of this.queues.values()) {
       totalMessages += queue.stats.totalMessages;

@@ -8,7 +8,9 @@ describe('Tracer Utility Functions', () => {
 
   // Define the utility functions directly to test their logic
   const endSpan = (span: any, attributes?: Record<string, any>) => {
-    if (!span) return;
+    if (!span) {
+      return;
+    }
     if (attributes) {
       span.setAttributes(attributes);
     }
@@ -16,7 +18,9 @@ describe('Tracer Utility Functions', () => {
   };
 
   const setSpanStatus = (span: any, success: boolean, message?: string) => {
-    if (!span) return;
+    if (!span) {
+      return;
+    }
     if (success) {
       span.setStatus({ code: SpanStatusCode.OK });
     } else {
@@ -32,7 +36,9 @@ describe('Tracer Utility Functions', () => {
     name: string,
     attributes?: Record<string, any>,
   ) => {
-    if (!span) return;
+    if (!span) {
+      return;
+    }
     span.addEvent(name, {
       timestamp: Date.now(),
       ...(attributes && attributes),

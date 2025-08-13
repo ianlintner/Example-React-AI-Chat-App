@@ -12,7 +12,7 @@ describe('MemoryStorage', () => {
 
   const createMockConversation = (
     id: string,
-    title: string = 'Test Conversation',
+    title = 'Test Conversation',
   ): Conversation => ({
     id,
     title,
@@ -24,7 +24,7 @@ describe('MemoryStorage', () => {
   const createMockMessage = (
     id: string,
     conversationId: string,
-    content: string = 'Test message',
+    content = 'Test message',
   ): Message => ({
     id,
     content,

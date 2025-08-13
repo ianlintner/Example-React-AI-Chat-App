@@ -24,7 +24,7 @@ async function demonstrateGoalSeekingSystem() {
     "I'm waiting for support",
     [],
   );
-  console.log('Agent response:', response1.content.substring(0, 100) + '...');
+  console.log('Agent response:', `${response1.content.substring(0, 100)}...`);
   console.log('Proactive actions:', response1.proactiveActions?.length || 0);
 
   // Check user state
@@ -42,7 +42,7 @@ async function demonstrateGoalSeekingSystem() {
     'Can you tell me a joke?',
     [],
   );
-  console.log('Agent response:', response2.content.substring(0, 100) + '...');
+  console.log('Agent response:', `${response2.content.substring(0, 100)}...`);
   console.log('Agent used:', response2.agentUsed);
 
   // Check updated state
@@ -57,7 +57,7 @@ async function demonstrateGoalSeekingSystem() {
     'I have a JavaScript error in my code',
     [],
   );
-  console.log('Agent response:', response3.content.substring(0, 100) + '...');
+  console.log('Agent response:', `${response3.content.substring(0, 100)}...`);
   console.log('Agent used:', response3.agentUsed);
 
   // Check final state

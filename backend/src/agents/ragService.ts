@@ -451,7 +451,9 @@ export class RAGService {
       filteredItems = filteredItems.filter(item => item.category === category);
     }
 
-    if (filteredItems.length === 0) return null;
+    if (filteredItems.length === 0) {
+      return null;
+    }
 
     const randomIndex = Math.floor(Math.random() * filteredItems.length);
     return filteredItems[randomIndex];
@@ -487,10 +489,7 @@ export class RAGService {
   }
 
   // Get top-rated content
-  getTopRated(
-    type?: 'joke' | 'trivia' | 'gif',
-    limit: number = 5,
-  ): ContentItem[] {
+  getTopRated(type?: 'joke' | 'trivia' | 'gif', limit = 5): ContentItem[] {
     let items = this.contentDatabase;
 
     if (type) {
@@ -507,7 +506,7 @@ export class RAGService {
   searchForAgent(
     agentType: AgentType,
     query: string,
-    fallbackToRandom: boolean = true,
+    fallbackToRandom = true,
   ): ContentItem | null {
     let contentType: 'joke' | 'trivia' | 'gif';
 

@@ -345,10 +345,18 @@ export class ConversationManager {
     currentAgent: AgentType,
   ): AgentType {
     // Based on conversation topic
-    if (context.conversationTopic === 'technical') return 'website_support';
-    if (context.conversationTopic === 'humor') return 'joke';
-    if (context.conversationTopic === 'educational') return 'trivia';
-    if (context.conversationTopic === 'visual_entertainment') return 'gif';
+    if (context.conversationTopic === 'technical') {
+      return 'website_support';
+    }
+    if (context.conversationTopic === 'humor') {
+      return 'joke';
+    }
+    if (context.conversationTopic === 'educational') {
+      return 'trivia';
+    }
+    if (context.conversationTopic === 'visual_entertainment') {
+      return 'gif';
+    }
 
     // Default fallback to general agent if current agent isn't performing well
     return currentAgent === 'general' ? 'joke' : 'general';
@@ -380,7 +388,9 @@ export class ConversationManager {
 
   // Generate handoff message for smooth transition
   generateHandoffMessage(context: ConversationContext): string | null {
-    if (!context.shouldHandoff || !context.handoffTarget) return null;
+    if (!context.shouldHandoff || !context.handoffTarget) {
+      return null;
+    }
 
     const handoffMessages: Record<string, Record<AgentType, string>> = {
       explicit_request: {
@@ -562,7 +572,9 @@ export class ConversationManager {
     userId: string,
   ): { target: AgentType; reason: string; message: string } | null {
     const context = this.contexts.get(userId);
-    if (!context?.shouldHandoff || !context.handoffTarget) return null;
+    if (!context?.shouldHandoff || !context.handoffTarget) {
+      return null;
+    }
 
     return {
       target: context.handoffTarget,
@@ -573,7 +585,7 @@ export class ConversationManager {
   }
 
   // Clean up old contexts
-  cleanup(maxAge: number = 3600000): void {
+  cleanup(maxAge = 3600000): void {
     // 1 hour default
     const now = Date.now();
     for (const [userId, context] of this.contexts) {

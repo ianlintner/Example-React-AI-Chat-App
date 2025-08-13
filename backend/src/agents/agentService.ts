@@ -39,7 +39,9 @@ export class AgentService {
   // Check if an agent is currently active for a user
   private isAgentActive(userId: string): boolean {
     const activeAgent = this.activeAgents.get(userId);
-    if (!activeAgent) return false;
+    if (!activeAgent) {
+      return false;
+    }
 
     // Consider an agent inactive after 30 seconds of no activity
     const thirtySecondsAgo = Date.now() - 30000;
@@ -631,12 +633,18 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     userId: string,
     actions: GoalAction[],
   ): GoalAction[] {
-    if (actions.length === 0) return actions;
+    if (actions.length === 0) {
+      return actions;
+    }
 
     // Sort actions by priority (immediate first, then by type priority)
     const sortedActions = actions.sort((a, b) => {
-      if (a.timing === 'immediate' && b.timing !== 'immediate') return -1;
-      if (a.timing !== 'immediate' && b.timing === 'immediate') return 1;
+      if (a.timing === 'immediate' && b.timing !== 'immediate') {
+        return -1;
+      }
+      if (a.timing !== 'immediate' && b.timing === 'immediate') {
+        return 1;
+      }
 
       // Priority order: technical_support > entertainment > engagement
       const priorityOrder: Record<string, number> = {
@@ -823,7 +831,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   forceAgentHandoff(
     userId: string,
     targetAgent: AgentType,
-    reason: string = 'Manual override',
+    reason = 'Manual override',
   ): void {
     const context = this.conversationManager.getContext(userId);
     if (context) {

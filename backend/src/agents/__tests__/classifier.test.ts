@@ -233,7 +233,7 @@ describe('Message Classifier', () => {
       });
 
       it('should handle very long messages', async () => {
-        const longMessage = 'programming '.repeat(100) + 'help me debug this';
+        const longMessage = `${'programming '.repeat(100)}help me debug this`;
         const result = await classifyMessage(longMessage);
         expect(result.agentType).toBe('website_support');
         expect(result.confidence).toBeGreaterThan(0.5);

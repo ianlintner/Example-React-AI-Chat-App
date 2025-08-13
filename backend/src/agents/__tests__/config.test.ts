@@ -421,7 +421,7 @@ describe('Agent Configuration', () => {
         expect(agent.systemPrompt.trim()).toBe(agent.systemPrompt);
 
         // Should not have double spaces (except intentional formatting)
-        const doubleSpaces = (agent.systemPrompt.match(/  /g) || []).length;
+        const doubleSpaces = (agent.systemPrompt.match(/ {2}/g) || []).length;
         expect(doubleSpaces).toBeLessThan(10); // Some formatting is acceptable
       });
     });

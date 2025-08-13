@@ -33,7 +33,9 @@ export class MemoryStorage {
     updates: Partial<Conversation>,
   ): Conversation | null {
     const index = this.conversations.findIndex(c => c.id === id);
-    if (index === -1) return null;
+    if (index === -1) {
+      return null;
+    }
 
     this.conversations[index] = { ...this.conversations[index], ...updates };
     return this.conversations[index];
@@ -41,7 +43,9 @@ export class MemoryStorage {
 
   deleteConversation(id: string): boolean {
     const index = this.conversations.findIndex(c => c.id === id);
-    if (index === -1) return false;
+    if (index === -1) {
+      return false;
+    }
 
     this.conversations.splice(index, 1);
     return true;
@@ -57,7 +61,9 @@ export class MemoryStorage {
 
   getConversationWithLastMessage(id: string): Conversation | null {
     const conversation = this.getConversation(id);
-    if (!conversation) return null;
+    if (!conversation) {
+      return null;
+    }
 
     return {
       ...conversation,

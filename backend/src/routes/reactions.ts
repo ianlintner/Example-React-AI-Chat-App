@@ -19,9 +19,9 @@ router.post('/record', async (req, res) => {
     const validReactionTypes = ['laugh', 'groan', 'love', 'meh', 'dislike'];
     if (!validReactionTypes.includes(reactionType)) {
       return res.status(400).json({
-        error:
-          'Invalid reaction type. Must be one of: ' +
-          validReactionTypes.join(', '),
+        error: `Invalid reaction type. Must be one of: ${validReactionTypes.join(
+          ', ',
+        )}`,
       });
     }
 

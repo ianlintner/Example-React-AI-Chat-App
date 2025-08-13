@@ -17,7 +17,14 @@ const config = {
     '!**/coverage/**',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'text-summary', 'lcov', 'html', 'json', 'cobertura'],
+  coverageReporters: [
+    'text',
+    'text-summary',
+    'lcov',
+    'html',
+    'json',
+    'cobertura',
+  ],
   testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',

@@ -130,7 +130,6 @@ jobs:
   # Frontend linting and building
   frontend:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
 
     steps:

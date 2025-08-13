@@ -43,6 +43,34 @@ jobs:
             workflows:
               - '.github/workflows/**'
 
+  quality:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install all workspaces
+        run: npm run install:all
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint (root)
+        run: npm run lint
+
+      - name: Type check (root)
+        run: npm run type-check
+
   # Backend testing and building
   backend:
     needs: changes
@@ -123,6 +151,18 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
       - name: Build frontend
         working-directory: frontend
         run: npm run build
@@ -169,8 +209,8 @@ jobs:
 
   # Integration tests (only if both backend and frontend changed or on main branch)
   integration:
-    needs: [changes, backend, frontend]
-    if: always() && (needs.backend.result == 'success' || needs.backend.result == 'skipped') && (needs.frontend.result == 'success' || needs.frontend.result == 'skipped') && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.ref == 'refs/heads/main')
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -186,20 +226,6 @@ jobs:
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
-
-      - name: Download backend artifact
-        if: needs.changes.outputs.backend == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-dist
-          path: backend/dist/
-
-      - name: Download frontend artifact
-        if: needs.changes.outputs.frontend == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
 
       - name: Start services for testing
         run: |
@@ -283,13 +309,14 @@ jobs:
 
   # Summary job for branch protection
   ci-success:
-    needs: [changes, backend, frontend, security, integration]
+    needs: [changes, quality, backend, frontend, security, integration]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check all job results
         run: |
           echo "Changes: ${{ needs.changes.result }}"
+          echo "Quality: ${{ needs.quality.result }}"
           echo "Backend: ${{ needs.backend.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
           echo "Security: ${{ needs.security.result }}"
@@ -308,6 +335,11 @@ jobs:
 
           if [[ "${{ needs.frontend.result }}" == "failure" ]]; then
             echo "❌ Frontend job failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.quality.result }}" == "failure" ]]; then
+            echo "❌ Quality job failed"
             exit 1
           fi
 

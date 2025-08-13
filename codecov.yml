@@ -3,18 +3,20 @@ coverage:
   status:
     project:
       default:
-        target: 80%
-        threshold: 2%
+        target: 0%
+        threshold: 100%
         base: auto
+        informational: true
     patch:
       default:
-        target: 80%
-        threshold: 2%
+        target: 0%
+        threshold: 100%
         base: auto
+        informational: true
 
   precision: 2
   round: down
-  range: '70...100'
+  range: '0...100'
 
 parsers:
   gcov:

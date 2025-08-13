@@ -15,9 +15,18 @@ class ShardSequencer extends TestSequencer {
 
     let selected = tests;
 
-    if (Number.isFinite(total) && total > 1 && Number.isFinite(index) && index >= 0 && index < total) {
-      selected = tests.filter((test) => {
-        const hash = crypto.createHash('md5').update(test.path).digest('hex');
+    if (
+      Number.isFinite(total) &&
+      total > 1 &&
+      Number.isFinite(index) &&
+      index >= 0 &&
+      index < total
+    ) {
+      selected = tests.filter(test => {
+        const hash = crypto
+          .createHash('md5')
+          .update(test.path)
+          .digest('hex');
         const n = parseInt(hash.slice(0, 8), 16);
         return n % total === index;
       });

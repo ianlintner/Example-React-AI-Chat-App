@@ -79,5 +79,8 @@
     "ts-jest": "^29.4.1",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "markdown-it": "^14.1.0"
+  }
 }

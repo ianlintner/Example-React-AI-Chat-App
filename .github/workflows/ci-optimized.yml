@@ -197,7 +197,7 @@ jobs:
 
       - name: Start services for testing
         run: |
-          docker-compose -f docker-compose.test.yml up -d --wait
+          docker compose -f docker-compose.test.yml up -d --wait
           timeout=60
           while ! curl -s http://localhost:3001/health > /dev/null && [ $timeout -gt 0 ]; do
             echo "Waiting for backend to be ready... ($timeout seconds left)"
@@ -207,7 +207,7 @@ jobs:
 
           if [ $timeout -le 0 ]; then
             echo "Backend failed to start within 60 seconds"
-            docker-compose -f docker-compose.test.yml logs
+            docker compose -f docker-compose.test.yml logs
             exit 1
           fi
 
@@ -227,7 +227,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose -f docker-compose.test.yml down
+        run: docker compose -f docker-compose.test.yml down
 
   # Build Docker images (only on main branch pushes)
   docker:

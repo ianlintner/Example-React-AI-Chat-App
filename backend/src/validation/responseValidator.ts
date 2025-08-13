@@ -1,12 +1,10 @@
 import { AgentType } from '../agents/types';
-import { Message } from '../types';
 import {
   createValidationSpan,
   addSpanEvent,
   setSpanStatus,
   endSpan,
 } from '../tracing/tracer';
-import { tracingContextManager } from '../tracing/contextManager';
 import { metrics } from '../metrics/prometheus';
 
 export interface ValidationResult {

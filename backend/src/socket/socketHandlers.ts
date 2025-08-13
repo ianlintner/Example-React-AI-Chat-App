@@ -7,12 +7,10 @@ import { GoalAction } from '../agents/goalSeekingSystem';
 import { metrics } from '../metrics/prometheus';
 import {
   createConversationSpan,
-  createAgentSpan,
   createGoalSeekingSpan,
   addSpanEvent,
   setSpanStatus,
   endSpan,
-  context,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
 
@@ -452,7 +450,7 @@ export const setupSocketHandlers = (io: Server) => {
       // Use context manager to ensure proper trace propagation
       await tracingContextManager.withSpan(
         conversationSpan,
-        async (span, traceContext) => {
+        async (span, _traceContext) => {
           addSpanEvent(span, 'chat_request_received', {
             'user.socket_id': socket.id,
             'message.length': data.message?.length || 0,

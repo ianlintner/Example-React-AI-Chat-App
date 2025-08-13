@@ -1,5 +1,4 @@
 import { Server as SocketServer } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 import { MessageQueue, QUEUE_NAMES, createMessageQueue } from './messageQueue';
 import {
   QueueMessage,

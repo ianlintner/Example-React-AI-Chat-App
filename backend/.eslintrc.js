@@ -16,6 +16,7 @@ module.exports = {
     ecmaVersion: 2022,
     sourceType: 'module',
     project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
   },
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -37,22 +38,21 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/__tests__/**/*', '**/*.test.ts', '**/*.test.tsx', '**/*.integration.test.ts'],
+      files: [
+        '**/__tests__/**/*',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/*.integration.test.ts',
+      ],
       rules: {
         '@typescript-eslint/no-unused-vars': 'warn',
         '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/ban-types': 'off',
         'no-console': 'off',
-        'prefer-template': 'off'
+        'prefer-template': 'off',
       },
     },
   ],
-  ignorePatterns: [
-    'dist/',
-    'node_modules/',
-    'coverage/',
-    '*.js',
-    '!.eslintrc.js',
-  ],
+  ignorePatterns: ['dist/', 'node_modules/', 'coverage/', '*.js'],
 };

@@ -8,13 +8,16 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code
 COPY backend/ .
 
 # Build TypeScript
 RUN npm run build
+
+# Prune dev dependencies for production image
+RUN npm prune --production
 
 # Production stage
 FROM node:18-alpine AS production

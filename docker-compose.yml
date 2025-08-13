@@ -34,6 +34,11 @@ services:
       - "9412:9411"
     networks:
       - observability
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Prometheus - Metrics Storage
   prometheus:

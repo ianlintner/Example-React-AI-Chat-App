@@ -106,7 +106,7 @@ register.registerMetric(validationMetrics);
 register.registerMetric(memoryStorageOperations);
 
 // Middleware for HTTP metrics
-export function httpMetricsMiddleware(req: any, res: any, next: any) {
+export function httpMetricsMiddleware(req: any, res: any, next: any): void {
   const start = Date.now();
 
   res.on('finish', () => {

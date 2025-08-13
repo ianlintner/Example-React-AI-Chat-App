@@ -4,20 +4,21 @@ import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import {
   trace,
   context,
+  Span,
   SpanKind,
   SpanStatusCode,
-  Span,
+  Attributes,
 } from '@opentelemetry/api';
-import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-base';
 import {
-  BatchSpanProcessor,
+  ConsoleSpanExporter,
   SimpleSpanProcessor,
+  AlwaysOnSampler,
+  ReadableSpan,
 } from '@opentelemetry/sdk-trace-base';
-import { AlwaysOnSampler } from '@opentelemetry/sdk-trace-base';
 import { tracingContextManager } from './contextManager';
 
 // Configure the trace exporter - FORCED TO USE ZIPKIN
-const createTraceExporter = () => {
+const createTraceExporter = (): ZipkinExporter => {
   console.log('🔍 TRACING DEBUG - Environment variables:');
   console.log('  ZIPKIN_ENDPOINT:', process.env.ZIPKIN_ENDPOINT);
   console.log('  OTEL_SERVICE_NAME:', process.env.OTEL_SERVICE_NAME);
@@ -36,7 +37,10 @@ const createTraceExporter = () => {
 
   // Log when traces are being exported to Zipkin
   const originalExport = zipkinExporter.export.bind(zipkinExporter);
-  zipkinExporter.export = (spans: any, resultCallback: any) => {
+  zipkinExporter.export = (
+    spans: ReadableSpan[],
+    resultCallback: (result: any) => void,
+  ): void => {
     console.log(
       `🔍 ZIPKIN EXPORT: Attempting to send ${spans.length} spans to ${zipkinEndpoint}`,
     );
@@ -44,10 +48,10 @@ const createTraceExporter = () => {
       `🔍 ZIPKIN EXPORT: Current timestamp: ${new Date().toISOString()}`,
     );
 
-    spans.forEach((span: any, index: number) => {
+    spans.forEach((span: ReadableSpan, index: number) => {
       console.log(`  📊 Span ${index + 1}: ${span.name}`);
-      console.log(`    - Trace ID: ${span.traceId}`);
-      console.log(`    - Span ID: ${span.spanId}`);
+      console.log(`    - Trace ID: ${span.spanContext().traceId}`);
+      console.log(`    - Span ID: ${span.spanContext().spanId}`);
       console.log(`    - Status: ${JSON.stringify(span.status)}`);
       console.log(`    - Attributes: ${JSON.stringify(span.attributes)}`);
     });
@@ -76,13 +80,13 @@ const createTraceExporter = () => {
 };
 
 // Add console exporter for debugging
-const createConsoleExporter = () => {
+const createConsoleExporter = (): ConsoleSpanExporter => {
   console.log('🔍 Adding console exporter for debugging');
   return new ConsoleSpanExporter();
 };
 
 // Create span processors for direct OTLP export without buffering
-const createSpanProcessors = () => {
+const createSpanProcessors = (): SimpleSpanProcessor[] => {
   const processors = [];
 
   // Always add console exporter for debugging
@@ -100,7 +104,7 @@ const createSpanProcessors = () => {
 };
 
 // Create and configure the Node SDK with 100% sampling
-const createSDK = () => {
+const createSDK = (): NodeSDK => {
   const serviceName =
     process.env.OTEL_SERVICE_NAME || 'ai-goal-seeking-backend';
   console.log('🔍 Creating Node SDK with service name:', serviceName);
@@ -141,7 +145,7 @@ const createSDK = () => {
 const sdk = createSDK();
 
 // Initialize the SDK with enhanced error handling
-export const initializeTracing = () => {
+export const initializeTracing = (): void => {
   try {
     console.log('🔍 Starting OpenTelemetry SDK initialization...');
     sdk.start();
@@ -156,7 +160,7 @@ export const initializeTracing = () => {
 };
 
 // Create a test span to verify tracing is working
-const createTestSpan = () => {
+const createTestSpan = (): void => {
   try {
     console.log('🔍 Creating test span...');
     const testTracer = trace.getTracer('test-tracer', '1.0.0');
@@ -190,7 +194,7 @@ export const createConversationSpan = (
   conversationId: string,
   operation: string,
   userId?: string,
-) => {
+): Span => {
   const spanName = tracingContextManager.createSpanName(
     'conversation',
     operation,
@@ -221,7 +225,7 @@ export const createAgentSpan = (
   operation: string,
   conversationId?: string,
   userId?: string,
-) => {
+): Span => {
   const spanName = tracingContextManager.createSpanName(
     'agent',
     `${agentType}.${operation}`,
@@ -253,7 +257,7 @@ export const createValidationSpan = (
   conversationId: string,
   agentType?: string,
   userId?: string,
-) => {
+): Span => {
   const spanName = tracingContextManager.createSpanName(
     'validation',
     'validate_response',
@@ -283,21 +287,23 @@ export const createValidationSpan = (
 
 export const createGoalSeekingSpan = (
   conversationId: string,
-  userState: any,
+  userState: unknown,
   userId?: string,
-) => {
+): Span => {
   const spanName = tracingContextManager.createSpanName(
     'goal_seeking',
     'process',
   );
+
+  const userStateObj = userState as any;
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
     attributes: {
       'conversation.id': conversationId,
       'goal_seeking.operation': 'process',
-      'user.state': userState?.state || 'unknown',
-      'user.engagement': userState?.engagement || 0,
-      'user.satisfaction': userState?.satisfaction || 0,
+      'user.state': userStateObj?.state || 'unknown',
+      'user.engagement': userStateObj?.engagement || 0,
+      'user.satisfaction': userStateObj?.satisfaction || 0,
     },
   });
 
@@ -306,9 +312,9 @@ export const createGoalSeekingSpan = (
     conversationId,
     userId,
     operation: 'goal_seeking.process',
-    'user.state': userState?.state,
-    'user.engagement': userState?.engagement,
-    'user.satisfaction': userState?.satisfaction,
+    'user.state': userStateObj?.state,
+    'user.engagement': userStateObj?.engagement,
+    'user.satisfaction': userStateObj?.satisfaction,
   });
 
   // Log trace context
@@ -319,10 +325,10 @@ export const createGoalSeekingSpan = (
 
 // Helper function to add span events
 export const addSpanEvent = (
-  span: any,
+  span: Span | null | undefined,
   name: string,
-  attributes?: Record<string, any>,
-) => {
+  attributes?: Attributes,
+): void => {
   if (!span) {
     return;
   }
@@ -334,10 +340,10 @@ export const addSpanEvent = (
 
 // Helper function to set span status
 export const setSpanStatus = (
-  span: any,
+  span: Span | null | undefined,
   success: boolean,
   message?: string,
-) => {
+): void => {
   if (!span) {
     return;
   }
@@ -352,7 +358,10 @@ export const setSpanStatus = (
 };
 
 // Helper function to safely end span
-export const endSpan = (span: any, attributes?: Record<string, any>) => {
+export const endSpan = (
+  span: Span | null | undefined,
+  attributes?: Attributes,
+): void => {
   if (!span) {
     return;
   }

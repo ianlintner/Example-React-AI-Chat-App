@@ -10,6 +10,7 @@ import { socketService } from './services/socketService';
 import ChatScreen from './components/ChatScreen';
 import MessageInput from './components/MessageInput';
 import type { Conversation, Message } from './types';
+import { logger } from './services/logger';
 
 export default function App() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -24,13 +25,13 @@ export default function App() {
       try {
         // Connect to socket server
         await socketService.connect();
-        console.log('Socket connected successfully');
+        logger.info('Socket connected successfully');
         setError(null);
         setIsConnected(true);
 
         // Automatically send support request after connection
         setTimeout(() => {
-          console.log('Sending automatic support request...');
+          logger.info('Sending automatic support request...');
           socketService.sendStreamingMessage({
             message:
               "Hello, I need technical support. I'm experiencing some issues and would like assistance from a support agent. Please let me know if I'll be on hold and if you can help keep me entertained while I wait.",
@@ -39,7 +40,7 @@ export default function App() {
           });
         }, 1000); // Send after 1 second to ensure connection is established
       } catch (error) {
-        console.error('Failed to connect to socket server:', error);
+        logger.error('Failed to connect to socket server:', error);
         setError('Failed to connect to server. Please check your connection.');
         setIsConnected(false);
       } finally {
@@ -72,7 +73,7 @@ export default function App() {
   // Handle socket events for new messages, proactive messages and streaming
   useEffect(() => {
     const handleNewMessage = (message: Message) => {
-      console.log('📨 New message received in App:', message);
+      logger.info('📨 New message received in App:', message);
 
       // Add new message to current conversation or create new one
       setConversation(prev => {
@@ -85,7 +86,7 @@ export default function App() {
             createdAt: new Date(),
             updatedAt: new Date(),
           };
-          console.log(
+          logger.info(
             'New conversation created for new message:',
             newConversation,
           );
@@ -94,18 +95,18 @@ export default function App() {
 
         // Check if this conversation is different from current one
         if (prev.id !== message.conversationId) {
-          console.log('Different conversation ID, not adding new message');
+          logger.info('Different conversation ID, not adding new message');
           return prev; // Don't add message from different conversation
         }
 
         // Check if message already exists to prevent duplicates
         const existingMessage = prev.messages.find(m => m.id === message.id);
         if (existingMessage) {
-          console.log('Message already exists, not adding duplicate');
+          logger.info('Message already exists, not adding duplicate');
           return prev;
         }
 
-        console.log('Adding new message to existing conversation');
+        logger.info('Adding new message to existing conversation');
         const updatedConversation = {
           ...prev,
           messages: [
@@ -114,7 +115,7 @@ export default function App() {
           ],
           updatedAt: new Date(),
         };
-        console.log(
+        logger.info(
           'Updated conversation with new message:',
           updatedConversation,
         );
@@ -129,7 +130,7 @@ export default function App() {
       messageId: string;
       conversationId: string;
     }) => {
-      console.log('🔄 Stream start received:', data);
+      logger.info('🔄 Stream start received:', data);
 
       // Add streaming message placeholder
       setConversation(prev => {
@@ -200,7 +201,7 @@ export default function App() {
       content: string;
       isComplete: boolean;
     }) => {
-      console.log('📝 Stream chunk received:', chunk.content.slice(-20));
+      logger.info('📝 Stream chunk received:', chunk.content.slice(-20));
 
       // Update message content
       setConversation(prev => {
@@ -231,7 +232,7 @@ export default function App() {
       agentUsed?: string;
       confidence?: number;
     }) => {
-      console.log('✅ Stream complete received:', data);
+      logger.info('✅ Stream complete received:', data);
 
       // Update message with final agent info and complete status
       setConversation(prev => {
@@ -260,7 +261,7 @@ export default function App() {
       agentUsed: string;
       confidence: number;
     }) => {
-      console.log(
+      logger.info(
         '🎁 Proactive message received in App:',
         JSON.stringify(data, null, 2),
       );

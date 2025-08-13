@@ -28,7 +28,7 @@ const executeProactiveAction = async (
   conversation: Conversation,
   socket: any,
   io: Server,
-) => {
+): Promise<void> => {
   try {
     console.log(
       `🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`,
@@ -138,7 +138,15 @@ const executeProactiveAction = async (
   }
 };
 
-export const setupSocketHandlers = (io: Server) => {
+export const setupSocketHandlers = (
+  io: Server,
+): {
+  emitToConversation: (
+    conversationId: string,
+    event: string,
+    data: any,
+  ) => void;
+} => {
   console.log(
     'OpenAI API Key status:',
     process.env.OPENAI_API_KEY ? 'Present' : 'Missing',
@@ -154,7 +162,7 @@ export const setupSocketHandlers = (io: Server) => {
     agentService.initializeUserGoals(socket.id);
 
     // Enhanced agent status with proactive context polling
-    const sendAgentStatus = () => {
+    const sendAgentStatus = (): void => {
       const activeAgent = agentService.getActiveAgentInfo(socket.id);
       const conversationContext = agentService.getConversationContext(
         socket.id,
@@ -774,7 +782,7 @@ export const setupSocketHandlers = (io: Server) => {
     conversationId: string,
     event: string,
     data: any,
-  ) => {
+  ): void => {
     io.to(conversationId).emit(event, data);
   };
 

@@ -14,14 +14,17 @@ import messageQueueRoutes from './routes/messageQueue';
 import { setupSocketHandlers } from './socket/socketHandlers';
 import { httpMetricsMiddleware, register } from './metrics/prometheus';
 import { createQueueService } from './messageQueue/queueService';
+import { getLogger, patchConsole } from './logger';
 
 dotenv.config();
+patchConsole();
+const log = getLogger(false);
 
 // Initialize OpenTelemetry tracing
 initializeTracing();
 
 // Generate test traces for debugging Zipkin connection
-console.log('🔍 Generating initial test traces for debugging...');
+log.info('🔍 Generating initial test traces for debugging...');
 setTimeout(() => {
   const { generateTestTraces } = require('./tracing/testTraces');
   generateTestTraces();
@@ -130,26 +133,26 @@ const queueService = createQueueService(io);
 
 // Start server
 server.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(
+  log.info(`🚀 Server running on port ${PORT}`);
+  log.info(
     `🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`,
   );
-  console.log(`💾 Using in-memory storage for demo purposes`);
+  log.info(`💾 Using in-memory storage for demo purposes`);
 
   // Initialize queue service
   try {
     await queueService.initialize();
-    console.log(
+    log.info(
       `📨 Message Queue System initialized (${queueService.getProviderType()} provider)`,
     );
   } catch (error) {
-    console.error('❌ Failed to initialize message queue system:', error);
+    log.error({ error }, '❌ Failed to initialize message queue system');
   }
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+  log.info('\n🛑 Received SIGINT, shutting down gracefully...');
 
   try {
     // Shutdown queue service
@@ -157,17 +160,17 @@ process.on('SIGINT', async () => {
 
     // Close server
     server.close(() => {
-      console.log('👋 Server shut down complete');
+      log.info('👋 Server shut down complete');
       process.exit(0);
     });
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    log.error({ error }, 'Error during shutdown');
     process.exit(1);
   }
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+  log.info('\n🛑 Received SIGTERM, shutting down gracefully...');
 
   try {
     // Shutdown queue service
@@ -175,11 +178,11 @@ process.on('SIGTERM', async () => {
 
     // Close server
     server.close(() => {
-      console.log('👋 Server shut down complete');
+      log.info('👋 Server shut down complete');
       process.exit(0);
     });
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    log.error({ error }, 'Error during shutdown');
     process.exit(1);
   }
 });

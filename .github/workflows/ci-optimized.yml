@@ -225,7 +225,7 @@ jobs:
             npm run test:integration
           else
             echo "No integration tests defined, running smoke tests"
-            curl -f http://localhost:3001/health || exit 1
+            curl -f http://localhost:5001/health || exit 1
             echo "✅ Basic smoke test passed"
           fi
 

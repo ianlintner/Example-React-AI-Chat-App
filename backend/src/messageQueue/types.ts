@@ -29,7 +29,7 @@ export interface MessageQueueProvider {
   enqueue(
     queueName: string,
     message: QueueMessage,
-    options?: QueueOptions
+    options?: QueueOptions,
   ): Promise<void>;
   dequeue(queueName: string): Promise<QueueMessage | null>;
   peek(queueName: string): Promise<QueueMessage | null>;

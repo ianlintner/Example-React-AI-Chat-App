@@ -133,7 +133,7 @@ const messageId = await queueService.enqueueChatMessage(
   'conv456', // conversationId
   'Hello!', // message
   undefined, // forceAgent (optional)
-  7 // priority (optional)
+  7, // priority (optional)
 );
 
 // Enqueue a delayed proactive action
@@ -145,7 +145,7 @@ const actionId = await queueService.enqueueProactiveAction(
   'conv456', // conversationId
   'delayed', // timing
   5000, // delayMs (5 seconds)
-  8 // priority
+  8, // priority
 );
 
 // Check queue stats
@@ -172,7 +172,7 @@ const customMessage = queue.createMessage(
     priority: 6,
     maxRetries: 5,
     userId: 'user123',
-  }
+  },
 );
 
 // Enqueue the message

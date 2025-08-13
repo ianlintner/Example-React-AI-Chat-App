@@ -50,7 +50,7 @@ Examples:
 Message to classify: "{message}"`;
 
 export async function classifyMessage(
-  message: string
+  message: string,
 ): Promise<MessageClassification> {
   // Fallback classification using simple keyword matching
   const fallbackClassification = (): MessageClassification => {
@@ -173,7 +173,7 @@ export async function classifyMessage(
       'give me a fact',
       'share a fact',
       'educate me with facts',
-      'tell me something i don\'t know',
+      "tell me something i don't know",
       'fascinating knowledge',
       'share fascinating knowledge',
       'share interesting history',
@@ -316,7 +316,7 @@ export async function classifyMessage(
         } catch (parseError) {
           console.warn(
             'Failed to parse AI classification response:',
-            parseError
+            parseError,
           );
         }
       }

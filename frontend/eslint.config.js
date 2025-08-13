@@ -12,7 +12,7 @@ module.exports = [
   {
     ignores: [
       'coverage/**',
-      'dist/**', 
+      'dist/**',
       '.expo/**',
       'node_modules/**',
       'build/**',
@@ -24,10 +24,10 @@ module.exports = [
       '**/*.min.js',
     ],
   },
-  
+
   // Base JavaScript configuration
   js.configs.recommended,
-  
+
   // Main configuration for TypeScript and React files
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -107,8 +107,8 @@ module.exports = [
       'template-curly-spacing': ['error', 'never'],
       'arrow-spacing': 'error',
       // Remove conflicting comma-dangle rule - handled by Prettier
-      'semi': 'off', // Handled by Prettier
-      'quotes': 'off', // Handled by Prettier
+      semi: 'off', // Handled by Prettier
+      quotes: 'off', // Handled by Prettier
       'jsx-quotes': 'off', // Handled by Prettier
 
       // Prettier integration - let Prettier handle all formatting
@@ -130,10 +130,14 @@ module.exports = [
       ],
     },
   },
-  
+
   // Test files configuration
   {
-    files: ['**/__tests__/**/*', '**/*.test.{js,jsx,ts,tsx}', '**/__mocks__/**/*'],
+    files: [
+      '**/__tests__/**/*',
+      '**/*.test.{js,jsx,ts,tsx}',
+      '**/__mocks__/**/*',
+    ],
     languageOptions: {
       globals: {
         ...globals.jest,
@@ -158,7 +162,7 @@ module.exports = [
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
-  
+
   // Node.js files configuration
   {
     files: ['**/*.config.js', 'jest.setup.js', 'scripts/**/*.js'],

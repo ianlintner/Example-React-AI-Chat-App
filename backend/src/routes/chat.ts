@@ -94,7 +94,7 @@ router.post('/', async (req, res) => {
     const agentResponse = await agentService.processMessage(
       message,
       conversation.messages.slice(0, -1), // Exclude the user message we just added
-      forceAgent
+      forceAgent,
     );
     addSpanEvent(span, 'agent.processing_complete', {
       agentUsed: agentResponse.agentUsed,
@@ -135,7 +135,7 @@ router.post('/', async (req, res) => {
     setSpanStatus(
       span,
       false,
-      error instanceof Error ? error.message : 'Unknown error'
+      error instanceof Error ? error.message : 'Unknown error',
     );
     endSpan(span);
     return res.status(500).json({

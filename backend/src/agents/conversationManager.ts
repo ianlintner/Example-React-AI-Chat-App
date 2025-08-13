@@ -34,7 +34,7 @@ export class ConversationManager {
   // Initialize conversation context for a user
   initializeContext(
     userId: string,
-    initialAgent: AgentType = 'general'
+    initialAgent: AgentType = 'general',
   ): ConversationContext {
     const context: ConversationContext = {
       userId,
@@ -57,7 +57,7 @@ export class ConversationManager {
     userId: string,
     userMessage: string,
     agentResponse: string,
-    currentAgent: AgentType
+    currentAgent: AgentType,
   ): ConversationContext {
     let context = this.contexts.get(userId);
     if (!context) {
@@ -76,7 +76,7 @@ export class ConversationManager {
     const handoffTrigger = this.detectHandoffTriggers(
       context,
       userMessage,
-      currentAgent
+      currentAgent,
     );
     if (handoffTrigger) {
       context.shouldHandoff = true;
@@ -92,7 +92,7 @@ export class ConversationManager {
   private analyzeMessage(
     context: ConversationContext,
     userMessage: string,
-    agentResponse: string
+    agentResponse: string,
   ): void {
     const lowerMessage = userMessage.toLowerCase();
 
@@ -147,10 +147,10 @@ export class ConversationManager {
     ];
 
     const positiveCount = positiveIndicators.filter(word =>
-      lowerMessage.includes(word)
+      lowerMessage.includes(word),
     ).length;
     const negativeCount = negativeIndicators.filter(word =>
-      lowerMessage.includes(word)
+      lowerMessage.includes(word),
     ).length;
 
     if (positiveCount > negativeCount) {
@@ -171,7 +171,7 @@ export class ConversationManager {
   private detectHandoffTriggers(
     context: ConversationContext,
     userMessage: string,
-    currentAgent: AgentType
+    currentAgent: AgentType,
   ): HandoffTrigger | null {
     const lowerMessage = userMessage.toLowerCase();
 
@@ -196,7 +196,7 @@ export class ConversationManager {
         ];
 
       console.log(
-        `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' from ${entertainmentAgents.length} available entertainment agents`
+        `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' from ${entertainmentAgents.length} available entertainment agents`,
       );
 
       return {
@@ -313,7 +313,7 @@ export class ConversationManager {
   // Detect if current topic doesn't match current agent's expertise
   private detectTopicMismatch(
     context: ConversationContext,
-    currentAgent: AgentType
+    currentAgent: AgentType,
   ): HandoffTrigger | null {
     const topicAgentMap: Record<string, AgentType> = {
       technical: 'website_support',
@@ -342,7 +342,7 @@ export class ConversationManager {
   // Suggest a better agent based on context
   private suggestBetterAgent(
     context: ConversationContext,
-    currentAgent: AgentType
+    currentAgent: AgentType,
   ): AgentType {
     // Based on conversation topic
     if (context.conversationTopic === 'technical') return 'website_support';
@@ -559,7 +559,7 @@ export class ConversationManager {
 
   // Get handoff information
   getHandoffInfo(
-    userId: string
+    userId: string,
   ): { target: AgentType; reason: string; message: string } | null {
     const context = this.contexts.get(userId);
     if (!context?.shouldHandoff || !context.handoffTarget) return null;

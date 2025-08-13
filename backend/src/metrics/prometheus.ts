@@ -117,7 +117,7 @@ export function httpMetricsMiddleware(req: any, res: any, next: any) {
 
     httpRequestDuration.observe(
       { method, route, status_code: statusCode },
-      duration
+      duration,
     );
     httpRequestsTotal.inc({ method, route, status_code: statusCode });
   });

@@ -186,7 +186,7 @@ export class GoalSeekingSystem {
 
     // Check if user is currently with the hold agent
     const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(
-      userId
+      userId,
     );
     const isWithHoldAgent = activeAgentInfo?.agentType === 'hold_agent';
 
@@ -222,7 +222,7 @@ export class GoalSeekingSystem {
         goal.lastUpdated = new Date();
         activatedGoals.push(goal);
         console.log(
-          `🎯 Goal activated for user ${userId}: ${goal.type} (with hold agent: ${isWithHoldAgent})`
+          `🎯 Goal activated for user ${userId}: ${goal.type} (with hold agent: ${isWithHoldAgent})`,
         );
       }
     });
@@ -238,20 +238,20 @@ export class GoalSeekingSystem {
 
     // Check if user is currently with the hold agent
     const activeAgentInfo = (this.agentService as any).getActiveAgentInfo(
-      userId
+      userId,
     );
     const isWithHoldAgent = activeAgentInfo?.agentType === 'hold_agent';
 
     // If not with hold agent, don't generate any proactive actions
     if (!isWithHoldAgent) {
       console.log(
-        `🚫 Proactive actions skipped for user ${userId} - not with hold agent (current: ${activeAgentInfo?.agentType || 'none'})`
+        `🚫 Proactive actions skipped for user ${userId} - not with hold agent (current: ${activeAgentInfo?.agentType || 'none'})`,
       );
       return [];
     }
 
     console.log(
-      `✅ User ${userId} is with hold agent - generating proactive actions`
+      `✅ User ${userId} is with hold agent - generating proactive actions`,
     );
 
     const actions: GoalAction[] = [];
@@ -272,7 +272,7 @@ export class GoalSeekingSystem {
 
   private async generateActionForGoal(
     goal: Goal,
-    userState: UserState
+    userState: UserState,
   ): Promise<GoalAction | null> {
     switch (goal.type) {
       case 'entertainment':
@@ -287,7 +287,7 @@ export class GoalSeekingSystem {
   }
 
   private async generateEntertainmentAction(
-    userState: UserState
+    userState: UserState,
   ): Promise<GoalAction> {
     const preference = userState.entertainmentPreference || 'mixed';
     let agentType: AgentType;
@@ -333,7 +333,7 @@ export class GoalSeekingSystem {
       case 'general_chat':
         // Changed from general agent to random entertainment agent
         const randomChatIndex = Math.floor(
-          Math.random() * entertainmentAgents.length
+          Math.random() * entertainmentAgents.length,
         );
         agentType = entertainmentAgents[randomChatIndex];
         message = this.getEntertainmentMessage(agentType);
@@ -342,13 +342,13 @@ export class GoalSeekingSystem {
         // AUTOMATIC RANDOM ENTERTAINMENT HANDOFF
         // Select a random entertainment agent from all available options
         const randomIndex = Math.floor(
-          Math.random() * entertainmentAgents.length
+          Math.random() * entertainmentAgents.length,
         );
         agentType = entertainmentAgents[randomIndex];
         message = this.getEntertainmentMessage(agentType);
 
         console.log(
-          `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${agentType}' from ${entertainmentAgents.length} available entertainment agents`
+          `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${agentType}' from ${entertainmentAgents.length} available entertainment agents`,
         );
     }
 
@@ -386,7 +386,7 @@ export class GoalSeekingSystem {
   }
 
   private async generateTechnicalSupportAction(
-    userState: UserState
+    userState: UserState,
   ): Promise<GoalAction> {
     let message = "I'm here to help with your technical question. ";
 
@@ -406,7 +406,7 @@ export class GoalSeekingSystem {
   }
 
   private async generateEngagementAction(
-    userState: UserState
+    userState: UserState,
   ): Promise<GoalAction> {
     // REMOVED ALL GENERAL AGENT PROACTIVE ACTIONS - Only entertainment agents should be proactive
     // Instead of general agent status updates, let entertainment agents handle engagement
@@ -439,7 +439,7 @@ export class GoalSeekingSystem {
   updateGoalProgress(
     userId: string,
     userResponse: string,
-    agentResponse: string
+    agentResponse: string,
   ): void {
     const userState = this.userStates.get(userId);
     if (!userState) return;
@@ -469,23 +469,23 @@ export class GoalSeekingSystem {
         case 'entertainment':
           if (
             positiveIndicators.some(indicator =>
-              lowerResponse.includes(indicator)
+              lowerResponse.includes(indicator),
             )
           ) {
             goal.progress = Math.min(1, goal.progress + 0.3);
             userState.satisfactionLevel = Math.min(
               1,
-              userState.satisfactionLevel + 0.1
+              userState.satisfactionLevel + 0.1,
             );
           } else if (
             negativeIndicators.some(indicator =>
-              lowerResponse.includes(indicator)
+              lowerResponse.includes(indicator),
             )
           ) {
             goal.progress = Math.max(0, goal.progress - 0.2);
             userState.satisfactionLevel = Math.max(
               0,
-              userState.satisfactionLevel - 0.1
+              userState.satisfactionLevel - 0.1,
             );
           }
           break;
@@ -499,7 +499,7 @@ export class GoalSeekingSystem {
             goal.progress = 1;
             userState.satisfactionLevel = Math.min(
               1,
-              userState.satisfactionLevel + 0.2
+              userState.satisfactionLevel + 0.2,
             );
           } else if (
             lowerResponse.includes('help') ||
@@ -514,7 +514,7 @@ export class GoalSeekingSystem {
             goal.progress = Math.min(1, goal.progress + 0.2);
             userState.engagementLevel = Math.min(
               1,
-              userState.engagementLevel + 0.1
+              userState.engagementLevel + 0.1,
             );
           }
           break;

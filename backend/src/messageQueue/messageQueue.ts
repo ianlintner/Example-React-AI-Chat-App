@@ -56,7 +56,7 @@ export class MessageQueue {
   async enqueue(
     queueName: string,
     message: QueueMessage,
-    options?: QueueOptions
+    options?: QueueOptions,
   ): Promise<void> {
     return await this.provider.enqueue(queueName, message, options);
   }
@@ -123,7 +123,7 @@ export class MessageQueue {
       delayMs?: number;
       maxRetries?: number;
       metadata?: Record<string, any>;
-    }
+    },
   ): QueueMessage {
     return {
       id: this.generateMessageId(),
@@ -147,7 +147,7 @@ export class MessageQueue {
 
 // Factory function for easy creation
 export function createMessageQueue(
-  config?: Partial<MessageQueueConfig>
+  config?: Partial<MessageQueueConfig>,
 ): MessageQueue {
   const defaultConfig: MessageQueueConfig = {
     provider:

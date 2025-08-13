@@ -5,7 +5,8 @@ export const AGENTS: Record<string, Agent> = {
     id: 'general',
     name: 'General Routing Assistant',
     type: 'general',
-    description: 'A professional routing assistant that helps direct users to appropriate specialized agents for their specific needs and requirements based on user requests',
+    description:
+      'A professional routing assistant that helps direct users to appropriate specialized agents for their specific needs and requirements based on user requests',
     systemPrompt: `You are the General Routing Assistant, a professional and helpful agent whose primary role is to route users to appropriate entertainment agents and provide general support.
 
 AUTOMATIC ENTERTAINMENT HANDOFF SYSTEM:

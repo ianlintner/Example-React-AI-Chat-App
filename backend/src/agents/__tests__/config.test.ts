@@ -103,7 +103,18 @@ describe('Agent Configuration', () => {
     });
 
     describe('Entertainment Agents', () => {
-      const entertainmentAgents = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru', 'youtube_guru', 'dnd_master'];
+      const entertainmentAgents = [
+        'joke',
+        'trivia',
+        'gif',
+        'story_teller',
+        'riddle_master',
+        'quote_master',
+        'game_host',
+        'music_guru',
+        'youtube_guru',
+        'dnd_master',
+      ];
 
       entertainmentAgents.forEach(agentType => {
         it(`should configure ${agentType} agent for immediate response`, () => {
@@ -158,7 +169,13 @@ describe('Agent Configuration', () => {
     });
 
     describe('Support Agents', () => {
-      const supportAgents = ['account_support', 'billing_support', 'website_support', 'operator_support', 'hold_agent'];
+      const supportAgents = [
+        'account_support',
+        'billing_support',
+        'website_support',
+        'operator_support',
+        'hold_agent',
+      ];
 
       supportAgents.forEach(agentType => {
         it(`should configure ${agentType} agent with professional tone`, () => {
@@ -259,23 +276,25 @@ describe('Agent Configuration', () => {
 
       invalidAgentTypes.forEach(invalidType => {
         expect(() => getAgent(invalidType as any)).toThrow();
-        expect(() => getAgent(invalidType as any)).toThrow(`Agent type '${invalidType}' not found`);
+        expect(() => getAgent(invalidType as any)).toThrow(
+          `Agent type '${invalidType}' not found`,
+        );
       });
     });
 
     it('should return immutable agent objects', () => {
       const agent1 = getAgent('joke');
       const agent2 = getAgent('joke');
-      
+
       expect(agent1).toBe(agent2); // Same reference
-      
+
       // Attempting to modify should not affect the original
       const originalName = agent1.name;
       (agent1 as any).name = 'Modified Name';
-      
+
       const agent3 = getAgent('joke');
       expect(agent3.name).toBe('Modified Name'); // Note: This shows the object is mutable (could be a concern)
-      
+
       // Reset for other tests
       agent1.name = originalName;
     });
@@ -285,7 +304,7 @@ describe('Agent Configuration', () => {
       expect(() => getAgent(' ')).toThrow();
       expect(() => getAgent('\t')).toThrow();
       expect(() => getAgent('\n')).toThrow();
-      
+
       // Test with special characters
       expect(() => getAgent('@#$%')).toThrow();
       expect(() => getAgent('joke!')).toThrow();
@@ -296,8 +315,10 @@ describe('Agent Configuration', () => {
 
   describe('Configuration Validation', () => {
     it('should use consistent model names', () => {
-      const models = [...new Set(Object.values(AGENTS).map(agent => agent.model))];
-      
+      const models = [
+        ...new Set(Object.values(AGENTS).map(agent => agent.model)),
+      ];
+
       // Should only use known OpenAI models
       const validModels = [
         'gpt-3.5-turbo',
@@ -305,23 +326,34 @@ describe('Agent Configuration', () => {
         'gpt-4-turbo-preview',
         'gpt-4-turbo',
       ];
-      
+
       models.forEach(model => {
         expect(validModels).toContain(model);
       });
     });
 
     it('should have reasonable temperature distributions', () => {
-      const temperatures = Object.values(AGENTS).map(agent => agent.temperature);
-      
+      const temperatures = Object.values(AGENTS).map(
+        agent => agent.temperature,
+      );
+
       // Support agents should generally have lower temperatures (more deterministic)
-      const supportAgents = ['account_support', 'billing_support', 'website_support'];
+      const supportAgents = [
+        'account_support',
+        'billing_support',
+        'website_support',
+      ];
       supportAgents.forEach(agentType => {
         expect(AGENTS[agentType].temperature).toBeLessThanOrEqual(0.5);
       });
-      
+
       // Entertainment agents should generally have higher temperatures (more creative)
-      const entertainmentAgents = ['joke', 'story_teller', 'game_host', 'dnd_master'];
+      const entertainmentAgents = [
+        'joke',
+        'story_teller',
+        'game_host',
+        'dnd_master',
+      ];
       entertainmentAgents.forEach(agentType => {
         expect(AGENTS[agentType].temperature).toBeGreaterThanOrEqual(0.7);
       });
@@ -329,11 +361,16 @@ describe('Agent Configuration', () => {
 
     it('should have appropriate maxTokens for agent purposes', () => {
       // Agents that need longer responses
-      const longResponseAgents = ['operator_support', 'website_support', 'billing_support', 'dnd_master'];
+      const longResponseAgents = [
+        'operator_support',
+        'website_support',
+        'billing_support',
+        'dnd_master',
+      ];
       longResponseAgents.forEach(agentType => {
         expect(AGENTS[agentType].maxTokens).toBeGreaterThanOrEqual(1200);
       });
-      
+
       // Agents that should be more concise
       const shortResponseAgents = ['gif'];
       shortResponseAgents.forEach(agentType => {
@@ -351,14 +388,16 @@ describe('Agent Configuration', () => {
     it('should have unique agent names', () => {
       const names = Object.values(AGENTS).map(agent => agent.name);
       const uniqueNames = [...new Set(names)];
-      
+
       expect(names.length).toBe(uniqueNames.length);
     });
 
     it('should have unique agent descriptions', () => {
-      const descriptions = Object.values(AGENTS).map(agent => agent.description);
+      const descriptions = Object.values(AGENTS).map(
+        agent => agent.description,
+      );
       const uniqueDescriptions = [...new Set(descriptions)];
-      
+
       expect(descriptions.length).toBe(uniqueDescriptions.length);
     });
   });
@@ -368,9 +407,10 @@ describe('Agent Configuration', () => {
       Object.values(AGENTS).forEach((agent: Agent) => {
         const prompt = agent.systemPrompt.toLowerCase();
         // Should define what the agent is/does
-        const hasRoleDefinition = prompt.includes('you are') || 
-                                 prompt.includes('your role') || 
-                                 prompt.includes('you specialize');
+        const hasRoleDefinition =
+          prompt.includes('you are') ||
+          prompt.includes('your role') ||
+          prompt.includes('you specialize');
         expect(hasRoleDefinition).toBe(true);
       });
     });
@@ -379,7 +419,7 @@ describe('Agent Configuration', () => {
       Object.values(AGENTS).forEach((agent: Agent) => {
         // Should not have excessive newlines at start/end
         expect(agent.systemPrompt.trim()).toBe(agent.systemPrompt);
-        
+
         // Should not have double spaces (except intentional formatting)
         const doubleSpaces = (agent.systemPrompt.match(/  /g) || []).length;
         expect(doubleSpaces).toBeLessThan(10); // Some formatting is acceptable
@@ -387,27 +427,45 @@ describe('Agent Configuration', () => {
     });
 
     it('should include behavioral instructions in entertainment agents', () => {
-      const entertainmentAgents = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru', 'youtube_guru', 'dnd_master'];
-      
+      const entertainmentAgents = [
+        'joke',
+        'trivia',
+        'gif',
+        'story_teller',
+        'riddle_master',
+        'quote_master',
+        'game_host',
+        'music_guru',
+        'youtube_guru',
+        'dnd_master',
+      ];
+
       entertainmentAgents.forEach(agentType => {
         const prompt = AGENTS[agentType].systemPrompt.toLowerCase();
-        const hasBehaviorInstructions = prompt.includes('respond') || 
-                                       prompt.includes('style') || 
-                                       prompt.includes('personality') ||
-                                       prompt.includes('approach');
+        const hasBehaviorInstructions =
+          prompt.includes('respond') ||
+          prompt.includes('style') ||
+          prompt.includes('personality') ||
+          prompt.includes('approach');
         expect(hasBehaviorInstructions).toBe(true);
       });
     });
 
     it('should include escalation instructions in support agents', () => {
-      const supportAgents = ['account_support', 'billing_support', 'website_support', 'operator_support'];
-      
+      const supportAgents = [
+        'account_support',
+        'billing_support',
+        'website_support',
+        'operator_support',
+      ];
+
       supportAgents.forEach(agentType => {
         const prompt = AGENTS[agentType].systemPrompt.toLowerCase();
-        const hasEscalationInstructions = prompt.includes('escalate') || 
-                                         prompt.includes('coordinate') || 
-                                         prompt.includes('refer') ||
-                                         prompt.includes('specialist');
+        const hasEscalationInstructions =
+          prompt.includes('escalate') ||
+          prompt.includes('coordinate') ||
+          prompt.includes('refer') ||
+          prompt.includes('specialist');
         expect(hasEscalationInstructions).toBe(true);
       });
     });
@@ -417,7 +475,7 @@ describe('Agent Configuration', () => {
     it('should have agent types matching TypeScript AgentType union', () => {
       // This test ensures our config matches the type definitions
       const agentTypes = Object.keys(AGENTS) as AgentType[];
-      
+
       agentTypes.forEach(agentType => {
         const agent = getAgent(agentType);
         expect(agent.type).toBe(agentType);
@@ -426,7 +484,7 @@ describe('Agent Configuration', () => {
 
     it('should return proper Agent interface structure', () => {
       const agent = getAgent('general');
-      
+
       // Ensure it matches Agent interface exactly
       expect(agent).toMatchObject({
         id: expect.any(String),
@@ -438,9 +496,18 @@ describe('Agent Configuration', () => {
         temperature: expect.any(Number),
         maxTokens: expect.any(Number),
       });
-      
+
       // Should not have extra properties beyond Agent interface
-      const expectedKeys = ['id', 'name', 'type', 'description', 'systemPrompt', 'model', 'temperature', 'maxTokens'];
+      const expectedKeys = [
+        'id',
+        'name',
+        'type',
+        'description',
+        'systemPrompt',
+        'model',
+        'temperature',
+        'maxTokens',
+      ];
       expect(Object.keys(agent).sort()).toEqual(expectedKeys.sort());
     });
   });
@@ -448,24 +515,26 @@ describe('Agent Configuration', () => {
   describe('Performance', () => {
     it('should retrieve agents quickly', () => {
       const start = Date.now();
-      
+
       for (let i = 0; i < 100; i++) {
         getAgent('general');
         getAgent('joke');
         getAgent('trivia');
       }
-      
+
       const duration = Date.now() - start;
       expect(duration).toBeLessThan(50); // Should be very fast lookup
     });
 
     it('should handle concurrent agent retrievals', () => {
-      const promises = Array(50).fill(0).map((_, i) => {
-        const agentTypes = ['general', 'joke', 'trivia', 'gif'];
-        const agentType = agentTypes[i % agentTypes.length];
-        return Promise.resolve(getAgent(agentType));
-      });
-      
+      const promises = Array(50)
+        .fill(0)
+        .map((_, i) => {
+          const agentTypes = ['general', 'joke', 'trivia', 'gif'];
+          const agentType = agentTypes[i % agentTypes.length];
+          return Promise.resolve(getAgent(agentType));
+        });
+
       return Promise.all(promises).then(results => {
         expect(results).toHaveLength(50);
         results.forEach(agent => {

@@ -347,11 +347,11 @@ export class RAGService {
           description: 'Mind blown reaction',
           alt: 'Person with mind blown expression',
         },
-      }
+      },
     );
 
     console.log(
-      `📚 RAG Service initialized with ${this.contentDatabase.length} content items`
+      `📚 RAG Service initialized with ${this.contentDatabase.length} content items`,
     );
   }
 
@@ -413,14 +413,14 @@ export class RAGService {
     // Filter by category
     if (query.category) {
       filteredItems = filteredItems.filter(
-        item => item.category === query.category
+        item => item.category === query.category,
       );
     }
 
     // Filter by tags
     if (query.tags && query.tags.length > 0) {
       filteredItems = filteredItems.filter(item =>
-        query.tags!.some(tag => item.tags.includes(tag))
+        query.tags!.some(tag => item.tags.includes(tag)),
       );
     }
 
@@ -435,7 +435,7 @@ export class RAGService {
       .slice(0, query.limit || this.maxResults);
 
     console.log(
-      `🔍 RAG Search: "${query.text}" found ${results.length} results`
+      `🔍 RAG Search: "${query.text}" found ${results.length} results`,
     );
     return results;
   }
@@ -443,7 +443,7 @@ export class RAGService {
   // Get random content of a specific type
   getRandomContent(
     type: 'joke' | 'trivia' | 'gif',
-    category?: string
+    category?: string,
   ): ContentItem | null {
     let filteredItems = this.contentDatabase.filter(item => item.type === type);
 
@@ -466,7 +466,7 @@ export class RAGService {
   addContent(item: ContentItem): void {
     // Check for duplicates
     const existing = this.contentDatabase.find(
-      existing => existing.content === item.content || existing.id === item.id
+      existing => existing.content === item.content || existing.id === item.id,
     );
 
     if (!existing) {
@@ -489,7 +489,7 @@ export class RAGService {
   // Get top-rated content
   getTopRated(
     type?: 'joke' | 'trivia' | 'gif',
-    limit: number = 5
+    limit: number = 5,
   ): ContentItem[] {
     let items = this.contentDatabase;
 
@@ -507,7 +507,7 @@ export class RAGService {
   searchForAgent(
     agentType: AgentType,
     query: string,
-    fallbackToRandom: boolean = true
+    fallbackToRandom: boolean = true,
   ): ContentItem | null {
     let contentType: 'joke' | 'trivia' | 'gif';
 

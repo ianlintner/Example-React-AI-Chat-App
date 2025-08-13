@@ -1,4 +1,8 @@
-import { ResponseValidator, ValidationResult, ValidationIssue } from '../responseValidator';
+import {
+  ResponseValidator,
+  ValidationResult,
+  ValidationIssue,
+} from '../responseValidator';
 import { AgentType } from '../../agents/types';
 import * as tracer from '../../tracing/tracer';
 import { tracingContextManager } from '../../tracing/contextManager';
@@ -13,7 +17,7 @@ describe('ResponseValidator', () => {
 
   beforeEach(() => {
     validator = new ResponseValidator();
-    
+
     // Mock span
     mockSpan = {
       setAttributes: jest.fn(),
@@ -29,7 +33,7 @@ describe('ResponseValidator', () => {
     (tracingContextManager.withSpan as jest.Mock).mockImplementation(
       async (span, callback) => {
         return await callback(span, {});
-      }
+      },
     );
 
     // Clear any existing logs
@@ -50,15 +54,16 @@ describe('ResponseValidator', () => {
     };
 
     it('should validate a good response successfully', () => {
-      const aiResponse = 'Hello! I am doing well, thank you for asking. How can I help you today?';
-      
+      const aiResponse =
+        'Hello! I am doing well, thank you for asking. How can I help you today?';
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
         defaultParams.userId,
-        defaultParams.isProactive
+        defaultParams.isProactive,
       );
 
       expect(result.isValid).toBe(true);
@@ -70,13 +75,13 @@ describe('ResponseValidator', () => {
 
     it('should detect empty or too short responses', () => {
       const aiResponse = 'Hi';
-      
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.isValid).toBe(false);
@@ -85,19 +90,20 @@ describe('ResponseValidator', () => {
           type: 'content',
           severity: 'high',
           message: 'Response is too short or empty',
-        })
+        }),
       );
     });
 
     it('should detect repetitive content', () => {
-      const aiResponse = 'testing testing testing testing testing testing testing. Another another another another another another another.';
-      
+      const aiResponse =
+        'testing testing testing testing testing testing testing. Another another another another another another another.';
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.issues).toContainEqual(
@@ -105,19 +111,20 @@ describe('ResponseValidator', () => {
           type: 'content',
           severity: 'medium',
           message: expect.stringContaining('Excessive repetition of words'),
-        })
+        }),
       );
     });
 
     it('should detect inappropriate language', () => {
-      const aiResponse = 'You are stupid and I hate you. This is a terrible question.';
-      
+      const aiResponse =
+        'You are stupid and I hate you. This is a terrible question.';
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.isValid).toBe(false);
@@ -126,19 +133,20 @@ describe('ResponseValidator', () => {
           type: 'appropriateness',
           severity: 'high',
           message: 'Response contains inappropriate language',
-        })
+        }),
       );
     });
 
     it('should detect overly casual tone', () => {
-      const aiResponse = 'Hey bro, that is totally awesome dude! This is so cool buddy and totally amazing mate!';
-      
+      const aiResponse =
+        'Hey bro, that is totally awesome dude! This is so cool buddy and totally amazing mate!';
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.issues).toContainEqual(
@@ -146,20 +154,20 @@ describe('ResponseValidator', () => {
           type: 'appropriateness',
           severity: 'medium',
           message: 'Response tone may be too casual for support context',
-        })
+        }),
       );
     });
 
     it('should validate response length for different agent types', () => {
       const shortResponse = 'Yes.';
-      
+
       // Test joke agent (min: 10, max: 500)
       const jokeResult = validator.validateResponse(
         'joke',
         'Tell me a joke',
         shortResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(jokeResult.issues).toContainEqual(
@@ -167,7 +175,7 @@ describe('ResponseValidator', () => {
           type: 'length',
           severity: 'medium',
           message: expect.stringContaining('Response too short for joke agent'),
-        })
+        }),
       );
 
       // Test with very long response
@@ -177,28 +185,31 @@ describe('ResponseValidator', () => {
         'Tell me a joke',
         longResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(longJokeResult.issues).toContainEqual(
         expect.objectContaining({
           type: 'length',
           severity: 'low',
-          message: expect.stringContaining('Response may be too long for joke agent'),
-        })
+          message: expect.stringContaining(
+            'Response may be too long for joke agent',
+          ),
+        }),
       );
     });
 
     it('should detect technical accuracy issues', () => {
       const userMessage = 'I have a JavaScript error in my code';
-      const aiResponse = "Here's the code to fix your bug. Try this solution and compile it.";
-      
+      const aiResponse =
+        "Here's the code to fix your bug. Try this solution and compile it.";
+
       const result = validator.validateResponse(
         'joke', // Non-technical agent
         userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.issues).toContainEqual(
@@ -206,19 +217,20 @@ describe('ResponseValidator', () => {
           type: 'technical',
           severity: 'high',
           message: 'Non-technical agent providing technical solutions',
-        })
+        }),
       );
     });
 
     it('should detect coherence issues', () => {
-      const aiResponse = 'this is a sentence without proper capitalization and punctuation';
-      
+      const aiResponse =
+        'this is a sentence without proper capitalization and punctuation';
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.issues).toContainEqual(
@@ -226,19 +238,19 @@ describe('ResponseValidator', () => {
           type: 'coherence',
           severity: 'medium',
           message: 'Response contains incomplete or malformed sentences',
-        })
+        }),
       );
     });
 
     it('should detect logical contradictions', () => {
       const aiResponse = 'Yes, that is correct. No, you are wrong about that.';
-      
+
       const result = validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.issues).toContainEqual(
@@ -246,7 +258,7 @@ describe('ResponseValidator', () => {
           type: 'coherence',
           severity: 'high',
           message: 'Response contains logical contradictions',
-        })
+        }),
       );
     });
 
@@ -262,7 +274,7 @@ describe('ResponseValidator', () => {
         defaultParams.userMessage,
         'Test response',
         defaultParams.conversationId,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(result.isValid).toBe(false);
@@ -272,7 +284,7 @@ describe('ResponseValidator', () => {
           type: 'technical',
           severity: 'high',
           message: 'Validation system error',
-        })
+        }),
       );
 
       // Restore original method
@@ -281,20 +293,20 @@ describe('ResponseValidator', () => {
 
     it('should create proper tracing spans', () => {
       const aiResponse = 'This is a test response.';
-      
+
       validator.validateResponse(
         defaultParams.agentType,
         defaultParams.userMessage,
         aiResponse,
         defaultParams.conversationId,
         defaultParams.userId,
-        defaultParams.isProactive
+        defaultParams.isProactive,
       );
 
       expect(tracer.createValidationSpan).toHaveBeenCalledWith(
         defaultParams.conversationId,
         defaultParams.agentType,
-        defaultParams.userId
+        defaultParams.userId,
       );
 
       expect(tracer.addSpanEvent).toHaveBeenCalledWith(
@@ -304,7 +316,7 @@ describe('ResponseValidator', () => {
           'agent.type': defaultParams.agentType,
           'user.id': defaultParams.userId,
           'conversation.id': defaultParams.conversationId,
-        })
+        }),
       );
 
       expect(tracer.setSpanStatus).toHaveBeenCalledWith(mockSpan, true);
@@ -320,7 +332,7 @@ describe('ResponseValidator', () => {
         'Test message',
         response,
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(result.metrics.responseLength).toBe(response.length);
@@ -337,7 +349,7 @@ describe('ResponseValidator', () => {
         'Test message',
         '',
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(result.metrics.responseLength).toBe(0);
@@ -348,7 +360,8 @@ describe('ResponseValidator', () => {
 
   describe('Scoring System', () => {
     it('should calculate higher scores for better responses', () => {
-      const goodResponse = 'Thank you for your question. I am here to help you with any concerns you may have.';
+      const goodResponse =
+        'Thank you for your question. I am here to help you with any concerns you may have.';
       const badResponse = 'stupid question dude whatever';
 
       const goodResult = validator.validateResponse(
@@ -356,7 +369,7 @@ describe('ResponseValidator', () => {
         'Can you help me?',
         goodResponse,
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       const badResult = validator.validateResponse(
@@ -364,7 +377,7 @@ describe('ResponseValidator', () => {
         'Can you help me?',
         badResponse,
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(goodResult.score).toBeGreaterThan(badResult.score);
@@ -374,13 +387,13 @@ describe('ResponseValidator', () => {
 
     it('should penalize responses with high severity issues', () => {
       const responseWithHighSeverityIssue = 'You are stupid and I hate you.';
-      
+
       const result = validator.validateResponse(
         'general',
         'Test message',
         responseWithHighSeverityIssue,
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(result.score).toBeLessThan(0.7);
@@ -391,17 +404,17 @@ describe('ResponseValidator', () => {
   describe('Validation Logging', () => {
     it('should log validation results', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      
+
       validator.validateResponse(
         'general',
         'Test message',
         'Test response',
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('🔍 Validation Result [general]')
+        expect.stringContaining('🔍 Validation Result [general]'),
       );
 
       consoleSpy.mockRestore();
@@ -413,7 +426,7 @@ describe('ResponseValidator', () => {
         'Test message 1',
         'Test response 1',
         'test-conv-1',
-        'test-user-1'
+        'test-user-1',
       );
 
       validator.validateResponse(
@@ -421,7 +434,7 @@ describe('ResponseValidator', () => {
         'Test message 2',
         'Test response 2',
         'test-conv-2',
-        'test-user-2'
+        'test-user-2',
       );
 
       const logs = validator.getValidationLogs();
@@ -442,7 +455,7 @@ describe('ResponseValidator', () => {
           `Test message ${i}`,
           `Test response ${i}`,
           `test-conv-${i}`,
-          `test-user-${i}`
+          `test-user-${i}`,
         );
       }
 
@@ -462,7 +475,7 @@ describe('ResponseValidator', () => {
 
     it('should return empty stats when no validations', () => {
       const stats = validator.getValidationStats();
-      
+
       expect(stats.totalValidations).toBe(0);
       expect(stats.averageScore).toBe(0);
       expect(stats.validationRate).toBe(0);
@@ -476,7 +489,7 @@ describe('ResponseValidator', () => {
         'Good message',
         'Thank you for your question. I am happy to help.',
         'test-conv-1',
-        'test-user-1'
+        'test-user-1',
       );
 
       validator.validateResponse(
@@ -484,11 +497,11 @@ describe('ResponseValidator', () => {
         'Bad message',
         'stupid',
         'test-conv-2',
-        'test-user-2'
+        'test-user-2',
       );
 
       const stats = validator.getValidationStats();
-      
+
       expect(stats.totalValidations).toBe(2);
       expect(stats.averageScore).toBeGreaterThan(0);
       expect(stats.validationRate).toBeLessThan(1); // Should be less than 1 due to the bad response
@@ -501,7 +514,7 @@ describe('ResponseValidator', () => {
         'Test',
         'You are stupid', // Should create appropriateness_high issue
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       const stats = validator.getValidationStats();
@@ -512,7 +525,7 @@ describe('ResponseValidator', () => {
   describe('Helper Methods', () => {
     it('should count syllables correctly', () => {
       const countSyllables = (validator as any).countSyllables.bind(validator);
-      
+
       expect(countSyllables('hello')).toBe(2);
       expect(countSyllables('cat')).toBe(1);
       expect(countSyllables('beautiful')).toBe(3);
@@ -520,55 +533,69 @@ describe('ResponseValidator', () => {
     });
 
     it('should calculate readability score', () => {
-      const calculateReadabilityScore = (validator as any).calculateReadabilityScore.bind(validator);
-      
+      const calculateReadabilityScore = (
+        validator as any
+      ).calculateReadabilityScore.bind(validator);
+
       const simpleText = 'This is simple. Easy to read.';
-      const complexText = 'This extraordinarily complicated sentence demonstrates sophisticated vocabulary utilization.';
-      
+      const complexText =
+        'This extraordinarily complicated sentence demonstrates sophisticated vocabulary utilization.';
+
       const simpleScore = calculateReadabilityScore(simpleText);
       const complexScore = calculateReadabilityScore(complexText);
-      
+
       expect(simpleScore).toBeGreaterThan(complexScore);
       expect(simpleScore).toBeGreaterThanOrEqual(0);
       expect(simpleScore).toBeLessThanOrEqual(1);
     });
 
     it('should calculate technical accuracy score', () => {
-      const calculateTechnicalAccuracy = (validator as any).calculateTechnicalAccuracy.bind(validator);
-      
+      const calculateTechnicalAccuracy = (
+        validator as any
+      ).calculateTechnicalAccuracy.bind(validator);
+
       const nonTechnicalText = 'Hello, how are you today?';
-      const technicalText = 'The JavaScript function returns an array of objects.';
-      
+      const technicalText =
+        'The JavaScript function returns an array of objects.';
+
       const nonTechnicalScore = calculateTechnicalAccuracy(nonTechnicalText);
       const technicalScore = calculateTechnicalAccuracy(technicalText);
-      
+
       expect(nonTechnicalScore).toBe(1); // Non-technical should be 1
       expect(technicalScore).toBe(0.8); // Technical should be 0.8
     });
 
     it('should calculate appropriateness score', () => {
-      const calculateAppropriatenessScore = (validator as any).calculateAppropriatenessScore.bind(validator);
-      
-      const professionalText = 'Thank you for your question. I am here to help.';
-      const inappropriateText = 'This is stupid and I don\'t care.';
-      
+      const calculateAppropriatenessScore = (
+        validator as any
+      ).calculateAppropriatenessScore.bind(validator);
+
+      const professionalText =
+        'Thank you for your question. I am here to help.';
+      const inappropriateText = "This is stupid and I don't care.";
+
       const professionalScore = calculateAppropriatenessScore(professionalText);
-      const inappropriateScore = calculateAppropriatenessScore(inappropriateText);
-      
+      const inappropriateScore =
+        calculateAppropriatenessScore(inappropriateText);
+
       expect(professionalScore).toBeGreaterThan(inappropriateScore);
       expect(professionalScore).toBeGreaterThanOrEqual(0);
       expect(professionalScore).toBeLessThanOrEqual(1);
     });
 
     it('should calculate coherence score', () => {
-      const calculateCoherenceScore = (validator as any).calculateCoherenceScore.bind(validator);
-      
-      const coherentText = 'This is a coherent response. However, it also flows well and makes sense. Therefore, it should score higher.';
-      const incoherentText = 'This is a very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long sentence without any proper structure or transitions and it just goes on and on and on without making much sense or having any logical flow which makes it very hard to read and understand.';
-      
+      const calculateCoherenceScore = (
+        validator as any
+      ).calculateCoherenceScore.bind(validator);
+
+      const coherentText =
+        'This is a coherent response. However, it also flows well and makes sense. Therefore, it should score higher.';
+      const incoherentText =
+        'This is a very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very very long sentence without any proper structure or transitions and it just goes on and on and on without making much sense or having any logical flow which makes it very hard to read and understand.';
+
       const coherentScore = calculateCoherenceScore(coherentText);
       const incoherentScore = calculateCoherenceScore(incoherentText);
-      
+
       expect(coherentScore).toBeGreaterThan(incoherentScore);
       expect(coherentScore).toBeGreaterThanOrEqual(0);
       expect(coherentScore).toBeLessThanOrEqual(1);
@@ -582,13 +609,13 @@ describe('ResponseValidator', () => {
         'Test message',
         'Test response',
         'test-conv',
-        'test-user'
+        'test-user',
       );
 
       expect(validator.getValidationLogs()).toHaveLength(1);
-      
+
       validator.clearLogs();
-      
+
       expect(validator.getValidationLogs()).toHaveLength(0);
     });
   });

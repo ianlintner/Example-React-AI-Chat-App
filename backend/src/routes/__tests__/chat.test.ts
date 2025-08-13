@@ -49,17 +49,15 @@ describe('Chat Routes', () => {
     it('should create a new conversation and process message', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
       let capturedConversation: any;
-      mockStorage.addConversation.mockImplementation((conv) => {
+      mockStorage.addConversation.mockImplementation(conv => {
         // Capture a deep copy of the conversation at the time it's stored
         capturedConversation = JSON.parse(JSON.stringify(conv));
         return conv;
       });
 
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Tell me a joke',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: 'Tell me a joke',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message');
@@ -83,7 +81,7 @@ describe('Chat Routes', () => {
       expect(mockAgentService.processMessage).toHaveBeenCalledWith(
         'Tell me a joke',
         [],
-        undefined
+        undefined,
       );
     });
 
@@ -105,12 +103,10 @@ describe('Chat Routes', () => {
 
       mockStorage.getConversation.mockReturnValue(conversationWithMessages);
 
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Another message',
-          conversationId: 'conv-123',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: 'Another message',
+        conversationId: 'conv-123',
+      });
 
       expect(response.status).toBe(200);
       expect(mockStorage.getConversation).toHaveBeenCalledWith('conv-123');
@@ -120,35 +116,31 @@ describe('Chat Routes', () => {
       expect(mockAgentService.processMessage).toHaveBeenCalledWith(
         'Another message',
         existingMessages,
-        undefined
+        undefined,
       );
     });
 
     it('should handle forceAgent parameter', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
-      mockStorage.addConversation.mockImplementation((conv) => conv);
+      mockStorage.addConversation.mockImplementation(conv => conv);
 
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Tell me a joke',
-          forceAgent: 'trivia',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: 'Tell me a joke',
+        forceAgent: 'trivia',
+      });
 
       expect(response.status).toBe(200);
       expect(mockAgentService.processMessage).toHaveBeenCalledWith(
         'Tell me a joke',
         [],
-        'trivia'
+        'trivia',
       );
     });
 
     it('should return 400 when message is empty', async () => {
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: '',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: '',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
@@ -160,11 +152,9 @@ describe('Chat Routes', () => {
     });
 
     it('should return 400 when message is whitespace only', async () => {
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: '   \n\t   ',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: '   \n\t   ',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toEqual({
@@ -176,12 +166,10 @@ describe('Chat Routes', () => {
     it('should return 404 when conversationId not found', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
 
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Hello',
-          conversationId: 'nonexistent-id',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: 'Hello',
+        conversationId: 'nonexistent-id',
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
@@ -194,16 +182,14 @@ describe('Chat Routes', () => {
 
     it('should return 500 when agent service throws error', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
-      mockStorage.addConversation.mockImplementation((conv) => conv);
+      mockStorage.addConversation.mockImplementation(conv => conv);
       mockAgentService.processMessage.mockRejectedValue(
-        new Error('Agent service error')
+        new Error('Agent service error'),
       );
 
-      const response = await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Hello',
-        });
+      const response = await request(app).post('/api/chat').send({
+        message: 'Hello',
+      });
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({
@@ -215,26 +201,23 @@ describe('Chat Routes', () => {
     it('should generate proper conversation title', async () => {
       mockStorage.getConversation.mockReturnValue(undefined);
       let capturedConversation: any;
-      mockStorage.addConversation.mockImplementation((conv) => {
+      mockStorage.addConversation.mockImplementation(conv => {
         capturedConversation = conv;
         return conv;
       });
 
       // Test with short message
-      await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'Hello there',
-        });
+      await request(app).post('/api/chat').send({
+        message: 'Hello there',
+      });
 
       expect(capturedConversation.title).toBe('Hello there');
 
       // Test with long message
-      await request(app)
-        .post('/api/chat')
-        .send({
-          message: 'This is a very long message that should be truncated after six words',
-        });
+      await request(app).post('/api/chat').send({
+        message:
+          'This is a very long message that should be truncated after six words',
+      });
 
       expect(capturedConversation.title).toBe('This is a very long message...');
     });

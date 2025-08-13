@@ -74,7 +74,7 @@ describe('RAGService', () => {
       const content = ragService.searchForAgent(
         'joke',
         'tell me something funny',
-        true
+        true,
       );
 
       expect(content).toBeTruthy();
@@ -86,7 +86,7 @@ describe('RAGService', () => {
       const content = ragService.searchForAgent(
         'trivia',
         'tell me something interesting',
-        true
+        true,
       );
 
       expect(content).toBeTruthy();
@@ -98,7 +98,7 @@ describe('RAGService', () => {
       const content = ragService.searchForAgent(
         'gif',
         'show me something funny',
-        true
+        true,
       );
 
       expect(content).toBeTruthy();
@@ -110,7 +110,7 @@ describe('RAGService', () => {
       const content = ragService.searchForAgent(
         'joke',
         'xyz-no-match-query',
-        true
+        true,
       );
 
       expect(content).toBeTruthy();
@@ -121,7 +121,7 @@ describe('RAGService', () => {
       const content = ragService.searchForAgent(
         'joke',
         'xyz-no-match-query',
-        false
+        false,
       );
 
       expect(content).toBeNull();

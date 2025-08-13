@@ -38,10 +38,10 @@ const createTraceExporter = () => {
   const originalExport = zipkinExporter.export.bind(zipkinExporter);
   zipkinExporter.export = (spans: any, resultCallback: any) => {
     console.log(
-      `🔍 ZIPKIN EXPORT: Attempting to send ${spans.length} spans to ${zipkinEndpoint}`
+      `🔍 ZIPKIN EXPORT: Attempting to send ${spans.length} spans to ${zipkinEndpoint}`,
     );
     console.log(
-      `🔍 ZIPKIN EXPORT: Current timestamp: ${new Date().toISOString()}`
+      `🔍 ZIPKIN EXPORT: Current timestamp: ${new Date().toISOString()}`,
     );
 
     spans.forEach((span: any, index: number) => {
@@ -61,11 +61,11 @@ const createTraceExporter = () => {
       } else {
         console.error(
           '❌ ZIPKIN EXPORT: Failed to send spans:',
-          result.error || result.message || 'Unknown error'
+          result.error || result.message || 'Unknown error',
         );
         console.error(
           '❌ ZIPKIN EXPORT: Full result:',
-          JSON.stringify(result, null, 2)
+          JSON.stringify(result, null, 2),
         );
       }
       resultCallback(result);
@@ -92,7 +92,7 @@ const createSpanProcessors = () => {
   // Add main exporter with direct processing (no buffering)
   const mainExporter = createTraceExporter();
   console.log(
-    '🔍 Adding direct span processor for immediate Zipkin export (no buffering)'
+    '🔍 Adding direct span processor for immediate Zipkin export (no buffering)',
   );
   processors.push(new SimpleSpanProcessor(mainExporter));
 
@@ -119,7 +119,7 @@ const createSDK = () => {
             console.log(
               '🔍 HTTP request instrumented:',
               (request as any).method,
-              (request as any).url
+              (request as any).url,
             );
           },
         },
@@ -189,11 +189,11 @@ export const tracer = trace.getTracer('ai-goal-seeking-system', '1.0.0');
 export const createConversationSpan = (
   conversationId: string,
   operation: string,
-  userId?: string
+  userId?: string,
 ) => {
   const spanName = tracingContextManager.createSpanName(
     'conversation',
-    operation
+    operation,
   );
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.SERVER,
@@ -220,11 +220,11 @@ export const createAgentSpan = (
   agentType: string,
   operation: string,
   conversationId?: string,
-  userId?: string
+  userId?: string,
 ) => {
   const spanName = tracingContextManager.createSpanName(
     'agent',
-    `${agentType}.${operation}`
+    `${agentType}.${operation}`,
   );
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
@@ -252,11 +252,11 @@ export const createAgentSpan = (
 export const createValidationSpan = (
   conversationId: string,
   agentType?: string,
-  userId?: string
+  userId?: string,
 ) => {
   const spanName = tracingContextManager.createSpanName(
     'validation',
-    'validate_response'
+    'validate_response',
   );
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
@@ -284,11 +284,11 @@ export const createValidationSpan = (
 export const createGoalSeekingSpan = (
   conversationId: string,
   userState: any,
-  userId?: string
+  userId?: string,
 ) => {
   const spanName = tracingContextManager.createSpanName(
     'goal_seeking',
-    'process'
+    'process',
   );
   const span = tracer.startSpan(spanName, {
     kind: SpanKind.INTERNAL,
@@ -321,7 +321,7 @@ export const createGoalSeekingSpan = (
 export const addSpanEvent = (
   span: any,
   name: string,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ) => {
   if (!span) return;
   span.addEvent(name, {
@@ -334,7 +334,7 @@ export const addSpanEvent = (
 export const setSpanStatus = (
   span: any,
   success: boolean,
-  message?: string
+  message?: string,
 ) => {
   if (!span) return;
   if (success) {

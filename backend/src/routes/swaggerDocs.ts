@@ -13,7 +13,7 @@ const loadOpenApiSpec = () => {
     // Need to go up to project root: ../../../../docs/test-bench-openapi.yaml
     const specPath = path.join(
       __dirname,
-      '../../../../docs/test-bench-openapi.yaml'
+      '../../../../docs/test-bench-openapi.yaml',
     );
     const fileContents = fs.readFileSync(specPath, 'utf8');
     return yaml.load(fileContents) as object;
@@ -68,7 +68,7 @@ router.get('/openapi.yaml', (req, res) => {
   try {
     const specPath = path.join(
       __dirname,
-      '../../../../docs/test-bench-openapi.yaml'
+      '../../../../docs/test-bench-openapi.yaml',
     );
     const fileContents = fs.readFileSync(specPath, 'utf8');
     res.setHeader('Content-Type', 'text/yaml');

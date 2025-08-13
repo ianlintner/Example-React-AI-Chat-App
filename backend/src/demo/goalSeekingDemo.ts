@@ -14,7 +14,7 @@ async function demonstrateGoalSeekingSystem() {
   const userState = agentService.initializeUserGoals(userId);
   console.log(
     'User initialized with goals:',
-    userState.goals.map(g => g.type)
+    userState.goals.map(g => g.type),
   );
 
   // Simulate user saying they're waiting
@@ -22,7 +22,7 @@ async function demonstrateGoalSeekingSystem() {
   const response1 = await agentService.processMessageWithGoalSeeking(
     userId,
     "I'm waiting for support",
-    []
+    [],
   );
   console.log('Agent response:', response1.content.substring(0, 100) + '...');
   console.log('Proactive actions:', response1.proactiveActions?.length || 0);
@@ -32,7 +32,7 @@ async function demonstrateGoalSeekingSystem() {
   console.log('User state:', state1?.currentState);
   console.log(
     'Active goals:',
-    state1?.goals.filter(g => g.active).map(g => g.type)
+    state1?.goals.filter(g => g.active).map(g => g.type),
   );
 
   // Simulate user asking for a joke
@@ -40,7 +40,7 @@ async function demonstrateGoalSeekingSystem() {
   const response2 = await agentService.processMessageWithGoalSeeking(
     userId,
     'Can you tell me a joke?',
-    []
+    [],
   );
   console.log('Agent response:', response2.content.substring(0, 100) + '...');
   console.log('Agent used:', response2.agentUsed);
@@ -55,7 +55,7 @@ async function demonstrateGoalSeekingSystem() {
   const response3 = await agentService.processMessageWithGoalSeeking(
     userId,
     'I have a JavaScript error in my code',
-    []
+    [],
   );
   console.log('Agent response:', response3.content.substring(0, 100) + '...');
   console.log('Agent used:', response3.agentUsed);
@@ -64,11 +64,11 @@ async function demonstrateGoalSeekingSystem() {
   const state3 = agentService.getUserGoalState(userId);
   console.log(
     'Technical context:',
-    state3?.technicalContext ? 'Set' : 'Not set'
+    state3?.technicalContext ? 'Set' : 'Not set',
   );
   console.log(
     'Active goals:',
-    state3?.goals.filter((g: any) => g.active).map((g: any) => g.type)
+    state3?.goals.filter((g: any) => g.active).map((g: any) => g.type),
   );
   console.log('Satisfaction level:', state3?.satisfactionLevel);
 

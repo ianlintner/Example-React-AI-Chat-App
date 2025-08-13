@@ -1,7 +1,17 @@
 import { Server as SocketServer } from 'socket.io';
-import { QueueService, createQueueService, getQueueService } from '../queueService';
+import {
+  QueueService,
+  createQueueService,
+  getQueueService,
+} from '../queueService';
 import { MessageQueue, QUEUE_NAMES } from '../messageQueue';
-import { QueueMessage, ChatMessagePayload, AgentResponsePayload, ProactiveActionPayload, StreamChunkPayload } from '../types';
+import {
+  QueueMessage,
+  ChatMessagePayload,
+  AgentResponsePayload,
+  ProactiveActionPayload,
+  StreamChunkPayload,
+} from '../types';
 
 // Mock the messageQueue module
 jest.mock('../messageQueue');
@@ -60,13 +70,31 @@ describe('QueueService', () => {
       await queueService.initialize();
 
       expect(mockMessageQueue.connect).toHaveBeenCalled();
-      expect(mockMessageQueue.on).toHaveBeenCalledWith('deadLetter', expect.any(Function));
+      expect(mockMessageQueue.on).toHaveBeenCalledWith(
+        'deadLetter',
+        expect.any(Function),
+      );
       expect(mockMessageQueue.subscribe).toHaveBeenCalledTimes(4);
-      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(QUEUE_NAMES.CHAT_MESSAGES, expect.any(Function));
-      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(QUEUE_NAMES.AGENT_RESPONSES, expect.any(Function));
-      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(QUEUE_NAMES.PROACTIVE_ACTIONS, expect.any(Function));
-      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(QUEUE_NAMES.STREAM_CHUNKS, expect.any(Function));
-      expect(consoleSpy).toHaveBeenCalledWith('📨 Queue Service initialized with provider:', 'memory');
+      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(
+        QUEUE_NAMES.CHAT_MESSAGES,
+        expect.any(Function),
+      );
+      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(
+        QUEUE_NAMES.AGENT_RESPONSES,
+        expect.any(Function),
+      );
+      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(
+        QUEUE_NAMES.PROACTIVE_ACTIONS,
+        expect.any(Function),
+      );
+      expect(mockMessageQueue.subscribe).toHaveBeenCalledWith(
+        QUEUE_NAMES.STREAM_CHUNKS,
+        expect.any(Function),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '📨 Queue Service initialized with provider:',
+        'memory',
+      );
     });
 
     it('should handle dead letter queue events', async () => {
@@ -74,21 +102,23 @@ describe('QueueService', () => {
       await queueService.initialize();
 
       // Get the dead letter handler that was registered
-      const deadLetterHandler = mockMessageQueue.on.mock.calls.find((call: any) => call[0] === 'deadLetter')[1];
-      
+      const deadLetterHandler = mockMessageQueue.on.mock.calls.find(
+        (call: any) => call[0] === 'deadLetter',
+      )[1];
+
       // Simulate a dead letter event
       const mockEvent = {
         queueName: 'test-queue',
         message: { id: 'test-msg-123' },
-        error: new Error('Test error')
+        error: new Error('Test error'),
       };
-      
+
       deadLetterHandler(mockEvent);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '💀 Dead letter message in test-queue:',
         'test-msg-123',
-        mockEvent.error
+        mockEvent.error,
       );
 
       consoleErrorSpy.mockRestore();
@@ -111,7 +141,7 @@ describe('QueueService', () => {
 
     it('should handle chat messages', async () => {
       const chatHandler = mockMessageQueue.subscribe.mock.calls.find(
-        (call: any) => call[0] === QUEUE_NAMES.CHAT_MESSAGES
+        (call: any) => call[0] === QUEUE_NAMES.CHAT_MESSAGES,
       )[1];
 
       const mockMessage: QueueMessage = {
@@ -120,28 +150,31 @@ describe('QueueService', () => {
         payload: {
           userId: 'user-123',
           conversationId: 'conv-123',
-          message: 'Hello world'
+          message: 'Hello world',
         } as ChatMessagePayload,
         timestamp: new Date(),
         priority: 5,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
       };
 
       await chatHandler(mockMessage);
 
       expect(mockSocketServer.to).toHaveBeenCalledWith('conv-123');
-      expect(mockSocketServer.emit).toHaveBeenCalledWith('queue_processed_chat', {
-        messageId: 'msg-123',
-        userId: 'user-123',
-        message: 'Hello world',
-        timestamp: mockMessage.timestamp
-      });
+      expect(mockSocketServer.emit).toHaveBeenCalledWith(
+        'queue_processed_chat',
+        {
+          messageId: 'msg-123',
+          userId: 'user-123',
+          message: 'Hello world',
+          timestamp: mockMessage.timestamp,
+        },
+      );
     });
 
     it('should handle agent responses', async () => {
       const agentHandler = mockMessageQueue.subscribe.mock.calls.find(
-        (call: any) => call[0] === QUEUE_NAMES.AGENT_RESPONSES
+        (call: any) => call[0] === QUEUE_NAMES.AGENT_RESPONSES,
       )[1];
 
       const mockMessage: QueueMessage = {
@@ -152,29 +185,32 @@ describe('QueueService', () => {
           messageId: 'orig-msg-123',
           content: 'Agent response',
           agentUsed: 'general',
-          confidence: 0.95
+          confidence: 0.95,
         } as AgentResponsePayload,
         timestamp: new Date(),
         priority: 6,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
       };
 
       await agentHandler(mockMessage);
 
       expect(mockSocketServer.to).toHaveBeenCalledWith('conv-123');
-      expect(mockSocketServer.emit).toHaveBeenCalledWith('queue_processed_agent_response', {
-        messageId: 'orig-msg-123',
-        content: 'Agent response',
-        agentUsed: 'general',
-        confidence: 0.95,
-        timestamp: mockMessage.timestamp
-      });
+      expect(mockSocketServer.emit).toHaveBeenCalledWith(
+        'queue_processed_agent_response',
+        {
+          messageId: 'orig-msg-123',
+          content: 'Agent response',
+          agentUsed: 'general',
+          confidence: 0.95,
+          timestamp: mockMessage.timestamp,
+        },
+      );
     });
 
     it('should handle proactive actions', async () => {
       const proactiveHandler = mockMessageQueue.subscribe.mock.calls.find(
-        (call: any) => call[0] === QUEUE_NAMES.PROACTIVE_ACTIONS
+        (call: any) => call[0] === QUEUE_NAMES.PROACTIVE_ACTIONS,
       )[1];
 
       const mockMessage: QueueMessage = {
@@ -184,29 +220,32 @@ describe('QueueService', () => {
           conversationId: 'conv-123',
           actionType: 'greeting',
           agentType: 'general',
-          message: 'Proactive message'
+          message: 'Proactive message',
         } as ProactiveActionPayload,
         timestamp: new Date(),
         priority: 7,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
       };
 
       await proactiveHandler(mockMessage);
 
       expect(mockSocketServer.to).toHaveBeenCalledWith('conv-123');
-      expect(mockSocketServer.emit).toHaveBeenCalledWith('queue_processed_proactive_action', {
-        actionType: 'greeting',
-        agentType: 'general',
-        message: 'Proactive message',
-        priority: 7,
-        timestamp: mockMessage.timestamp
-      });
+      expect(mockSocketServer.emit).toHaveBeenCalledWith(
+        'queue_processed_proactive_action',
+        {
+          actionType: 'greeting',
+          agentType: 'general',
+          message: 'Proactive message',
+          priority: 7,
+          timestamp: mockMessage.timestamp,
+        },
+      );
     });
 
     it('should handle stream chunks', async () => {
       const streamHandler = mockMessageQueue.subscribe.mock.calls.find(
-        (call: any) => call[0] === QUEUE_NAMES.STREAM_CHUNKS
+        (call: any) => call[0] === QUEUE_NAMES.STREAM_CHUNKS,
       )[1];
 
       const mockMessage: QueueMessage = {
@@ -216,23 +255,26 @@ describe('QueueService', () => {
           conversationId: 'conv-123',
           messageId: 'orig-msg-123',
           content: 'Stream chunk',
-          isComplete: false
+          isComplete: false,
         } as StreamChunkPayload,
         timestamp: new Date(),
         priority: 8,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
       };
 
       await streamHandler(mockMessage);
 
       expect(mockSocketServer.to).toHaveBeenCalledWith('conv-123');
-      expect(mockSocketServer.emit).toHaveBeenCalledWith('queue_processed_stream_chunk', {
-        messageId: 'orig-msg-123',
-        content: 'Stream chunk',
-        isComplete: false,
-        timestamp: mockMessage.timestamp
-      });
+      expect(mockSocketServer.emit).toHaveBeenCalledWith(
+        'queue_processed_stream_chunk',
+        {
+          messageId: 'orig-msg-123',
+          content: 'Stream chunk',
+          isComplete: false,
+          timestamp: mockMessage.timestamp,
+        },
+      );
     });
   });
 
@@ -247,7 +289,7 @@ describe('QueueService', () => {
         const messageId = await queueService.enqueueChatMessage(
           'user-123',
           'conv-123',
-          'Hello world'
+          'Hello world',
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
@@ -257,18 +299,18 @@ describe('QueueService', () => {
             userId: 'user-123',
             conversationId: 'conv-123',
             forceAgent: undefined,
-            timestamp: expect.any(Date)
+            timestamp: expect.any(Date),
           },
           {
             userId: 'user-123',
             conversationId: 'conv-123',
-            priority: 5
-          }
+            priority: 5,
+          },
         );
 
         expect(mockMessageQueue.enqueue).toHaveBeenCalledWith(
           QUEUE_NAMES.CHAT_MESSAGES,
-          { id: 'mock-msg-id' }
+          { id: 'mock-msg-id' },
         );
 
         expect(messageId).toBe('mock-msg-id');
@@ -280,17 +322,17 @@ describe('QueueService', () => {
           'conv-123',
           'Hello world',
           'joke',
-          8
+          8,
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
           'chat_message',
           expect.objectContaining({
-            forceAgent: 'joke'
+            forceAgent: 'joke',
           }),
           expect.objectContaining({
-            priority: 8
-          })
+            priority: 8,
+          }),
         );
       });
     });
@@ -303,7 +345,7 @@ describe('QueueService', () => {
           0.95,
           'user-123',
           'conv-123',
-          'orig-msg-123'
+          'orig-msg-123',
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
@@ -315,13 +357,13 @@ describe('QueueService', () => {
             userId: 'user-123',
             conversationId: 'conv-123',
             messageId: 'orig-msg-123',
-            timestamp: expect.any(Date)
+            timestamp: expect.any(Date),
           },
           {
             userId: 'user-123',
             conversationId: 'conv-123',
-            priority: 6
-          }
+            priority: 6,
+          },
         );
 
         expect(messageId).toBe('mock-msg-id');
@@ -335,15 +377,15 @@ describe('QueueService', () => {
           'user-123',
           'conv-123',
           'orig-msg-123',
-          9
+          9,
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
           'agent_response',
           expect.any(Object),
           expect.objectContaining({
-            priority: 9
-          })
+            priority: 9,
+          }),
         );
       });
     });
@@ -355,7 +397,7 @@ describe('QueueService', () => {
           'general',
           'Hello there!',
           'user-123',
-          'conv-123'
+          'conv-123',
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
@@ -368,14 +410,14 @@ describe('QueueService', () => {
             conversationId: 'conv-123',
             timing: 'immediate',
             delayMs: undefined,
-            priority: 7
+            priority: 7,
           },
           {
             userId: 'user-123',
             conversationId: 'conv-123',
             priority: 7,
-            delayMs: undefined
-          }
+            delayMs: undefined,
+          },
         );
 
         expect(messageId).toBe('mock-msg-id');
@@ -390,7 +432,7 @@ describe('QueueService', () => {
           'conv-123',
           'delayed',
           5000,
-          8
+          8,
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
@@ -398,12 +440,12 @@ describe('QueueService', () => {
           expect.objectContaining({
             timing: 'delayed',
             delayMs: 5000,
-            priority: 8
+            priority: 8,
           }),
           expect.objectContaining({
             priority: 8,
-            delayMs: 5000
-          })
+            delayMs: 5000,
+          }),
         );
       });
     });
@@ -415,7 +457,7 @@ describe('QueueService', () => {
           'conv-123',
           'Stream content',
           false,
-          'user-123'
+          'user-123',
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
@@ -425,13 +467,13 @@ describe('QueueService', () => {
             conversationId: 'conv-123',
             content: 'Stream content',
             isComplete: false,
-            userId: 'user-123'
+            userId: 'user-123',
           },
           {
             userId: 'user-123',
             conversationId: 'conv-123',
-            priority: 8
-          }
+            priority: 8,
+          },
         );
 
         expect(messageId).toBe('mock-msg-id');
@@ -444,17 +486,17 @@ describe('QueueService', () => {
           'Stream content',
           true,
           'user-123',
-          9
+          9,
         );
 
         expect(mockMessageQueue.createMessage).toHaveBeenCalledWith(
           'stream_chunk',
           expect.objectContaining({
-            isComplete: true
+            isComplete: true,
           }),
           expect.objectContaining({
-            priority: 9
-          })
+            priority: 9,
+          }),
         );
       });
     });
@@ -480,9 +522,13 @@ describe('QueueService', () => {
         const mockStats = { totalMessages: 5, processing: 1 };
         mockMessageQueue.getStats.mockResolvedValue(mockStats);
 
-        const stats = await queueService.getQueueStats(QUEUE_NAMES.CHAT_MESSAGES);
+        const stats = await queueService.getQueueStats(
+          QUEUE_NAMES.CHAT_MESSAGES,
+        );
 
-        expect(mockMessageQueue.getStats).toHaveBeenCalledWith(QUEUE_NAMES.CHAT_MESSAGES);
+        expect(mockMessageQueue.getStats).toHaveBeenCalledWith(
+          QUEUE_NAMES.CHAT_MESSAGES,
+        );
         expect(stats).toBe(mockStats);
       });
     });
@@ -493,7 +539,9 @@ describe('QueueService', () => {
 
         const size = await queueService.getQueueSize(QUEUE_NAMES.CHAT_MESSAGES);
 
-        expect(mockMessageQueue.getQueueSize).toHaveBeenCalledWith(QUEUE_NAMES.CHAT_MESSAGES);
+        expect(mockMessageQueue.getQueueSize).toHaveBeenCalledWith(
+          QUEUE_NAMES.CHAT_MESSAGES,
+        );
         expect(size).toBe(42);
       });
     });
@@ -502,8 +550,12 @@ describe('QueueService', () => {
       it('should purge queue and log message', async () => {
         await queueService.purgeQueue(QUEUE_NAMES.CHAT_MESSAGES);
 
-        expect(mockMessageQueue.purgeQueue).toHaveBeenCalledWith(QUEUE_NAMES.CHAT_MESSAGES);
-        expect(consoleSpy).toHaveBeenCalledWith(`🧹 Purged queue: ${QUEUE_NAMES.CHAT_MESSAGES}`);
+        expect(mockMessageQueue.purgeQueue).toHaveBeenCalledWith(
+          QUEUE_NAMES.CHAT_MESSAGES,
+        );
+        expect(consoleSpy).toHaveBeenCalledWith(
+          `🧹 Purged queue: ${QUEUE_NAMES.CHAT_MESSAGES}`,
+        );
       });
     });
 
@@ -529,8 +581,12 @@ describe('QueueService', () => {
       await queueService.demonstrateQueueFeatures('user-123', 'conv-123');
 
       expect(mockMessageQueue.enqueue).toHaveBeenCalledTimes(5);
-      expect(consoleSpy).toHaveBeenCalledWith('🎭 Demonstrating message queue features...');
-      expect(consoleSpy).toHaveBeenCalledWith('🎭 Demo messages enqueued. Check the processing order!');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '🎭 Demonstrating message queue features...',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '🎭 Demo messages enqueued. Check the processing order!',
+      );
     });
   });
 
@@ -559,11 +615,15 @@ describe('QueueService', () => {
       expect(mockMessageQueue.disconnect).toHaveBeenCalled();
       expect(mockCreateMessageQueue).toHaveBeenCalledWith({
         provider: 'redis',
-        redis: { url: 'redis://localhost:6379' }
+        redis: { url: 'redis://localhost:6379' },
       });
       expect(newMockQueue.connect).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('🔄 Switching from memory to redis');
-      expect(consoleSpy).toHaveBeenCalledWith('✅ Successfully switched to redis provider');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '🔄 Switching from memory to redis',
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '✅ Successfully switched to redis provider',
+      );
     });
 
     it('should switch to memory provider without redis URL', async () => {
@@ -574,7 +634,7 @@ describe('QueueService', () => {
 
       expect(mockCreateMessageQueue).toHaveBeenCalledWith({
         provider: 'memory',
-        redis: { url: undefined }
+        redis: { url: undefined },
       });
     });
   });

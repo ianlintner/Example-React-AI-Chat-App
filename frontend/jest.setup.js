@@ -7,8 +7,8 @@ global.React = require('react');
 // Mock React Native completely
 jest.mock('react-native', () => ({
   StyleSheet: {
-    create: jest.fn((styles) => styles),
-    flatten: jest.fn((style) => style),
+    create: jest.fn(styles => styles),
+    flatten: jest.fn(style => style),
     compose: jest.fn((style1, style2) => [style1, style2]),
     absoluteFill: {},
     absoluteFillObject: {
@@ -30,14 +30,14 @@ jest.mock('react-native', () => ({
   PixelRatio: {
     get: jest.fn(() => 2),
     getFontScale: jest.fn(() => 1),
-    getPixelSizeForLayoutSize: jest.fn((layoutSize) => layoutSize * 2),
-    roundToNearestPixel: jest.fn((layoutSize) => Math.round(layoutSize)),
+    getPixelSizeForLayoutSize: jest.fn(layoutSize => layoutSize * 2),
+    roundToNearestPixel: jest.fn(layoutSize => Math.round(layoutSize)),
   },
 
   Platform: {
     OS: 'ios',
     Version: '14.0',
-    select: jest.fn((options) => options.ios || options.default),
+    select: jest.fn(options => options.ios || options.default),
     isPad: false,
     isTesting: true,
     isTV: false,
@@ -84,7 +84,7 @@ jest.mock('react-native', () => ({
     ScrollView: 'AnimatedScrollView',
     FlatList: 'AnimatedFlatList',
     Image: 'AnimatedImage',
-    Value: jest.fn().mockImplementation((value) => ({
+    Value: jest.fn().mockImplementation(value => ({
       setValue: jest.fn(),
       addListener: jest.fn(() => 'listenerId'),
       removeListener: jest.fn(),
@@ -95,7 +95,7 @@ jest.mock('react-native', () => ({
       animate: jest.fn(),
       _value: value,
     })),
-    ValueXY: jest.fn().mockImplementation((value) => ({
+    ValueXY: jest.fn().mockImplementation(value => ({
       x: { _value: value?.x || 0 },
       y: { _value: value?.y || 0 },
       setValue: jest.fn(),
@@ -111,42 +111,42 @@ jest.mock('react-native', () => ({
       getTranslateTransform: jest.fn(() => []),
     })),
     timing: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     spring: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     decay: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     sequence: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     parallel: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     stagger: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     loop: jest.fn().mockImplementation(() => ({
-      start: jest.fn((callback) => callback && callback({ finished: true })),
+      start: jest.fn(callback => callback && callback({ finished: true })),
       stop: jest.fn(),
       reset: jest.fn(),
     })),
     event: jest.fn(),
-    createAnimatedComponent: jest.fn((Component) => Component),
+    createAnimatedComponent: jest.fn(Component => Component),
     Easing: {
       linear: jest.fn(),
       ease: jest.fn(),
@@ -170,29 +170,44 @@ jest.mock('react-native', () => ({
 // Mock @react-native-picker/picker
 jest.mock('@react-native-picker/picker', () => {
   const React = require('react');
-  const MockPicker = ({ children, onValueChange, selectedValue, style, testID, ...props }) => {
-    return React.createElement('View', { 
-      testID: testID || 'picker',
-      style,
-      ...props,
-      // Simulate picker behavior
-      onPress: () => {
-        // Mock selecting the first item if onValueChange exists
-        if (onValueChange && children && children.length > 0) {
-          const firstChild = Array.isArray(children) ? children[0] : children;
-          if (firstChild && firstChild.props && firstChild.props.value) {
-            onValueChange(firstChild.props.value);
+  const MockPicker = ({
+    children,
+    onValueChange,
+    selectedValue,
+    style,
+    testID,
+    ...props
+  }) => {
+    return React.createElement(
+      'View',
+      {
+        testID: testID || 'picker',
+        style,
+        ...props,
+        // Simulate picker behavior
+        onPress: () => {
+          // Mock selecting the first item if onValueChange exists
+          if (onValueChange && children && children.length > 0) {
+            const firstChild = Array.isArray(children) ? children[0] : children;
+            if (firstChild && firstChild.props && firstChild.props.value) {
+              onValueChange(firstChild.props.value);
+            }
           }
-        }
-      }
-    }, children);
+        },
+      },
+      children,
+    );
   };
-  
+
   MockPicker.Item = ({ label, value, ...props }) => {
-    return React.createElement('Text', { 
-      testID: 'picker-item',
-      ...props
-    }, label);
+    return React.createElement(
+      'Text',
+      {
+        testID: 'picker-item',
+        ...props,
+      },
+      label,
+    );
   };
 
   return {
@@ -203,14 +218,18 @@ jest.mock('@react-native-picker/picker', () => {
 // Mock react-native-paper components
 jest.mock('react-native-paper', () => {
   const React = require('react');
-  
+
   const createMockComponent = (displayName, testID) => {
     const MockComponent = React.forwardRef(({ children, ...props }, ref) => {
-      return React.createElement('View', { 
-        ref,
-        testID: testID || displayName.toLowerCase(),
-        ...props
-      }, children);
+      return React.createElement(
+        'View',
+        {
+          ref,
+          testID: testID || displayName.toLowerCase(),
+          ...props,
+        },
+        children,
+      );
     });
     MockComponent.displayName = displayName;
     return MockComponent;
@@ -218,63 +237,100 @@ jest.mock('react-native-paper', () => {
 
   const MockAvatar = createMockComponent('Avatar', 'avatar');
   MockAvatar.Icon = React.forwardRef(({ icon, size, style, ...props }, ref) => {
-    return React.createElement('View', { 
-      ref,
-      testID: 'avatar-icon',
-      style: [{ width: size || 40, height: size || 40 }, style],
-      ...props
-    }, React.createElement('Text', { testID: 'avatar-icon-text' }, typeof icon === 'string' ? icon : 'icon'));
+    return React.createElement(
+      'View',
+      {
+        ref,
+        testID: 'avatar-icon',
+        style: [{ width: size || 40, height: size || 40 }, style],
+        ...props,
+      },
+      React.createElement(
+        'Text',
+        { testID: 'avatar-icon-text' },
+        typeof icon === 'string' ? icon : 'icon',
+      ),
+    );
   });
   MockAvatar.Icon.displayName = 'Avatar.Icon';
 
-  const MockChip = React.forwardRef(({ children, mode, compact, textStyle, style, ...props }, ref) => {
-    return React.createElement('View', { 
-      ref,
-      testID: 'chip',
-      style: style,
-      ...props
-    }, React.createElement('Text', { 
-      testID: 'chip-text',
-      style: textStyle 
-    }, children));
-  });
+  const MockChip = React.forwardRef(
+    ({ children, mode, compact, textStyle, style, ...props }, ref) => {
+      return React.createElement(
+        'View',
+        {
+          ref,
+          testID: 'chip',
+          style: style,
+          ...props,
+        },
+        React.createElement(
+          'Text',
+          {
+            testID: 'chip-text',
+            style: textStyle,
+          },
+          children,
+        ),
+      );
+    },
+  );
   MockChip.displayName = 'Chip';
 
   const MockButton = React.forwardRef(({ children, ...props }, ref) => {
-    return React.createElement('TouchableOpacity', { 
-      ref,
-      testID: 'button',
-      ...props 
-    }, React.createElement('Text', { testID: 'button-text' }, children));
+    return React.createElement(
+      'TouchableOpacity',
+      {
+        ref,
+        testID: 'button',
+        ...props,
+      },
+      React.createElement('Text', { testID: 'button-text' }, children),
+    );
   });
   MockButton.displayName = 'Button';
 
-  const MockIconButton = React.forwardRef(({ icon, size, iconColor, style, onPress, disabled, testID, ...props }, ref) => {
-    return React.createElement('TouchableOpacity', { 
+  const MockIconButton = React.forwardRef(
+    (
+      { icon, size, iconColor, style, onPress, disabled, testID, ...props },
       ref,
-      testID: testID || 'icon-button',
-      style: [{ width: size || 24, height: size || 24 }, style],
-      onPress: disabled ? undefined : onPress,
-      disabled,
-      ...props
-    }, React.createElement('Text', { 
-      testID: 'icon-button-text',
-      style: { color: iconColor }
-    }, typeof icon === 'string' ? icon : 'icon'));
-  });
+    ) => {
+      return React.createElement(
+        'TouchableOpacity',
+        {
+          ref,
+          testID: testID || 'icon-button',
+          style: [{ width: size || 24, height: size || 24 }, style],
+          onPress: disabled ? undefined : onPress,
+          disabled,
+          ...props,
+        },
+        React.createElement(
+          'Text',
+          {
+            testID: 'icon-button-text',
+            style: { color: iconColor },
+          },
+          typeof icon === 'string' ? icon : 'icon',
+        ),
+      );
+    },
+  );
   MockIconButton.displayName = 'IconButton';
 
-  const MockActivityIndicator = React.forwardRef(({ size, color, ...props }, ref) => {
-    return React.createElement('View', { 
-      ref,
-      testID: 'activity-indicator',
-      style: { 
-        width: size === 'small' ? 20 : 36, 
-        height: size === 'small' ? 20 : 36 
-      },
-      ...props
-    });
-  });
+  const MockActivityIndicator = React.forwardRef(
+    ({ size, color, ...props }, ref) => {
+      return React.createElement('View', {
+        ref,
+        testID: 'activity-indicator',
+        style: {
+          width: size === 'small' ? 20 : 36,
+          height: size === 'small' ? 20 : 36,
+        },
+        ...props,
+      });
+    },
+  );
   MockActivityIndicator.displayName = 'ActivityIndicator';
 
   return {
@@ -306,12 +362,16 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('react-native-markdown-display', () => {
   const React = require('react');
   return React.forwardRef(({ children, style, ...props }, ref) => {
-    return React.createElement('Text', { 
-      ref,
-      testID: 'markdown',
-      style,
-      ...props
-    }, children);
+    return React.createElement(
+      'Text',
+      {
+        ref,
+        testID: 'markdown',
+        style,
+        ...props,
+      },
+      children,
+    );
   });
 });
 
@@ -421,8 +481,8 @@ jest.mock('./hooks/useColorScheme.web', () => {
 
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
-  const mockCreateAnimatedComponent = (Component) => Component;
-  
+  const mockCreateAnimatedComponent = Component => Component;
+
   return {
     default: {
       createAnimatedComponent: mockCreateAnimatedComponent,
@@ -462,14 +522,20 @@ jest.mock('react-native-reanimated', () => {
 // Mock @react-navigation/elements
 jest.mock('@react-navigation/elements', () => {
   const React = require('react');
-  
-  const MockPlatformPressable = React.forwardRef(({ children, testID, ...props }, ref) => {
-    return React.createElement('TouchableOpacity', { 
-      ref,
-      testID: testID || 'platform-pressable',
-      ...props 
-    }, children);
-  });
+
+  const MockPlatformPressable = React.forwardRef(
+    ({ children, testID, ...props }, ref) => {
+      return React.createElement(
+        'TouchableOpacity',
+        {
+          ref,
+          testID: testID || 'platform-pressable',
+          ...props,
+        },
+        children,
+      );
+    },
+  );
   MockPlatformPressable.displayName = 'PlatformPressable';
 
   return {
@@ -520,16 +586,20 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('expo-router', () => ({
   Link: ({ children, href, testID, onPress, ...props }) => {
     const React = require('react');
-    return React.createElement('Text', { 
-      ...props, 
-      href, 
-      testID: testID || 'external-link', // Don't override testID if explicitly provided
-      onPress: (event) => {
-        if (onPress) {
-          onPress(event);
-        }
-      }
-    }, children);
+    return React.createElement(
+      'Text',
+      {
+        ...props,
+        href,
+        testID: testID || 'external-link', // Don't override testID if explicitly provided
+        onPress: event => {
+          if (onPress) {
+            onPress(event);
+          }
+        },
+      },
+      children,
+    );
   },
   useRouter: jest.fn(() => ({
     push: jest.fn(),
@@ -543,7 +613,11 @@ jest.mock('expo-router', () => ({
   usePathname: jest.fn(() => '/'),
   Redirect: ({ href }) => {
     const React = require('react');
-    return React.createElement('Text', { testID: 'redirect' }, `Redirect to ${href}`);
+    return React.createElement(
+      'Text',
+      { testID: 'redirect' },
+      `Redirect to ${href}`,
+    );
   },
   router: {
     push: jest.fn(),

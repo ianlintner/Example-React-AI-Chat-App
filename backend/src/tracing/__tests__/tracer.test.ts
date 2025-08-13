@@ -1,6 +1,6 @@
 // Tracer utility functions tests
 describe('Tracer Utility Functions', () => {
-  // Import SpanStatusCode constants for reference  
+  // Import SpanStatusCode constants for reference
   const SpanStatusCode = {
     OK: 1,
     ERROR: 2,
@@ -27,7 +27,11 @@ describe('Tracer Utility Functions', () => {
     }
   };
 
-  const addSpanEvent = (span: any, name: string, attributes?: Record<string, any>) => {
+  const addSpanEvent = (
+    span: any,
+    name: string,
+    attributes?: Record<string, any>,
+  ) => {
     if (!span) return;
     span.addEvent(name, {
       timestamp: Date.now(),

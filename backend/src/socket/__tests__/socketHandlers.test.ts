@@ -21,19 +21,22 @@ const TEST_TIMEOUT = 10000;
 jest.setTimeout(TEST_TIMEOUT);
 
 // Utility to fail fast if a promise doesn't resolve
-const withTimeout = <T>(p: Promise<T>, ms = TEST_TIMEOUT - 1000): Promise<T> => {
+const withTimeout = <T>(
+  p: Promise<T>,
+  ms = TEST_TIMEOUT - 1000,
+): Promise<T> => {
   let timer: NodeJS.Timeout;
   return new Promise<T>((resolve, reject) => {
     timer = setTimeout(() => reject(new Error('Test timed out')), ms);
     p.then(
-      (value) => {
+      value => {
         clearTimeout(timer);
         resolve(value);
       },
-      (err) => {
+      err => {
         clearTimeout(timer);
         reject(err);
-      }
+      },
     );
   });
 };
@@ -45,7 +48,7 @@ describe('Socket Handlers', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    
+
     // Mock socket
     mockSocket = {
       id: 'test-socket-id',
@@ -74,19 +77,24 @@ describe('Socket Handlers', () => {
     (agentService.getConversationContext as jest.Mock).mockReturnValue(null);
     (agentService.getUserGoalState as jest.Mock).mockReturnValue(null);
     (agentService.getCurrentAgent as jest.Mock).mockReturnValue('general');
-    (agentService.getAvailableAgents as jest.Mock).mockReturnValue(['general', 'joke']);
+    (agentService.getAvailableAgents as jest.Mock).mockReturnValue([
+      'general',
+      'joke',
+    ]);
     (agentService.getQueuedActions as jest.Mock).mockResolvedValue([]);
     (agentService.executeProactiveAction as jest.Mock).mockResolvedValue({
       content: 'Proactive response',
       agentUsed: 'joke',
       confidence: 0.9,
     });
-    (agentService.processMessageWithBothSystems as jest.Mock).mockResolvedValue({
-      content: 'Test response',
-      agentUsed: 'general',
-      confidence: 0.8,
-      proactiveActions: [],
-    });
+    (agentService.processMessageWithBothSystems as jest.Mock).mockResolvedValue(
+      {
+        content: 'Test response',
+        agentUsed: 'general',
+        confidence: 0.8,
+        proactiveActions: [],
+      },
+    );
 
     // Mock metrics
     (metrics.activeConnections as any) = {
@@ -102,7 +110,9 @@ describe('Socket Handlers', () => {
 
     // Mock tracer
     (tracer.createConversationSpan as jest.Mock).mockReturnValue('mock-span');
-    (tracer.createGoalSeekingSpan as jest.Mock).mockReturnValue('mock-goal-span');
+    (tracer.createGoalSeekingSpan as jest.Mock).mockReturnValue(
+      'mock-goal-span',
+    );
     (tracer.addSpanEvent as jest.Mock).mockImplementation();
     (tracer.setSpanStatus as jest.Mock).mockImplementation();
     (tracer.endSpan as jest.Mock).mockImplementation();
@@ -115,7 +125,7 @@ describe('Socket Handlers', () => {
         } catch (error) {
           return Promise.reject(error);
         }
-      }
+      },
     );
 
     // Set up environment
@@ -127,7 +137,7 @@ describe('Socket Handlers', () => {
     try {
       if (mockSocket && jest.isMockFunction(mockSocket.on)) {
         const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
-          (call: any) => call[0] === 'disconnect'
+          (call: any) => call[0] === 'disconnect',
         );
         if (disconnectCall) {
           const disconnectHandler = disconnectCall[1];
@@ -138,10 +148,9 @@ describe('Socket Handlers', () => {
       // no-op
     }
 
-
     jest.clearAllMocks();
     jest.useRealTimers();
-    
+
     // Cleanup any console spy if it exists
     if (jest.isMockFunction(console.log)) {
       (console.log as jest.Mock).mockRestore();
@@ -154,73 +163,101 @@ describe('Socket Handlers', () => {
   describe('setupSocketHandlers', () => {
     it('should set up socket handlers and return helper functions', () => {
       const result = setupSocketHandlers(mockIo);
-      
-      expect(mockIo.on).toHaveBeenCalledWith('connection', expect.any(Function));
+
+      expect(mockIo.on).toHaveBeenCalledWith(
+        'connection',
+        expect.any(Function),
+      );
       expect(result).toHaveProperty('emitToConversation');
       expect(typeof result.emitToConversation).toBe('function');
     });
 
     it('should log OpenAI API key status', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      
+
       setupSocketHandlers(mockIo);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         'OpenAI API Key status:',
-        'Present'
+        'Present',
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
 
   describe('Connection Handler', () => {
     let connectionHandler: Function;
-    
+
     beforeEach(() => {
       setupSocketHandlers(mockIo);
-      
+
       // Get the connection handler
       connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
-      
+
       // Call the connection handler
       connectionHandler(mockSocket);
     });
 
     it('should handle new socket connection', () => {
       expect(metrics.activeConnections.inc).toHaveBeenCalled();
-      expect(agentService.initializeUserGoals).toHaveBeenCalledWith('test-socket-id');
+      expect(agentService.initializeUserGoals).toHaveBeenCalledWith(
+        'test-socket-id',
+      );
     });
 
     it('should set up socket event handlers', () => {
-      expect(mockSocket.on).toHaveBeenCalledWith('join_conversation', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('leave_conversation', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('typing_start', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('typing_stop', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('message_read', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('stream_chat', expect.any(Function));
-      expect(mockSocket.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'join_conversation',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'leave_conversation',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'typing_start',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'typing_stop',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'message_read',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'stream_chat',
+        expect.any(Function),
+      );
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'disconnect',
+        expect.any(Function),
+      );
       expect(mockSocket.on).toHaveBeenCalledWith('error', expect.any(Function));
     });
 
     it('should set up periodic timers', () => {
       // Verify that socket connection setup is complete
-      expect(agentService.initializeUserGoals).toHaveBeenCalledWith('test-socket-id');
+      expect(agentService.initializeUserGoals).toHaveBeenCalledWith(
+        'test-socket-id',
+      );
       expect(metrics.activeConnections.inc).toHaveBeenCalled();
     });
 
     it('should properly clean up on disconnect', () => {
       // Get disconnect handler
       const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'disconnect'
+        call => call[0] === 'disconnect',
       );
       const disconnectHandler = disconnectCall[1];
-      
+
       // Simulate disconnect
       disconnectHandler();
-      
+
       // Verify metrics are updated
       expect(metrics.activeConnections.dec).toHaveBeenCalled();
     });
@@ -233,16 +270,16 @@ describe('Socket Handlers', () => {
     beforeEach(() => {
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
       connectionHandler(mockSocket);
 
       // Get handlers
       const joinCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'join_conversation'
+        call => call[0] === 'join_conversation',
       );
       const leaveCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'leave_conversation'
+        call => call[0] === 'leave_conversation',
       );
 
       joinHandler = joinCall[1];
@@ -251,17 +288,17 @@ describe('Socket Handlers', () => {
 
     it('should handle join_conversation event', () => {
       const conversationId = 'test-conversation-id';
-      
+
       joinHandler(conversationId);
-      
+
       expect(mockSocket.join).toHaveBeenCalledWith(conversationId);
     });
 
     it('should handle leave_conversation event', () => {
       const conversationId = 'test-conversation-id';
-      
+
       leaveHandler(conversationId);
-      
+
       expect(mockSocket.leave).toHaveBeenCalledWith(conversationId);
     });
   });
@@ -273,15 +310,15 @@ describe('Socket Handlers', () => {
     beforeEach(() => {
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
       connectionHandler(mockSocket);
 
       const typingStartCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'typing_start'
+        call => call[0] === 'typing_start',
       );
       const typingStopCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'typing_stop'
+        call => call[0] === 'typing_stop',
       );
 
       typingStartHandler = typingStartCall[1];
@@ -290,9 +327,9 @@ describe('Socket Handlers', () => {
 
     it('should handle typing_start event', () => {
       const data = { conversationId: 'test-conv', userName: 'TestUser' };
-      
+
       typingStartHandler(data);
-      
+
       expect(mockSocket.to).toHaveBeenCalledWith('test-conv');
       expect(mockSocket.emit).toHaveBeenCalledWith('user_typing', {
         userId: 'test-socket-id',
@@ -303,9 +340,9 @@ describe('Socket Handlers', () => {
 
     it('should handle typing_start event without userName', () => {
       const data = { conversationId: 'test-conv' };
-      
+
       typingStartHandler(data);
-      
+
       expect(mockSocket.emit).toHaveBeenCalledWith('user_typing', {
         userId: 'test-socket-id',
         userName: 'Anonymous',
@@ -315,9 +352,9 @@ describe('Socket Handlers', () => {
 
     it('should handle typing_stop event', () => {
       const data = { conversationId: 'test-conv' };
-      
+
       typingStopHandler(data);
-      
+
       expect(mockSocket.to).toHaveBeenCalledWith('test-conv');
       expect(mockSocket.emit).toHaveBeenCalledWith('user_typing', {
         userId: 'test-socket-id',
@@ -332,21 +369,21 @@ describe('Socket Handlers', () => {
     beforeEach(() => {
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
       connectionHandler(mockSocket);
 
       const messageReadCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'message_read'
+        call => call[0] === 'message_read',
       );
       messageReadHandler = messageReadCall[1];
     });
 
     it('should handle message_read event', () => {
       const data = { conversationId: 'test-conv', messageId: 'test-msg' };
-      
+
       messageReadHandler(data);
-      
+
       expect(mockSocket.to).toHaveBeenCalledWith('test-conv');
       expect(mockSocket.emit).toHaveBeenCalledWith('message_status', {
         messageId: 'test-msg',
@@ -363,12 +400,12 @@ describe('Socket Handlers', () => {
       jest.useRealTimers();
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        (call: any) => call[0] === 'connection'
+        (call: any) => call[0] === 'connection',
       )[1];
       await connectionHandler(mockSocket);
 
       const streamChatCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        (call: any) => call[0] === 'stream_chat'
+        (call: any) => call[0] === 'stream_chat',
       );
       streamChatHandler = streamChatCall[1];
     });
@@ -376,7 +413,7 @@ describe('Socket Handlers', () => {
     afterEach(() => {
       // Get disconnect handler and call it to clean up timers
       const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        (call: any) => call[0] === 'disconnect'
+        (call: any) => call[0] === 'disconnect',
       );
       if (disconnectCall) {
         const disconnectHandler = disconnectCall[1];
@@ -386,7 +423,7 @@ describe('Socket Handlers', () => {
 
     it('should handle empty message', async () => {
       const data = { message: '', conversationId: 'test-conv' };
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
@@ -398,7 +435,7 @@ describe('Socket Handlers', () => {
     it('should handle conversation not found', async () => {
       const data = { message: 'test message', conversationId: 'non-existent' };
       (storage.getConversation as jest.Mock).mockReturnValue(null);
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
@@ -409,7 +446,7 @@ describe('Socket Handlers', () => {
 
     it('should create new conversation when no conversationId provided', async () => {
       const data = { message: 'test message' };
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(storage.addConversation).toHaveBeenCalledWith(
@@ -417,7 +454,7 @@ describe('Socket Handlers', () => {
           id: 'mock-uuid',
           title: 'test message',
           messages: expect.any(Array),
-        })
+        }),
       );
       expect(mockSocket.join).toHaveBeenCalledWith('mock-uuid');
     });
@@ -430,10 +467,12 @@ describe('Socket Handlers', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      (storage.getConversation as jest.Mock).mockReturnValue(existingConversation);
-      
+      (storage.getConversation as jest.Mock).mockReturnValue(
+        existingConversation,
+      );
+
       const data = { message: 'test message', conversationId: 'existing-conv' };
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(storage.getConversation).toHaveBeenCalledWith('existing-conv');
@@ -442,7 +481,7 @@ describe('Socket Handlers', () => {
 
     it('should process message and emit streaming response', async () => {
       const data = { message: 'test message' };
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(agentService.processMessageWithBothSystems).toHaveBeenCalledWith(
@@ -450,31 +489,40 @@ describe('Socket Handlers', () => {
         'test message',
         [],
         'mock-uuid',
-        undefined
+        undefined,
       );
-      
+
       expect(mockIo.to).toHaveBeenCalledWith('mock-uuid');
-      expect(mockIo.emit).toHaveBeenCalledWith('stream_start', expect.any(Object));
-      expect(mockIo.emit).toHaveBeenCalledWith('stream_chunk', expect.any(Object));
-      expect(mockIo.emit).toHaveBeenCalledWith('stream_complete', expect.any(Object));
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'stream_start',
+        expect.any(Object),
+      );
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'stream_chunk',
+        expect.any(Object),
+      );
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'stream_complete',
+        expect.any(Object),
+      );
     });
 
     it('should handle agent service errors', async () => {
       const data = { message: 'test message' };
-      (agentService.processMessageWithBothSystems as jest.Mock).mockRejectedValue(
-        new Error('Agent service error')
-      );
-      
+      (
+        agentService.processMessageWithBothSystems as jest.Mock
+      ).mockRejectedValue(new Error('Agent service error'));
+
       // Suppress console.error during this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
         message: 'Internal server error',
         code: 'INTERNAL_ERROR',
       });
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -488,32 +536,34 @@ describe('Socket Handlers', () => {
           message: 'Want to hear a joke?',
         },
       ];
-      
-      (agentService.processMessageWithBothSystems as jest.Mock).mockResolvedValue({
+
+      (
+        agentService.processMessageWithBothSystems as jest.Mock
+      ).mockResolvedValue({
         content: 'Test response',
         agentUsed: 'general',
         confidence: 0.8,
         proactiveActions,
       });
-      
+
       (agentService.executeProactiveAction as jest.Mock).mockResolvedValue({
         content: 'Here is a joke!',
         agentUsed: 'joke',
         confidence: 0.9,
       });
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(agentService.executeProactiveAction).toHaveBeenCalledWith(
         'test-socket-id',
         proactiveActions[0],
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
     it('should track metrics during message processing', async () => {
       const data = { message: 'test message' };
-      
+
       await withTimeout(streamChatHandler(data));
 
       expect(metrics.chatMessagesTotal.inc).toHaveBeenCalledWith({
@@ -526,7 +576,7 @@ describe('Socket Handlers', () => {
       });
       expect(metrics.agentResponseTime.observe).toHaveBeenCalledWith(
         { agent_type: 'general', success: 'true' },
-        expect.any(Number)
+        expect.any(Number),
       );
     });
   });
@@ -537,19 +587,19 @@ describe('Socket Handlers', () => {
     beforeEach(() => {
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
       connectionHandler(mockSocket);
 
       const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'disconnect'
+        call => call[0] === 'disconnect',
       );
       disconnectHandler = disconnectCall[1];
     });
 
     it('should handle socket disconnection', () => {
       disconnectHandler();
-      
+
       expect(metrics.activeConnections.dec).toHaveBeenCalled();
     });
   });
@@ -560,12 +610,12 @@ describe('Socket Handlers', () => {
     beforeEach(() => {
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        call => call[0] === 'connection',
       )[1];
       connectionHandler(mockSocket);
 
       const errorCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'error'
+        call => call[0] === 'error',
       );
       errorHandler = errorCall[1];
     });
@@ -573,14 +623,14 @@ describe('Socket Handlers', () => {
     it('should handle socket errors', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       const error = new Error('Socket error');
-      
+
       errorHandler(error);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         'Socket error from test-socket-id:',
-        error
+        error,
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -588,9 +638,9 @@ describe('Socket Handlers', () => {
   describe('Helper Functions', () => {
     it('should provide emitToConversation helper', () => {
       const { emitToConversation } = setupSocketHandlers(mockIo);
-      
+
       emitToConversation('test-conv', 'test-event', { data: 'test' });
-      
+
       expect(mockIo.to).toHaveBeenCalledWith('test-conv');
       expect(mockIo.emit).toHaveBeenCalledWith('test-event', { data: 'test' });
     });

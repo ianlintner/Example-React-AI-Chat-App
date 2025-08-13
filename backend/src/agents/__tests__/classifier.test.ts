@@ -23,10 +23,10 @@ describe('Message Classifier', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Store original environment
     originalEnv = process.env.OPENAI_API_KEY;
-    
+
     // Clear the mock
     mockOpenAICreate.mockClear();
   });
@@ -71,14 +71,17 @@ describe('Message Classifier', () => {
 
       it('should give higher confidence for messages with more technical keywords', async () => {
         const simpleMessage = 'Help me code';
-        const complexMessage = 'Help me debug this React component with TypeScript and async await promises';
+        const complexMessage =
+          'Help me debug this React component with TypeScript and async await promises';
 
         const simpleResult = await classifyMessage(simpleMessage);
         const complexResult = await classifyMessage(complexMessage);
 
         expect(simpleResult.agentType).toBe('website_support');
         expect(complexResult.agentType).toBe('website_support');
-        expect(complexResult.confidence).toBeGreaterThan(simpleResult.confidence);
+        expect(complexResult.confidence).toBeGreaterThan(
+          simpleResult.confidence,
+        );
       });
     });
 
@@ -109,7 +112,7 @@ describe('Message Classifier', () => {
       it('should prioritize GIF over other classifications', async () => {
         const message = 'Show me a funny coding gif'; // Has both technical and gif keywords
         const result = await classifyMessage(message);
-        
+
         expect(result.agentType).toBe('gif');
         expect(result.reasoning).toContain('GIF');
       });
@@ -142,7 +145,7 @@ describe('Message Classifier', () => {
       it('should be lower priority than GIF but higher than trivia', async () => {
         const jokeMessage = 'Tell me a joke';
         const result = await classifyMessage(jokeMessage);
-        
+
         expect(result.agentType).toBe('joke');
         expect(result.confidence).toBeGreaterThan(0.6);
       });
@@ -209,7 +212,9 @@ describe('Message Classifier', () => {
         expect(jokeFact.agentType).toBe('joke');
 
         // Test trivia priority over general
-        const triviaGeneral = await classifyMessage('Share an interesting fun fact about animals');
+        const triviaGeneral = await classifyMessage(
+          'Share an interesting fun fact about animals',
+        );
         expect(triviaGeneral.agentType).toBe('trivia');
       });
     });
@@ -254,20 +259,27 @@ describe('Message Classifier', () => {
     describe('Confidence Scoring', () => {
       it('should cap confidence at maximum values', async () => {
         // Create message with many keywords to test capping
-        const manyGifKeywords = 'gif animated meme funny visual reaction cute happy sad dance'.split(' ').join(' ');
+        const manyGifKeywords =
+          'gif animated meme funny visual reaction cute happy sad dance'
+            .split(' ')
+            .join(' ');
         const result = await classifyMessage(manyGifKeywords);
-        
+
         expect(result.agentType).toBe('gif');
         expect(result.confidence).toBeLessThanOrEqual(0.95);
       });
 
       it('should increase confidence with more relevant keywords', async () => {
         const oneKeyword = await classifyMessage('joke');
-        const multipleKeywords = await classifyMessage('dad joke funny humor pun');
-        
+        const multipleKeywords = await classifyMessage(
+          'dad joke funny humor pun',
+        );
+
         expect(oneKeyword.agentType).toBe('joke');
         expect(multipleKeywords.agentType).toBe('joke');
-        expect(multipleKeywords.confidence).toBeGreaterThan(oneKeyword.confidence);
+        expect(multipleKeywords.confidence).toBeGreaterThan(
+          oneKeyword.confidence,
+        );
       });
     });
   });
@@ -281,17 +293,17 @@ describe('Message Classifier', () => {
       const mockClassification = {
         agentType: 'joke',
         confidence: 0.95,
-        reasoning: 'User is requesting a joke'
+        reasoning: 'User is requesting a joke',
       };
 
       mockOpenAICreate.mockResolvedValue({
         choices: [
           {
             message: {
-              content: JSON.stringify(mockClassification)
-            }
-          }
-        ]
+              content: JSON.stringify(mockClassification),
+            },
+          },
+        ],
       });
 
       const result = await classifyMessage('Tell me a joke');
@@ -301,11 +313,11 @@ describe('Message Classifier', () => {
         messages: [
           {
             role: 'system',
-            content: expect.stringContaining('Tell me a joke')
-          }
+            content: expect.stringContaining('Tell me a joke'),
+          },
         ],
         max_tokens: 200,
-        temperature: 0.1
+        temperature: 0.1,
       });
 
       expect(result).toEqual(mockClassification);
@@ -325,10 +337,10 @@ describe('Message Classifier', () => {
         choices: [
           {
             message: {
-              content: 'Invalid JSON response'
-            }
-          }
-        ]
+              content: 'Invalid JSON response',
+            },
+          },
+        ],
       });
 
       const result = await classifyMessage('Tell me a joke');
@@ -339,7 +351,7 @@ describe('Message Classifier', () => {
 
     it('should fall back when OpenAI returns empty response', async () => {
       mockOpenAICreate.mockResolvedValue({
-        choices: []
+        choices: [],
       });
 
       const result = await classifyMessage('Tell me a joke');
@@ -368,11 +380,11 @@ describe('Message Classifier', () => {
       const similarMessages = [
         'Tell me a joke',
         'Share a joke with me',
-        'I want to hear a joke'
+        'I want to hear a joke',
       ];
 
       const results = await Promise.all(
-        similarMessages.map(msg => classifyMessage(msg))
+        similarMessages.map(msg => classifyMessage(msg)),
       );
 
       results.forEach(result => {
@@ -386,11 +398,11 @@ describe('Message Classifier', () => {
         'Show me a gif',
         'I need a gif',
         'Can you share a gif?',
-        'Give me a gif please'
+        'Give me a gif please',
       ];
 
       const results = await Promise.all(
-        variations.map(msg => classifyMessage(msg))
+        variations.map(msg => classifyMessage(msg)),
       );
 
       results.forEach(result => {
@@ -408,27 +420,34 @@ describe('Message Classifier', () => {
         'Random message',
         '',
         '123',
-        'Special characters: !@#$%^&*()'
+        'Special characters: !@#$%^&*()',
       ];
 
       for (const message of testMessages) {
         const result = await classifyMessage(message);
-        
+
         expect(result).toHaveProperty('agentType');
         expect(result).toHaveProperty('confidence');
         expect(result).toHaveProperty('reasoning');
-        
+
         expect(typeof result.agentType).toBe('string');
         expect(typeof result.confidence).toBe('number');
         expect(typeof result.reasoning).toBe('string');
-        
+
         expect(result.confidence).toBeGreaterThanOrEqual(0);
         expect(result.confidence).toBeLessThanOrEqual(1);
-        
+
         // Validate agentType is one of the expected types
         const validAgentTypes: AgentType[] = [
-          'general', 'joke', 'trivia', 'gif', 'website_support',
-          'account_support', 'billing_support', 'operator_support', 'hold_agent'
+          'general',
+          'joke',
+          'trivia',
+          'gif',
+          'website_support',
+          'account_support',
+          'billing_support',
+          'operator_support',
+          'hold_agent',
         ];
         expect(validAgentTypes).toContain(result.agentType);
       }
@@ -438,25 +457,27 @@ describe('Message Classifier', () => {
   describe('Performance', () => {
     it('should classify messages within reasonable time', async () => {
       delete process.env.OPENAI_API_KEY; // Use fast fallback
-      
+
       const start = Date.now();
       await classifyMessage('Tell me a joke');
       const duration = Date.now() - start;
-      
+
       expect(duration).toBeLessThan(100); // Should be very fast for fallback
     });
 
     it('should handle multiple concurrent classifications', async () => {
       delete process.env.OPENAI_API_KEY;
-      
-      const messages = Array(10).fill(0).map((_, i) => `Test message ${i}`);
-      
+
+      const messages = Array(10)
+        .fill(0)
+        .map((_, i) => `Test message ${i}`);
+
       const start = Date.now();
       const results = await Promise.all(
-        messages.map(msg => classifyMessage(msg))
+        messages.map(msg => classifyMessage(msg)),
       );
       const duration = Date.now() - start;
-      
+
       expect(results).toHaveLength(10);
       expect(duration).toBeLessThan(1000);
     });

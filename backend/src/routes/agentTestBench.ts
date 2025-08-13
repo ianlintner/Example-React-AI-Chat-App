@@ -51,7 +51,7 @@ router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
       conversationHistory,
       agentType as AgentType,
       `test-conversation-${Date.now()}`,
-      userId
+      userId,
     );
 
     res.json({
@@ -115,7 +115,7 @@ router.post('/rag/test', async (req, res): Promise<void> => {
     const ragResult = ragService.searchForAgent(
       agentType,
       query,
-      useFullSearch
+      useFullSearch,
     );
 
     res.json({
@@ -161,7 +161,7 @@ router.post('/validator/test', async (req, res): Promise<void> => {
       agentResponse,
       conversationId,
       userId,
-      isProactive
+      isProactive,
     );
 
     res.json({
@@ -235,7 +235,7 @@ router.post('/joke-learning/test', async (req, res): Promise<void> => {
           basePrompt,
           adaptivePrompt: jokeLearningSystem.generateAdaptivePrompt(
             userId,
-            basePrompt
+            basePrompt,
           ),
           recommendation:
             jokeLearningSystem.getPersonalizedJokeRecommendation(userId),
@@ -296,7 +296,7 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
           message,
           [],
           undefined,
-          `test-conversation-${Date.now()}`
+          `test-conversation-${Date.now()}`,
         );
         result = {
           response,
@@ -352,7 +352,7 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
         result = {
           context: agentService.initializeConversation(
             userId,
-            agentType as AgentType
+            agentType as AgentType,
           ),
         };
         break;
@@ -368,7 +368,7 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
           userId,
           message,
           [],
-          `test-conversation-${Date.now()}`
+          `test-conversation-${Date.now()}`,
         );
         result = {
           response,
@@ -420,7 +420,7 @@ router.post('/comprehensive/test', async (req, res): Promise<void> => {
       message,
       conversationHistory,
       `test-conversation-${Date.now()}`,
-      forcedAgentType as AgentType
+      forcedAgentType as AgentType,
     );
 
     const comprehensiveState = agentService.getComprehensiveUserState(userId);
@@ -536,7 +536,7 @@ router.post('/bulk-test', async (req, res): Promise<void> => {
           [],
           agentType as AgentType,
           `bulk-test-${Date.now()}-${agentType}`,
-          userId
+          userId,
         );
 
         results.push({

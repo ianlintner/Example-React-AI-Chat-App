@@ -73,7 +73,7 @@ export class InMemoryMessageQueueProvider
   async enqueue(
     queueName: string,
     message: QueueMessage,
-    options?: QueueOptions
+    options?: QueueOptions,
   ): Promise<void> {
     if (!this.isConnected) {
       throw new Error('Message queue is not connected');
@@ -124,7 +124,7 @@ export class InMemoryMessageQueueProvider
     queue.stats.pendingMessages++;
 
     console.log(
-      `📨 Enqueued message ${message.id} to ${queueName} (priority: ${message.priority}, queue size: ${queue.messages.length})`
+      `📨 Enqueued message ${message.id} to ${queueName} (priority: ${message.priority}, queue size: ${queue.messages.length})`,
     );
 
     // Notify subscribers immediately
@@ -157,7 +157,7 @@ export class InMemoryMessageQueueProvider
     queue.subscribers.push(handler);
 
     console.log(
-      `📨 Subscribed to queue ${queueName} (${queue.subscribers.length} subscribers)`
+      `📨 Subscribed to queue ${queueName} (${queue.subscribers.length} subscribers)`,
     );
 
     // Process any existing messages
@@ -206,12 +206,12 @@ export class InMemoryMessageQueueProvider
         this.processingMessages.delete(message.id);
 
         console.log(
-          `✅ Successfully processed message ${message.id} from ${queueName} (${processingTime}ms)`
+          `✅ Successfully processed message ${message.id} from ${queueName} (${processingTime}ms)`,
         );
       } catch (error) {
         console.error(
           `❌ Error processing message ${message.id} from ${queueName}:`,
-          error
+          error,
         );
 
         queue.stats.processingMessages--;
@@ -222,13 +222,13 @@ export class InMemoryMessageQueueProvider
 
         if (message.retryCount < (message.maxRetries || 3)) {
           console.log(
-            `🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`
+            `🔄 Retrying message ${message.id} (attempt ${message.retryCount + 1}/${message.maxRetries})`,
           );
 
           // Exponential backoff
           const retryDelay = Math.min(
             1000 * Math.pow(2, message.retryCount - 1),
-            30000
+            30000,
           );
 
           const timeout = setTimeout(() => {
@@ -239,7 +239,7 @@ export class InMemoryMessageQueueProvider
           this.retryTimeouts.set(message.id, timeout);
         } else {
           console.error(
-            `💀 Message ${message.id} failed permanently after ${message.retryCount} retries`
+            `💀 Message ${message.id} failed permanently after ${message.retryCount} retries`,
           );
           queue.stats.failedMessages++;
 

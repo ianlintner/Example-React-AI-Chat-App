@@ -55,12 +55,12 @@ export class ResponseValidator {
     aiResponse: string,
     conversationId: string,
     userId: string,
-    isProactive: boolean = false
+    isProactive: boolean = false,
   ): ValidationResult {
     const validationSpan = createValidationSpan(
       conversationId,
       agentType,
-      userId
+      userId,
     );
 
     addSpanEvent(validationSpan, 'validation.start', {
@@ -75,7 +75,7 @@ export class ResponseValidator {
     try {
       const issues: ValidationIssue[] = [];
       let metrics: ValidationMetrics;
-      
+
       // Calculate metrics first and handle potential errors
       try {
         metrics = this.calculateMetrics(aiResponse);
@@ -94,7 +94,7 @@ export class ResponseValidator {
         agentType,
         userMessage,
         aiResponse,
-        issues
+        issues,
       );
 
       // Appropriateness validation
@@ -126,7 +126,7 @@ export class ResponseValidator {
         'validation.is_valid': validationResult.isValid,
         'validation.issues_count': issues.length,
         'validation.high_severity_issues': issues.filter(
-          i => i.severity === 'high'
+          i => i.severity === 'high',
         ).length,
         'validation.metrics.readability': metrics.readabilityScore,
         'validation.metrics.technical_accuracy': metrics.technicalAccuracy,
@@ -226,7 +226,10 @@ export class ResponseValidator {
     }
 
     // Check for repetitive content
-    const words = response.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const words = response
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(w => w.length > 3);
     const wordCounts = new Map<string, number>();
     words.forEach(word => {
       // Clean word of punctuation
@@ -237,7 +240,7 @@ export class ResponseValidator {
     });
 
     const repeatedWords = Array.from(wordCounts.entries()).filter(
-      ([word, count]) => count > 5 && word.length > 3
+      ([word, count]) => count > 5 && word.length > 3,
     );
 
     if (repeatedWords.length > 0) {
@@ -254,7 +257,7 @@ export class ResponseValidator {
     agentType: AgentType,
     userMessage: string,
     aiResponse: string,
-    issues: ValidationIssue[]
+    issues: ValidationIssue[],
   ): void {
     // Check for technical context
     const technicalKeywords = [
@@ -275,7 +278,7 @@ export class ResponseValidator {
     const hasTechnicalContent = technicalKeywords.some(
       keyword =>
         userMessage.toLowerCase().includes(keyword) ||
-        aiResponse.toLowerCase().includes(keyword)
+        aiResponse.toLowerCase().includes(keyword),
     );
 
     if (hasTechnicalContent && agentType !== 'website_support') {
@@ -290,7 +293,7 @@ export class ResponseValidator {
       ];
 
       const makesTechnicalClaims = technicalClaims.some(claim =>
-        aiResponse.toLowerCase().includes(claim)
+        aiResponse.toLowerCase().includes(claim),
       );
 
       if (makesTechnicalClaims) {
@@ -307,7 +310,7 @@ export class ResponseValidator {
 
   private validateAppropriateness(
     response: string,
-    issues: ValidationIssue[]
+    issues: ValidationIssue[],
   ): void {
     // Check for inappropriate content
     const inappropriatePatterns = [
@@ -329,12 +332,18 @@ export class ResponseValidator {
 
     // Check for overly casual tone in support context
     const overlyFamiliarWords = [
-      'bro', 'dude', 'buddy', 'mate', 'totally', 'awesome', 'cool'
+      'bro',
+      'dude',
+      'buddy',
+      'mate',
+      'totally',
+      'awesome',
+      'cool',
     ];
 
     let casualCount = 0;
     const lowerResponse = response.toLowerCase();
-    
+
     overlyFamiliarWords.forEach(word => {
       const regex = new RegExp(`\\b${word}\\b`, 'g');
       const matches = lowerResponse.match(regex);
@@ -356,7 +365,7 @@ export class ResponseValidator {
   private validateLength(
     response: string,
     agentType: AgentType,
-    issues: ValidationIssue[]
+    issues: ValidationIssue[],
   ): void {
     const expectedLengths: Record<AgentType, { min: number; max: number }> = {
       joke: { min: 10, max: 500 },
@@ -499,7 +508,7 @@ export class ResponseValidator {
     ];
 
     const foundTerms = technicalTerms.filter(term =>
-      response.toLowerCase().includes(term)
+      response.toLowerCase().includes(term),
     );
 
     // If no technical terms, assume non-technical response is accurate
@@ -532,11 +541,11 @@ export class ResponseValidator {
     ];
 
     const professionalCount = professionalIndicators.filter(indicator =>
-      response.toLowerCase().includes(indicator)
+      response.toLowerCase().includes(indicator),
     ).length;
 
     const inappropriateCount = inappropriateIndicators.filter(indicator =>
-      response.toLowerCase().includes(indicator)
+      response.toLowerCase().includes(indicator),
     ).length;
 
     // Score based on professional vs inappropriate content
@@ -566,7 +575,7 @@ export class ResponseValidator {
     ];
 
     const hasTransitions = transitions.some(transition =>
-      response.toLowerCase().includes(transition)
+      response.toLowerCase().includes(transition),
     );
 
     if (hasTransitions) coherenceScore += 0.2;
@@ -586,7 +595,7 @@ export class ResponseValidator {
     const words = response.toLowerCase().split(/\s+/);
     const uniqueWords = new Set(words);
     const repetitionRatio = words.length / uniqueWords.size;
-    
+
     if (repetitionRatio > 2) {
       coherenceScore -= 0.3;
     }
@@ -599,7 +608,7 @@ export class ResponseValidator {
         properSentences++;
       }
     });
-    
+
     const properSentenceRatio = properSentences / sentences.length;
     coherenceScore += (properSentenceRatio - 0.5) * 0.2;
 
@@ -607,7 +616,8 @@ export class ResponseValidator {
     if (sentences.length === 1) {
       // Check if the sentence is overly complex or has poor structure
       const words = sentences[0].trim().split(/\s+/);
-      if (words.length > 50) { // Very long sentences tend to be less coherent
+      if (words.length > 50) {
+        // Very long sentences tend to be less coherent
         coherenceScore -= 0.2;
       }
     }
@@ -617,7 +627,7 @@ export class ResponseValidator {
 
   private calculateOverallScore(
     metrics: ValidationMetrics,
-    issues: ValidationIssue[]
+    issues: ValidationIssue[],
   ): number {
     // Weight the metrics
     const baseScore =
@@ -671,31 +681,31 @@ export class ResponseValidator {
         agent_type: agentType,
         proactive: proactiveLabel,
       },
-      validationResult.score
+      validationResult.score,
     );
 
     // Response length histogram
     metrics.validationResponseLength.observe(
       { agent_type: agentType },
-      validationResult.metrics.responseLength
+      validationResult.metrics.responseLength,
     );
 
     // Quality metrics histograms
     metrics.validationMetrics.observe(
       { agent_type: agentType, metric_type: 'readability' },
-      validationResult.metrics.readabilityScore
+      validationResult.metrics.readabilityScore,
     );
     metrics.validationMetrics.observe(
       { agent_type: agentType, metric_type: 'technical_accuracy' },
-      validationResult.metrics.technicalAccuracy
+      validationResult.metrics.technicalAccuracy,
     );
     metrics.validationMetrics.observe(
       { agent_type: agentType, metric_type: 'appropriateness' },
-      validationResult.metrics.appropriatenessScore
+      validationResult.metrics.appropriatenessScore,
     );
     metrics.validationMetrics.observe(
       { agent_type: agentType, metric_type: 'coherence' },
-      validationResult.metrics.coherenceScore
+      validationResult.metrics.coherenceScore,
     );
 
     // Issues counter - count each issue by type and severity
@@ -709,13 +719,13 @@ export class ResponseValidator {
 
     // Console log for monitoring
     console.log(
-      `🔍 Validation Result [${log.agentType}] Score: ${log.validationResult.score.toFixed(2)}, Valid: ${log.validationResult.isValid}`
+      `🔍 Validation Result [${log.agentType}] Score: ${log.validationResult.score.toFixed(2)}, Valid: ${log.validationResult.isValid}`,
     );
 
     if (log.validationResult.issues.length > 0) {
       console.log(
         `⚠️  Issues found:`,
-        log.validationResult.issues.map(i => `${i.severity}: ${i.message}`)
+        log.validationResult.issues.map(i => `${i.severity}: ${i.message}`),
       );
     }
   }
@@ -748,10 +758,10 @@ export class ResponseValidator {
     const averageScore =
       this.validationLogs.reduce(
         (sum, log) => sum + log.validationResult.score,
-        0
+        0,
       ) / totalValidations;
     const validValidations = this.validationLogs.filter(
-      log => log.validationResult.isValid
+      log => log.validationResult.isValid,
     ).length;
     const validationRate = validValidations / totalValidations;
 

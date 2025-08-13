@@ -61,7 +61,7 @@ app.use(
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-  })
+  }),
 );
 app.use(express.json());
 
@@ -132,7 +132,7 @@ const queueService = createQueueService(io);
 server.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(
-    `🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`
+    `🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`,
   );
   console.log(`💾 Using in-memory storage for demo purposes`);
 
@@ -140,7 +140,7 @@ server.listen(PORT, async () => {
   try {
     await queueService.initialize();
     console.log(
-      `📨 Message Queue System initialized (${queueService.getProviderType()} provider)`
+      `📨 Message Queue System initialized (${queueService.getProviderType()} provider)`,
     );
   } catch (error) {
     console.error('❌ Failed to initialize message queue system:', error);

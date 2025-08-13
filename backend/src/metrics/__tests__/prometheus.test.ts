@@ -65,27 +65,27 @@ describe('Prometheus Metrics', () => {
       expect(mockRes.on).toHaveBeenCalledWith('finish', expect.any(Function));
     });
 
-    it('should record metrics when response finishes', (done) => {
+    it('should record metrics when response finishes', done => {
       // Spy on the metrics methods
       const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
       const incSpy = jest.spyOn(metrics.httpRequestsTotal, 'inc');
-      
+
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           setTimeout(() => {
             callback();
-            
+
             // Verify metrics were called
             expect(observeSpy).toHaveBeenCalledWith(
               { method: 'GET', route: '/api/test', status_code: '200' },
-              expect.any(Number)
+              expect.any(Number),
             );
             expect(incSpy).toHaveBeenCalledWith({
               method: 'GET',
               route: '/api/test',
               status_code: '200',
             });
-            
+
             // Clean up spies
             observeSpy.mockRestore();
             incSpy.mockRestore();
@@ -97,19 +97,19 @@ describe('Prometheus Metrics', () => {
       httpMetricsMiddleware(mockReq, mockRes, mockNext);
     });
 
-    it('should handle requests without route', (done) => {
+    it('should handle requests without route', done => {
       mockReq.route = undefined;
       const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
-      
+
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
-          
+
           expect(observeSpy).toHaveBeenCalledWith(
             { method: 'GET', route: '/api/test', status_code: '200' },
-            expect.any(Number)
+            expect.any(Number),
           );
-          
+
           observeSpy.mockRestore();
           done();
         }
@@ -118,20 +118,20 @@ describe('Prometheus Metrics', () => {
       httpMetricsMiddleware(mockReq, mockRes, mockNext);
     });
 
-    it('should handle requests without path', (done) => {
+    it('should handle requests without path', done => {
       mockReq.route = undefined;
       mockReq.path = undefined;
       const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
-      
+
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
-          
+
           expect(observeSpy).toHaveBeenCalledWith(
             { method: 'GET', route: 'unknown', status_code: '200' },
-            expect.any(Number)
+            expect.any(Number),
           );
-          
+
           observeSpy.mockRestore();
           done();
         }
@@ -140,20 +140,20 @@ describe('Prometheus Metrics', () => {
       httpMetricsMiddleware(mockReq, mockRes, mockNext);
     });
 
-    it('should handle different status codes', (done) => {
+    it('should handle different status codes', done => {
       mockRes.statusCode = 404;
       const incSpy = jest.spyOn(metrics.httpRequestsTotal, 'inc');
-      
+
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
-          
+
           expect(incSpy).toHaveBeenCalledWith({
             method: 'GET',
             route: '/api/test',
             status_code: '404',
           });
-          
+
           incSpy.mockRestore();
           done();
         }

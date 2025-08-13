@@ -9,11 +9,13 @@ import {
   StreamChunkPayload,
 } from './types';
 
+declare const exports: any;
 const DEFAULT_PRIORITY = 5;
 
 export class QueueService {
   private messageQueue: MessageQueue;
   private io: SocketServer;
+  private currentProvider: 'memory' | 'redis' = 'memory';
 
   constructor(io: SocketServer) {
     this.io = io;
@@ -24,7 +26,7 @@ export class QueueService {
     await this.messageQueue.connect();
     console.log(
       '📨 Queue Service initialized with provider:',
-      this.messageQueue.getProviderType()
+      this.currentProvider
     );
 
     // Set up queue handlers
@@ -343,7 +345,7 @@ export class QueueService {
     redisUrl?: string
   ): Promise<void> {
     console.log(
-      `🔄 Switching from ${this.messageQueue.getProviderType()} to ${providerType}`
+      `🔄 Switching from ${this.currentProvider} to ${providerType}`
     );
 
     // Gracefully shutdown current provider
@@ -358,21 +360,28 @@ export class QueueService {
     // Initialize new provider
     await this.messageQueue.connect();
     await this.setupQueueHandlers();
+    this.currentProvider = providerType;
 
     console.log(`✅ Successfully switched to ${providerType} provider`);
   }
 }
 
 // Create singleton instance
-let queueServiceInstance: QueueService | null = null;
+export let queueServiceInstance: QueueService | null = null;
 
 export function createQueueService(io: SocketServer): QueueService {
-  if (!queueServiceInstance) {
-    queueServiceInstance = new QueueService(io);
+  const existing =
+    (exports as any).queueServiceInstance ?? queueServiceInstance;
+  if (!existing) {
+    const instance = new QueueService(io);
+    queueServiceInstance = instance;
+    (exports as any).queueServiceInstance = instance;
+    return instance;
   }
-  return queueServiceInstance;
+  queueServiceInstance = existing;
+  return existing;
 }
 
 export function getQueueService(): QueueService | null {
-  return queueServiceInstance;
+  return (exports as any).queueServiceInstance ?? queueServiceInstance;
 }

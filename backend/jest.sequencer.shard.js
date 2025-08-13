@@ -23,10 +23,7 @@ class ShardSequencer extends TestSequencer {
       index < total
     ) {
       selected = tests.filter(test => {
-        const hash = crypto
-          .createHash('md5')
-          .update(test.path)
-          .digest('hex');
+        const hash = crypto.createHash('md5').update(test.path).digest('hex');
         const n = parseInt(hash.slice(0, 8), 16);
         return n % total === index;
       });

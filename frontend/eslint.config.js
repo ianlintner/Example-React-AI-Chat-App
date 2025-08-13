@@ -96,7 +96,7 @@ module.exports = [
       'react-native/no-single-element-style-arrays': 'error',
 
       // General rules
-      'no-console': 'warn',
+      'no-console': 'off',
       'no-debugger': 'error',
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
       'no-undef': 'off', // Handled by TypeScript

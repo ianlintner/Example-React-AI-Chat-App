@@ -35,10 +35,11 @@ services:
     networks:
       - observability
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:13133/"]
-      interval: 10s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:13133/ > /dev/null 2>&1 || exit 1"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
 
   # Prometheus - Metrics Storage
   prometheus:

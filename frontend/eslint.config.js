@@ -20,9 +20,21 @@ module.exports = [
       '*.config.js',
       'jest.setup.js',
       'scripts/**',
+      '__mocks__/**',
       '**/*.bundle.js',
       '**/*.min.js',
     ],
+  },
+
+  // Special override: exclude typed-linting for __mocks__ files
+  {
+    files: ['**/__mocks__/**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        // Disable type-aware linting for mock files (prevents parserOptions.project errors)
+        project: null,
+      },
+    },
   },
 
   // Base JavaScript configuration

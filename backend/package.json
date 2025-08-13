@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "jest",
     "test:unit": "jest --testPathIgnorePatterns=integration --watchAll=false",
-    "test:integration": "jest --testPathPattern=integration --runInBand --watchAll=false",
+    "test:integration": "jest --testPathPattern=integration --watchAll=false",
     "test:ci": "jest --ci --coverage --watchAll=false",
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",

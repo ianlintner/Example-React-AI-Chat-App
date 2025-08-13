@@ -33,11 +33,12 @@ const config = {
   forceExit: true,
   clearMocks: true,
   restoreMocks: true,
-  maxWorkers: '50%',
+  maxWorkers: process.env.JEST_MAX_WORKERS || '50%',
   bail: false,
   passWithNoTests: true,
   errorOnDeprecated: true,
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testSequencer: '<rootDir>/jest.sequencer.shard.js',
 };
 
 // Make coverage informational in CI by not enforcing thresholds.

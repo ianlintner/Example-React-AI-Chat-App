@@ -18,7 +18,7 @@ services:
       redis:
         condition: service_healthy
       otel-collector:
-        condition: service_healthy
+        condition: service_started
     networks:
       - observability
     profiles:
@@ -35,7 +35,7 @@ services:
       redis:
         condition: service_healthy
       otel-collector:
-        condition: service_healthy
+        condition: service_started
     environment:
       - NODE_ENV=development
       - REDIS_URL=redis://redis:6379

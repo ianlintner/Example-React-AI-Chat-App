@@ -20,7 +20,7 @@ services:
 
   # OpenTelemetry Collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.130.0
     container_name: otel-collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
@@ -34,12 +34,6 @@ services:
       - "9412:9411"
     networks:
       - observability
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:13133/ > /dev/null 2>&1 || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   # Prometheus - Metrics Storage
   prometheus:

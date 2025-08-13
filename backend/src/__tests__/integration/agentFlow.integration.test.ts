@@ -3,6 +3,56 @@ import { AgentService } from '../../agents/agentService';
 import { RAGService } from '../../agents/ragService';
 import { ConversationManager } from '../../agents/conversationManager';
 import { Message } from '../../types';
+// Mock the OpenAI module
+jest.mock('openai', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      chat: {
+        completions: {
+          create: jest.fn().mockImplementation(async (params: any) => {
+            const message = params.messages[0]?.content || '';
+            let agentType = 'general';
+            if (message.includes('joke')) {
+              agentType = 'joke';
+            } else if (message.includes('debug') || message.includes('React')) {
+              agentType = 'website_support';
+            } else if (message.includes('fact') || message.includes('space')) {
+              agentType = 'trivia';
+            } else if (message.includes('gif')) {
+              agentType = 'gif';
+            }
+
+            // Simulate a classification response
+            if (params.messages.some((m: any) => m.content.includes('Classify the user message'))) {
+              return Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content: JSON.stringify({ agent: agentType, confidence: 0.9 }),
+                    },
+                  },
+                ],
+              });
+            }
+
+            // Simulate a content generation response
+            return Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content: `This is a mock response for the ${agentType} agent.`,
+                  },
+                },
+              ],
+            });
+          }),
+        },
+      },
+    };
+  });
+});
 
 describe('Agent Flow Integration Tests', () => {
   let agentService: AgentService;

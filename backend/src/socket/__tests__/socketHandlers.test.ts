@@ -16,6 +16,28 @@ jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid'),
 }));
 
+// Ensure tests never hang indefinitely
+const TEST_TIMEOUT = 10000;
+jest.setTimeout(TEST_TIMEOUT);
+
+// Utility to fail fast if a promise doesn't resolve
+const withTimeout = <T>(p: Promise<T>, ms = TEST_TIMEOUT - 1000): Promise<T> => {
+  let timer: NodeJS.Timeout;
+  return new Promise<T>((resolve, reject) => {
+    timer = setTimeout(() => reject(new Error('Test timed out')), ms);
+    p.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+};
+
 describe('Socket Handlers', () => {
   let mockIo: jest.Mocked<Server>;
   let mockSocket: any;
@@ -101,9 +123,24 @@ describe('Socket Handlers', () => {
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    // Ensure we trigger disconnect to clear any setInterval/setTimeout created by the connection handler
+    try {
+      if (mockSocket && jest.isMockFunction(mockSocket.on)) {
+        const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+          (call: any) => call[0] === 'disconnect'
+        );
+        if (disconnectCall) {
+          const disconnectHandler = disconnectCall[1];
+          disconnectHandler();
+        }
+      }
+    } catch {
+      // no-op
+    }
+
+
     jest.clearAllMocks();
+    jest.useRealTimers();
     
     // Cleanup any console spy if it exists
     if (jest.isMockFunction(console.log)) {
@@ -322,31 +359,36 @@ describe('Socket Handlers', () => {
   describe('Stream Chat Handler', () => {
     let streamChatHandler: Function;
 
-    beforeEach(() => {
-      // Use real timers for async tests
+    beforeEach(async () => {
       jest.useRealTimers();
-      
       setupSocketHandlers(mockIo);
       const connectionHandler = (mockIo.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'connection'
+        (call: any) => call[0] === 'connection'
       )[1];
-      connectionHandler(mockSocket);
+      await connectionHandler(mockSocket);
 
       const streamChatCall = (mockSocket.on as jest.Mock).mock.calls.find(
-        call => call[0] === 'stream_chat'
+        (call: any) => call[0] === 'stream_chat'
       );
       streamChatHandler = streamChatCall[1];
     });
-    
+
     afterEach(() => {
-      jest.useFakeTimers();
+      // Get disconnect handler and call it to clean up timers
+      const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+        (call: any) => call[0] === 'disconnect'
+      );
+      if (disconnectCall) {
+        const disconnectHandler = disconnectCall[1];
+        disconnectHandler();
+      }
     });
 
     it('should handle empty message', async () => {
       const data = { message: '', conversationId: 'test-conv' };
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
         message: 'Message is required',
         code: 'INVALID_REQUEST',
@@ -357,8 +399,8 @@ describe('Socket Handlers', () => {
       const data = { message: 'test message', conversationId: 'non-existent' };
       (storage.getConversation as jest.Mock).mockReturnValue(null);
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
         message: 'Conversation not found',
         code: 'CONVERSATION_NOT_FOUND',
@@ -368,8 +410,8 @@ describe('Socket Handlers', () => {
     it('should create new conversation when no conversationId provided', async () => {
       const data = { message: 'test message' };
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(storage.addConversation).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'mock-uuid',
@@ -392,8 +434,8 @@ describe('Socket Handlers', () => {
       
       const data = { message: 'test message', conversationId: 'existing-conv' };
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(storage.getConversation).toHaveBeenCalledWith('existing-conv');
       expect(agentService.processMessageWithBothSystems).toHaveBeenCalled();
     });
@@ -401,8 +443,8 @@ describe('Socket Handlers', () => {
     it('should process message and emit streaming response', async () => {
       const data = { message: 'test message' };
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(agentService.processMessageWithBothSystems).toHaveBeenCalledWith(
         'test-socket-id',
         'test message',
@@ -426,8 +468,8 @@ describe('Socket Handlers', () => {
       // Suppress console.error during this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(mockSocket.emit).toHaveBeenCalledWith('stream_error', {
         message: 'Internal server error',
         code: 'INTERNAL_ERROR',
@@ -460,8 +502,8 @@ describe('Socket Handlers', () => {
         confidence: 0.9,
       });
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(agentService.executeProactiveAction).toHaveBeenCalledWith(
         'test-socket-id',
         proactiveActions[0],
@@ -472,8 +514,8 @@ describe('Socket Handlers', () => {
     it('should track metrics during message processing', async () => {
       const data = { message: 'test message' };
       
-      await streamChatHandler(data);
-      
+      await withTimeout(streamChatHandler(data));
+
       expect(metrics.chatMessagesTotal.inc).toHaveBeenCalledWith({
         type: 'user',
         agent_type: 'incoming',

@@ -37,6 +37,9 @@ describe('QueueService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset the singleton instance before each test
+    const queueServiceModule = require('../queueService');
+    (queueServiceModule as any).queueServiceInstance = null;
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     queueService = new QueueService(mockSocketServer);
   });
@@ -583,13 +586,13 @@ describe('QueueService singleton functions', () => {
   beforeEach(() => {
     consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     jest.clearAllMocks();
+    // Reset the singleton instance before each test
+    const queueServiceModule = require('../queueService');
+    (queueServiceModule as any).queueServiceInstance = null;
   });
 
   afterEach(() => {
     consoleSpy.mockRestore();
-    // Reset singleton - need to access the module's internal instance
-    const queueServiceModule = require('../queueService');
-    (queueServiceModule as any).queueServiceInstance = null;
   });
 
   describe('createQueueService', () => {

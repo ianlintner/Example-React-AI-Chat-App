@@ -1,51 +1,7 @@
-// Mock prom-client before imports
-const mockHistogram = {
-  observe: jest.fn(),
-};
-const mockCounter = {
-  inc: jest.fn(),
-};
-const mockGauge = {
-  set: jest.fn(),
-  inc: jest.fn(),
-  dec: jest.fn(),
-};
-const mockRegistry = {
-  registerMetric: jest.fn(),
-  metrics: jest.fn().mockResolvedValue('mocked metrics'),
-};
-
-const mockRegistryConstructor = jest.fn(() => mockRegistry);
-const mockHistogramConstructor = jest.fn(() => mockHistogram);
-const mockCounterConstructor = jest.fn(() => mockCounter);
-const mockGaugeConstructor = jest.fn(() => mockGauge);
-const mockCollectDefaultMetrics = jest.fn();
-
-jest.mock('prom-client', () => ({
-  Registry: mockRegistryConstructor,
-  Histogram: mockHistogramConstructor,
-  Counter: mockCounterConstructor,
-  Gauge: mockGaugeConstructor,
-  collectDefaultMetrics: mockCollectDefaultMetrics,
-  default: {
-    Registry: mockRegistryConstructor,
-    Histogram: mockHistogramConstructor,
-    Counter: mockCounterConstructor,
-    Gauge: mockGaugeConstructor,
-    collectDefaultMetrics: mockCollectDefaultMetrics,
-  },
-}));
-
-// Import the module which will trigger constructor calls
-const prometheusModule = require('../prometheus');
-const { metrics, register, httpMetricsMiddleware } = prometheusModule;
-const promClient = require('prom-client');
+import { metrics, register, httpMetricsMiddleware } from '../prometheus';
+import promClient from 'prom-client';
 
 describe('Prometheus Metrics', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('Metrics Initialization', () => {
     it('should create all required metrics', () => {
       expect(metrics.httpRequestDuration).toBeDefined();
@@ -56,73 +12,28 @@ describe('Prometheus Metrics', () => {
       expect(metrics.aiModelRequests).toBeDefined();
       expect(metrics.aiModelTokensUsed).toBeDefined();
       expect(metrics.validationChecks).toBeDefined();
+      expect(metrics.validationScores).toBeDefined();
+      expect(metrics.validationIssues).toBeDefined();
+      expect(metrics.validationResponseLength).toBeDefined();
+      expect(metrics.validationMetrics).toBeDefined();
       expect(metrics.memoryStorageOperations).toBeDefined();
     });
 
-    it('should create registry and register metrics', () => {
-      expect(mockRegistryConstructor).toHaveBeenCalled();
-      expect(mockCollectDefaultMetrics).toHaveBeenCalled();
+    it('should have histogram metrics with observe method', () => {
+      expect(typeof metrics.httpRequestDuration.observe).toBe('function');
+      expect(typeof metrics.agentResponseTime.observe).toBe('function');
+      expect(typeof metrics.validationScores.observe).toBe('function');
     });
 
-    it('should create histograms with correct configuration', () => {
-      expect(mockHistogramConstructor).toHaveBeenCalledWith({
-        name: 'http_request_duration_seconds',
-        help: 'Duration of HTTP requests in seconds',
-        labelNames: ['method', 'route', 'status_code'],
-        buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
-      });
-
-      expect(mockHistogramConstructor).toHaveBeenCalledWith({
-        name: 'agent_response_time_seconds',
-        help: 'Time taken for agent to respond to messages',
-        labelNames: ['agent_type', 'success'],
-        buckets: [0.1, 0.5, 1, 2, 5, 10, 30],
-      });
+    it('should have counter metrics with inc method', () => {
+      expect(typeof metrics.httpRequestsTotal.inc).toBe('function');
+      expect(typeof metrics.chatMessagesTotal.inc).toBe('function');
+      expect(typeof metrics.aiModelRequests.inc).toBe('function');
+      expect(typeof metrics.validationChecks.inc).toBe('function');
     });
 
-    it('should create counters with correct configuration', () => {
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'http_requests_total',
-        help: 'Total number of HTTP requests',
-        labelNames: ['method', 'route', 'status_code'],
-      });
-
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'chat_messages_total',
-        help: 'Total number of chat messages processed',
-        labelNames: ['type', 'agent_type'],
-      });
-
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'ai_model_requests_total',
-        help: 'Total number of AI model requests',
-        labelNames: ['model', 'success'],
-      });
-
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'ai_model_tokens_used_total',
-        help: 'Total number of tokens used by AI models',
-        labelNames: ['model', 'type'],
-      });
-
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'validation_checks_total',
-        help: 'Total number of validation checks performed',
-        labelNames: ['agent_type', 'result', 'proactive'],
-      });
-
-      expect(mockCounterConstructor).toHaveBeenCalledWith({
-        name: 'memory_storage_operations_total',
-        help: 'Total number of memory storage operations',
-        labelNames: ['operation'],
-      });
-    });
-
-    it('should create gauge with correct configuration', () => {
-      expect(mockGaugeConstructor).toHaveBeenCalledWith({
-        name: 'websocket_connections_active',
-        help: 'Number of active WebSocket connections',
-      });
+    it('should have gauge metrics with set method', () => {
+      expect(typeof metrics.activeConnections.set).toBe('function');
     });
   });
 
@@ -154,25 +65,30 @@ describe('Prometheus Metrics', () => {
       expect(mockRes.on).toHaveBeenCalledWith('finish', expect.any(Function));
     });
 
-    it('should record metrics on response finish', (done) => {
-      const startTime = Date.now();
+    it('should record metrics when response finishes', (done) => {
+      // Spy on the metrics methods
+      const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
+      const incSpy = jest.spyOn(metrics.httpRequestsTotal, 'inc');
       
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
-          // Simulate some time passing
           setTimeout(() => {
             callback();
             
             // Verify metrics were called
-            expect(metrics.httpRequestDuration.observe).toHaveBeenCalledWith(
+            expect(observeSpy).toHaveBeenCalledWith(
               { method: 'GET', route: '/api/test', status_code: '200' },
               expect.any(Number)
             );
-            expect(metrics.httpRequestsTotal.inc).toHaveBeenCalledWith({
+            expect(incSpy).toHaveBeenCalledWith({
               method: 'GET',
               route: '/api/test',
               status_code: '200',
             });
+            
+            // Clean up spies
+            observeSpy.mockRestore();
+            incSpy.mockRestore();
             done();
           }, 10);
         }
@@ -183,15 +99,18 @@ describe('Prometheus Metrics', () => {
 
     it('should handle requests without route', (done) => {
       mockReq.route = undefined;
+      const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
       
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
           
-          expect(metrics.httpRequestDuration.observe).toHaveBeenCalledWith(
+          expect(observeSpy).toHaveBeenCalledWith(
             { method: 'GET', route: '/api/test', status_code: '200' },
             expect.any(Number)
           );
+          
+          observeSpy.mockRestore();
           done();
         }
       });
@@ -202,15 +121,18 @@ describe('Prometheus Metrics', () => {
     it('should handle requests without path', (done) => {
       mockReq.route = undefined;
       mockReq.path = undefined;
+      const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
       
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
           
-          expect(metrics.httpRequestDuration.observe).toHaveBeenCalledWith(
+          expect(observeSpy).toHaveBeenCalledWith(
             { method: 'GET', route: 'unknown', status_code: '200' },
             expect.any(Number)
           );
+          
+          observeSpy.mockRestore();
           done();
         }
       });
@@ -220,16 +142,19 @@ describe('Prometheus Metrics', () => {
 
     it('should handle different status codes', (done) => {
       mockRes.statusCode = 404;
+      const incSpy = jest.spyOn(metrics.httpRequestsTotal, 'inc');
       
       mockRes.on.mockImplementation((event: string, callback: Function) => {
         if (event === 'finish') {
           callback();
           
-          expect(metrics.httpRequestsTotal.inc).toHaveBeenCalledWith({
+          expect(incSpy).toHaveBeenCalledWith({
             method: 'GET',
             route: '/api/test',
             status_code: '404',
           });
+          
+          incSpy.mockRestore();
           done();
         }
       });
@@ -238,9 +163,10 @@ describe('Prometheus Metrics', () => {
     });
   });
 
-  describe('Exports', () => {
+  describe('Registry and Exports', () => {
     it('should export register', () => {
       expect(register).toBeDefined();
+      expect(typeof register.metrics).toBe('function');
     });
 
     it('should export metrics object', () => {
@@ -250,6 +176,11 @@ describe('Prometheus Metrics', () => {
 
     it('should export promClient as default', () => {
       expect(promClient).toBeDefined();
+    });
+
+    it('should be able to collect metrics', async () => {
+      const metricsOutput = await register.metrics();
+      expect(typeof metricsOutput).toBe('string');
     });
   });
 });

@@ -99,7 +99,7 @@ const executeProactiveAction = async (
     console.log(`✅ Proactive action completed: ${action.type}`);
 
     // Process any queued actions after a delay
-    setTimeout(async () => {
+    const processQueuedTimeout = setTimeout(async () => {
       try {
         const queuedActions = await agentService.getQueuedActions(socket.id);
         if (queuedActions && queuedActions.length > 0) {
@@ -119,6 +119,8 @@ const executeProactiveAction = async (
         console.error('Error processing queued actions:', error);
       }
     }, 2000); // 2 second delay to ensure current action is fully processed
+    // Prevent keeping the event loop alive in tests
+    (processQueuedTimeout as any).unref?.();
   } catch (error) {
     console.error('Error executing proactive action:', error);
 
@@ -289,21 +291,29 @@ export const setupSocketHandlers = (io: Server) => {
       socket.emit('agent_status_update', agentStatus);
     };
 
+    // Track timeouts for cleanup
+    const timeouts: NodeJS.Timeout[] = [];
+
     // Send initial status after connection
-    setTimeout(() => {
+    const initialStatusTimeout = setTimeout(() => {
       sendAgentStatus();
     }, 500);
+    // Prevent keeping the event loop alive in tests
+    (initialStatusTimeout as any).unref?.();
+    timeouts.push(initialStatusTimeout);
 
     // Set up periodic agent status updates (every 5 seconds)
     const statusInterval = setInterval(() => {
       sendAgentStatus();
     }, 5000);
+    // Prevent keeping the event loop alive in tests
+    (statusInterval as any).unref?.();
 
     // Store intervals for cleanup
     const intervals = [statusInterval];
 
     // Initialize user state for goal-seeking system and hold agent
-    setTimeout(async () => {
+    const initStateTimeout = setTimeout(async () => {
       try {
         console.log(`🎯 Initializing user state for ${socket.id}`);
 
@@ -368,6 +378,8 @@ export const setupSocketHandlers = (io: Server) => {
           },
           10 * 60 * 1000
         ); // 10 minutes
+        // Prevent keeping the event loop alive in tests
+        (holdUpdateInterval as any).unref?.();
 
         // Store the holdUpdateInterval for cleanup
         intervals.push(holdUpdateInterval);
@@ -375,6 +387,9 @@ export const setupSocketHandlers = (io: Server) => {
         console.error('Error initializing user state:', error);
       }
     }, 500); // Initialize state quickly
+    // Prevent keeping the event loop alive in tests
+    (initStateTimeout as any).unref?.();
+    timeouts.push(initStateTimeout);
 
     // Join a conversation room
     socket.on('join_conversation', (conversationId: string) => {
@@ -641,9 +656,12 @@ export const setupSocketHandlers = (io: Server) => {
             });
 
             // Send agent status update after message processing
-            setTimeout(() => {
+            const postProcessTimeout = setTimeout(() => {
               sendAgentStatus();
             }, 100);
+            // Prevent keeping the event loop alive in tests
+            (postProcessTimeout as any).unref?.();
+            timeouts.push(postProcessTimeout);
 
             // Handle proactive actions from goal-seeking system
             if (
@@ -672,7 +690,7 @@ export const setupSocketHandlers = (io: Server) => {
                   );
                 } else if (action.timing === 'delayed' && action.delayMs) {
                   // Schedule delayed action
-                  setTimeout(async () => {
+                  const delayedActionTimeout = setTimeout(async () => {
                     await executeProactiveAction(
                       action,
                       conversation,
@@ -680,6 +698,9 @@ export const setupSocketHandlers = (io: Server) => {
                       io
                     );
                   }, action.delayMs);
+                  // Prevent keeping the event loop alive in tests
+                  (delayedActionTimeout as any).unref?.();
+                  timeouts.push(delayedActionTimeout);
                 }
               }
             }
@@ -737,6 +758,8 @@ export const setupSocketHandlers = (io: Server) => {
 
       // Clear all intervals
       intervals.forEach(clearInterval);
+      // Clear all timeouts
+      timeouts.forEach(clearTimeout);
 
       // Track WebSocket disconnection metrics
       metrics.activeConnections.dec();

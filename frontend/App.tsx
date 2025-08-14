@@ -28,7 +28,6 @@ export default function App() {
         logger.info('Socket connected successfully');
         setError(null);
         setIsConnected(true);
-
       } catch (error) {
         logger.error('Failed to connect to socket server:', error);
         setError('Failed to connect to server. Please check your connection.');

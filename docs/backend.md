@@ -4,18 +4,30 @@ This document provides comprehensive information about the backend architecture,
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Technology Stack](#technology-stack)
-3. [Project Structure](#project-structure)
-4. [Server Architecture](#server-architecture)
-5. [API Design](#api-design)
-6. [WebSocket Implementation](#websocket-implementation)
-7. [Data Storage](#data-storage)
-8. [OpenAI Integration](#openai-integration)
-9. [Error Handling](#error-handling)
-10. [Middleware](#middleware)
-11. [Environment Configuration](#environment-configuration)
-12. [Development Workflow](#development-workflow)
+- [Backend Guide](#backend-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Technology Stack](#technology-stack)
+    - [Core Technologies](#core-technologies)
+    - [Supporting Libraries](#supporting-libraries)
+    - [Development Tools](#development-tools)
+  - [Project Structure](#project-structure)
+  - [Server Architecture](#server-architecture)
+    - [Main Server Configuration](#main-server-configuration)
+    - [Application Architecture](#application-architecture)
+  - [API Design](#api-design)
+    - [RESTful Endpoints](#restful-endpoints)
+      - [Health Check](#health-check)
+      - [Chat Routes](#chat-routes)
+      - [Conversation Routes](#conversation-routes)
+  - [WebSocket Implementation](#websocket-implementation)
+    - [Socket.io Event Handlers](#socketio-event-handlers)
+  - [Data Storage](#data-storage)
+    - [In-Memory Storage Implementation](#in-memory-storage-implementation)
+  - [OpenAI Integration](#openai-integration)
+    - [Streaming Response Implementation](#streaming-response-implementation)
+  - [Error Handling](#error-handling)
+    - [Centralized Error Handling](#centralized-error-handling)
 
 ## Overview
 
@@ -679,163 +691,5 @@ export const createError = (message: string, statusCode: number, code: string): 
   return error;
 };
 
-export const errorHandler = (error: AppError, req: Request, res: Response, next: NextFunction) => {
-  const { statusCode = 500, message, code = 'INTERNAL_ERROR' } = error;
-
-  console.error('Error:', {
-    message,
-    code,
-    statusCode,
-    stack: error.stack,
-    url: req.url,
-    method: req.method,
-  });
-
-  res.status(statusCode).json({
-    message: error.isOperational ? message : 'Internal server error',
-    code,
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-  });
-};
-
-// Usage in routes
-app.use(errorHandler);
+export const errorHandler = (error: AppError, req: Request, res: Response, next
 ```
-
-## Middleware
-
-### Common Middleware Stack
-
-```typescript
-// middleware/index.ts
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
-
-export const setupMiddleware = (app: express.Application) => {
-  // Security middleware
-  app.use(helmet());
-
-  // CORS configuration
-  app.use(
-    cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:8081',
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }),
-  );
-
-  // Request logging
-  app.use(morgan('combined'));
-
-  // Body parsing
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-  // Rate limiting
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: {
-      message: 'Too many requests from this IP',
-      code: 'RATE_LIMIT_EXCEEDED',
-    },
-  });
-
-  app.use('/api/', limiter);
-};
-```
-
-## Environment Configuration
-
-### Environment Variables
-
-```bash
-# .env
-PORT=5001
-NODE_ENV=development
-FRONTEND_URL=http://localhost:8081
-OPENAI_API_KEY=your-openai-api-key-here
-
-# Optional configurations
-LOG_LEVEL=info
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-### Configuration Management
-
-```typescript
-// config/index.ts
-import { config } from 'dotenv';
-
-config();
-
-export const serverConfig = {
-  port: parseInt(process.env.PORT || '5001', 10),
-  nodeEnv: process.env.NODE_ENV || 'development',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8081',
-  openaiApiKey: process.env.OPENAI_API_KEY,
-  logLevel: process.env.LOG_LEVEL || 'info',
-  rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
-  },
-};
-
-// Validate required environment variables
-const requiredEnvVars = ['PORT', 'FRONTEND_URL'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  console.error('Missing required environment variables:', missingEnvVars);
-  process.exit(1);
-}
-```
-
-## Development Workflow
-
-### Available Scripts
-
-```json
-{
-  "scripts": {
-    "dev": "nodemon src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "type-check": "tsc --noEmit"
-  }
-}
-```
-
-### Development Tools Configuration
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-```
-
-This backend guide provides a comprehensive overview of the Node.js server architecture, API design, and development practices. The modular structure makes it easy to extend and maintain the application as it grows.

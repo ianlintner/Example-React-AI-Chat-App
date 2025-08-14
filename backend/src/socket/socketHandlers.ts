@@ -343,6 +343,17 @@ export const setupSocketHandlers = (
           }
         }
 
+        // Create a real conversation for this hold session so subsequent messages use the same conversation
+        const initialConversation: Conversation = {
+          id: uuidv4(),
+          title: 'On hold',
+          messages: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        storage.addConversation(initialConversation);
+        socket.join(initialConversation.id);
+
         // Send initial hold greeting proactively, then immediately hand off to an entertainment agent
         const holdGreeting =
           "You're on hold for a moment while we connect you. In the meantime, we'll bring in something fun to keep you entertained!";
@@ -352,7 +363,7 @@ export const setupSocketHandlers = (
             content: holdGreeting,
             role: 'assistant',
             timestamp: new Date(),
-            conversationId: 'hold',
+            conversationId: initialConversation.id,
             agentUsed: 'hold_agent',
             confidence: 1.0,
             isProactive: true,
@@ -424,18 +435,9 @@ export const setupSocketHandlers = (
               timing: 'immediate',
             };
 
-            // Use a temporary "hold" conversation context for the initial proactive message
-            const tempConversation: Conversation = {
-              id: 'hold',
-              title: 'On Hold',
-              messages: [],
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
-
             await executeProactiveAction(
               initialAction,
-              tempConversation,
+              initialConversation,
               socket,
               io,
             );
@@ -463,7 +465,7 @@ export const setupSocketHandlers = (
                     content: holdUpdateMessage,
                     role: 'assistant',
                     timestamp: new Date(),
-                    conversationId: 'hold',
+                    conversationId: initialConversation.id,
                     agentUsed: 'hold_agent',
                     confidence: 1.0,
                     isProactive: true,

@@ -644,7 +644,6 @@ jest.mock('expo-router', () => ({
   },
 }));
 
-
 // Mock react-native-vector-icons
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcon');
 jest.mock('react-native-vector-icons/FontAwesome', () => 'FontAwesomeIcon');

@@ -63,9 +63,21 @@ export interface AppSettings {
   modelPreference: string;
 }
 
-export type AgentType = 'general' | 'joke' | 'trivia' | 'gif' | 'account_support' | 'billing_support' | 
-  'website_support' | 'operator_support' | 'hold_agent' | 'story_teller' | 'riddle_master' | 
-  'quote_master' | 'game_host' | 'music_guru';
+export type AgentType =
+  | 'general'
+  | 'joke'
+  | 'trivia'
+  | 'gif'
+  | 'account_support'
+  | 'billing_support'
+  | 'website_support'
+  | 'operator_support'
+  | 'hold_agent'
+  | 'story_teller'
+  | 'riddle_master'
+  | 'quote_master'
+  | 'game_host'
+  | 'music_guru';
 
 export interface Agent {
   id: string;

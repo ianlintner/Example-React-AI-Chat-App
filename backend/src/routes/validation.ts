@@ -9,13 +9,13 @@ router.get('/stats', (req, res) => {
     const stats = responseValidator.getValidationStats();
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
     console.error('Error fetching validation stats:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch validation statistics'
+      error: 'Failed to fetch validation statistics',
     });
   }
 });
@@ -25,26 +25,26 @@ router.get('/logs', (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
     const logs = responseValidator.getValidationLogs();
-    
+
     // Apply pagination
     const startIndex = parseInt(offset as string);
     const endIndex = startIndex + parseInt(limit as string);
     const paginatedLogs = logs.slice(startIndex, endIndex);
-    
+
     res.json({
       success: true,
       data: {
         logs: paginatedLogs,
         total: logs.length,
         limit: parseInt(limit as string),
-        offset: startIndex
-      }
+        offset: startIndex,
+      },
     });
   } catch (error) {
     console.error('Error fetching validation logs:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch validation logs'
+      error: 'Failed to fetch validation logs',
     });
   }
 });
@@ -54,15 +54,16 @@ router.get('/logs/:agentType', (req, res) => {
   try {
     const { agentType } = req.params;
     const { limit = 50, offset = 0 } = req.query;
-    
-    const logs = responseValidator.getValidationLogs()
+
+    const logs = responseValidator
+      .getValidationLogs()
       .filter(log => log.agentType === agentType);
-    
+
     // Apply pagination
     const startIndex = parseInt(offset as string);
     const endIndex = startIndex + parseInt(limit as string);
     const paginatedLogs = logs.slice(startIndex, endIndex);
-    
+
     res.json({
       success: true,
       data: {
@@ -70,14 +71,14 @@ router.get('/logs/:agentType', (req, res) => {
         total: logs.length,
         limit: parseInt(limit as string),
         offset: startIndex,
-        agentType
-      }
+        agentType,
+      },
     });
   } catch (error) {
     console.error('Error fetching validation logs by agent type:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch validation logs'
+      error: 'Failed to fetch validation logs',
     });
   }
 });
@@ -86,28 +87,29 @@ router.get('/logs/:agentType', (req, res) => {
 router.get('/failed', (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
-    const logs = responseValidator.getValidationLogs()
+    const logs = responseValidator
+      .getValidationLogs()
       .filter(log => !log.validationResult.isValid);
-    
+
     // Apply pagination
     const startIndex = parseInt(offset as string);
     const endIndex = startIndex + parseInt(limit as string);
     const paginatedLogs = logs.slice(startIndex, endIndex);
-    
+
     res.json({
       success: true,
       data: {
         logs: paginatedLogs,
         total: logs.length,
         limit: parseInt(limit as string),
-        offset: startIndex
-      }
+        offset: startIndex,
+      },
     });
   } catch (error) {
     console.error('Error fetching failed validations:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch failed validations'
+      error: 'Failed to fetch failed validations',
     });
   }
 });
@@ -117,7 +119,7 @@ router.get('/summary', (req, res) => {
   try {
     const logs = responseValidator.getValidationLogs();
     const summary: { [key: string]: any } = {};
-    
+
     // Group logs by agent type
     logs.forEach(log => {
       if (!summary[log.agentType]) {
@@ -129,45 +131,47 @@ router.get('/summary', (req, res) => {
           issues: {
             high: 0,
             medium: 0,
-            low: 0
-          }
+            low: 0,
+          },
         };
       }
-      
+
       const agentSummary = summary[log.agentType];
       agentSummary.total++;
-      
+
       if (log.validationResult.isValid) {
         agentSummary.valid++;
       } else {
         agentSummary.invalid++;
       }
-      
+
       agentSummary.averageScore += log.validationResult.score;
-      
+
       // Count issues by severity
       log.validationResult.issues.forEach(issue => {
         agentSummary.issues[issue.severity]++;
       });
     });
-    
+
     // Calculate averages
     Object.values(summary).forEach((agentSummary: any) => {
-      agentSummary.averageScore = agentSummary.total > 0 ? 
-        agentSummary.averageScore / agentSummary.total : 0;
-      agentSummary.validationRate = agentSummary.total > 0 ? 
-        agentSummary.valid / agentSummary.total : 0;
+      agentSummary.averageScore =
+        agentSummary.total > 0
+          ? agentSummary.averageScore / agentSummary.total
+          : 0;
+      agentSummary.validationRate =
+        agentSummary.total > 0 ? agentSummary.valid / agentSummary.total : 0;
     });
-    
+
     res.json({
       success: true,
-      data: summary
+      data: summary,
     });
   } catch (error) {
     console.error('Error generating validation summary:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to generate validation summary'
+      error: 'Failed to generate validation summary',
     });
   }
 });
@@ -178,13 +182,13 @@ router.post('/clear', (req, res) => {
     responseValidator.clearLogs();
     res.json({
       success: true,
-      message: 'Validation logs cleared successfully'
+      message: 'Validation logs cleared successfully',
     });
   } catch (error) {
     console.error('Error clearing validation logs:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to clear validation logs'
+      error: 'Failed to clear validation logs',
     });
   }
 });

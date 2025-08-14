@@ -35,7 +35,7 @@ datasources:
         queries:
           - name: 'Sample query'
             query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
-      
+
   - name: Loki
     type: loki
     access: proxy
@@ -46,5 +46,5 @@ datasources:
         - datasourceUid: zipkin
           matcherRegex: "traceID=(\\w+)"
           name: TraceID
-          url: "$${__value.raw}"
-          urlDisplayLabel: "View Trace"
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'

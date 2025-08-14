@@ -16,7 +16,7 @@ describe('Message Queue System', () => {
   describe('Basic Queue Operations', () => {
     test('should enqueue and dequeue messages', async () => {
       const message = queue.createMessage('test', { content: 'Hello' });
-      
+
       await queue.enqueue('test_queue', message);
       const size = await queue.getQueueSize('test_queue');
       expect(size).toBe(1);
@@ -27,9 +27,21 @@ describe('Message Queue System', () => {
     });
 
     test('should handle priority ordering', async () => {
-      const lowPriorityMsg = queue.createMessage('test', { order: 1 }, { priority: 3 });
-      const highPriorityMsg = queue.createMessage('test', { order: 2 }, { priority: 9 });
-      const medPriorityMsg = queue.createMessage('test', { order: 3 }, { priority: 6 });
+      const lowPriorityMsg = queue.createMessage(
+        'test',
+        { order: 1 },
+        { priority: 3 },
+      );
+      const highPriorityMsg = queue.createMessage(
+        'test',
+        { order: 2 },
+        { priority: 9 },
+      );
+      const medPriorityMsg = queue.createMessage(
+        'test',
+        { order: 3 },
+        { priority: 6 },
+      );
 
       // Enqueue in random order
       await queue.enqueue('priority_test', lowPriorityMsg);
@@ -43,7 +55,7 @@ describe('Message Queue System', () => {
 
       expect(first.payload.order).toBe(2); // Highest priority
       expect(second.payload.order).toBe(3); // Medium priority
-      expect(third.payload.order).toBe(1);  // Lowest priority
+      expect(third.payload.order).toBe(1); // Lowest priority
     });
 
     test('should peek at messages without removing them', async () => {
@@ -72,7 +84,7 @@ describe('Message Queue System', () => {
   describe('Message Processing', () => {
     test('should process messages with subscribers', async () => {
       const processedMessages: any[] = [];
-      
+
       // Subscribe to queue
       await queue.subscribe('sub_test', async (message: any) => {
         processedMessages.push(message);
@@ -92,7 +104,7 @@ describe('Message Queue System', () => {
     test('should handle multiple subscribers', async () => {
       const subscriber1Messages: any[] = [];
       const subscriber2Messages: any[] = [];
-      
+
       // Multiple subscribers
       await queue.subscribe('multi_test', async (message: any) => {
         subscriber1Messages.push(message);
@@ -114,7 +126,7 @@ describe('Message Queue System', () => {
   describe('Error Handling and Retries', () => {
     test('should retry failed messages', async () => {
       let attempts = 0;
-      
+
       await queue.subscribe('retry_test', async (message: any) => {
         attempts++;
         if (attempts < 3) {
@@ -123,7 +135,11 @@ describe('Message Queue System', () => {
         // Success on third attempt
       });
 
-      const message = queue.createMessage('test', { content: 'Retry me' }, { maxRetries: 5 });
+      const message = queue.createMessage(
+        'test',
+        { content: 'Retry me' },
+        { maxRetries: 5 },
+      );
       await queue.enqueue('retry_test', message);
 
       // Wait for retries
@@ -134,7 +150,7 @@ describe('Message Queue System', () => {
 
     test('should emit dead letter events for permanently failed messages', async () => {
       const deadLetters: any[] = [];
-      
+
       queue.on('deadLetter', (data: any) => {
         deadLetters.push(data);
       });
@@ -143,7 +159,11 @@ describe('Message Queue System', () => {
         throw new Error('Always fails');
       });
 
-      const message = queue.createMessage('test', { content: 'Kill me' }, { maxRetries: 2 });
+      const message = queue.createMessage(
+        'test',
+        { content: 'Kill me' },
+        { maxRetries: 2 },
+      );
       await queue.enqueue('dead_test', message);
 
       // Wait for all retry attempts
@@ -159,12 +179,12 @@ describe('Message Queue System', () => {
       // Add some messages
       const msg1 = queue.createMessage('test', { id: 1 });
       const msg2 = queue.createMessage('test', { id: 2 });
-      
+
       await queue.enqueue('stats_test', msg1);
       await queue.enqueue('stats_test', msg2);
 
       const stats = await queue.getStats('stats_test');
-      
+
       expect(stats.totalMessages).toBeGreaterThanOrEqual(2);
       expect(stats.pendingMessages).toBeGreaterThanOrEqual(0);
       expect(stats.queues).toContain('stats_test');
@@ -184,8 +204,11 @@ describe('Message Queue System', () => {
     });
 
     test('should delete queues', async () => {
-      await queue.enqueue('delete_test', queue.createMessage('test', { id: 1 }));
-      
+      await queue.enqueue(
+        'delete_test',
+        queue.createMessage('test', { id: 1 }),
+      );
+
       let size = await queue.getQueueSize('delete_test');
       expect(size).toBe(1);
 
@@ -211,21 +234,21 @@ describe('Message Queue System', () => {
   describe('Delayed Messages', () => {
     test('should process delayed messages after delay', async () => {
       const processedMessages: any[] = [];
-      
+
       await queue.subscribe('delay_test', async (message: any) => {
         processedMessages.push({
           content: message.payload.content,
-          processedAt: Date.now()
+          processedAt: Date.now(),
         });
       });
 
       const startTime = Date.now();
       const message = queue.createMessage(
-        'test', 
+        'test',
         { content: 'Delayed message' },
-        { delayMs: 1000 } // 1 second delay
+        { delayMs: 1000 }, // 1 second delay
       );
-      
+
       await queue.enqueue('delay_test', message);
 
       // Should not be processed immediately
@@ -235,7 +258,7 @@ describe('Message Queue System', () => {
       // Should be processed after delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       expect(processedMessages).toHaveLength(1);
-      
+
       const processedAt = processedMessages[0].processedAt;
       const actualDelay = processedAt - startTime;
       expect(actualDelay).toBeGreaterThanOrEqual(1000); // At least 1 second delay
@@ -264,7 +287,7 @@ describe('Message Queue System', () => {
 describe('Message Creation', () => {
   test('should create messages with all properties', () => {
     const queue = createInMemoryQueue();
-    
+
     const message = queue.createMessage(
       'test_type',
       { content: 'Test payload' },
@@ -274,8 +297,8 @@ describe('Message Creation', () => {
         priority: 7,
         maxRetries: 5,
         delayMs: 2000,
-        metadata: { source: 'test' }
-      }
+        metadata: { source: 'test' },
+      },
     );
 
     expect(message.type).toBe('test_type');
@@ -293,7 +316,7 @@ describe('Message Creation', () => {
 
   test('should apply default values', () => {
     const queue = createInMemoryQueue();
-    
+
     const message = queue.createMessage('test', { data: 'test' });
 
     expect(message.priority).toBe(5); // Default priority

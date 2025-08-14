@@ -3,8 +3,12 @@ import { getQueueService } from '../messageQueue/queueService';
 import { QUEUE_NAMES } from '../messageQueue/messageQueue';
 
 // Type guard to check if a value is a valid queue name
-function isValidQueueName(name: unknown): name is (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES] {
-  return typeof name === 'string' && Object.values(QUEUE_NAMES).includes(name as any);
+function isValidQueueName(
+  name: unknown,
+): name is (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES] {
+  return (
+    typeof name === 'string' && Object.values(QUEUE_NAMES).includes(name as any)
+  );
 }
 
 const router = express.Router();
@@ -58,11 +62,11 @@ router.get('/stats', async (req, res) => {
 
     const queueName = req.query.queueName as string;
     const stats = await queueService.getQueueStats(queueName);
-    
+
     return res.json({
       ...stats,
       provider: queueService.getProviderType(),
-      healthy: await queueService.isHealthy()
+      healthy: await queueService.isHealthy(),
     });
   } catch (error) {
     console.error('Error getting queue stats:', error);
@@ -98,27 +102,27 @@ router.get('/health', async (req, res) => {
   try {
     const queueService = getQueueService();
     if (!queueService) {
-      return res.status(503).json({ 
-        healthy: false, 
+      return res.status(503).json({
+        healthy: false,
         error: 'Queue service not initialized',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     const healthy = await queueService.isHealthy();
     const statusCode = healthy ? 200 : 503;
-    
+
     return res.status(statusCode).json({
       healthy,
       provider: queueService.getProviderType(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error checking queue health:', error);
-    return res.status(503).json({ 
-      healthy: false, 
+    return res.status(503).json({
+      healthy: false,
       error: 'Health check failed',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -164,7 +168,7 @@ router.get('/size/:queueName', async (req, res) => {
     }
 
     const { queueName } = req.params;
-    
+
     // Validate queue name
     if (!isValidQueueName(queueName)) {
       return res.status(400).json({ error: 'Invalid queue name' });
@@ -174,11 +178,11 @@ router.get('/size/:queueName', async (req, res) => {
     }
 
     const size = await queueService.getQueueSize(queueName);
-    
+
     return res.json({
       queueName,
       size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error getting queue size:', error);
@@ -225,16 +229,18 @@ router.post('/demo', async (req, res) => {
     const { userId, conversationId } = req.body;
 
     if (!userId || !conversationId) {
-      return res.status(400).json({ error: 'userId and conversationId are required' });
+      return res
+        .status(400)
+        .json({ error: 'userId and conversationId are required' });
     }
 
     await queueService.demonstrateQueueFeatures(userId, conversationId);
-    
+
     return res.json({
       message: 'Demo messages enqueued successfully',
       userId,
       conversationId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error running queue demo:', error);
@@ -272,18 +278,18 @@ router.delete('/purge/:queueName', async (req, res) => {
     }
 
     const { queueName } = req.params;
-    
+
     // Validate queue name
     if (!Object.values(QUEUE_NAMES).includes(queueName as any)) {
       return res.status(400).json({ error: 'Invalid queue name' });
     }
 
     await queueService.purgeQueue(queueName);
-    
+
     return res.json({
       message: `Queue ${queueName} purged successfully`,
       queueName,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error purging queue:', error);
@@ -339,11 +345,15 @@ router.post('/enqueue/chat', async (req, res) => {
     const { userId, conversationId, message, forceAgent, priority } = req.body;
 
     if (!userId || !conversationId || !message) {
-      return res.status(400).json({ error: 'userId, conversationId, and message are required' });
+      return res
+        .status(400)
+        .json({ error: 'userId, conversationId, and message are required' });
     }
 
     if (priority && (priority < 1 || priority > 10)) {
-      return res.status(400).json({ error: 'Priority must be between 1 and 10' });
+      return res
+        .status(400)
+        .json({ error: 'Priority must be between 1 and 10' });
     }
 
     const messageId = await queueService.enqueueChatMessage(
@@ -351,13 +361,13 @@ router.post('/enqueue/chat', async (req, res) => {
       conversationId,
       message,
       forceAgent,
-      priority
+      priority,
     );
-    
+
     return res.json({
       messageId,
       message: 'Chat message enqueued successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error enqueuing chat message:', error);
@@ -419,29 +429,34 @@ router.post('/enqueue/proactive', async (req, res) => {
       return res.status(503).json({ error: 'Queue service not initialized' });
     }
 
-    const { 
-      actionType, 
-      agentType, 
-      message, 
-      userId, 
-      conversationId, 
-      timing, 
-      delayMs, 
-      priority 
+    const {
+      actionType,
+      agentType,
+      message,
+      userId,
+      conversationId,
+      timing,
+      delayMs,
+      priority,
     } = req.body;
 
     if (!actionType || !agentType || !message || !userId || !conversationId) {
-      return res.status(400).json({ 
-        error: 'actionType, agentType, message, userId, and conversationId are required' 
+      return res.status(400).json({
+        error:
+          'actionType, agentType, message, userId, and conversationId are required',
       });
     }
 
     if (timing && !['immediate', 'delayed'].includes(timing)) {
-      return res.status(400).json({ error: 'Timing must be either "immediate" or "delayed"' });
+      return res
+        .status(400)
+        .json({ error: 'Timing must be either "immediate" or "delayed"' });
     }
 
     if (priority && (priority < 1 || priority > 10)) {
-      return res.status(400).json({ error: 'Priority must be between 1 and 10' });
+      return res
+        .status(400)
+        .json({ error: 'Priority must be between 1 and 10' });
     }
 
     const messageId = await queueService.enqueueProactiveAction(
@@ -452,17 +467,19 @@ router.post('/enqueue/proactive', async (req, res) => {
       conversationId,
       timing || 'immediate',
       delayMs,
-      priority
+      priority,
     );
-    
+
     return res.json({
       messageId,
       message: 'Proactive action enqueued successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error enqueuing proactive action:', error);
-    return res.status(500).json({ error: 'Failed to enqueue proactive action' });
+    return res
+      .status(500)
+      .json({ error: 'Failed to enqueue proactive action' });
   }
 });
 

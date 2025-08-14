@@ -12,7 +12,11 @@ const router = express.Router();
 router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
   try {
     const { agentType } = req.params;
-    const { message, conversationHistory = [], userId = 'test-user' } = req.body;
+    const {
+      message,
+      conversationHistory = [],
+      userId = 'test-user',
+    } = req.body;
 
     if (!message) {
       res.status(400).json({ error: 'Message is required' });
@@ -21,9 +25,20 @@ router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
 
     // Validate agent type
     const validAgentTypes: AgentType[] = [
-      'general', 'joke', 'trivia', 'gif', 'account_support', 'billing_support',
-      'website_support', 'operator_support', 'hold_agent', 'story_teller',
-      'riddle_master', 'quote_master', 'game_host', 'music_guru'
+      'general',
+      'joke',
+      'trivia',
+      'gif',
+      'account_support',
+      'billing_support',
+      'website_support',
+      'operator_support',
+      'hold_agent',
+      'story_teller',
+      'riddle_master',
+      'quote_master',
+      'game_host',
+      'music_guru',
     ];
 
     if (!validAgentTypes.includes(agentType as AgentType)) {
@@ -36,7 +51,7 @@ router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
       conversationHistory,
       agentType as AgentType,
       `test-conversation-${Date.now()}`,
-      userId
+      userId,
     );
 
     res.json({
@@ -48,14 +63,14 @@ router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
       testMetadata: {
         userId,
         forced: true,
-        environment: 'test'
-      }
+        environment: 'test',
+      },
     });
   } catch (error) {
     console.error('Agent test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test agent',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -76,13 +91,13 @@ router.post('/classifier/test', async (req, res): Promise<void> => {
       success: true,
       message,
       classification,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Classification test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test classifier',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -97,7 +112,11 @@ router.post('/rag/test', async (req, res): Promise<void> => {
       return;
     }
 
-    const ragResult = ragService.searchForAgent(agentType, query, useFullSearch);
+    const ragResult = ragService.searchForAgent(
+      agentType,
+      query,
+      useFullSearch,
+    );
 
     res.json({
       success: true,
@@ -106,13 +125,13 @@ router.post('/rag/test', async (req, res): Promise<void> => {
       useFullSearch,
       result: ragResult,
       hasResult: !!ragResult,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('RAG test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test RAG service',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -120,17 +139,19 @@ router.post('/rag/test', async (req, res): Promise<void> => {
 // Test response validation
 router.post('/validator/test', async (req, res): Promise<void> => {
   try {
-    const { 
-      agentType, 
-      userMessage, 
-      agentResponse, 
+    const {
+      agentType,
+      userMessage,
+      agentResponse,
       conversationId = 'test-conversation',
       userId = 'test-user',
-      isProactive = false
+      isProactive = false,
     } = req.body;
 
     if (!agentType || !userMessage || !agentResponse) {
-      res.status(400).json({ error: 'Agent type, user message, and agent response are required' });
+      res.status(400).json({
+        error: 'Agent type, user message, and agent response are required',
+      });
       return;
     }
 
@@ -140,7 +161,7 @@ router.post('/validator/test', async (req, res): Promise<void> => {
       agentResponse,
       conversationId,
       userId,
-      isProactive
+      isProactive,
     );
 
     res.json({
@@ -151,16 +172,16 @@ router.post('/validator/test', async (req, res): Promise<void> => {
         agentResponse,
         conversationId,
         userId,
-        isProactive
+        isProactive,
       },
       validation: validationResult,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Validation test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test response validator',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -168,7 +189,15 @@ router.post('/validator/test', async (req, res): Promise<void> => {
 // Test joke learning system
 router.post('/joke-learning/test', async (req, res): Promise<void> => {
   try {
-    const { userId = 'test-user', action, jokeId, reactionType, messageId, jokeCategory, jokeType } = req.body;
+    const {
+      userId = 'test-user',
+      action,
+      jokeId,
+      reactionType,
+      messageId,
+      jokeCategory,
+      jokeType,
+    } = req.body;
 
     let result: any = {};
 
@@ -177,13 +206,15 @@ router.post('/joke-learning/test', async (req, res): Promise<void> => {
         result = {
           profile: jokeLearningSystem.getUserProfile(userId),
           metrics: jokeLearningSystem.getLearningMetrics(),
-          categories: jokeLearningSystem.getJokeCategories()
+          categories: jokeLearningSystem.getJokeCategories(),
         };
         break;
 
       case 'record-reaction':
         if (!jokeId || !reactionType) {
-          res.status(400).json({ error: 'Joke ID and reaction type required for record-reaction' });
+          res.status(400).json({
+            error: 'Joke ID and reaction type required for record-reaction',
+          });
           return;
         }
         const reaction = {
@@ -192,23 +223,30 @@ router.post('/joke-learning/test', async (req, res): Promise<void> => {
           reactionType,
           timestamp: new Date(),
           jokeCategory: jokeCategory || 'dad_jokes',
-          jokeType: jokeType || 'pun'
+          jokeType: jokeType || 'pun',
         };
         jokeLearningSystem.recordReaction(reaction);
         result = { recorded: true, reaction };
         break;
 
       case 'generate-prompt':
-        const basePrompt = "You are a joke-telling AI. Tell engaging jokes.";
+        const basePrompt = 'You are a joke-telling AI. Tell engaging jokes.';
         result = {
           basePrompt,
-          adaptivePrompt: jokeLearningSystem.generateAdaptivePrompt(userId, basePrompt),
-          recommendation: jokeLearningSystem.getPersonalizedJokeRecommendation(userId)
+          adaptivePrompt: jokeLearningSystem.generateAdaptivePrompt(
+            userId,
+            basePrompt,
+          ),
+          recommendation:
+            jokeLearningSystem.getPersonalizedJokeRecommendation(userId),
         };
         break;
 
       default:
-        res.status(400).json({ error: 'Invalid action. Use: get-profile, record-reaction, or generate-prompt' });
+        res.status(400).json({
+          error:
+            'Invalid action. Use: get-profile, record-reaction, or generate-prompt',
+        });
         return;
     }
 
@@ -217,13 +255,13 @@ router.post('/joke-learning/test', async (req, res): Promise<void> => {
       action,
       userId,
       result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Joke learning test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test joke learning system',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -239,7 +277,7 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
       case 'get-state':
         result = {
           userState: agentService.getUserGoalState(userId),
-          activeGoals: agentService.getUserActiveGoals(userId)
+          activeGoals: agentService.getUserActiveGoals(userId),
         };
         break;
 
@@ -258,17 +296,19 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
           message,
           [],
           undefined,
-          `test-conversation-${Date.now()}`
+          `test-conversation-${Date.now()}`,
         );
         result = {
           response,
           updatedState: agentService.getUserGoalState(userId),
-          activeGoals: agentService.getUserActiveGoals(userId)
+          activeGoals: agentService.getUserActiveGoals(userId),
         };
         break;
 
       default:
-        res.status(400).json({ error: 'Invalid action. Use: get-state, initialize, or update-state' });
+        res.status(400).json({
+          error: 'Invalid action. Use: get-state, initialize, or update-state',
+        });
         return;
     }
 
@@ -277,13 +317,13 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
       action,
       userId,
       result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Goal-seeking test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test goal-seeking system',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -291,7 +331,12 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
 // Test conversation management
 router.post('/conversation-manager/test', async (req, res): Promise<void> => {
   try {
-    const { userId = 'test-user', action, message, agentType = 'general' } = req.body;
+    const {
+      userId = 'test-user',
+      action,
+      message,
+      agentType = 'general',
+    } = req.body;
 
     let result: any = {};
 
@@ -299,35 +344,43 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
       case 'get-context':
         result = {
           context: agentService.getConversationContext(userId),
-          currentAgent: agentService.getCurrentAgent(userId)
+          currentAgent: agentService.getCurrentAgent(userId),
         };
         break;
 
       case 'initialize':
         result = {
-          context: agentService.initializeConversation(userId, agentType as AgentType)
+          context: agentService.initializeConversation(
+            userId,
+            agentType as AgentType,
+          ),
         };
         break;
 
       case 'process-message':
         if (!message) {
-          res.status(400).json({ error: 'Message required for process-message' });
+          res
+            .status(400)
+            .json({ error: 'Message required for process-message' });
           return;
         }
         const response = await agentService.processMessageWithConversation(
           userId,
           message,
           [],
-          `test-conversation-${Date.now()}`
+          `test-conversation-${Date.now()}`,
         );
         result = {
           response,
-          context: agentService.getConversationContext(userId)
+          context: agentService.getConversationContext(userId),
         };
         break;
 
       default:
-        res.status(400).json({ error: 'Invalid action. Use: get-context, initialize, or process-message' });
+        res.status(400).json({
+          error:
+            'Invalid action. Use: get-context, initialize, or process-message',
+        });
         return;
     }
 
@@ -336,13 +389,13 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
       action,
       userId,
       result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Conversation manager test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test conversation manager',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -350,7 +403,12 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
 // Test comprehensive system (both goal-seeking and conversation management)
 router.post('/comprehensive/test', async (req, res): Promise<void> => {
   try {
-    const { userId = 'test-user', message, conversationHistory = [], forcedAgentType } = req.body;
+    const {
+      userId = 'test-user',
+      message,
+      conversationHistory = [],
+      forcedAgentType,
+    } = req.body;
 
     if (!message) {
       res.status(400).json({ error: 'Message is required' });
@@ -362,7 +420,7 @@ router.post('/comprehensive/test', async (req, res): Promise<void> => {
       message,
       conversationHistory,
       `test-conversation-${Date.now()}`,
-      forcedAgentType as AgentType
+      forcedAgentType as AgentType,
     );
 
     const comprehensiveState = agentService.getComprehensiveUserState(userId);
@@ -372,13 +430,13 @@ router.post('/comprehensive/test', async (req, res): Promise<void> => {
       message,
       response,
       userState: comprehensiveState,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Comprehensive test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test comprehensive system',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -387,18 +445,18 @@ router.post('/comprehensive/test', async (req, res): Promise<void> => {
 router.get('/agents/list', (req, res) => {
   try {
     const agents = agentService.getAvailableAgents();
-    
+
     res.json({
       success: true,
       agents,
       totalCount: agents.length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Agents list error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get agents list',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -415,19 +473,19 @@ router.get('/health', (req, res) => {
       goalSeekingSystem: 'operational',
       conversationManager: 'operational',
       openaiApiKey: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     res.json({
       success: true,
       health,
-      status: 'healthy'
+      status: 'healthy',
     });
   } catch (error) {
     console.error('Health check error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Health check failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -443,9 +501,20 @@ router.post('/bulk-test', async (req, res): Promise<void> => {
     }
 
     const validAgentTypes: AgentType[] = [
-      'general', 'joke', 'trivia', 'gif', 'account_support', 'billing_support',
-      'website_support', 'operator_support', 'hold_agent', 'story_teller',
-      'riddle_master', 'quote_master', 'game_host', 'music_guru'
+      'general',
+      'joke',
+      'trivia',
+      'gif',
+      'account_support',
+      'billing_support',
+      'website_support',
+      'operator_support',
+      'hold_agent',
+      'story_teller',
+      'riddle_master',
+      'quote_master',
+      'game_host',
+      'music_guru',
     ];
 
     const testAgents = agentTypes.length > 0 ? agentTypes : validAgentTypes;
@@ -456,7 +525,7 @@ router.post('/bulk-test', async (req, res): Promise<void> => {
         results.push({
           agentType,
           success: false,
-          error: 'Invalid agent type'
+          error: 'Invalid agent type',
         });
         continue;
       }
@@ -467,20 +536,20 @@ router.post('/bulk-test', async (req, res): Promise<void> => {
           [],
           agentType as AgentType,
           `bulk-test-${Date.now()}-${agentType}`,
-          userId
+          userId,
         );
 
         results.push({
           agentType,
           success: true,
           response,
-          executionTime: Date.now()
+          executionTime: Date.now(),
         });
       } catch (error) {
         results.push({
           agentType,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -492,13 +561,13 @@ router.post('/bulk-test', async (req, res): Promise<void> => {
       totalTested: results.length,
       successCount: results.filter(r => r.success).length,
       failureCount: results.filter(r => !r.success).length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Bulk test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to perform bulk test',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

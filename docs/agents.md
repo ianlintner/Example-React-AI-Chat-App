@@ -23,17 +23,20 @@ The system includes two specialized agents:
 ### Components
 
 #### Message Classification (`backend/src/agents/classifier.ts`)
+
 - Uses OpenAI API to intelligently classify incoming messages
 - Falls back to keyword-based classification when API is unavailable
 - Returns confidence scores for classification accuracy
 - Analyzes message content to determine appropriate agent type
 
 #### Agent Configuration (`backend/src/agents/config.ts`)
+
 - Defines agent personalities, system prompts, and parameters
 - Configures model settings (temperature, max tokens, etc.)
 - Contains specialized prompts for each agent type
 
 #### Agent Service (`backend/src/agents/agentService.ts`)
+
 - Main orchestrator that processes messages through the appropriate agent
 - Handles conversation history and context
 - Supports forced agent selection for specific use cases
@@ -50,8 +53,8 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
-  agentUsed?: 'technical' | 'general';  // New
-  confidence?: number;                  // New
+  agentUsed?: 'technical' | 'general'; // New
+  confidence?: number; // New
 }
 
 interface ChatRequest {
@@ -64,8 +67,8 @@ interface ChatRequest {
 interface ChatResponse {
   message: Message;
   conversation: Conversation;
-  agentUsed: 'technical' | 'general';   // New
-  confidence: number;                   // New
+  agentUsed: 'technical' | 'general'; // New
+  confidence: number; // New
 }
 ```
 
@@ -76,11 +79,13 @@ interface ChatResponse {
 ## Frontend Integration
 
 ### Message Display
+
 - Messages now show which agent responded with visual indicators
 - Confidence scores are displayed for transparency
 - Different styling for technical vs general agent responses
 
 ### Agent Selection
+
 - Users can optionally force a specific agent for their query
 - Automatic classification happens by default
 - Visual feedback shows which agent is being used
@@ -88,6 +93,7 @@ interface ChatResponse {
 ## Usage Examples
 
 ### Technical Questions
+
 ```
 Input: "How do I fix this React component error?"
 → Routes to Technical Agent (⚙️)
@@ -95,6 +101,7 @@ Input: "How do I fix this React component error?"
 ```
 
 ### General Questions
+
 ```
 Input: "What's a good recipe for dinner?"
 → Routes to General Agent (💬)
@@ -104,6 +111,7 @@ Input: "What's a good recipe for dinner?"
 ### Classification Examples
 
 **Technical Keywords Detected:**
+
 - code, programming, debug, error, bug, api, database
 - javascript, python, react, node, css, html
 - function, variable, array, object, class, method
@@ -111,6 +119,7 @@ Input: "What's a good recipe for dinner?"
 - docker, kubernetes, aws, testing, ci/cd
 
 **General Topics:**
+
 - Casual conversation, creative writing, general knowledge
 - Advice, recommendations, entertainment
 - Non-technical questions and everyday assistance
@@ -126,6 +135,7 @@ Input: "What's a good recipe for dinner?"
 ## Demo Mode
 
 When no OpenAI API key is provided, the system operates in demo mode:
+
 - Still classifies messages using keyword matching
 - Provides simulated responses showing agent functionality
 - Maintains all UI features and agent selection
@@ -158,6 +168,7 @@ The system now implements single-agent control to ensure only one agent is activ
 ### Logging
 
 The system provides detailed logging for debugging:
+
 - `🎯` - Goal-seeking system actions
 - `🚫` - Agent conflicts and filtering
 - `⏳` - Queued actions

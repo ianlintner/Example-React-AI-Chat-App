@@ -11,6 +11,7 @@ The Entertainment Agents system provides engaging, high-quality entertainment co
 **Purpose**: Delivers personalized humor that adapts to user reactions and preferences.
 
 **Key Features**:
+
 - **Adaptive Learning**: Learns from user reactions (laughs, groans, etc.)
 - **Quality-Curated Content**: RAG database with 4-5 star rated jokes
 - **Multiple Categories**: Dad jokes, tech humor, story jokes, wordplay
@@ -18,11 +19,13 @@ The Entertainment Agents system provides engaging, high-quality entertainment co
 - **Reaction Tracking**: Monitors user engagement and adjusts accordingly
 
 **Content Categories**:
+
 - `dad_joke` - Classic dad humor and puns
 - `tech_joke` - Programming and technology humor
 - `story_joke` - Narrative-style jokes with setups and punchlines
 
 **Example Interaction**:
+
 ```
 User: "Tell me a joke!"
 
@@ -38,6 +41,7 @@ Joke Master: "Why don't scientists trust atoms? Because they make up everything!
 **Purpose**: Shares fascinating facts and educational content to engage and inform users.
 
 **Key Features**:
+
 - **Curated Facts Database**: Quality-rated trivia across multiple subjects
 - **Educational Value**: Combines entertainment with learning
 - **Diverse Topics**: Science, animals, space, history, human body, mathematics
@@ -45,6 +49,7 @@ Joke Master: "Why don't scientists trust atoms? Because they make up everything!
 - **Follow-up Engagement**: Encourages curiosity and further questions
 
 **Content Categories**:
+
 - `animals` - Animal behavior, biology, and fascinating creature facts
 - `space` - Astronomy, planets, and cosmic phenomena
 - `science` - Scientific discoveries, physics, and natural phenomena
@@ -54,6 +59,7 @@ Joke Master: "Why don't scientists trust atoms? Because they make up everything!
 - `mathematics` - Mathematical concepts, paradoxes, and number theory
 
 **Example Interaction**:
+
 ```
 User: "Tell me something interesting!"
 
@@ -69,6 +75,7 @@ Isn't that incredible? Want to hear another fascinating fact?
 **Purpose**: Provides visual entertainment through curated, mood-appropriate animated content.
 
 **Key Features**:
+
 - **Visual Entertainment**: Animated GIFs for every mood and situation
 - **Accessibility Features**: Alt text and descriptions for all content
 - **Contextual Selection**: Chooses GIFs based on conversation context
@@ -76,6 +83,7 @@ Isn't that incredible? Want to hear another fascinating fact?
 - **Mood Enhancement**: Brightens conversations with visual humor
 
 **Content Categories**:
+
 - `funny` - General humor and comedy animations
 - `cute` - Adorable and heartwarming content
 - `excited` - Celebration and joy reactions
@@ -88,6 +96,7 @@ Isn't that incredible? Want to hear another fascinating fact?
 - `mind_blown` - Astonishment and "wow" reactions
 
 **Example Interaction**:
+
 ```
 User: "Show me a funny gif!"
 
@@ -131,9 +140,9 @@ Each entertainment agent leverages the RAG system for consistent, high-quality c
   category: 'funny',
   tags: ['funny', 'laugh', 'comedy', 'silly', 'animated'],
   rating: 4,
-  metadata: { 
-    description: 'Funny laughing reaction', 
-    alt: 'Person laughing hysterically' 
+  metadata: {
+    description: 'Funny laughing reaction',
+    alt: 'Person laughing hysterically'
   }
 }
 ```
@@ -157,7 +166,7 @@ Entertainment agents are properly integrated into the message classification sys
 ```typescript
 // Classification examples
 "Tell me a joke" → joke (confidence: 0.9)
-"Share a fun fact" → trivia (confidence: 0.85)  
+"Share a fun fact" → trivia (confidence: 0.85)
 "Show me a gif" → gif (confidence: 0.9)
 "Make me laugh" → joke (confidence: 0.8)
 "Something interesting" → trivia (confidence: 0.7)
@@ -201,18 +210,21 @@ Entertainment agents participate in proactive customer engagement:
 ### Adaptive Personalization
 
 **Joke Master Personalization**:
+
 - Tracks user reactions to different joke types
-- Adjusts humor style based on positive/negative feedback  
+- Adjusts humor style based on positive/negative feedback
 - Remembers preferred categories (dad jokes vs. tech humor)
 - Learns from conversation patterns and timing
 
 **Trivia Master Engagement**:
+
 - Monitors user interest in different topic categories
 - Follows up with related facts based on engagement
 - Adjusts complexity based on user responses
 - Encourages deeper exploration of interesting topics
 
 **GIF Master Context Awareness**:
+
 - Selects mood-appropriate content
 - Considers conversation tone and context
 - Provides variety while matching user preferences
@@ -221,12 +233,14 @@ Entertainment agents participate in proactive customer engagement:
 ### Quality Assurance
 
 **Content Standards**:
+
 - All content rated 4-5 stars for quality assurance
 - Family-friendly and workplace-appropriate
 - Factually accurate trivia content
 - Tested for engagement and entertainment value
 
 **Accessibility Features**:
+
 - Alt text for all visual content (GIFs)
 - Clear, understandable language
 - Inclusive humor that doesn't target groups
@@ -246,7 +260,7 @@ Entertainment agents participate in proactive customer engagement:
   adaptationSpeed: 'medium' // How quickly it learns preferences
 }
 
-// Trivia Master configuration  
+// Trivia Master configuration
 {
   name: 'Trivia Master',
   personality: 'knowledgeable, enthusiastic, educational',
@@ -259,7 +273,7 @@ Entertainment agents participate in proactive customer engagement:
 {
   name: 'GIF Master',
   personality: 'visual, expressive, mood-enhancing',
-  responseStyle: 'playful and supportive',  
+  responseStyle: 'playful and supportive',
   contentModeration: 'strict', // Family-friendly only
   accessibilityCompliance: 'full' // Alt text required
 }
@@ -268,6 +282,7 @@ Entertainment agents participate in proactive customer engagement:
 ### Content Expansion
 
 **Adding New Content**:
+
 ```typescript
 // Example of adding seasonal content
 ragService.addContent({
@@ -277,11 +292,12 @@ ragService.addContent({
   category: 'seasonal_joke',
   tags: ['christmas', 'tree', 'seasonal', 'pun', 'family'],
   rating: 4,
-  metadata: { season: 'winter', holiday: 'christmas' }
+  metadata: { season: 'winter', holiday: 'christmas' },
 });
 ```
 
 **Content Categories Expansion**:
+
 - Seasonal content (holidays, weather)
 - Industry-specific humor (healthcare, education, retail)
 - Cultural content (different regions, languages)
@@ -292,18 +308,21 @@ ragService.addContent({
 ### Entertainment Metrics
 
 **Engagement Tracking**:
+
 - User response rates to entertainment offers
 - Average interaction duration with each agent type
 - User satisfaction indicators (reactions, continued engagement)
 - Content effectiveness (which jokes/facts get best responses)
 
 **Quality Metrics**:
+
 - Content relevance scores for user requests
 - Fallback usage rates (when no perfect match found)
 - User preference learning accuracy
 - Agent handoff success rates
 
 **Analytics Dashboard Data**:
+
 ```typescript
 {
   entertainmentSession: {
@@ -348,16 +367,19 @@ ragService.addContent({
 ### Common Issues
 
 **Users Not Engaging with Entertainment**:
+
 - Review introduction messaging and offer timing
 - Consider different entertainment types for different user personalities
 - Ensure content quality and relevance to user interests
 
 **Repetitive Content**:
+
 - Check variety algorithms in content selection
 - Expand content database with more diverse options
 - Implement better rotation logic to avoid repetition
 
 **Inappropriate Content Concerns**:
+
 - Review content rating and approval processes
 - Implement stricter content moderation rules
 - Add user reporting mechanisms for problematic content
@@ -379,7 +401,7 @@ console.log(`📊 User engagement: ${engagementLevel}`);
 1. **AI-Generated Content**: Supplement RAG database with AI-created jokes/facts
 2. **User Preference Learning**: Advanced ML for personalization
 3. **Multi-media Support**: Audio clips, interactive content
-4. **Social Features**: User-generated content, sharing capabilities  
+4. **Social Features**: User-generated content, sharing capabilities
 5. **Advanced Analytics**: Detailed entertainment effectiveness metrics
 6. **Real-time Trends**: Integration with trending topics and viral content
 

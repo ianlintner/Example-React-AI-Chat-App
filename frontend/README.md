@@ -22,7 +22,7 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 
 ## 🛠 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Android Studio (for Android development)
 - Xcode (for iOS development - macOS only)
@@ -31,21 +31,22 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 ## 🔧 Installation
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Configure backend connection:**
-   
+
    The app is configured to connect to your existing backend. Update the server URL in `services/socketService.ts`:
 
    ```typescript
-   const serverUrl = __DEV__ 
+   const serverUrl = __DEV__
      ? 'http://10.0.2.2:5001' // Android emulator localhost
      : 'http://localhost:5001'; // Production URL
    ```
 
-   **Important:** 
+   **Important:**
    - For Android Emulator: Use `10.0.2.2:5001` (emulator's localhost)
    - For Physical Android Device: Use your computer's IP address (e.g., `192.168.1.100:5001`)
    - For iOS Simulator: Use `localhost:5001`
@@ -56,12 +57,14 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 ### Development
 
 1. **Start your backend server first:**
+
    ```bash
    cd ../backend
    npm run dev
    ```
 
 2. **Start the mobile app:**
+
    ```bash
    npm start
    ```
@@ -75,6 +78,7 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 ### Android Development
 
 1. **Using Android Studio:**
+
    ```bash
    npm run android
    ```
@@ -87,6 +91,7 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 ### iOS Development (macOS only)
 
 1. **Using Xcode:**
+
    ```bash
    npm run ios
    ```
@@ -105,8 +110,9 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
    - macOS/Linux: `ifconfig`
 
 2. **Update the backend URL** in `services/socketService.ts`:
+
    ```typescript
-   const serverUrl = __DEV__ 
+   const serverUrl = __DEV__
      ? 'http://YOUR_IP_ADDRESS:5001' // Replace with your IP
      : 'http://localhost:5001';
    ```
@@ -116,12 +122,14 @@ This is the React Native/Expo mobile client for a demo portfolio that showcases 
 ## 📦 Key Components
 
 ### Core Components
+
 - **`App.tsx`**: Main application component with Socket.io integration
 - **`ChatScreen.tsx`**: Mobile-optimized chat interface with message bubbles
 - **`MessageInput.tsx`**: Mobile keyboard-friendly input component
 - **`socketService.ts`**: Socket.io service adapted for mobile
 
 ### Features Migrated
+
 - ✅ Real-time messaging with streaming responses
 - ✅ All 10 AI agents with visual indicators
 - ✅ Agent confidence scores and proactive messages
@@ -182,6 +190,7 @@ npx expo eject
 ### Building for Production
 
 1. **Android APK/AAB:**
+
    ```bash
    npx expo build:android
    ```
@@ -266,6 +275,7 @@ Same license as the main AI Chat Application project.
 ## 🎯 Migration Status
 
 ### ✅ Completed
+
 - Core chat functionality
 - Socket.io integration
 - All 10 AI agents
@@ -275,6 +285,7 @@ Same license as the main AI Chat Application project.
 - Error handling
 
 ### 🔄 Future Enhancements
+
 - Push notifications
 - Dark theme support
 - Voice message support

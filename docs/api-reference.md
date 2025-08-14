@@ -20,6 +20,7 @@ Currently, the API does not require authentication. All endpoints are publicly a
 Check if the server is running and healthy.
 
 **Response:**
+
 ```json
 {
   "status": "OK",
@@ -34,6 +35,7 @@ Check if the server is running and healthy.
 Send a message to the AI and receive a response.
 
 **Request Body:**
+
 ```json
 {
   "message": "Hello, how are you?",
@@ -42,10 +44,12 @@ Send a message to the AI and receive a response.
 ```
 
 **Parameters:**
+
 - `message` (string, required): The user's message to send to the AI
 - `conversationId` (string, optional): ID of existing conversation. If not provided, a new conversation will be created.
 
 **Response:**
+
 ```json
 {
   "message": {
@@ -83,6 +87,7 @@ Send a message to the AI and receive a response.
 **Error Responses:**
 
 400 Bad Request:
+
 ```json
 {
   "message": "Message is required",
@@ -91,6 +96,7 @@ Send a message to the AI and receive a response.
 ```
 
 404 Not Found:
+
 ```json
 {
   "message": "Conversation not found",
@@ -99,6 +105,7 @@ Send a message to the AI and receive a response.
 ```
 
 500 Internal Server Error:
+
 ```json
 {
   "message": "Internal server error",
@@ -113,6 +120,7 @@ Send a message to the AI and receive a response.
 Retrieve all conversations.
 
 **Response:**
+
 ```json
 [
   {
@@ -130,9 +138,11 @@ Retrieve all conversations.
 Retrieve a specific conversation by ID.
 
 **Parameters:**
+
 - `id` (string): Conversation ID
 
 **Response:**
+
 ```json
 {
   "id": "conversation-uuid",
@@ -156,9 +166,11 @@ Retrieve a specific conversation by ID.
 Delete a specific conversation.
 
 **Parameters:**
+
 - `id` (string): Conversation ID
 
 **Response:**
+
 ```json
 {
   "message": "Conversation deleted successfully"
@@ -172,6 +184,7 @@ The application uses Socket.IO for real-time communication.
 ### Connection
 
 Connect to the WebSocket server:
+
 ```javascript
 import io from 'socket.io-client';
 const socket = io('http://localhost:5001');
@@ -181,41 +194,46 @@ const socket = io('http://localhost:5001');
 
 #### Client to Server Events
 
-**join_conversation**
+**join_conversation**  
 Join a specific conversation room for real-time updates.
+
 ```javascript
 socket.emit('join_conversation', { conversationId: 'conversation-uuid' });
 ```
 
-**leave_conversation**
+**leave_conversation**  
 Leave a conversation room.
+
 ```javascript
 socket.emit('leave_conversation', { conversationId: 'conversation-uuid' });
 ```
 
 #### Server to Client Events
 
-**message_received**
+**message_received**  
 Emitted when a new message is added to a conversation.
+
 ```javascript
-socket.on('message_received', (data) => {
+socket.on('message_received', data => {
   console.log('New message:', data.message);
   console.log('Updated conversation:', data.conversation);
 });
 ```
 
-**conversation_updated**
+**conversation_updated**  
 Emitted when a conversation is updated.
+
 ```javascript
-socket.on('conversation_updated', (conversation) => {
+socket.on('conversation_updated', conversation => {
   console.log('Conversation updated:', conversation);
 });
 ```
 
-**error**
+**error**  
 Emitted when an error occurs.
+
 ```javascript
-socket.on('error', (error) => {
+socket.on('error', error => {
   console.error('Socket error:', error);
 });
 ```
@@ -223,6 +241,7 @@ socket.on('error', (error) => {
 ## Data Models
 
 ### Message
+
 ```typescript
 interface Message {
   id: string;
@@ -234,6 +253,7 @@ interface Message {
 ```
 
 ### Conversation
+
 ```typescript
 interface Conversation {
   id: string;
@@ -245,6 +265,7 @@ interface Conversation {
 ```
 
 ### ChatRequest
+
 ```typescript
 interface ChatRequest {
   message: string;
@@ -253,6 +274,7 @@ interface ChatRequest {
 ```
 
 ### ChatResponse
+
 ```typescript
 interface ChatResponse {
   message: Message;
@@ -272,6 +294,7 @@ All API endpoints return consistent error responses:
 ```
 
 Common error codes:
+
 - `INVALID_REQUEST`: Invalid request parameters
 - `CONVERSATION_NOT_FOUND`: Requested conversation doesn't exist
 - `INTERNAL_ERROR`: Server-side error
@@ -283,6 +306,7 @@ Currently, no rate limiting is implemented. In production, consider implementing
 ## CORS Configuration
 
 The server is configured to accept requests from:
+
 - `http://localhost:8081` (Expo development server)
 - `http://localhost:19000` (Expo DevTools)
 - Custom frontend URL via `FRONTEND_URL` environment variable
@@ -290,6 +314,7 @@ The server is configured to accept requests from:
 ## Environment Variables
 
 Required environment variables:
+
 - `OPENAI_API_KEY`: OpenAI API key for AI responses (optional for demo mode)
 - `PORT`: Server port (default: 5001)
 - `FRONTEND_URL`: Frontend URL for CORS (default: http://localhost:8081)

@@ -9,8 +9,9 @@ Our AI Goal-Seeking Chat System includes comprehensive observability and monitor
 ### OpenTelemetry Integration
 
 The system uses OpenTelemetry for distributed tracing, providing insights into:
+
 - Conversation flows and latency
-- Agent selection and performance 
+- Agent selection and performance
 - Goal-seeking system effectiveness
 - Validation pipeline execution
 - Proactive action triggering
@@ -43,13 +44,14 @@ Each user interaction creates a conversation span that tracks:
 conversation.stream_chat
 ├── chat_request_received
 ├── goal_seeking.process
-│   ├── goal_seeking_started  
+│   ├── goal_seeking_started
 │   └── goal_seeking_completed
 ├── proactive_actions_started
 └── conversation_completed
 ```
 
 **Attributes Tracked:**
+
 - `conversation.id` - Unique conversation identifier
 - `user.socket_id` - User session identifier
 - `message.length` - Message character count
@@ -77,6 +79,7 @@ goal_seeking.process
 ```
 
 **Attributes Tracked:**
+
 - `goal_seeking.operation` - Type of goal-seeking operation
 - `user.state` - Current user state
 - `user.engagement` - Engagement level
@@ -99,6 +102,7 @@ agent.{agentType}.{operation}
 ```
 
 **Attributes Tracked:**
+
 - `agent.type` - Agent type (entertainment, technical, conversational)
 - `agent.operation` - Operation type (process_message, generate_proactive)
 - `agent.confidence` - Confidence score
@@ -180,12 +184,14 @@ validation.validate_response
 ### Real-Time Dashboard
 
 **System Health Overview:**
+
 - Active user connections
 - Message processing rate
 - System response times
 - Error rates and alerts
 
 **Goal-Seeking Monitor:**
+
 - Active goals by type
 - User state distribution
 - Proactive action frequency
@@ -194,12 +200,14 @@ validation.validate_response
 ### Performance Dashboard
 
 **Agent Analytics:**
+
 - Agent selection patterns
 - Performance by agent type
 - Confidence score distributions
 - Response quality metrics
 
 **User Journey Analysis:**
+
 - User state transitions
 - Engagement level trends
 - Satisfaction progression
@@ -208,6 +216,7 @@ validation.validate_response
 ### Validation Dashboard
 
 **Quality Assurance:**
+
 - Validation success rates
 - Common validation issues
 - Response quality trends

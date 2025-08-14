@@ -10,7 +10,7 @@ describe('RAGService', () => {
   describe('Content Database', () => {
     test('should initialize with predefined content', () => {
       const stats = ragService.getStats();
-      
+
       expect(stats.joke).toBe(10);
       expect(stats.trivia).toBe(10);
       expect(stats.gif).toBe(10);
@@ -18,7 +18,7 @@ describe('RAGService', () => {
 
     test('should have quality-rated content', () => {
       const allContent = ragService.getTopRated(undefined, 100);
-      
+
       allContent.forEach(item => {
         expect(item.rating).toBeGreaterThanOrEqual(4);
         expect(item.rating).toBeLessThanOrEqual(5);
@@ -27,7 +27,7 @@ describe('RAGService', () => {
 
     test('should have proper content structure', () => {
       const jokes = ragService.getTopRated('joke', 5);
-      
+
       jokes.forEach(joke => {
         expect(joke).toHaveProperty('id');
         expect(joke).toHaveProperty('type', 'joke');
@@ -45,11 +45,11 @@ describe('RAGService', () => {
       const query: SearchQuery = {
         text: 'programmers',
         type: 'joke',
-        limit: 5
+        limit: 5,
       };
 
       const results = ragService.search(query);
-      
+
       expect(results.length).toBeGreaterThan(0);
       results.forEach(result => {
         expect(result.relevanceScore).toBeGreaterThan(0);
@@ -60,50 +60,70 @@ describe('RAGService', () => {
     test('should respect search limits', () => {
       const query: SearchQuery = {
         text: 'funny',
-        limit: 3
+        limit: 3,
       };
 
       const results = ragService.search(query);
-      
+
       expect(results.length).toBeLessThanOrEqual(3);
     });
   });
 
   describe('Agent-Specific Search', () => {
     test('should return appropriate content for joke agent', () => {
-      const content = ragService.searchForAgent('joke', 'tell me something funny', true);
-      
+      const content = ragService.searchForAgent(
+        'joke',
+        'tell me something funny',
+        true,
+      );
+
       expect(content).toBeTruthy();
       expect(content?.type).toBe('joke');
       expect(content?.rating).toBeGreaterThanOrEqual(4);
     });
 
     test('should return appropriate content for trivia agent', () => {
-      const content = ragService.searchForAgent('trivia', 'tell me something interesting', true);
-      
+      const content = ragService.searchForAgent(
+        'trivia',
+        'tell me something interesting',
+        true,
+      );
+
       expect(content).toBeTruthy();
       expect(content?.type).toBe('trivia');
       expect(content?.rating).toBeGreaterThanOrEqual(4);
     });
 
     test('should return appropriate content for gif agent', () => {
-      const content = ragService.searchForAgent('gif', 'show me something funny', true);
-      
+      const content = ragService.searchForAgent(
+        'gif',
+        'show me something funny',
+        true,
+      );
+
       expect(content).toBeTruthy();
       expect(content?.type).toBe('gif');
       expect(content?.rating).toBeGreaterThanOrEqual(4);
     });
 
     test('should fallback to random content when no match found', () => {
-      const content = ragService.searchForAgent('joke', 'xyz-no-match-query', true);
-      
+      const content = ragService.searchForAgent(
+        'joke',
+        'xyz-no-match-query',
+        true,
+      );
+
       expect(content).toBeTruthy();
       expect(content?.type).toBe('joke');
     });
 
     test('should return null when no fallback requested', () => {
-      const content = ragService.searchForAgent('joke', 'xyz-no-match-query', false);
-      
+      const content = ragService.searchForAgent(
+        'joke',
+        'xyz-no-match-query',
+        false,
+      );
+
       expect(content).toBeNull();
     });
   });
@@ -111,14 +131,14 @@ describe('RAGService', () => {
   describe('Random Content Retrieval', () => {
     test('should return random jokes', () => {
       const joke = ragService.getRandomContent('joke');
-      
+
       expect(joke).toBeTruthy();
       expect(joke?.type).toBe('joke');
     });
 
     test('should return random content by category', () => {
       const techJoke = ragService.getRandomContent('joke', 'tech_joke');
-      
+
       if (techJoke) {
         expect(techJoke.type).toBe('joke');
         expect(techJoke.category).toBe('tech_joke');
@@ -134,18 +154,18 @@ describe('RAGService', () => {
         content: 'Why did the test pass? Because it was well written!',
         category: 'test_joke',
         tags: ['test', 'programming', 'quality'],
-        rating: 5
+        rating: 5,
       };
 
       ragService.addContent(newJoke);
-      
+
       const stats = ragService.getStats();
       expect(stats.joke).toBe(11); // 10 original + 1 new
     });
 
     test('should retrieve top-rated content', () => {
       const topJokes = ragService.getTopRated('joke', 3);
-      
+
       expect(topJokes.length).toBeLessThanOrEqual(3);
       topJokes.forEach(joke => {
         expect(joke.type).toBe('joke');
@@ -157,7 +177,7 @@ describe('RAGService', () => {
   describe('Content Quality Assurance', () => {
     test('should have family-friendly joke content', () => {
       const jokes = ragService.getTopRated('joke', 100);
-      
+
       jokes.forEach(joke => {
         expect(joke.content.length).toBeGreaterThan(10);
         expect(joke.content.length).toBeLessThan(500);
@@ -166,7 +186,7 @@ describe('RAGService', () => {
 
     test('should have educational trivia content', () => {
       const trivia = ragService.getTopRated('trivia', 100);
-      
+
       trivia.forEach(fact => {
         expect(fact.content.length).toBeGreaterThan(20);
         expect(fact.tags.length).toBeGreaterThan(0);
@@ -175,7 +195,7 @@ describe('RAGService', () => {
 
     test('should have accessible GIF content', () => {
       const gifs = ragService.getTopRated('gif', 100);
-      
+
       gifs.forEach(gif => {
         expect(gif.content).toMatch(/^https?:\/\//);
         expect(gif.metadata).toHaveProperty('description');

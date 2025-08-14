@@ -9,7 +9,7 @@ export interface QueueMessage {
   maxRetries?: number;
   delayMs?: number;
   priority?: number; // 1-10, higher is more important
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface QueueOptions {
@@ -26,31 +26,35 @@ export interface MessageHandler {
 
 export interface MessageQueueProvider {
   // Core queue operations
-  enqueue(queueName: string, message: QueueMessage, options?: QueueOptions): Promise<void>;
+  enqueue(
+    queueName: string,
+    message: QueueMessage,
+    options?: QueueOptions,
+  ): Promise<void>;
   dequeue(queueName: string): Promise<QueueMessage | null>;
   peek(queueName: string): Promise<QueueMessage | null>;
-  
+
   // Consumer operations
   subscribe(queueName: string, handler: MessageHandler): Promise<void>;
   unsubscribe(queueName: string): Promise<void>;
-  
+
   // Queue management
   getQueueSize(queueName: string): Promise<number>;
   purgeQueue(queueName: string): Promise<void>;
   deleteQueue(queueName: string): Promise<void>;
-  
+
   // Health and monitoring
   isHealthy(): Promise<boolean>;
   getStats(queueName?: string): Promise<QueueStats>;
-  
+
   // Connection management
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  
+
   // Event handling
-  on(event: string, listener: (...args: any[]) => void): this;
-  off(event: string, listener: (...args: any[]) => void): this;
-  emit(event: string, ...args: any[]): boolean;
+  on(event: string, listener: (...args: unknown[]) => void): this;
+  off(event: string, listener: (...args: unknown[]) => void): this;
+  emit(event: string, ...args: unknown[]): boolean;
 }
 
 export interface QueueStats {
@@ -63,7 +67,7 @@ export interface QueueStats {
   queues: string[];
 }
 
-export type MessageType = 
+export type MessageType =
   | 'chat_message'
   | 'agent_response'
   | 'proactive_action'

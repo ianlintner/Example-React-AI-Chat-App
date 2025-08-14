@@ -79,6 +79,7 @@ nano .env
 ```
 
 Required environment variables:
+
 ```bash
 PORT=5001
 NODE_ENV=development
@@ -98,6 +99,7 @@ nano .env
 ```
 
 Required environment variables:
+
 ```bash
 VITE_API_URL=http://localhost:5001
 ```
@@ -180,6 +182,7 @@ git push origin feature/new-feature
 ### Commit Message Convention
 
 Follow conventional commits:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -534,12 +537,12 @@ import { performance } from 'perf_hooks';
 
 app.use((req, res, next) => {
   const start = performance.now();
-  
+
   res.on('finish', () => {
     const duration = performance.now() - start;
     console.log(`${req.method} ${req.url} - ${duration.toFixed(2)}ms`);
   });
-  
+
   next();
 });
 ```

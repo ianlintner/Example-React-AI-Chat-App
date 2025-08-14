@@ -25,6 +25,7 @@ The mobile application is built with React Native and Expo, providing a native m
 ## Technology Stack
 
 ### Core Technologies
+
 - **React Native** - Native mobile development framework
 - **Expo** - Development platform and toolchain
 - **TypeScript** - Type safety and better developer experience
@@ -33,6 +34,7 @@ The mobile application is built with React Native and Expo, providing a native m
 - **Socket.io Client** - Real-time WebSocket communication
 
 ### Supporting Libraries
+
 - **React Native Markdown Display** - Markdown rendering
 - **React Native Gesture Handler** - Native gesture support
 - **React Native Reanimated** - Advanced animations
@@ -100,6 +102,7 @@ App
 ### Core Components
 
 #### 1. ChatScreen.tsx
+
 Main chat interface component with full mobile functionality.
 
 ```typescript
@@ -117,7 +120,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     socketService.connect();
-    
+
     socketService.on('connect', () => setIsConnected(true));
     socketService.on('disconnect', () => setIsConnected(false));
     socketService.on('message', handleNewMessage);
@@ -129,11 +132,11 @@ export default function ChatScreen() {
   }, []);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <AgentStatusBar 
+      <AgentStatusBar
         activeAgent={activeAgent}
         isConnected={isConnected}
       />
@@ -142,7 +145,7 @@ export default function ChatScreen() {
           <MessageBubble key={message.id} message={message} />
         ))}
       </ScrollView>
-      <MessageInput 
+      <MessageInput
         onSendMessage={handleSendMessage}
         disabled={!isConnected}
       />
@@ -152,6 +155,7 @@ export default function ChatScreen() {
 ```
 
 #### 2. ValidationDashboard.tsx
+
 Real-time AI response validation and metrics display.
 
 ```typescript
@@ -180,13 +184,13 @@ export default function ValidationDashboard() {
         <Card.Content>
           <Title>Response Quality</Title>
           <Paragraph>Average quality score</Paragraph>
-          <ProgressBar 
-            progress={metrics?.averageQuality || 0} 
+          <ProgressBar
+            progress={metrics?.averageQuality || 0}
             style={{ marginTop: 8 }}
           />
         </Card.Content>
       </Card>
-      
+
       <Card style={{ margin: 16 }}>
         <Card.Content>
           <Title>Agent Performance</Title>
@@ -203,6 +207,7 @@ export default function ValidationDashboard() {
 ```
 
 #### 3. MessageInput.tsx
+
 Native mobile message input with enhanced UX.
 
 ```typescript
@@ -333,7 +338,7 @@ export function useSocket() {
 
   useEffect(() => {
     socketService.connect();
-    
+
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
     const handleMessage = (message: Message) => {
@@ -423,7 +428,7 @@ import { Colors } from '@/constants/Colors';
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+  colorName: keyof typeof Colors.light & keyof typeof Colors.dark,
 ) {
   const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
@@ -465,7 +470,7 @@ class SocketService {
       console.log('Disconnected from server');
     });
 
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', error => {
       console.error('Connection error:', error);
     });
   }
@@ -522,7 +527,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001';
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_URL}${endpoint}`;
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -588,13 +593,7 @@ export interface AgentStats {
   averageResponseTime: number;
 }
 
-export type AgentType = 
-  | 'general'
-  | 'technical'
-  | 'joke'
-  | 'trivia'
-  | 'gif'
-  | 'hold_agent';
+export type AgentType = 'general' | 'technical' | 'joke' | 'trivia' | 'gif' | 'hold_agent';
 
 // Navigation types for Expo Router
 export type RootTabParamList = {

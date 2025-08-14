@@ -129,23 +129,23 @@ const queueService = getQueueService();
 
 // Enqueue a chat message
 const messageId = await queueService.enqueueChatMessage(
-  'user123',           // userId
-  'conv456',          // conversationId
-  'Hello!',           // message
-  undefined,          // forceAgent (optional)
-  7                   // priority (optional)
+  'user123', // userId
+  'conv456', // conversationId
+  'Hello!', // message
+  undefined, // forceAgent (optional)
+  7, // priority (optional)
 );
 
 // Enqueue a delayed proactive action
 const actionId = await queueService.enqueueProactiveAction(
-  'reminder',         // actionType
-  'general',          // agentType
-  'Don\'t forget!',   // message
-  'user123',          // userId
-  'conv456',          // conversationId
-  'delayed',          // timing
-  5000,               // delayMs (5 seconds)
-  8                   // priority
+  'reminder', // actionType
+  'general', // agentType
+  "Don't forget!", // message
+  'user123', // userId
+  'conv456', // conversationId
+  'delayed', // timing
+  5000, // delayMs (5 seconds)
+  8, // priority
 );
 
 // Check queue stats
@@ -166,13 +166,13 @@ const customMessage = queue.createMessage(
   {
     eventType: 'user_login',
     userId: 'user123',
-    timestamp: new Date()
+    timestamp: new Date(),
   },
   {
     priority: 6,
     maxRetries: 5,
-    userId: 'user123'
-  }
+    userId: 'user123',
+  },
 );
 
 // Enqueue the message
@@ -182,11 +182,13 @@ await queue.enqueue('custom_queue', customMessage);
 ## Provider Comparison
 
 ### In-Memory Provider
+
 - **Best for**: Local development, testing, single-instance deployments
 - **Pros**: No external dependencies, fast, simple setup
 - **Cons**: Messages lost on restart, no persistence, single-instance only
 
 ### Redis Provider
+
 - **Best for**: Production, distributed systems, high availability
 - **Pros**: Persistent, scalable, supports multiple instances
 - **Cons**: Requires Redis server, additional complexity
@@ -226,11 +228,11 @@ services:
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis
-  
+
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
 
@@ -280,15 +282,15 @@ The system emits processed messages via Socket.IO:
 
 ```javascript
 // Frontend - Listen for processed queue events
-socket.on('queue_processed_chat', (data) => {
+socket.on('queue_processed_chat', data => {
   console.log('Chat message processed:', data);
 });
 
-socket.on('queue_processed_agent_response', (data) => {
+socket.on('queue_processed_agent_response', data => {
   console.log('Agent response processed:', data);
 });
 
-socket.on('queue_processed_proactive_action', (data) => {
+socket.on('queue_processed_proactive_action', data => {
   console.log('Proactive action processed:', data);
 });
 ```
@@ -298,6 +300,7 @@ socket.on('queue_processed_proactive_action', (data) => {
 ### Retry Logic
 
 Messages automatically retry with exponential backoff:
+
 - **Attempt 1**: Immediate
 - **Attempt 2**: 1 second delay
 - **Attempt 3**: 2 second delay
@@ -310,7 +313,7 @@ Failed messages emit a `deadLetter` event:
 ```typescript
 queueService.messageQueue.on('deadLetter', ({ queueName, message, error }) => {
   console.error(`Dead letter in ${queueName}:`, message.id, error);
-  
+
   // Send to monitoring system
   // Log to file
   // Send alert
@@ -328,14 +331,14 @@ describe('Message Queue', () => {
   test('should process messages by priority', async () => {
     const queue = createInMemoryQueue();
     await queue.connect();
-    
+
     // Test priority ordering
     const highPriorityMsg = queue.createMessage('test', { data: 'high' }, { priority: 9 });
     const lowPriorityMsg = queue.createMessage('test', { data: 'low' }, { priority: 3 });
-    
+
     await queue.enqueue('test_queue', lowPriorityMsg);
     await queue.enqueue('test_queue', highPriorityMsg);
-    
+
     const firstMsg = await queue.dequeue('test_queue');
     expect(firstMsg?.payload.data).toBe('high');
   });
@@ -357,24 +360,28 @@ curl http://localhost:5001/api/queue/stats
 ## Best Practices
 
 ### Queue Design
+
 - Use appropriate priorities (don't overuse high priority)
 - Keep message payloads small and focused
 - Use delayed messages for scheduled actions
 - Set appropriate retry limits
 
 ### Error Handling
+
 - Always handle dead letter queue events
 - Log queue statistics regularly
 - Monitor queue sizes to prevent backlog
 - Set up alerts for queue health
 
 ### Performance
+
 - Use Redis for high-throughput scenarios
 - Monitor average processing times
 - Scale consumers horizontally when needed
 - Use message batching for bulk operations
 
 ### Security
+
 - Validate message payloads
 - Sanitize user data before queueing
 - Use authentication for queue management endpoints
@@ -385,21 +392,25 @@ curl http://localhost:5001/api/queue/stats
 ### Common Issues
 
 **Queue not processing messages:**
+
 - Check if queue service is initialized
 - Verify subscribers are set up
 - Check for errors in message handlers
 
 **High memory usage with in-memory provider:**
+
 - Check queue sizes with `/api/queue/stats`
 - Purge unnecessary queues
 - Consider switching to Redis
 
 **Redis connection issues:**
+
 - Verify Redis server is running
 - Check REDIS_URL configuration
 - Ensure network connectivity
 
 **Messages failing repeatedly:**
+
 - Check dead letter queue events
 - Verify message handler logic
 - Review retry configuration
@@ -425,6 +436,7 @@ curl -X POST http://localhost:5001/api/queue/demo \
 ## Future Enhancements
 
 Planned features:
+
 - AWS SQS provider
 - Message encryption
 - Queue persistence for in-memory provider

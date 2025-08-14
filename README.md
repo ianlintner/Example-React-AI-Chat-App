@@ -18,16 +18,18 @@ A portfolio-ready demo that showcases current, high‑impact technologies and ar
 - Delivery patterns: consistent TypeScript, test pyramid, CI quality gates
 - Developer experience: clear module boundaries, docs, and demo scenarios
 
-## Quick Start (Demo Focus)
+## 🚀 Quick Start
 
-Prerequisites
+### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Expo CLI: `npm i -g @expo/cli`
 - Optional: OpenAI API key (demo works without via RAG + stubs)
 - Optional: Docker (for the monitoring stack)
 
-Setup
+### Setup
+
 ```bash
 # 1) Install dependencies
 cd backend && npm install
@@ -45,32 +47,39 @@ cd backend && npm run dev
 cd frontend && npm start    # Expo: press i for iOS simulator or scan QR with Expo Go
 ```
 
-Monitoring & Docs (optional)
-- API Docs: http://localhost:3000/api/docs
-- Grafana: http://localhost:5001
-- Prometheus: http://localhost:9090
-- Jaeger: http://localhost:16686
+### Access Points
 
-To start the monitoring stack:
+- 📱 Mobile App: Start Expo, press i for iOS simulator or scan QR with Expo Go
+- 📖 API Docs: http://localhost:3000/api/docs
+- 📊 Monitoring (Grafana): http://localhost:5001
+- 📈 Metrics (Prometheus): http://localhost:9090
+- 🔍 Tracing (Jaeger): http://localhost:16686
+
+### Monitoring Stack (optional)
+
 ```bash
 docker-compose up
 ```
 
 ## Suggested 10‑Minute Walkthrough
 
-1) Chat + Agents
+1. Chat + Agents
+
 - Launch the app with Expo.
 - Send a few messages and observe multi‑agent routing and goal‑seeking behavior.
 
-2) Validation & Quality
+2. Validation & Quality
+
 - Trigger responses that exercise the validation layer (safe/unsafe, structure).
 - Review validation results in the API responses and logs.
 
-3) Observability Tour
+3. Observability Tour
+
 - Open Grafana dashboards and Jaeger traces while interacting with the app.
 - Show request/response timings, agent selection latency, and validation metrics.
 
-4) RAG Demo (No API Key)
+4. RAG Demo (No API Key)
+
 - Run without an OpenAI key to demonstrate curated RAG responses and offline behavior.
 
 ## Architecture (High‑Level)
@@ -109,23 +118,27 @@ graph TB
 ## Tech Highlights
 
 Frontend (React Native + Expo)
+
 - TypeScript, Expo Router, Socket.io Client
 - Componentized UI and demo‑first screens
 - Jest + React Native Testing Library
 
 Backend (Node.js + Express)
+
 - TypeScript, Express 5, Socket.io Server
 - Agent orchestration, classification, goal‑seeking loop
 - RAG content, validation/safety gates
 - In‑memory storage (demo‑friendly), Mongo/Postgres ready
 
 Observability & Ops
+
 - OpenTelemetry tracing
 - Prometheus metrics + Grafana dashboards
 - Jaeger distributed tracing
 - Docker Compose for local ops demo
 
 CI/Quality
+
 - Jest unit/integration tests
 - ESLint + Prettier
 - GitHub Actions workflows
@@ -147,14 +160,6 @@ CI/Quality
 ├── grafana/                 # Dashboards provisioned for demo
 └── docker-compose.yml       # Monitoring stack (Prometheus, Grafana, Jaeger)
 ```
-
-## Demo Scenarios You Can Show
-
-- Multi‑Agent Routing: classification → agent selection → response
-- Goal‑Seeking Loop: proactive steps to move toward a target outcome
-- Validation Gate: enforce shape/safety before emit
-- RAG Content: quality‑rated curated data, offline behavior
-- Observability: traces for end‑to‑end flows, live metrics dashboards
 
 ## Documentation
 

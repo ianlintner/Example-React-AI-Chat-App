@@ -11,7 +11,10 @@ const loadOpenApiSpec = () => {
   try {
     // When compiled, files are in backend/dist/backend/src/routes/
     // Need to go up to project root: ../../../../docs/test-bench-openapi.yaml
-    const specPath = path.join(__dirname, '../../../../docs/test-bench-openapi.yaml');
+    const specPath = path.join(
+      __dirname,
+      '../../../../docs/test-bench-openapi.yaml',
+    );
     const fileContents = fs.readFileSync(specPath, 'utf8');
     return yaml.load(fileContents) as object;
   } catch (error) {
@@ -21,9 +24,9 @@ const loadOpenApiSpec = () => {
       info: {
         title: 'AI Chat App Test Bench API',
         description: 'OpenAPI specification could not be loaded',
-        version: '1.0.0'
+        version: '1.0.0',
       },
-      paths: {}
+      paths: {},
     };
   }
 };
@@ -46,8 +49,8 @@ const swaggerOptions = {
     filter: true,
     showExtensions: true,
     showCommonExtensions: true,
-    tryItOutEnabled: true
-  }
+    tryItOutEnabled: true,
+  },
 };
 
 // Serve Swagger UI
@@ -63,7 +66,10 @@ router.get('/openapi.json', (req, res) => {
 // Serve raw OpenAPI spec as YAML
 router.get('/openapi.yaml', (req, res) => {
   try {
-    const specPath = path.join(__dirname, '../../../../docs/test-bench-openapi.yaml');
+    const specPath = path.join(
+      __dirname,
+      '../../../../docs/test-bench-openapi.yaml',
+    );
     const fileContents = fs.readFileSync(specPath, 'utf8');
     res.setHeader('Content-Type', 'text/yaml');
     res.send(fileContents);
@@ -209,7 +215,7 @@ router.get('/', (req, res) => {
     </body>
     </html>
   `;
-  
+
   res.send(html);
 });
 

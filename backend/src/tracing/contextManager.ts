@@ -1,4 +1,10 @@
-import { trace, context, SpanContext, Span, propagation } from '@opentelemetry/api';
+import {
+  trace,
+  context,
+  SpanContext,
+  Span,
+  propagation,
+} from '@opentelemetry/api';
 
 export interface TraceInfo {
   traceId: string;
@@ -9,7 +15,7 @@ export interface TraceInfo {
 
 export class TracingContextManager {
   private static instance: TracingContextManager;
-  
+
   public static getInstance(): TracingContextManager {
     if (!TracingContextManager.instance) {
       TracingContextManager.instance = new TracingContextManager();
@@ -31,7 +37,7 @@ export class TracingContextManager {
       traceId: spanContext.traceId,
       spanId: spanContext.spanId,
       traceFlags: spanContext.traceFlags,
-      isRemote: spanContext.isRemote
+      isRemote: spanContext.isRemote,
     };
   }
 
@@ -40,11 +46,11 @@ export class TracingContextManager {
    */
   createChildSpan(name: string, parentContext?: any): Span {
     const tracer = trace.getTracer('ai-goal-seeking-system', '1.0.0');
-    
+
     if (parentContext) {
       return tracer.startSpan(name, {}, parentContext);
     }
-    
+
     return tracer.startSpan(name);
   }
 
@@ -52,19 +58,19 @@ export class TracingContextManager {
    * Execute a function within a span context
    */
   async withSpan<T>(
-    span: Span, 
-    fn: (span: Span, context: any) => Promise<T> | T
+    span: Span,
+    fn: (span: Span, context: any) => Promise<T> | T,
   ): Promise<T> {
     return context.with(trace.setSpan(context.active(), span), async () => {
       const activeContext = context.active();
       const traceInfo = this.getCurrentTraceInfo();
-      
+
       // Add trace info as span attributes
       if (traceInfo) {
         span.setAttributes({
           'trace.id': traceInfo.traceId,
           'span.id': traceInfo.spanId,
-          'trace.flags': traceInfo.traceFlags.toString()
+          'trace.flags': traceInfo.traceFlags.toString(),
         });
       }
 
@@ -73,9 +79,9 @@ export class TracingContextManager {
         span.setStatus({ code: 1 }); // OK
         return result;
       } catch (error) {
-        span.setStatus({ 
+        span.setStatus({
           code: 2, // ERROR
-          message: error instanceof Error ? error.message : 'Unknown error'
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
         span.recordException(error as Error);
         throw error;
@@ -90,7 +96,7 @@ export class TracingContextManager {
    */
   async withContext<T>(
     contextToUse: any,
-    fn: () => Promise<T> | T
+    fn: () => Promise<T> | T,
   ): Promise<T> {
     return context.with(contextToUse || context.active(), fn);
   }
@@ -105,7 +111,9 @@ export class TracingContextManager {
   /**
    * Inject context into headers (for outgoing requests)
    */
-  injectContextIntoHeaders(headers: Record<string, string> = {}): Record<string, string> {
+  injectContextIntoHeaders(
+    headers: Record<string, string> = {},
+  ): Record<string, string> {
     propagation.inject(context.active(), headers);
     return headers;
   }
@@ -117,13 +125,15 @@ export class TracingContextManager {
     const tracer = trace.getTracer('ai-goal-seeking-system', '1.0.0');
     const span = tracer.startSpan(name, {
       kind: 1, // SERVER
-      attributes: attributes
+      attributes: attributes,
     });
 
     // Log trace creation
     const spanContext = span.spanContext();
-    console.log(`🔍 TRACE: Created root span '${name}' with trace ID: ${spanContext.traceId}, span ID: ${spanContext.spanId}`);
-    
+    console.log(
+      `🔍 TRACE: Created root span '${name}' with trace ID: ${spanContext.traceId}, span ID: ${spanContext.spanId}`,
+    );
+
     return span;
   }
 
@@ -134,7 +144,7 @@ export class TracingContextManager {
     const tracer = trace.getTracer('ai-goal-seeking-system', '1.0.0');
     return tracer.startSpan(name, {
       kind: 1, // SERVER
-      links: links.map(link => ({ context: link }))
+      links: links.map(link => ({ context: link })),
     });
   }
 
@@ -152,7 +162,9 @@ export class TracingContextManager {
   logCurrentTrace(operation: string): void {
     const traceInfo = this.getCurrentTraceInfo();
     if (traceInfo) {
-      console.log(`🔍 TRACE [${operation}]: trace=${traceInfo.traceId}, span=${traceInfo.spanId}, flags=${traceInfo.traceFlags}`);
+      console.log(
+        `🔍 TRACE [${operation}]: trace=${traceInfo.traceId}, span=${traceInfo.spanId}, flags=${traceInfo.traceFlags}`,
+      );
     } else {
       console.log(`🔍 TRACE [${operation}]: No active trace context`);
     }
@@ -163,11 +175,13 @@ export class TracingContextManager {
    */
   bindTraceToFunction<T extends (...args: any[]) => any>(
     fn: T,
-    span?: Span
+    span?: Span,
   ): T {
     const currentContext = context.active();
-    const contextToUse = span ? trace.setSpan(currentContext, span) : currentContext;
-    
+    const contextToUse = span
+      ? trace.setSpan(currentContext, span)
+      : currentContext;
+
     return ((...args: any[]) => {
       return context.with(contextToUse, () => fn(...args));
     }) as T;
@@ -186,23 +200,34 @@ export class TracingContextManager {
   /**
    * Add consistent span attributes
    */
-  addStandardAttributes(span: Span, attributes: {
-    userId?: string;
-    conversationId?: string;
-    agentType?: string;
-    operation?: string;
-    [key: string]: any;
-  }): void {
+  addStandardAttributes(
+    span: Span,
+    attributes: {
+      userId?: string;
+      conversationId?: string;
+      agentType?: string;
+      operation?: string;
+      [key: string]: any;
+    },
+  ): void {
     const standardAttrs: Record<string, any> = {
       'service.name': 'ai-goal-seeking-backend',
       'service.version': '1.0.0',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    if (attributes.userId) standardAttrs['user.id'] = attributes.userId;
-    if (attributes.conversationId) standardAttrs['conversation.id'] = attributes.conversationId;
-    if (attributes.agentType) standardAttrs['agent.type'] = attributes.agentType;
-    if (attributes.operation) standardAttrs['operation.name'] = attributes.operation;
+    if (attributes.userId) {
+      standardAttrs['user.id'] = attributes.userId;
+    }
+    if (attributes.conversationId) {
+      standardAttrs['conversation.id'] = attributes.conversationId;
+    }
+    if (attributes.agentType) {
+      standardAttrs['agent.type'] = attributes.agentType;
+    }
+    if (attributes.operation) {
+      standardAttrs['operation.name'] = attributes.operation;
+    }
 
     // Add all custom attributes
     Object.keys(attributes).forEach(key => {

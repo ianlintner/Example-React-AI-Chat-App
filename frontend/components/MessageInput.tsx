@@ -4,15 +4,13 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
 } from 'react-native';
 import { IconButton, ActivityIndicator } from 'react-native-paper';
 import { DiscordColors } from '../constants/Colors';
 import { socketService } from '../services/socketService';
-import type { Conversation, ChatRequest, Message } from '../types';
+import type { ChatRequest, Message } from '../types';
 
 interface MessageInputProps {
   conversationId?: string;
@@ -63,8 +61,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
       };
 
       onMessageSent(userMessage);
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch {
+      // Error handled silently
     } finally {
       setIsLoading(false);
       // Auto-focus the input for easy multiple message sending
@@ -76,7 +74,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleTyping = (text: string) => {
     setMessage(text);
-    
+
     // Send typing indicators
     if (conversationId) {
       if (text.length > 0) {
@@ -94,7 +92,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const canSend = message.trim().length > 0 && !isLoading && !disabled;
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.keyboardAvoidingView}
     >
@@ -103,7 +101,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <TextInput
             ref={textInputRef}
             style={styles.textInput}
-            placeholder="Message #ai-assistant"
+            placeholder='Message #ai-assistant'
             placeholderTextColor={DiscordColors.inputPlaceholder}
             value={message}
             onChangeText={handleTyping}
@@ -112,35 +110,35 @@ const MessageInput: React.FC<MessageInputProps> = ({
             editable={!disabled && !isLoading}
             onSubmitEditing={handleSend}
             blurOnSubmit={true}
-            returnKeyType="send"
+            returnKeyType='send'
           />
-          
+
           <View style={styles.sendButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#2196F3" />
+              <ActivityIndicator size='small' color='#2196F3' />
             ) : (
               <IconButton
-                icon="send"
+                icon='send'
                 size={24}
                 iconColor={canSend ? '#2196F3' : '#ccc'}
-                style={[
-                  styles.sendButton,
-                  canSend && styles.sendButtonEnabled
-                ]}
+                style={[styles.sendButton, canSend && styles.sendButtonEnabled]}
                 onPress={handleButtonPress}
                 disabled={!canSend}
+                testID='send-button'
               />
             )}
           </View>
         </View>
-        
+
         {/* Character count */}
         {message.length > 1800 && (
           <View style={styles.characterCount}>
-            <Text style={[
-              styles.characterCountText,
-              message.length >= 2000 && styles.characterCountWarning
-            ]}>
+            <Text
+              style={[
+                styles.characterCountText,
+                message.length >= 2000 && styles.characterCountWarning,
+              ]}
+            >
               {message.length}/2000
             </Text>
           </View>
@@ -149,8 +147,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
     </KeyboardAvoidingView>
   );
 };
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   keyboardAvoidingView: {

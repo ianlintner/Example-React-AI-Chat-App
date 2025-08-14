@@ -6,24 +6,28 @@ import { Message } from '../types';
 import { GoalSeekingSystem, GoalAction } from './goalSeekingSystem';
 import { responseValidator } from '../validation/responseValidator';
 import { jokeLearningSystem } from './jokeLearningSystem';
-import { ConversationManager, ConversationContext } from './conversationManager';
+import {
+  ConversationManager,
+  ConversationContext,
+} from './conversationManager';
 import { ragService } from './ragService';
 import { dndService } from './dndService';
-import { 
-  tracer, 
-  createAgentSpan, 
+import {
+  tracer,
+  createAgentSpan,
   createConversationSpan,
   createValidationSpan,
-  addSpanEvent, 
-  setSpanStatus, 
-  endSpan 
+  addSpanEvent,
+  setSpanStatus,
+  endSpan,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
   private conversationManager: ConversationManager;
-  private activeAgents: Map<string, { agentType: AgentType; timestamp: Date }> = new Map();
+  private activeAgents: Map<string, { agentType: AgentType; timestamp: Date }> =
+    new Map();
   private actionQueue: Map<string, GoalAction[]> = new Map();
   private processingQueue: Set<string> = new Set();
 
@@ -35,8 +39,10 @@ export class AgentService {
   // Check if an agent is currently active for a user
   private isAgentActive(userId: string): boolean {
     const activeAgent = this.activeAgents.get(userId);
-    if (!activeAgent) return false;
-    
+    if (!activeAgent) {
+      return false;
+    }
+
     // Consider an agent inactive after 30 seconds of no activity
     const thirtySecondsAgo = Date.now() - 30000;
     return activeAgent.timestamp.getTime() > thirtySecondsAgo;
@@ -46,7 +52,7 @@ export class AgentService {
   private setAgentActive(userId: string, agentType: AgentType): void {
     this.activeAgents.set(userId, {
       agentType,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -86,32 +92,36 @@ export class AgentService {
   }
 
   async processMessage(
-    message: string, 
+    message: string,
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
     conversationId?: string,
-    userId?: string
+    userId?: string,
   ): Promise<AgentResponse> {
-    const span = createAgentSpan('agent_service', 'process_message', conversationId);
-    
+    const span = createAgentSpan(
+      'agent_service',
+      'process_message',
+      conversationId,
+    );
+
     span.setAttributes({
       'message.length': message.length,
       'conversation.history_count': conversationHistory.length,
       'agent.forced': !!forcedAgentType,
-      'user.id': userId || 'anonymous'
+      'user.id': userId || 'anonymous',
     });
-    
+
     addSpanEvent(span, 'agent.process_message_start', {
-      message_preview: message.substring(0, 50)
+      message_preview: message.substring(0, 50),
     });
 
     try {
       // Classify the message to determine which agent to use
       let agentType: AgentType;
       let confidence: number;
-      
+
       addSpanEvent(span, 'agent.classification_start');
-      
+
       if (forcedAgentType) {
         agentType = forcedAgentType;
         confidence = 1.0;
@@ -120,18 +130,20 @@ export class AgentService {
         const classification = await classifyMessage(message);
         agentType = classification.agentType;
         confidence = classification.confidence;
-        
-        addSpanEvent(span, 'agent.classification_complete', { 
-          agentType, 
+
+        addSpanEvent(span, 'agent.classification_complete', {
+          agentType,
           confidence,
-          reasoning: classification.reasoning 
+          reasoning: classification.reasoning,
         });
-        console.log(`Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`);
+        console.log(
+          `Message classified as ${agentType} with confidence ${confidence}: ${classification.reasoning}`,
+        );
       }
 
       span.setAttributes({
         'agent.type': agentType,
-        'agent.confidence': confidence
+        'agent.confidence': confidence,
       });
 
       // Get the appropriate agent
@@ -141,16 +153,22 @@ export class AgentService {
       // For joke agent, use adaptive prompt based on user learning data
       let systemPrompt = agent.systemPrompt;
       if (agentType === 'joke' && userId) {
-        systemPrompt = jokeLearningSystem.generateAdaptivePrompt(userId, agent.systemPrompt);
+        systemPrompt = jokeLearningSystem.generateAdaptivePrompt(
+          userId,
+          agent.systemPrompt,
+        );
         addSpanEvent(span, 'agent.adaptive_prompt_generated');
       }
 
       // Prepare the conversation history for the agent
-      const messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }> = [
+      const messages: Array<{
+        role: 'system' | 'user' | 'assistant';
+        content: string;
+      }> = [
         {
           role: 'system',
-          content: systemPrompt
-        }
+          content: systemPrompt,
+        },
       ];
 
       // Add conversation history (limit to last 10 messages to avoid token limits)
@@ -158,26 +176,26 @@ export class AgentService {
       for (const msg of recentHistory) {
         messages.push({
           role: msg.role as 'user' | 'assistant',
-          content: msg.content
+          content: msg.content,
         });
       }
 
       // Add the current message
       messages.push({
         role: 'user',
-        content: message
+        content: message,
       });
 
-      addSpanEvent(span, 'agent.messages_prepared', { 
+      addSpanEvent(span, 'agent.messages_prepared', {
         messageCount: messages.length,
-        historyCount: recentHistory.length 
+        historyCount: recentHistory.length,
       });
 
       // Generate response using the agent
       let responseContent: string;
-      
+
       addSpanEvent(span, 'agent.response_generation_start');
-      
+
       try {
         if (!process.env.OPENAI_API_KEY) {
           // Demo response when no API key is provided
@@ -198,18 +216,19 @@ export class AgentService {
             temperature: agent.temperature,
           });
 
-          responseContent = completion.choices[0]?.message?.content || 
+          responseContent =
+            completion.choices[0]?.message?.content ||
             `I apologize, but I encountered an error while processing your request. Please try again.`;
-            
-          addSpanEvent(span, 'agent.openai_call_complete', { 
+
+          addSpanEvent(span, 'agent.openai_call_complete', {
             tokensUsed: completion.usage?.total_tokens,
-            responseLength: responseContent.length 
+            responseLength: responseContent.length,
           });
         }
       } catch (error) {
         console.error(`Error calling OpenAI API with ${agent.name}:`, error);
-        addSpanEvent(span, 'agent.openai_call_error', { 
-          error: (error as Error).message 
+        addSpanEvent(span, 'agent.openai_call_error', {
+          error: (error as Error).message,
         });
         responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
       }
@@ -218,37 +237,44 @@ export class AgentService {
       if (conversationId && userId) {
         const validationSpan = createValidationSpan(conversationId, agentType);
         addSpanEvent(validationSpan, 'validation.start');
-        
+
         const validationResult = responseValidator.validateResponse(
           agentType,
           message,
           responseContent,
           conversationId,
           userId,
-          false // Not a proactive message
+          false, // Not a proactive message
         );
-        
+
         validationSpan.setAttributes({
           'validation.issues_count': validationResult.issues.length,
-          'validation.has_high_severity': validationResult.issues.some(issue => issue.severity === 'high')
+          'validation.has_high_severity': validationResult.issues.some(
+            issue => issue.severity === 'high',
+          ),
         });
-        
+
         // Log validation issues if any
         if (validationResult.issues.length > 0) {
-          console.warn(`⚠️ Validation issues for ${agentType} response:`, validationResult.issues);
-          addSpanEvent(validationSpan, 'validation.issues_found', { 
-            issueCount: validationResult.issues.length 
+          console.warn(
+            `⚠️ Validation issues for ${agentType} response:`,
+            validationResult.issues,
+          );
+          addSpanEvent(validationSpan, 'validation.issues_found', {
+            issueCount: validationResult.issues.length,
           });
         }
-        
+
         // For high-severity issues, you might want to regenerate the response
         // or provide a fallback response
         if (validationResult.issues.some(issue => issue.severity === 'high')) {
-          console.error(`❌ High severity validation issues detected for ${agentType} response`);
+          console.error(
+            `❌ High severity validation issues detected for ${agentType} response`,
+          );
           addSpanEvent(validationSpan, 'validation.high_severity_issues');
           // Could implement fallback logic here
         }
-        
+
         setSpanStatus(validationSpan, true);
         endSpan(validationSpan);
       }
@@ -256,35 +282,36 @@ export class AgentService {
       const result = {
         content: responseContent,
         agentUsed: agentType,
-        confidence: confidence
+        confidence: confidence,
       };
 
       span.setAttributes({
         'response.length': responseContent.length,
-        'response.agent_used': agentType
+        'response.agent_used': agentType,
       });
 
       addSpanEvent(span, 'agent.process_message_complete', {
-        responseLength: responseContent.length
+        responseLength: responseContent.length,
       });
-      
+
       setSpanStatus(span, true);
       endSpan(span);
-      
+
       return result;
     } catch (error) {
       console.error('Error in processMessage:', error);
-      addSpanEvent(span, 'agent.process_message_error', { 
-        error: (error as Error).message 
+      addSpanEvent(span, 'agent.process_message_error', {
+        error: (error as Error).message,
       });
       setSpanStatus(span, false, (error as Error).message);
       endSpan(span);
-      
+
       // Return fallback response
       return {
-        content: 'I apologize, but I encountered an error while processing your request. Please try again.',
+        content:
+          'I apologize, but I encountered an error while processing your request. Please try again.',
         agentUsed: 'general' as AgentType,
-        confidence: 0
+        confidence: 0,
       };
     }
   }
@@ -436,53 +463,63 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       {
         id: 'general',
         name: 'General Assistant',
-        description: 'Helpful for casual conversation, general questions, creative tasks, and everyday assistance'
+        description:
+          'Helpful for casual conversation, general questions, creative tasks, and everyday assistance',
       },
       {
         id: 'joke',
         name: 'Adaptive Joke Master',
-        description: 'An intelligent joke agent that learns from your reactions and tailors humor to your preferences'
+        description:
+          'An intelligent joke agent that learns from your reactions and tailors humor to your preferences',
       },
       {
         id: 'trivia',
         name: 'Trivia Master',
-        description: 'Your source for fascinating random facts, trivia, and interesting knowledge from around the world'
+        description:
+          'Your source for fascinating random facts, trivia, and interesting knowledge from around the world',
       },
       {
         id: 'gif',
         name: 'GIF Master',
-        description: 'Provides entertaining GIFs and animated reactions to brighten your day'
+        description:
+          'Provides entertaining GIFs and animated reactions to brighten your day',
       },
       {
         id: 'account_support',
         name: 'Account Support Specialist',
-        description: 'Specialized in account-related issues, user authentication, profile management, and account security'
+        description:
+          'Specialized in account-related issues, user authentication, profile management, and account security',
       },
       {
         id: 'billing_support',
         name: 'Billing Support Specialist',
-        description: 'Expert in billing, payments, subscriptions, refunds, and all financial account matters'
+        description:
+          'Expert in billing, payments, subscriptions, refunds, and all financial account matters',
       },
       {
         id: 'website_support',
         name: 'Website Issues Specialist',
-        description: 'Specialized in website functionality, browser issues, performance problems, and technical web support'
+        description:
+          'Specialized in website functionality, browser issues, performance problems, and technical web support',
       },
       {
         id: 'operator_support',
         name: 'Customer Service Operator',
-        description: 'General customer service operator for unknown issues, routing, and comprehensive support coordination'
+        description:
+          'General customer service operator for unknown issues, routing, and comprehensive support coordination',
       },
       {
         id: 'hold_agent',
         name: 'Hold Agent',
-        description: 'Manages customer hold experiences with wait time updates and entertainment coordination'
+        description:
+          'Manages customer hold experiences with wait time updates and entertainment coordination',
       },
       {
         id: 'dnd_master',
         name: 'D&D Master',
-        description: 'Interactive D&D RPG lite experience with character generation, dice rolling, and random encounters'
-      }
+        description:
+          'Interactive D&D RPG lite experience with character generation, dice rolling, and random encounters',
+      },
     ];
   }
 
@@ -492,10 +529,11 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
-    conversationId?: string
+    conversationId?: string,
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
     // Set current agent as active for this user
-    const agentType = forcedAgentType || (await classifyMessage(message)).agentType;
+    const agentType =
+      forcedAgentType || (await classifyMessage(message)).agentType;
     this.setAgentActive(userId, agentType);
 
     // Update user state based on their message
@@ -503,31 +541,40 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
 
     // Activate goals based on current user state
     const activatedGoals = this.goalSeekingSystem.activateGoals(userId);
-    
+
     // Process the message normally with validation
     const response = await this.processMessage(
-      message, 
-      conversationHistory, 
-      forcedAgentType, 
-      conversationId, 
-      userId
+      message,
+      conversationHistory,
+      forcedAgentType,
+      conversationId,
+      userId,
     );
 
     // Update goal progress based on the response
-    this.goalSeekingSystem.updateGoalProgress(userId, message, response.content);
+    this.goalSeekingSystem.updateGoalProgress(
+      userId,
+      message,
+      response.content,
+    );
 
     // Generate proactive actions if goals are active
-    const rawProactiveActions = await this.goalSeekingSystem.generateProactiveActions(userId);
+    const rawProactiveActions =
+      await this.goalSeekingSystem.generateProactiveActions(userId);
 
     // Filter proactive actions to ensure single agent control
-    const proactiveActions = this.filterProactiveActions(userId, rawProactiveActions);
+    const proactiveActions = this.filterProactiveActions(
+      userId,
+      rawProactiveActions,
+    );
 
     // Clear active agent after processing
     this.clearActiveAgent(userId);
 
     return {
       ...response,
-      proactiveActions: proactiveActions.length > 0 ? proactiveActions : undefined
+      proactiveActions:
+        proactiveActions.length > 0 ? proactiveActions : undefined,
     };
   }
 
@@ -535,11 +582,13 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   async executeProactiveAction(
     userId: string,
     action: GoalAction,
-    conversationHistory: Message[] = []
+    conversationHistory: Message[] = [],
   ): Promise<AgentResponse> {
     // Check if an agent is already active for this user
     if (this.isAgentActive(userId)) {
-      console.log(`🚫 Agent ${this.activeAgents.get(userId)?.agentType} is already active for user ${userId}. Queueing action: ${action.type}`);
+      console.log(
+        `🚫 Agent ${this.activeAgents.get(userId)?.agentType} is already active for user ${userId}. Queueing action: ${action.type}`,
+      );
       this.queueAction(userId, action);
       throw new Error('Agent already active');
     }
@@ -555,20 +604,24 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       const response = await this.processMessage(
         proactiveMessage,
         conversationHistory,
-        action.agentType
+        action.agentType,
       );
 
-      console.log(`✅ Proactive action executed successfully for user ${userId} with agent ${action.agentType}`);
+      console.log(
+        `✅ Proactive action executed successfully for user ${userId} with agent ${action.agentType}`,
+      );
       return response;
     } finally {
       // Clear active agent after processing
       this.clearActiveAgent(userId);
-      
+
       // Process any queued actions
       setTimeout(async () => {
         const queuedActions = await this.processQueuedActions(userId);
         if (queuedActions.length > 0) {
-          console.log(`🎯 Processing ${queuedActions.length} queued actions for user ${userId}`);
+          console.log(
+            `🎯 Processing ${queuedActions.length} queued actions for user ${userId}`,
+          );
           // Note: The actual execution of queued actions should be handled by the socket handler
         }
       }, 1000); // Small delay to ensure current action is fully processed
@@ -576,31 +629,44 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   }
 
   // Filter proactive actions to ensure single agent control
-  private filterProactiveActions(userId: string, actions: GoalAction[]): GoalAction[] {
-    if (actions.length === 0) return actions;
+  private filterProactiveActions(
+    userId: string,
+    actions: GoalAction[],
+  ): GoalAction[] {
+    if (actions.length === 0) {
+      return actions;
+    }
 
     // Sort actions by priority (immediate first, then by type priority)
     const sortedActions = actions.sort((a, b) => {
-      if (a.timing === 'immediate' && b.timing !== 'immediate') return -1;
-      if (a.timing !== 'immediate' && b.timing === 'immediate') return 1;
-      
+      if (a.timing === 'immediate' && b.timing !== 'immediate') {
+        return -1;
+      }
+      if (a.timing !== 'immediate' && b.timing === 'immediate') {
+        return 1;
+      }
+
       // Priority order: technical_support > entertainment > engagement
-      const priorityOrder: Record<string, number> = { 
-        'technical_check': 3, 
-        'entertainment_offer': 2, 
-        'proactive_message': 1, 
-        'agent_switch': 1,
-        'status_update': 0 
+      const priorityOrder: Record<string, number> = {
+        technical_check: 3,
+        entertainment_offer: 2,
+        proactive_message: 1,
+        agent_switch: 1,
+        status_update: 0,
       };
       return (priorityOrder[b.type] || 0) - (priorityOrder[a.type] || 0);
     });
 
     // Only return the highest priority action to ensure single agent control
     const selectedAction = sortedActions[0];
-    console.log(`🎯 Selected single proactive action for user ${userId}: ${selectedAction.type} (${selectedAction.agentType})`);
-    
+    console.log(
+      `🎯 Selected single proactive action for user ${userId}: ${selectedAction.type} (${selectedAction.agentType})`,
+    );
+
     if (sortedActions.length > 1) {
-      console.log(`🚫 Filtered out ${sortedActions.length - 1} additional proactive actions to maintain single agent control`);
+      console.log(
+        `🚫 Filtered out ${sortedActions.length - 1} additional proactive actions to maintain single agent control`,
+      );
     }
 
     return [selectedAction];
@@ -617,7 +683,9 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   }
 
   // Get active agent info for a user
-  getActiveAgentInfo(userId: string): { agentType: AgentType; timestamp: Date } | null {
+  getActiveAgentInfo(
+    userId: string,
+  ): { agentType: AgentType; timestamp: Date } | null {
     return this.activeAgents.get(userId) || null;
   }
 
@@ -649,8 +717,12 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     userId: string,
     message: string,
     conversationHistory: Message[] = [],
-    conversationId?: string
-  ): Promise<AgentResponse & { handoffInfo?: { target: AgentType; reason: string; message: string } }> {
+    conversationId?: string,
+  ): Promise<
+    AgentResponse & {
+      handoffInfo?: { target: AgentType; reason: string; message: string };
+    }
+  > {
     // Get or initialize conversation context
     let context = this.conversationManager.getContext(userId);
     if (!context) {
@@ -660,45 +732,67 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
 
     // Current agent from conversation context
     let currentAgent = context.currentAgent;
-    
+
     // Check if we need to handoff before processing
     const handoffInfo = this.conversationManager.getHandoffInfo(userId);
     if (handoffInfo) {
-      console.log(`🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`);
-      
+      console.log(
+        `🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`,
+      );
+
       // Complete the handoff
-      context = this.conversationManager.completeHandoff(userId, handoffInfo.target);
+      context = this.conversationManager.completeHandoff(
+        userId,
+        handoffInfo.target,
+      );
       currentAgent = handoffInfo.target;
-      
+
       // For entertainment agents, process the message directly with the target agent instead of returning handoff message
-      const entertainmentAgents = ['joke', 'trivia', 'gif', 'story_teller', 'riddle_master', 'quote_master', 'game_host', 'music_guru', 'dnd_master'];
+      const entertainmentAgents = [
+        'joke',
+        'trivia',
+        'gif',
+        'story_teller',
+        'riddle_master',
+        'quote_master',
+        'game_host',
+        'music_guru',
+        'dnd_master',
+      ];
       if (entertainmentAgents.includes(handoffInfo.target)) {
-        console.log(`🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`);
-        
+        console.log(
+          `🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`,
+        );
+
         // Process message with the entertainment agent
         const response = await this.processMessage(
           message,
           conversationHistory,
           handoffInfo.target,
           conversationId,
-          userId
+          userId,
         );
 
         // Update conversation context with the interaction
-        this.conversationManager.updateContext(userId, message, response.content, handoffInfo.target);
+        this.conversationManager.updateContext(
+          userId,
+          message,
+          response.content,
+          handoffInfo.target,
+        );
 
         return {
           ...response,
-          agentUsed: handoffInfo.target // Make sure the response shows it came from the entertainment agent
+          agentUsed: handoffInfo.target, // Make sure the response shows it came from the entertainment agent
         };
       }
-      
+
       // For non-entertainment agents, return handoff message first
       return {
         content: handoffInfo.message,
         agentUsed: 'general', // Handoff messages come from general agent
         confidence: 1.0,
-        handoffInfo
+        handoffInfo,
       };
     }
 
@@ -708,18 +802,23 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       conversationHistory,
       currentAgent,
       conversationId,
-      userId
+      userId,
     );
 
     // Update conversation context with the interaction
-    this.conversationManager.updateContext(userId, message, response.content, currentAgent);
+    this.conversationManager.updateContext(
+      userId,
+      message,
+      response.content,
+      currentAgent,
+    );
 
     // Check if handoff is now needed after this interaction
     const newHandoffInfo = this.conversationManager.getHandoffInfo(userId);
-    
+
     return {
       ...response,
-      handoffInfo: newHandoffInfo || undefined
+      handoffInfo: newHandoffInfo || undefined,
     };
   }
 
@@ -729,7 +828,11 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   }
 
   // Force agent handoff (manual override)
-  forceAgentHandoff(userId: string, targetAgent: AgentType, reason: string = 'Manual override'): void {
+  forceAgentHandoff(
+    userId: string,
+    targetAgent: AgentType,
+    reason = 'Manual override',
+  ): void {
     const context = this.conversationManager.getContext(userId);
     if (context) {
       context.shouldHandoff = true;
@@ -745,7 +848,10 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   }
 
   // Initialize conversation for a user with specific agent
-  initializeConversation(userId: string, initialAgent: AgentType = 'general'): ConversationContext {
+  initializeConversation(
+    userId: string,
+    initialAgent: AgentType = 'general',
+  ): ConversationContext {
     return this.conversationManager.initializeContext(userId, initialAgent);
   }
 
@@ -755,33 +861,35 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     conversationId?: string,
-    forcedAgentType?: AgentType
-  ): Promise<AgentResponse & { 
-    proactiveActions?: GoalAction[];
-    handoffInfo?: { target: AgentType; reason: string; message: string };
-    conversationContext?: ConversationContext;
-  }> {
+    forcedAgentType?: AgentType,
+  ): Promise<
+    AgentResponse & {
+      proactiveActions?: GoalAction[];
+      handoffInfo?: { target: AgentType; reason: string; message: string };
+      conversationContext?: ConversationContext;
+    }
+  > {
     // If agent is forced, use goal-seeking system primarily
     if (forcedAgentType) {
       const goalSeekingResponse = await this.processMessageWithGoalSeeking(
-        userId, 
-        message, 
-        conversationHistory, 
-        forcedAgentType, 
-        conversationId
+        userId,
+        message,
+        conversationHistory,
+        forcedAgentType,
+        conversationId,
       );
-      
+
       // Still update conversation context
       const context = this.conversationManager.updateContext(
-        userId, 
-        message, 
-        goalSeekingResponse.content, 
-        forcedAgentType
+        userId,
+        message,
+        goalSeekingResponse.content,
+        forcedAgentType,
       );
-      
+
       return {
         ...goalSeekingResponse,
-        conversationContext: context
+        conversationContext: context,
       };
     }
 
@@ -790,7 +898,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       userId,
       message,
       conversationHistory,
-      conversationId
+      conversationId,
     );
 
     // If no handoff is happening, also process with goal-seeking for proactive actions
@@ -798,22 +906,33 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       // Update goal-seeking system
       this.goalSeekingSystem.updateUserState(userId, message);
       this.goalSeekingSystem.activateGoals(userId);
-      this.goalSeekingSystem.updateGoalProgress(userId, message, conversationResponse.content);
-      
+      this.goalSeekingSystem.updateGoalProgress(
+        userId,
+        message,
+        conversationResponse.content,
+      );
+
       // Generate proactive actions
-      const rawProactiveActions = await this.goalSeekingSystem.generateProactiveActions(userId);
-      const proactiveActions = this.filterProactiveActions(userId, rawProactiveActions);
-      
+      const rawProactiveActions =
+        await this.goalSeekingSystem.generateProactiveActions(userId);
+      const proactiveActions = this.filterProactiveActions(
+        userId,
+        rawProactiveActions,
+      );
+
       return {
         ...conversationResponse,
-        proactiveActions: proactiveActions.length > 0 ? proactiveActions : undefined,
-        conversationContext: this.conversationManager.getContext(userId) || undefined
+        proactiveActions:
+          proactiveActions.length > 0 ? proactiveActions : undefined,
+        conversationContext:
+          this.conversationManager.getContext(userId) || undefined,
       };
     }
 
     return {
       ...conversationResponse,
-      conversationContext: this.conversationManager.getContext(userId) || undefined
+      conversationContext:
+        this.conversationManager.getContext(userId) || undefined,
     };
   }
 
@@ -823,7 +942,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       conversationContext: this.conversationManager.getContext(userId),
       goalState: this.goalSeekingSystem.getUserState(userId),
       activeGoals: this.goalSeekingSystem.getActiveGoals(userId),
-      activeAgent: this.getActiveAgentInfo(userId)
+      activeAgent: this.getActiveAgentInfo(userId),
     };
   }
 }

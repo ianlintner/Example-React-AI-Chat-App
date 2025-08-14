@@ -5,9 +5,7 @@ import {
   AppState,
   ActivityIndicator,
   Text,
-  StatusBar,
 } from 'react-native';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { DiscordColors } from '../../constants/Colors';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
@@ -18,7 +16,6 @@ export default function HomeScreen() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
 
   // Initialize socket connection on app start
@@ -27,22 +24,19 @@ export default function HomeScreen() {
       try {
         // Connect to socket server
         await socketService.connect();
-        console.log('Socket connected successfully');
         setError(null);
         setIsConnected(true);
-        
+
         // Automatically send support request after connection
         setTimeout(() => {
-          console.log('Sending automatic support request...');
           socketService.sendStreamingMessage({
-            message: 'Hello, I need technical support. I\'m experiencing some issues and would like assistance from a support agent. Please let me know if I\'ll be on hold and if you can help keep me entertained while I wait.',
+            message:
+              "Hello, I need technical support. I'm experiencing some issues and would like assistance from a support agent. Please let me know if I'll be on hold and if you can help keep me entertained while I wait.",
             conversationId: undefined,
-            forceAgent: undefined
+            forceAgent: undefined,
           });
         }, 1000); // Send after 1 second to ensure connection is established
-        
-      } catch (error) {
-        console.error('Failed to connect to socket server:', error);
+      } catch {
         setError('Failed to connect to server. Please check your connection.');
         setIsConnected(false);
       } finally {
@@ -60,7 +54,10 @@ export default function HomeScreen() {
       }
     };
 
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
 
     // Cleanup on unmount
     return () => {
@@ -72,8 +69,6 @@ export default function HomeScreen() {
   // Handle socket events for new messages, proactive messages and streaming
   useEffect(() => {
     const handleNewMessage = (message: Message) => {
-      console.log('📨 New message received in App:', message);
-      
       // Add new message to current conversation or create new one
       setConversation(prev => {
         if (!prev) {
@@ -83,42 +78,38 @@ export default function HomeScreen() {
             title: 'AI Assistant Chat',
             messages: [{ ...message, status: 'complete' }],
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
-          console.log('New conversation created for new message:', newConversation);
           return newConversation;
         }
-        
+
         // Check if this conversation is different from current one
         if (prev.id !== message.conversationId) {
-          console.log('Different conversation ID, not adding new message');
           return prev; // Don't add message from different conversation
         }
-        
+
         // Check if message already exists to prevent duplicates
         const existingMessage = prev.messages.find(m => m.id === message.id);
         if (existingMessage) {
-          console.log('Message already exists, not adding duplicate');
           return prev;
         }
-        
-        console.log('Adding new message to existing conversation');
+
         const updatedConversation = {
           ...prev,
-          messages: [...prev.messages, { ...message, status: 'complete' as const }],
-          updatedAt: new Date()
+          messages: [
+            ...prev.messages,
+            { ...message, status: 'complete' as const },
+          ],
+          updatedAt: new Date(),
         };
-        console.log('Updated conversation with new message:', updatedConversation);
         return updatedConversation;
       });
-      
-      // Update last update time to trigger re-renders
-      setLastUpdateTime(new Date());
     };
 
-    const handleStreamStart = (data: { messageId: string; conversationId: string }) => {
-      console.log('🔄 Stream start received:', data);
-      
+    const handleStreamStart = (data: {
+      messageId: string;
+      conversationId: string;
+    }) => {
       // Add streaming message placeholder
       setConversation(prev => {
         if (!prev) {
@@ -126,140 +117,149 @@ export default function HomeScreen() {
           const newConversation: Conversation = {
             id: data.conversationId,
             title: 'AI Assistant Chat',
-            messages: [{
-              id: data.messageId,
-              content: '',
-              role: 'assistant',
-              timestamp: new Date(),
-              conversationId: data.conversationId,
-              status: 'pending'
-            }],
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-          return newConversation;
-        }
-        
-        // Check if we need to update conversation ID (from temp to real)
-        const isTemporaryConversation = prev.id.startsWith('temp-');
-        if (isTemporaryConversation && prev.id !== data.conversationId) {
-          // Update conversation to use the real ID from backend
-          console.log(`🔄 Updating conversation ID from ${prev.id} to ${data.conversationId}`);
-          return {
-            ...prev,
-            id: data.conversationId,
             messages: [
-              ...prev.messages.map(m => ({ ...m, conversationId: data.conversationId })),
               {
                 id: data.messageId,
                 content: '',
                 role: 'assistant',
                 timestamp: new Date(),
                 conversationId: data.conversationId,
-                status: 'pending'
-              }
+                status: 'pending',
+              },
             ],
-            updatedAt: new Date()
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          };
+          return newConversation;
+        }
+
+        // Check if we need to update conversation ID (from temp to real)
+        const isTemporaryConversation = prev.id.startsWith('temp-');
+        if (isTemporaryConversation && prev.id !== data.conversationId) {
+          // Update conversation to use the real ID from backend
+          return {
+            ...prev,
+            id: data.conversationId,
+            messages: [
+              ...prev.messages.map(m => ({
+                ...m,
+                conversationId: data.conversationId,
+              })),
+              {
+                id: data.messageId,
+                content: '',
+                role: 'assistant',
+                timestamp: new Date(),
+                conversationId: data.conversationId,
+                status: 'pending',
+              },
+            ],
+            updatedAt: new Date(),
           };
         }
-        
+
         // Check if this conversation is different from current one
         if (prev.id !== data.conversationId) {
           return prev; // Don't add message from different conversation
         }
-        
+
         // Check if message already exists
-        const existingMessage = prev.messages.find(m => m.id === data.messageId);
+        const existingMessage = prev.messages.find(
+          m => m.id === data.messageId,
+        );
         if (existingMessage) {
           // Update existing message to streaming
           return {
             ...prev,
-            messages: prev.messages.map(m => 
-              m.id === data.messageId 
+            messages: prev.messages.map(m =>
+              m.id === data.messageId
                 ? { ...m, status: 'streaming' as const }
-                : m
+                : m,
             ),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
         }
-        
+
         // Add new streaming message
         return {
           ...prev,
-          messages: [...prev.messages, {
-            id: data.messageId,
-            content: '',
-            role: 'assistant',
-            timestamp: new Date(),
-            conversationId: data.conversationId,
-            status: 'pending'
-          }],
-          updatedAt: new Date()
+          messages: [
+            ...prev.messages,
+            {
+              id: data.messageId,
+              content: '',
+              role: 'assistant',
+              timestamp: new Date(),
+              conversationId: data.conversationId,
+              status: 'pending',
+            },
+          ],
+          updatedAt: new Date(),
         };
       });
     };
 
-    const handleStreamChunk = (chunk: { messageId: string; content: string; isComplete: boolean }) => {
-      console.log('📝 Stream chunk received:', chunk.content.slice(-20));
-      
+    const handleStreamChunk = (chunk: {
+      messageId: string;
+      content: string;
+      isComplete: boolean;
+    }) => {
       // Update message content
       setConversation(prev => {
         if (!prev) return prev;
-        
+
         return {
           ...prev,
-          messages: prev.messages.map(m => 
-            m.id === chunk.messageId 
-              ? { 
-                  ...m, 
+          messages: prev.messages.map(m =>
+            m.id === chunk.messageId
+              ? {
+                  ...m,
                   content: chunk.content,
-                  status: chunk.isComplete ? 'complete' as const : 'streaming' as const
+                  status: chunk.isComplete
+                    ? ('complete' as const)
+                    : ('streaming' as const),
                 }
-              : m
+              : m,
           ),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
       });
     };
 
-    const handleStreamComplete = (data: { 
-      messageId: string; 
-      conversationId: string; 
+    const handleStreamComplete = (data: {
+      messageId: string;
+      conversationId: string;
       conversation: Conversation;
       agentUsed?: string;
       confidence?: number;
     }) => {
-      console.log('✅ Stream complete received:', data);
-      
       // Update message with final agent info and complete status
       setConversation(prev => {
         if (!prev) return data.conversation;
-        
+
         return {
           ...prev,
-          messages: prev.messages.map(m => 
-            m.id === data.messageId 
-              ? { 
-                  ...m, 
+          messages: prev.messages.map(m =>
+            m.id === data.messageId
+              ? {
+                  ...m,
                   ...(data.agentUsed && { agentUsed: data.agentUsed }),
                   ...(data.confidence && { confidence: data.confidence }),
-                  status: 'complete' as const
+                  status: 'complete' as const,
                 }
-              : m
+              : m,
           ),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
       });
     };
 
-    const handleProactiveMessage = (data: { 
-      message: Message; 
-      actionType: string; 
-      agentUsed: string; 
-      confidence: number 
+    const handleProactiveMessage = (data: {
+      message: Message;
+      actionType: string;
+      agentUsed: string;
+      confidence: number;
     }) => {
-      console.log('🎁 Proactive message received in App:', JSON.stringify(data, null, 2));
-      
       // Add proactive message to current conversation or create new one
       setConversation(prev => {
         if (!prev) {
@@ -269,32 +269,34 @@ export default function HomeScreen() {
             title: 'AI Assistant Chat',
             messages: [{ ...data.message, status: 'complete' }],
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
           return newConversation;
         }
-        
+
         // Check if this conversation is different from current one
         if (prev.id !== data.message.conversationId) {
           return prev; // Don't add message from different conversation
         }
-        
+
         // Check if message already exists to prevent duplicates
-        const existingMessage = prev.messages.find(m => m.id === data.message.id);
+        const existingMessage = prev.messages.find(
+          m => m.id === data.message.id,
+        );
         if (existingMessage) {
           return prev;
         }
-        
+
         // Add proactive message
         return {
           ...prev,
-          messages: [...prev.messages, { ...data.message, status: 'complete' as const }],
-          updatedAt: new Date()
+          messages: [
+            ...prev.messages,
+            { ...data.message, status: 'complete' as const },
+          ],
+          updatedAt: new Date(),
         };
       });
-      
-      // Update last update time to trigger re-renders
-      setLastUpdateTime(new Date());
     };
 
     // Set up socket listeners
@@ -327,7 +329,9 @@ export default function HomeScreen() {
       }
 
       // Merge with existing conversation
-      const messageExists = prevConversation.messages.some(m => m.id === newMessage.id);
+      const messageExists = prevConversation.messages.some(
+        m => m.id === newMessage.id,
+      );
       if (messageExists) {
         return prevConversation;
       }
@@ -338,18 +342,13 @@ export default function HomeScreen() {
         updatedAt: new Date(),
       };
     });
-    setLastUpdateTime(new Date());
   };
 
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorTitle}>
-          Connection Error
-        </Text>
-        <Text style={styles.errorMessage}>
-          {error}
-        </Text>
+        <Text style={styles.errorTitle}>Connection Error</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
         <Text style={styles.errorSubtext}>
           Please check your connection and restart the app.
         </Text>
@@ -360,10 +359,8 @@ export default function HomeScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>
-          Connecting to AI Assistant...
-        </Text>
+        <ActivityIndicator size='large' testID='activity-indicator' />
+        <Text style={styles.loadingText}>Connecting to AI Assistant...</Text>
       </View>
     );
   }

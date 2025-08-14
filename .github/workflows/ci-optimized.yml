@@ -223,6 +223,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare env files for Compose
+        run: |
+          # Ensure backend .env exists so docker-compose env_file paths don't fail on CI
+          if [ -f backend/.env.example ] && [ ! -f backend/.env ]; then
+            cp backend/.env.example backend/.env
+            echo "Created backend/.env from example"
+          elif [ ! -f backend/.env ]; then
+            printf "NODE_ENV=test\nPORT=5001\n" > backend/.env
+            echo "Created minimal backend/.env"
+          fi
+
+          # Prepare frontend .env if an example exists (harmless if not used)
+          if [ -f frontend/.env.example ] && [ ! -f frontend/.env ]; then
+            cp frontend/.env.example frontend/.env
+            echo "Created frontend/.env from example"
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

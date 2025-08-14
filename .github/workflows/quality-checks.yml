@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
-        if: github.event_name == 'push' && (!github.event.repository.private || vars.ENABLE_SARIF_UPLOAD == 'true')
+        if: github.event_name == 'push' && github.event.repository.fork == false && (!github.event.repository.private || vars.ENABLE_SARIF_UPLOAD == 'true')
         with:
           sarif_file: 'trivy-results.sarif'
 

@@ -1,7 +1,9 @@
-# AI Chat Application - Complete Architecture Guide
+# Demo Portfolio Architecture — AI + Modern Web Engineering Patterns
+
+> This guide supports a demo portfolio project. It focuses on patterns, tradeoffs, and implementation details that matter in AI and modern web app engineering. Production hardening and full productization are out of scope.
 
 ## Table of Contents
-- [AI Chat Application - Complete Architecture Guide](#ai-chat-application---complete-architecture-guide)
+- [Demo Portfolio Architecture — AI + Modern Web Engineering Patterns](#demo-portfolio-architecture--ai--modern-web-engineering-patterns)
   - [Table of Contents](#table-of-contents)
   - [System Overview](#system-overview)
     - [Key Architectural Principles](#key-architectural-principles)
@@ -46,7 +48,7 @@
 
 ## System Overview
 
-The AI Chat Application is a sophisticated, mobile-first real-time chat system featuring a comprehensive multi-agent AI framework, goal-seeking behavior, and enterprise-grade observability. The system is designed to provide intelligent customer service, technical support, and entertainment through specialized AI agents.
+This demo portfolio implements a mobile-first, real-time AI chat system to showcase multi-agent orchestration, goal-seeking behavior, and enterprise-style observability. It demonstrates patterns and tradeoffs rather than delivering a complete product, including intelligent customer service, technical support, and entertainment via specialized agents.
 
 ### Key Architectural Principles
 - **Mobile-First**: Native React Native/Expo application
@@ -1236,7 +1238,7 @@ Cloud Ready: AWS/GCP/Azure compatible
 
 ## Conclusion
 
-The AI Chat Application represents a sophisticated, production-ready system that successfully combines:
+This demo portfolio showcases how to combine:
 
 ### ✅ **Architectural Excellence**
 - **Mobile-First Design**: Native React Native application with cross-platform support
@@ -1273,6 +1275,6 @@ This system successfully demonstrates how modern AI applications can be built wi
 
 ---
 
-**Architecture Version**: 1.0  
-**Last Updated**: January 2025  
-**Next Review**: Q2 2025
+**Architecture Version**: 1.1  
+**Last Updated**: August 2025  
+**Next Review**: Q4 2025

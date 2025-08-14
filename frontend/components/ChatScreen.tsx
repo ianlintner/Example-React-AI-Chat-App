@@ -957,14 +957,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   proactiveChip: {
-    height: 20,
     backgroundColor: ForestColors.brandPrimary,
-    borderRadius: 10,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 0,
+    minHeight: 22,
+    alignSelf: 'center',
   },
   chipText: {
     fontSize: 11,
-    fontWeight: '500',
-    color: ForestColors.textNormal,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 16,
+    includeFontPadding: false,
   },
   confidenceText: {
     fontSize: 10,

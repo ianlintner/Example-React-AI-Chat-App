@@ -4,6 +4,7 @@ import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
 import { GoalAction } from '../agents/goalSeekingSystem';
+import { AgentType } from '../agents/types';
 import { metrics } from '../metrics/prometheus';
 import {
   createConversationSpan,
@@ -342,6 +343,111 @@ export const setupSocketHandlers = (
           }
         }
 
+        // Create a real conversation for this hold session so subsequent messages use the same conversation
+        const initialConversation: Conversation = {
+          id: uuidv4(),
+          title: 'On hold',
+          messages: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        storage.addConversation(initialConversation);
+        socket.join(initialConversation.id);
+
+        // Send initial hold greeting proactively, then immediately hand off to an entertainment agent
+        const holdGreeting =
+          "You're on hold for a moment while we connect you. In the meantime, we'll bring in something fun to keep you entertained!";
+        const holdGreetingData = {
+          message: {
+            id: require('uuid').v4(),
+            content: holdGreeting,
+            role: 'assistant',
+            timestamp: new Date(),
+            conversationId: initialConversation.id,
+            agentUsed: 'hold_agent',
+            confidence: 1.0,
+            isProactive: true,
+          },
+          actionType: 'hold_greeting',
+          agentUsed: 'hold_agent',
+          confidence: 1.0,
+        };
+        socket.emit('proactive_message', holdGreetingData);
+
+        // After a short delay, hand off to an entertainment agent and send a message
+        const entertainmentInitTimeout = setTimeout(async () => {
+          try {
+            const entertainmentAgents: AgentType[] = [
+              'joke',
+              'trivia',
+              'gif',
+              'story_teller',
+              'riddle_master',
+              'quote_master',
+              'game_host',
+              'music_guru',
+              'dnd_master',
+            ];
+            const target =
+              entertainmentAgents[
+                Math.floor(Math.random() * entertainmentAgents.length)
+              ];
+
+            // Set the current conversation agent to the selected entertainment agent
+            agentService.initializeConversation(socket.id, target);
+            agentService.forceAgentHandoff(
+              socket.id,
+              target,
+              'Automatic entertainment on hold',
+            );
+            // Push a status update reflecting the handoff immediately
+            sendAgentStatus();
+
+            const getEntertainmentMessage = (agentType: AgentType): string => {
+              switch (agentType) {
+                case 'joke':
+                  return 'Tell me a joke right now. I want to hear one of your best ones!';
+                case 'trivia':
+                  return 'Share a fascinating trivia fact with me right now. I want to learn something interesting!';
+                case 'gif':
+                  return 'Show me an entertaining GIF right now. I want to see something fun!';
+                case 'story_teller':
+                  return 'Tell me an engaging short story right now. I want to hear something captivating!';
+                case 'riddle_master':
+                  return 'Give me a brain teaser or riddle right now. I want to challenge my mind!';
+                case 'quote_master':
+                  return 'Share an inspiring or entertaining quote with me right now. I want some wisdom or humor!';
+                case 'game_host':
+                  return 'Start a fun interactive game with me right now. I want to play something engaging!';
+                case 'music_guru':
+                  return 'Give me a personalized music recommendation right now. I want to discover something great!';
+                case 'dnd_master':
+                  return 'Let’s start a quick D&D mini-adventure! Give me a hook or roll some dice to begin.';
+                default:
+                  return 'Entertain me right now with your specialty!';
+              }
+            };
+
+            const initialAction: GoalAction = {
+              type: 'proactive_message',
+              agentType: target,
+              message: getEntertainmentMessage(target),
+              timing: 'immediate',
+            };
+
+            await executeProactiveAction(
+              initialAction,
+              initialConversation,
+              socket,
+              io,
+            );
+          } catch (err) {
+            console.error('Error sending initial entertainment message:', err);
+          }
+        }, 250);
+        (entertainmentInitTimeout as any).unref?.();
+        timeouts.push(entertainmentInitTimeout);
+
         // Set up 10-minute hold updates
         const holdUpdateInterval = setInterval(
           async () => {
@@ -359,7 +465,7 @@ export const setupSocketHandlers = (
                     content: holdUpdateMessage,
                     role: 'assistant',
                     timestamp: new Date(),
-                    conversationId: 'hold',
+                    conversationId: initialConversation.id,
                     agentUsed: 'hold_agent',
                     confidence: 1.0,
                     isProactive: true,
@@ -495,6 +601,11 @@ export const setupSocketHandlers = (
                 return;
               }
               conversation = foundConversation;
+              // Ensure the socket is in the conversation room for streaming events
+              socket.join(conversation.id);
+              console.log(
+                `Socket ${socket.id} joined conversation ${conversation.id}`,
+              );
             } else {
               // Create new conversation
               conversation = {

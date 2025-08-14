@@ -28,17 +28,6 @@ export default function App() {
         logger.info('Socket connected successfully');
         setError(null);
         setIsConnected(true);
-
-        // Automatically send support request after connection
-        setTimeout(() => {
-          logger.info('Sending automatic support request...');
-          socketService.sendStreamingMessage({
-            message:
-              "Hello, I need technical support. I'm experiencing some issues and would like assistance from a support agent. Please let me know if I'll be on hold and if you can help keep me entertained while I wait.",
-            conversationId: undefined,
-            forceAgent: undefined,
-          });
-        }, 1000); // Send after 1 second to ensure connection is established
       } catch (error) {
         logger.error('Failed to connect to socket server:', error);
         setError('Failed to connect to server. Please check your connection.');

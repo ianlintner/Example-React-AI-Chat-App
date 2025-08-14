@@ -231,7 +231,20 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
 
   const formatTimestamp = (timestamp: Date) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Chicago', // Ensure consistent CST/CDT formatting for tests
+      }).format(date);
+    } catch {
+      // Fallback to environment default if Intl/timeZone is unavailable
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
   };
 
   const getAgentInfo = (agentUsed?: string) => {

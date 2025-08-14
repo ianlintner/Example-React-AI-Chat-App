@@ -13,6 +13,7 @@ concurrency:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   # Detect changes to determine which jobs to run
@@ -198,7 +199,7 @@ jobs:
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
-        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && (!github.event.repository.private || vars.ENABLE_SARIF_UPLOAD == 'true')
         with:
           sarif_file: 'trivy-results.sarif'
 

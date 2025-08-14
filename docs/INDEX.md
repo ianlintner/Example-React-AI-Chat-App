@@ -1,10 +1,15 @@
-# AI Chat Application - Complete Documentation Index
+# Demo Portfolio - AI + Modern Web Engineering Patterns (Documentation Index)
 
-Welcome to the comprehensive documentation for the AI Chat Application - a sophisticated mobile-first AI chat system with multi-agent intelligence, goal-seeking behavior, and enterprise-grade architecture.
+Welcome to the documentation for a demo portfolio project that showcases contemporary AI and modern web engineering patterns. This suite is designed for hands‑on demos, interviews, workshops, and code reviews, emphasizing patterns, tradeoffs, and implementation details rather than product completeness.
 
 ## 📚 Documentation Overview
 
-This documentation suite provides complete coverage of all aspects of the system, from high-level architecture to implementation details.
+This documentation is organized to help you demo, explain, and evaluate key patterns quickly: multi‑agent orchestration, goal‑seeking loops, RAG, validation, and observability from metrics to traces.
+
+Demo essentials:
+- Start with the Main README for quick demo setup and a 10‑minute walkthrough.
+- Open Grafana and Jaeger while interacting to visualize flows and latencies.
+- Use the Architecture Guide to narrate design tradeoffs during a demo.
 
 ---
 
@@ -259,8 +264,8 @@ All documentation in this suite follows these standards:
 
 ---
 
-**Documentation Version**: 2.0  
-**Last Updated**: January 2025  
-**Next Review**: Q2 2025
+**Documentation Version**: 2.1  
+**Last Updated**: August 2025  
+**Next Review**: Q4 2025
 
 For questions or suggestions about this documentation, please open an issue in the project repository.

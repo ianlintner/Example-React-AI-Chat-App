@@ -20,9 +20,21 @@ module.exports = [
       '*.config.js',
       'jest.setup.js',
       'scripts/**',
+      '__mocks__/**',
       '**/*.bundle.js',
       '**/*.min.js',
     ],
+  },
+
+  // Special override: exclude typed-linting for __mocks__ files
+  {
+    files: ['**/__mocks__/**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        // Disable type-aware linting for mock files (prevents parserOptions.project errors)
+        project: null,
+      },
+    },
   },
 
   // Base JavaScript configuration
@@ -31,6 +43,7 @@ module.exports = [
   // Main configuration for TypeScript and React files
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: ['**/__mocks__/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -133,11 +146,7 @@ module.exports = [
 
   // Test files configuration
   {
-    files: [
-      '**/__tests__/**/*',
-      '**/*.test.{js,jsx,ts,tsx}',
-      '**/__mocks__/**/*',
-    ],
+    files: ['**/__tests__/**/*', '**/*.test.{js,jsx,ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.jest,

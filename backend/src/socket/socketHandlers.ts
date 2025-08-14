@@ -593,14 +593,19 @@ export const setupSocketHandlers = (
             let conversation: Conversation;
             if (conversationId) {
               const foundConversation = storage.getConversation(conversationId);
-              if (!foundConversation) {
-                socket.emit('stream_error', {
-                  message: 'Conversation not found',
-                  code: 'CONVERSATION_NOT_FOUND',
-                });
-                return;
-              }
-              conversation = foundConversation;
+      if (!foundConversation) {
+        socket.emit('stream_error', {
+          message: 'Conversation not found',
+          code: 'CONVERSATION_NOT_FOUND',
+        });
+        return;
+      }
+      conversation = foundConversation;
+      // Ensure the socket is in the conversation room for streaming events
+      socket.join(conversation.id);
+      console.log(
+        `Socket ${socket.id} joined conversation ${conversation.id}`,
+      );
             } else {
               // Create new conversation
               conversation = {

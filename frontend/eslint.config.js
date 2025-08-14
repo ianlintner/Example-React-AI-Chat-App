@@ -43,6 +43,7 @@ module.exports = [
   // Main configuration for TypeScript and React files
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
+    ignores: ['**/__mocks__/**'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
@@ -148,7 +149,6 @@ module.exports = [
     files: [
       '**/__tests__/**/*',
       '**/*.test.{js,jsx,ts,tsx}',
-      '**/__mocks__/**/*',
     ],
     languageOptions: {
       globals: {

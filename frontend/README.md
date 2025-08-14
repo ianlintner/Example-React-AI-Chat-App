@@ -1,8 +1,8 @@
-# AI Chat Mobile App - React Native
+# Demo Portfolio Mobile App — React Native (Expo)
 
-This is the React Native version of the AI Chat Application, migrated from the web version to provide native Android (and iOS) support for your users.
+This is the React Native/Expo mobile client for a demo portfolio that showcases current AI and modern web engineering patterns. It is optimized for hands‑on demos, interviews, workshops, and code reviews—not product completeness.
 
-## 🚀 Features
+## 🚀 Demo‑focused Features
 
 - **Real-time AI Chat**: Full Socket.io integration with streaming responses
 - **10 Specialized AI Agents**: Technical, Joke Master, Trivia Master, GIF Master, and customer service agents
@@ -11,6 +11,8 @@ This is the React Native version of the AI Chat Application, migrated from the w
 - **Native Mobile UX**: Optimized for mobile with smooth animations and gestures
 - **Offline Capability**: Graceful handling of network disconnections
 - **Material Design**: Using React Native Paper for consistent UI
+
+> Demo orientation: Works offline via curated RAG content; add an OpenAI API key to enable live model calls with the same validation and observability pipeline.
 
 ## 📱 Supported Platforms
 

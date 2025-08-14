@@ -1,8 +1,8 @@
-# AI Goal-Seeking Chat System - Complete Implementation
+# Demo Portfolio Summary — AI Goal-Seeking Chat Patterns
 
 ## Overview
 
-This document provides a comprehensive overview of our AI Goal-Seeking Chat System, specifically designed to **entertain users while they are on hold and answer technical questions**. The system combines intelligent agent selection, proactive goal-seeking behavior, response validation, and comprehensive monitoring.
+This document provides a comprehensive overview of our AI Goal-Seeking Chat system as part of a demo portfolio focused on showcasing modern AI and web engineering patterns. It is designed to **entertain users while they are on hold and answer technical questions**, demonstrating multi‑agent orchestration, goal‑seeking, validation, and observability—not product completeness.
 
 ## System Goals Achievement
 
@@ -309,4 +309,4 @@ The combination of entertainment and technical capabilities ensures users have a
 - ✅ Adaptive learning and personalization
 - ✅ Seamless transitions between entertainment and technical support
 
-The system is production-ready and can be deployed to provide immediate value to users while continuously learning and improving from real-world interactions.
+This repository is a demo portfolio intended to showcase patterns, tradeoffs, and implementation details. It is optimized for clarity and demonstration; production hardening and full productization are out of scope.

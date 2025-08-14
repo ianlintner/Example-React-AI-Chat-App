@@ -194,14 +194,14 @@ const socket = io('http://localhost:5001');
 
 #### Client to Server Events
 
-**join_conversation**
+**join_conversation**  
 Join a specific conversation room for real-time updates.
 
 ```javascript
 socket.emit('join_conversation', { conversationId: 'conversation-uuid' });
 ```
 
-**leave_conversation**
+**leave_conversation**  
 Leave a conversation room.
 
 ```javascript
@@ -210,7 +210,7 @@ socket.emit('leave_conversation', { conversationId: 'conversation-uuid' });
 
 #### Server to Client Events
 
-**message_received**
+**message_received**  
 Emitted when a new message is added to a conversation.
 
 ```javascript
@@ -220,7 +220,7 @@ socket.on('message_received', data => {
 });
 ```
 
-**conversation_updated**
+**conversation_updated**  
 Emitted when a conversation is updated.
 
 ```javascript
@@ -229,7 +229,7 @@ socket.on('conversation_updated', conversation => {
 });
 ```
 
-**error**
+**error**  
 Emitted when an error occurs.
 
 ```javascript

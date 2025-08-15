@@ -1,5 +1,7 @@
 # Demo Portfolio: AI + Modern Web Engineering Patterns
 
+[![CI/CD](https://github.com/ianlintner/Example-React-AI-Chat-App/actions/workflows/ci-optimized.yml/badge.svg)](https://github.com/ianlintner/Example-React-AI-Chat-App/actions/workflows/ci-optimized.yml)
+
 A portfolio-ready demo that showcases current, high‑impact technologies and architectural patterns for building AI‑enabled, real‑time applications. This repository is intentionally designed for hands‑on demos, interviews, workshops, and code reviews.
 
 - Modern mobile client (React Native + Expo) with real‑time UX

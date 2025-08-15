@@ -327,7 +327,7 @@ jobs:
         id: meta_frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ github.repository }}-${{ matrix.component }}
+          images: ianlintner068/example-react-ai-chat-app-frontend
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-

@@ -8,3 +8,7 @@ frontend/coverage
 backend/jest-socket-results.json
 *.log
 gh-run*
+latest-runs*
+run*.json
+external/run-16972773386-jobs.json
+external/workflows.txt

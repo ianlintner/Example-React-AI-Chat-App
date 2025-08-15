@@ -104,8 +104,8 @@ services:
   # Backend - Node.js API with OpenTelemetry tracing
   backend:
     build:
-      context: .
-      dockerfile: ./backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: ai-backend
     ports:
       - "5001:5001"

@@ -6,3 +6,10 @@ backend/coverage
 frontend/coverage
 .DS_Store
 backend/jest-socket-results.json
+*.log
+gh-run*
+latest-runs*
+*run*.json
+external/run-16972773386-jobs.json
+external/workflows.txt
+external/era-run-16990365551.json

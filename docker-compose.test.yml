@@ -27,8 +27,8 @@ services:
   # Backend with additional test configuration
   backend:
     build:
-      context: .
-      dockerfile: ./backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "5001:5001"
     env_file:

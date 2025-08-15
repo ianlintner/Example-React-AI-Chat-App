@@ -1,0 +1,89 @@
+{
+  "name": "react-ai-chat-app",
+  "version": "1.0.0",
+  "description": "AI-powered chat application with React Native frontend and Node.js backend",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm test --prefix frontend -- --runInBand",
+    "test:unit": "npm run test:unit:backend",
+    "test:unit:backend": "cd backend && npm run test:unit",
+    "test:integration": "cd backend && npm run test:integration",
+    "test:e2e": "cd tests && npm run e2e",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
+    "lint:fix:frontend": "cd frontend && npm run lint -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:backend": "cd backend && npm run format",
+    "format:frontend": "cd frontend && npm run format",
+    "coverage": "npm run coverage:backend",
+    "coverage:backend": "cd backend && npm run test:coverage",
+    "coverage:merge": "nyc merge coverage coverage/merged-coverage.json",
+    "coverage:report": "nyc report --reporter=html --reporter=text --reporter=lcov",
+    "type-check": "npm run type-check:backend && npm run type-check:frontend",
+    "type-check:backend": "cd backend && npm run typecheck",
+    "type-check:frontend": "cd frontend && npm run type-check",
+    "pre-commit": "lint-staged",
+    "prepare": "husky",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up",
+    "docker:down": "docker-compose down",
+    "docker:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd backend && rm -rf dist node_modules",
+    "clean:frontend": "cd frontend && rm -rf dist .expo node_modules",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "react-native",
+    "nodejs",
+    "opentelemetry"
+  ],
+  "author": "Ian Lintner",
+  "license": "MIT",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "expo": "^53.0.20",
+    "metro": "^0.82.0",
+    "prom-client": "^15.1.3",
+    "react-native-markdown-display": "^7.0.2",
+    "react-native-paper": "^5.14.5",
+    "react-native-vector-icons": "^10.3.0",
+    "socket.io-client": "^4.7.2",
+    "@expo/metro-runtime": "~5.0.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "concurrently": "^8.2.0",
+    "typescript": "~5.8.3",
+    "prettier": "^3.2.5",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "nyc": "^15.1.0"
+  },
+  "lint-staged": {
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "backend/**/*.{ts,js}": [
+      "cd backend && npm run lint:fix",
+      "cd backend && npm run format"
+    ],
+    "frontend/**/*.{ts,tsx,js,jsx}": [
+      "cd frontend && npm run lint -- --fix",
+      "cd frontend && npm run format"
+    ]
+  }
+}

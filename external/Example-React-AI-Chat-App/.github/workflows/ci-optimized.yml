@@ -1,0 +1,380 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop] # Only run on main branches for push
+  pull_request:
+    branches: [main, develop] # Only run on PRs to main branches
+
+# Prevent multiple runs on the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # Detect changes to determine which jobs to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      docs: ${{ steps.changes.outputs.docs }}
+      workflows: ${{ steps.changes.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'shared/**'
+              - 'docker-compose*.yml'
+              - 'otel-collector-config.yaml'
+            frontend:
+              - 'frontend/**'
+              - 'shared/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+            workflows:
+              - '.github/workflows/**'
+
+  quality:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install all workspaces
+        run: npm run install:all
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint (root)
+        run: npm run lint
+
+      - name: Type check (root)
+        run: npm run type-check
+
+  # Backend testing and building
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run tests with coverage
+        working-directory: backend
+        run: npm run test:ci
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          directory: backend/coverage
+          flags: backend
+          fail_ci_if_error: false
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist/
+          retention-days: 7
+
+  # Frontend linting and building
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run linting
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # Security and dependency scanning
+  security:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: github.event_name == 'push' && (!github.event.repository.private || vars.ENABLE_SARIF_UPLOAD == 'true')
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Audit backend dependencies
+        if: needs.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: npm audit --audit-level=moderate
+
+      - name: Audit frontend dependencies
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: frontend
+        run: npm audit --audit-level=moderate
+
+  # Integration tests (only if both backend and frontend changed or on main branch)
+  integration:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare env files for Compose
+        run: |
+          # Ensure backend .env exists so docker-compose env_file paths don't fail on CI
+          if [ -f backend/.env.example ] && [ ! -f backend/.env ]; then
+            cp backend/.env.example backend/.env
+            echo "Created backend/.env from example"
+          elif [ ! -f backend/.env ]; then
+            printf "NODE_ENV=test\nPORT=5001\n" > backend/.env
+            echo "Created minimal backend/.env"
+          fi
+
+          # Prepare frontend .env if an example exists (harmless if not used)
+          if [ -f frontend/.env.example ] && [ ! -f frontend/.env ]; then
+            cp frontend/.env.example frontend/.env
+            echo "Created frontend/.env from example"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start services for testing
+        run: |
+          # Start only the services required for integration tests to avoid unrelated failures (e.g., Grafana provisioning)
+          docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --wait redis zipkin otel-collector backend
+
+          # Wait for backend health (port 5001 as defined in docker-compose.yml)
+          timeout=60
+          while ! curl -sf http://localhost:5001/health > /dev/null && [ $timeout -gt 0 ]; do
+            echo "Waiting for backend to be ready... ($timeout seconds left)"
+            sleep 2
+            timeout=$((timeout-2))
+          done
+
+          if [ $timeout -le 0 ]; then
+            echo "Backend failed to start within 60 seconds"
+            docker compose -f docker-compose.yml -f docker-compose.test.yml ps
+            docker compose -f docker-compose.yml -f docker-compose.test.yml logs backend otel-collector redis zipkin
+            exit 1
+          fi
+
+          echo "✅ Services are ready for testing"
+
+      - name: Run integration tests
+        working-directory: backend
+        run: |
+          # Run any integration tests that exist
+          if npm run | grep -q "test:integration"; then
+            npm run test:integration
+          else
+            echo "No integration tests defined, running smoke tests"
+            curl -f http://localhost:5001/health || exit 1
+            echo "✅ Basic smoke test passed"
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml down
+
+  # Build Docker images (only on main branch pushes)
+  docker:
+    needs: [backend, frontend, integration]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: github.repository_owner == 'ianlintner'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ github.repository }}-${{ matrix.component }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.component }}
+          push: ${{ github.repository_owner == 'ianlintner' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Summary job for branch protection
+  ci-success:
+    needs: [changes, quality, backend, frontend, security, integration]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all job results
+        run: |
+          echo "Changes: ${{ needs.changes.result }}"
+          echo "Quality: ${{ needs.quality.result }}"
+          echo "Backend: ${{ needs.backend.result }}"
+          echo "Frontend: ${{ needs.frontend.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Integration: ${{ needs.integration.result }}"
+
+          # Fail if any required job failed
+          if [[ "${{ needs.changes.result }}" == "failure" ]]; then
+            echo "❌ Changes detection failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.backend.result }}" == "failure" ]]; then
+            echo "❌ Backend job failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.frontend.result }}" == "failure" ]]; then
+            echo "❌ Frontend job failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.quality.result }}" == "failure" ]]; then
+            echo "❌ Quality job failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.security.result }}" == "failure" ]]; then
+            echo "❌ Security job failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.integration.result }}" == "failure" ]]; then
+            echo "❌ Integration job failed"
+            exit 1
+          fi
+
+          echo "✅ All required jobs passed or were skipped appropriately"

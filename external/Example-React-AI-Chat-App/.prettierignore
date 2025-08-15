@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+.expo/
+.next/
+
+# Config files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Generated files
+*.generated.js
+*.generated.ts
+*.d.ts
+
+# Documentation
+CHANGELOG.md
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test reports
+test-results/
+junit.xml
+
+# Coverage reports
+coverage/
+nyc_output/

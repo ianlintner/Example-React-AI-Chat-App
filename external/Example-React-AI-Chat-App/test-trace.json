@@ -1,0 +1,20 @@
+[
+  {
+    "traceId": "463ac35c9f6413ad48485a3953bb6124",
+    "id": "0020000000000001",
+    "kind": "SERVER",
+    "name": "zipkin_test_trace",
+    "timestamp": 1736224603000000,
+    "duration": 100000,
+    "localEndpoint": {
+      "serviceName": "test-service",
+      "ipv4": "127.0.0.1",
+      "port": 8080
+    },
+    "tags": {
+      "test": "zipkin-working",
+      "method": "GET",
+      "status": "success"
+    }
+  }
+]

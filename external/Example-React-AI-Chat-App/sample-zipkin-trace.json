@@ -1,0 +1,40 @@
+[
+  {
+    "traceId": "463ac35c9f6413ad48485a3953bb6124",
+    "parentId": "0020000000000001",
+    "id": "0020000000000002",
+    "kind": "SERVER",
+    "name": "get_user_info",
+    "timestamp": 1609459200000000,
+    "duration": 150000,
+    "localEndpoint": {
+      "serviceName": "user-service",
+      "ipv4": "127.0.0.1",
+      "port": 8080
+    },
+    "tags": {
+      "http.method": "GET",
+      "http.url": "/users/123",
+      "http.status_code": "200",
+      "user.id": "123"
+    }
+  },
+  {
+    "traceId": "463ac35c9f6413ad48485a3953bb6124",
+    "id": "0020000000000001",
+    "kind": "CLIENT",
+    "name": "http_request",
+    "timestamp": 1609459200000000,
+    "duration": 200000,
+    "localEndpoint": {
+      "serviceName": "frontend-service",
+      "ipv4": "127.0.0.1",
+      "port": 3000
+    },
+    "tags": {
+      "http.method": "GET",
+      "http.url": "/users/123",
+      "component": "http-client"
+    }
+  }
+]

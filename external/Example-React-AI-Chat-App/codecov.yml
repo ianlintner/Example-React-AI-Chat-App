@@ -1,0 +1,59 @@
+# Codecov configuration
+coverage:
+  status:
+    project:
+      default:
+        target: 0%
+        threshold: 100%
+        base: auto
+        informational: true
+    patch:
+      default:
+        target: 0%
+        threshold: 100%
+        base: auto
+        informational: true
+
+  precision: 2
+  round: down
+  range: '0...100'
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: 'reach,diff,flags,tree'
+  behavior: default
+  require_changes: false
+
+github_checks:
+  annotations: true
+
+flags:
+  backend:
+    paths:
+      - backend/
+    carryforward: true
+  frontend:
+    paths:
+      - frontend/
+    carryforward: true
+
+ignore:
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/coverage/**'
+  - '**/__tests__/**'
+  - '**/jest.config.js'
+  - '**/jest.setup.js'
+  - '**/*.config.js'
+  - '**/*.d.ts'

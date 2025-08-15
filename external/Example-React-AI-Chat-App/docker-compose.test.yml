@@ -1,0 +1,96 @@
+# Docker Compose override for testing and validation
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.test.yml up
+
+services:
+  # Test runner service for automated testing
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai-test-runner
+    command: ["npm", "test"]
+    environment:
+      - NODE_ENV=test
+      - REDIS_URL=redis://redis:6379
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=ai-goal-seeking-test,service.version=1.0.0,deployment.environment=test
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    networks:
+      - observability
+    profiles:
+      - test
+
+  # Backend with additional test configuration
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=ai-goal-seeking-backend,service.version=1.0.0,deployment.environment=docker-test
+      - OTEL_SERVICE_NAME=ai-goal-seeking-backend
+      - LOG_LEVEL=debug
+      - FRONTEND_URL=http://frontend:80,http://localhost:8080
+    volumes:
+      # Mount source for hot reloading in development
+      - ./backend/src:/app/src:ro
+    
+  # Frontend with test configuration  
+  frontend:
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://backend:5001
+      - REACT_APP_SOCKET_URL=http://backend:5001
+
+  # Load testing service using k6
+  load-test:
+    image: grafana/k6:latest
+    container_name: ai-load-test
+    volumes:
+      - ./tests/load:/scripts
+    command: ["run", "/scripts/load-test.js"]
+    environment:
+      - BASE_URL=http://backend:5001
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - observability
+    profiles:
+      - load-test
+
+  # Trace validation service
+  trace-validator:
+    image: alpine/curl:latest
+    container_name: trace-validator
+    volumes:
+      - ./tests/validation:/scripts
+    command: ["sh", "/scripts/validate-traces.sh"]
+    depends_on:
+      backend:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    networks:
+      - observability
+    profiles:
+      - validate
+
+networks:
+  observability:
+    external: false

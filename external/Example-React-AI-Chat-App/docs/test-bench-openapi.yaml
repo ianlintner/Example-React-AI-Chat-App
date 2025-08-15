@@ -1,0 +1,105 @@
+openapi: 3.0.0
+info:
+  title: AI Agent Test Bench API
+  description: API for testing AI agents and conversation management
+  version: 1.0.0
+servers:
+  - url: http://localhost:5001
+    description: Development server
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/chat/send:
+    post:
+      summary: Send a chat message
+      description: Send a message to the chat system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The message content
+                conversationId:
+                  type: string
+                  description: The conversation ID
+      responses:
+        '200':
+          description: Message sent successfully
+        '400':
+          description: Bad request
+
+  /api/conversations:
+    get:
+      summary: Get conversations
+      description: Retrieve a list of conversations
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    title:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+
+  /api/queue/stats:
+    get:
+      summary: Get message queue statistics
+      description: Retrieve statistics about the message queue system
+      responses:
+        '200':
+          description: Queue statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalMessages:
+                    type: number
+                  pendingMessages:
+                    type: number
+                  processingMessages:
+                    type: number
+                  completedMessages:
+                    type: number
+                  failedMessages:
+                    type: number
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string

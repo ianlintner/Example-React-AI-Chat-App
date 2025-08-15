@@ -1,0 +1,38 @@
+path,title,audience,owner,last_updated,status,action,notes
+README.md,Root README,all,docs,,needs-update,condense+link->docs/index.md,Keep short overview + quickstart; point to docs site
+SETUP-INSTRUCTIONS.md,Setup Instructions,dev,devops,,candidate-merge,merge->docs/getting-started/setup.md,Combine with docker-setup basics
+MIGRATION_COMPLETE.md,Migration Complete Note,maintainers,docs,,candidate-delete,evaluate/delete-or-archive,If historical only, move note into release notes or remove
+docs/INDEX.md,Docs Index,all,docs,,candidate-merge,merge->docs/index.md,Unify multiple index pages
+docs/README.md,Docs Readme,all,docs,,candidate-merge,merge->docs/index.md,Duplicate entry point
+docs/API.md,API (legacy),dev-backend,backend,,candidate-merge,merge->docs/reference/api-reference.md,Duplicate w/ api-reference.md
+docs/api-reference.md,API Reference,dev-backend,backend,,candidate-merge,merge->docs/reference/api-reference.md,Unify API docs; ensure parity with backend routes + OpenAPI
+docs/architecture.md,System Architecture,dev,docs,,candidate-merge,merge->docs/architecture/system-overview.md,Overlap w/ system-summary.md
+docs/system-summary.md,System Summary,dev,docs,,candidate-merge,merge->docs/architecture/system-overview.md,Fold into system overview
+docs/backend.md,Backend Architecture,dev-backend,backend,,keep,move->docs/architecture/components/backend.md,Link to key modules and routes
+docs/frontend.md,Frontend Architecture,dev-frontend,frontend,,keep,move->docs/architecture/components/frontend.md,Add component map and navigation
+docs/development.md,Development Guide,dev,docs,,evaluate,merge/split->getting-started or reference,Keep focused; avoid duplication with setup docs
+docs/ci-cd-setup.md,CI/CD Setup,devops,devops,,candidate-merge,merge->docs/operations/ci-cd.md,Combine setup + improvements + testing pieces
+docs/ci-cd-improvements.md,CI/CD Improvements,devops,devops,,candidate-merge,merge->docs/operations/ci-cd.md,Consolidate w/ setup
+docs/testing-and-ci.md,Testing and CI,dev,devops,,candidate-merge,merge->docs/operations/ci-cd.md,Consider splitting unit/e2e testing into reference
+docs/docker-setup.md,Docker Setup,dev,devops,,candidate-merge,merge->docs/getting-started/setup.md or reference/docker-setup.md,Keep deep-dive in reference if needed
+docs/docker-observability.md,Docker Observability,ops,devops,,candidate-merge,merge->docs/operations/observability.md,Consolidate into single ops doc
+docs/observability-monitoring.md,Observability & Monitoring,ops,devops,,candidate-merge,merge->docs/operations/observability.md,Primary ops page
+docs/prometheus-grafana-migration.md,Prometheus/Grafana Migration,ops,devops,,candidate-merge,merge->docs/operations/prometheus-grafana.md,Link dashboards JSON
+docs/100-percent-sampling-config.md,100% Sampling Config,ops,devops,,evaluate,integrate->observability/tracing or keep as reference,Ensure current and necessary
+docs/message-queue-system.md,Message Queue System,dev,backend,,keep,move->docs/architecture/components/message-queue.md,Align with current providers and types
+docs/rag-system.md,RAG System,dev,backend,,keep,move->docs/architecture/components/rag-system.md,Document data flow and embeddings
+docs/validation-system.md,Validation System,dev,backend,,keep,move->docs/architecture/components/validation-system.md,Map to current validators and tests
+docs/agents.md,Agents Overview,dev,backend,,candidate-merge,merge->docs/architecture/components/agents.md,Becomes top-level agents page
+docs/goal-seeking-system.md,Goal Seeking System,dev,backend,,candidate-merge,merge->docs/architecture/components/agents.md,Section under Agents
+docs/hold-agent-system.md,Hold Agent System,dev,backend,,candidate-merge,merge->docs/architecture/components/agents.md,Section under Agents
+docs/entertainment-agents.md,Entertainment Agents,dev,backend,,candidate-merge,merge->docs/architecture/components/agents.md,Section under Agents
+docs/new-entertainment-agents-summary.md,New Entertainment Agents Summary,dev,backend,,candidate-merge,merge->docs/architecture/components/agents.md,Fold into Agents page
+docs/new-features-overview.md,New Features Overview,all,docs,,evaluate,merge->system-overview or changelog,If features are now standard
+docs/test-bench-system.md,Test Bench System,dev/backend,backend,,keep,move->docs/reference/test-bench.md,Link to OpenAPI
+docs/test-bench-openapi.yaml,Test Bench OpenAPI,dev/backend,backend,,keep,keep under docs/reference/,Ensure alignment with backend routes
+docs/youtube-embedding.md,YouTube Embedding,dev/frontend,frontend,,evaluate,evaluate/delete-or-archive,Remove if feature deprecated
+docs/React.code-workspace,VS Code Workspace,maintainers,docs,,exclude,move-out-of-docs,Not user documentation
+docs/assets/preview.png,Docs Preview Image,all,docs,,keep,keep,Asset file
+frontend/README.md,Frontend README,dev/frontend,frontend,,needs-update,minimize+link->docs,index: Quick start + link to docs
+frontend/AGENT_STATUS_IMPLEMENTATION.md,Frontend Agent Status Implementation,dev/frontend,frontend,,candidate-merge,merge->docs/architecture/components/agents.md#frontend-integration,Integrate with agents documentation
+external/Example-React-AI-Chat-App/README.md,External Example App README,dev,docs,,keep,link-from->docs/examples/external-app.md,Keep example in external/; add curated pointer

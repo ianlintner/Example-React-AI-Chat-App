@@ -311,8 +311,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata (backend)
+        if: matrix.component == 'backend'
+        id: meta_backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ianlintner068/example-react-ai-chat-app-backend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract metadata (frontend)
+        if: matrix.component == 'frontend'
+        id: meta_frontend
         uses: docker/metadata-action@v5
         with:
           images: ${{ github.repository }}-${{ matrix.component }}
@@ -321,13 +333,25 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (backend)
+        if: matrix.component == 'backend'
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.component }}
+          context: backend
           push: ${{ github.repository_owner == 'ianlintner' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_backend.outputs.tags }}
+          labels: ${{ steps.meta_backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Docker image (frontend)
+        if: matrix.component == 'frontend'
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          push: ${{ github.repository_owner == 'ianlintner' }}
+          tags: ${{ steps.meta_frontend.outputs.tags }}
+          labels: ${{ steps.meta_frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

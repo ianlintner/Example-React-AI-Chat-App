@@ -22,6 +22,32 @@ const generateConversationTitle = (message: string): string => {
 };
 
 // POST /api/chat - Send message to AI
+/**
+ * @openapi
+ * /api/chat:
+ *   post:
+ *     tags: [chat]
+ *     summary: Send a message to the AI and receive a response
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ChatRequest'
+ *     responses:
+ *       '200':
+ *         description: Chat response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChatResponse'
+ *       '400':
+ *         description: Invalid request
+ *       '404':
+ *         description: Conversation not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.post('/', async (req, res) => {
   const span = createConversationSpan('chat-new', 'process_message');
 
@@ -146,6 +172,24 @@ router.post('/', async (req, res) => {
 });
 
 // GET /api/chat/agents - Get available agents
+/**
+ * @openapi
+ * /api/chat/agents:
+ *   get:
+ *     tags: [chat]
+ *     summary: Get available agents
+ *     responses:
+ *       '200':
+ *         description: List of agents
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/agents', (req, res) => {
   try {
     const agents = agentService.getAvailableAgents();

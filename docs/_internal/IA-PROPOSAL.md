@@ -1,19 +1,22 @@
 Title: Documentation Information Architecture (IA) Proposal
 
 Objectives
+
 - Single canonical entry point for all docs.
 - Eliminate duplication and outdated pages.
 - Organize content by lifecycle: Getting Started, Architecture, Operations, Reference, Examples.
 - Make maintenance straightforward with clear ownership and conventions.
 
 Pain points observed
+
 - Multiple entry points (docs/INDEX.md and docs/README.md) and a long root README.
 - Duplicate/overlapping topics (API docs, CI/CD docs, observability).
-- Several "new-*" and "overview" pages that look like transitional content.
+- Several "new-\*" and "overview" pages that look like transitional content.
 - VS Code workspace file inside docs (not user-facing).
 - External example app docs not clearly surfaced from main docs.
 
 Target structure (canonical entry = docs/index.md)
+
 - docs/index.md (Merge of docs/INDEX.md and docs/README.md)
   - Purpose: Welcome, table of contents, audiences, pointers to key workflows.
 
@@ -51,12 +54,14 @@ Target structure (canonical entry = docs/index.md)
   - external-app.md (Curated pointer to external/Example-React-AI-Chat-App with brief usage; keep full example in external/)
 
 - assets
-  - docs/assets/* (Keep images and diagrams; update references after moves)
+  - docs/assets/\* (Keep images and diagrams; update references after moves)
 
 Root README slimming
+
 - Keep concise: 1-2 paragraphs overview, architecture diagram image, badges, minimal quickstart, and a “Read full docs” link to docs/index.md.
 
 Mapping from current files to target
+
 - docs/INDEX.md + docs/README.md → docs/index.md
 - docs/API.md + docs/api-reference.md → docs/reference/api-reference.md
 - docs/system-summary.md + docs/architecture.md → docs/architecture/system-overview.md
@@ -81,12 +86,14 @@ Mapping from current files to target
 - external/Example-React-AI-Chat-App/README.md → Keep in place; add docs/examples/external-app.md pointer
 
 Conventions and style
+
 - Headings structure: H1 title, H2 sections, H3 detail. Include “Audience”, “Prerequisites”, and “Last updated” at top.
 - Link hygiene: relative links only within docs/, centralized assets in docs/assets/.
 - Code formatting: use Prettier for Markdown; lint with markdownlint; optional prose lint (Vale).
 - Diagrams: prefer Mermaid blocks in Markdown. If using external tools, keep source files under docs/architecture/diagrams/.
 
 Ownership
+
 - Backend docs owner: backend team (align to CODEOWNERS if present).
 - Frontend docs owner: frontend team.
 - Operations docs owner: DevOps/Infra.
@@ -94,6 +101,7 @@ Ownership
 - Examples owner: docs maintainer.
 
 Open questions for decision
+
 - Do we want to generate OpenAPI from code (preferred), or keep curated docs/test-bench-openapi.yaml for now?
 - Do we keep a Markdown-only repo for this pass, or introduce a site generator (MkDocs/Docusaurus)? Recommendation: defer generator; stabilize IA first.
 - Where to surface testing strategy? Options:
@@ -102,6 +110,7 @@ Open questions for decision
 - 100-percent-sampling-config.md: integrate into tracing, or keep as a separate reference?
 
 Acceptance criteria
+
 - docs/index.md exists and is the only canonical entry page.
 - No duplicate topics remain after merges.
 - Root README is concise and links to docs/index.md.
@@ -109,8 +118,9 @@ Acceptance criteria
 - API doc parity with backend routes and OpenAPI file.
 
 Next steps after approval
-1) Create folders/files per target structure (empty placeholders as needed).
-2) Add docs/CONSOLIDATION-PLAN.md with exact move/merge actions and owners.
-3) Perform PR #1: structure and file moves only.
-4) Perform PR #2: content merges, rewrites, and link updates.
-5) Add docs quality gates (markdownlint, link checker) in CI.
+
+1. Create folders/files per target structure (empty placeholders as needed).
+2. Add docs/CONSOLIDATION-PLAN.md with exact move/merge actions and owners.
+3. Perform PR #1: structure and file moves only.
+4. Perform PR #2: content merges, rewrites, and link updates.
+5. Add docs quality gates (markdownlint, link checker) in CI.

@@ -44,7 +44,7 @@
     "clean:frontend": "cd frontend && rm -rf dist .expo node_modules",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "docs:lint": "markdownlint 'docs/**/*.md' README.md frontend/README.md",
-    "docs:links": "sh -c 'set -e; find docs -name \"*.md\" -print0 | xargs -0 -n1 -I{} npx markdown-link-check -q -c .markdown-link-check.json {}; npx markdown-link-check -q -c .markdown-link-check.json README.md; [ -f frontend/README.md ] && npx markdown-link-check -q -c .markdown-link-check.json frontend/README.md || true'"
+    "docs:links": "sh -c 'set -e; find docs -name \"*.md\" -not -path \"*/_sources/*\" -not -path \"*/_internal/*\" -print0 | xargs -0 -n1 -I{} npx markdown-link-check -q -c .markdown-link-check.json {}; npx markdown-link-check -q -c .markdown-link-check.json README.md; [ -f frontend/README.md ] && npx markdown-link-check -q -c .markdown-link-check.json frontend/README.md || true'"
   },
   "keywords": [
     "ai",

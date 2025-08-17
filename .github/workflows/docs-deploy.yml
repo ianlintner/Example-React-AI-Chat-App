@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GCS_BUCKET: example-react-app-docs
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
     steps:
       - name: Checkout repository
@@ -53,15 +56,27 @@ jobs:
 
       # Authentication option 1: Service Account JSON key (simplest)
       # Add your key as repo secret GCP_SA_KEY (the JSON content)
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        if: env.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && env.GCP_SERVICE_ACCOUNT != ''
         uses: google-github-actions/auth@v2
         with:
-          # One of the following must be set:
-          # 1) Service Account key JSON (recommended only for simple setups)
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          # 2) Workload Identity Federation (preferred)
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to Google Cloud (Service Account Key)
+        if: env.GCP_SA_KEY != '' && (env.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || env.GCP_SERVICE_ACCOUNT == '')
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.GCP_SA_KEY }}
+
+      - name: Fail if no GCP auth inputs provided
+        if: env.GCP_SA_KEY == '' && (env.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || env.GCP_SERVICE_ACCOUNT == '')
+        run: |
+          echo "❌ No GCP auth inputs provided."
+          echo "Set either:"
+          echo "  - GCP_SA_KEY (Service Account JSON), OR"
+          echo "  - GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_SERVICE_ACCOUNT (Workload Identity Federation)."
+          exit 1
 
       # Authentication option 2: Workload Identity Federation (recommended)
       # Add these repo secrets:

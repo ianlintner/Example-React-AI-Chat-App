@@ -58,6 +58,5 @@ Use this page as the single canonical entry to navigate all docs.
 
 ## Notes
 
-- This index consolidates prior entry points (docs/README.md and docs/INDEX.md). Those legacy files will be removed after cross-links are updated.
 - API documentation is generated from code using swagger-jsdoc + swagger-ui-express. UI available at /docs and JSON at /docs/json when the backend is running.
 - Documentation is organized under: getting-started, architecture, operations, reference, examples.

@@ -5,6 +5,47 @@ import { UserReaction } from '../agents/learningTypes';
 const router = express.Router();
 
 // Record a user reaction to a joke
+/**
+ * @openapi
+ * /api/reactions/record:
+ *   post:
+ *     tags: [reactions]
+ *     summary: Record a user reaction to a joke
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               messageId:
+ *                 type: string
+ *               userId:
+ *                 type: string
+ *               reactionType:
+ *                 type: string
+ *                 enum: [laugh, groan, love, meh, dislike]
+ *               jokeType:
+ *                 type: string
+ *                 nullable: true
+ *               jokeCategory:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       '200':
+ *         description: Reaction recorded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *       '400':
+ *         description: Missing or invalid fields
+ *       '500':
+ *         description: Internal server error
+ */
 router.post('/record', async (req, res) => {
   try {
     const { messageId, userId, reactionType, jokeType, jokeCategory } =
@@ -49,6 +90,30 @@ router.post('/record', async (req, res) => {
 });
 
 // Get user's joke profile
+/**
+ * @openapi
+ * /api/reactions/profile/{userId}:
+ *   get:
+ *     tags: [reactions]
+ *     summary: Get user's joke preference profile
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: User profile returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       '404':
+ *         description: User profile not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/profile/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -70,6 +135,22 @@ router.get('/profile/:userId', async (req, res) => {
 });
 
 // Get learning metrics
+/**
+ * @openapi
+ * /api/reactions/metrics:
+ *   get:
+ *     tags: [reactions]
+ *     summary: Get learning metrics for joke reactions
+ *     responses:
+ *       '200':
+ *         description: Metrics returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/metrics', async (req, res) => {
   try {
     const metrics = jokeLearningSystem.getLearningMetrics();
@@ -90,6 +171,23 @@ router.get('/metrics', async (req, res) => {
 });
 
 // Get joke categories
+/**
+ * @openapi
+ * /api/reactions/categories:
+ *   get:
+ *     tags: [reactions]
+ *     summary: Get available joke categories
+ *     responses:
+ *       '200':
+ *         description: List of categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: { type: string }
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/categories', async (req, res) => {
   try {
     const categories = jokeLearningSystem.getJokeCategories();
@@ -103,6 +201,28 @@ router.get('/categories', async (req, res) => {
 });
 
 // Get personalized joke recommendation for user
+/**
+ * @openapi
+ * /api/reactions/recommendation/{userId}:
+ *   get:
+ *     tags: [reactions]
+ *     summary: Get personalized joke recommendation for a user
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Recommendation returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/recommendation/:userId', async (req, res) => {
   try {
     const { userId } = req.params;

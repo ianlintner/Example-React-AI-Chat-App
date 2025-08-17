@@ -4,6 +4,25 @@ import { responseValidator } from '../validation/responseValidator';
 const router = express.Router();
 
 // Get validation statistics
+/**
+ * @openapi
+ * /api/validation/stats:
+ *   get:
+ *     tags: [validation]
+ *     summary: Get validation statistics
+ *     responses:
+ *       '200':
+ *         description: Validation statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: object }
+ *       '500':
+ *         description: Failed to fetch validation statistics
+ */
 router.get('/stats', (req, res) => {
   try {
     const stats = responseValidator.getValidationStats();
@@ -21,6 +40,44 @@ router.get('/stats', (req, res) => {
 });
 
 // Get validation logs
+/**
+ * @openapi
+ * /api/validation/logs:
+ *   get:
+ *     tags: [validation]
+ *     summary: Get validation logs with pagination
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       '200':
+ *         description: Validation logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     logs:
+ *                       type: array
+ *                       items: { type: object }
+ *                     total: { type: integer }
+ *                     limit: { type: integer }
+ *                     offset: { type: integer }
+ *       '500':
+ *         description: Failed to fetch validation logs
+ */
 router.get('/logs', (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
@@ -50,6 +107,50 @@ router.get('/logs', (req, res) => {
 });
 
 // Get validation logs filtered by agent type
+/**
+ * @openapi
+ * /api/validation/logs/{agentType}:
+ *   get:
+ *     tags: [validation]
+ *     summary: Get validation logs filtered by agent type with pagination
+ *     parameters:
+ *       - in: path
+ *         name: agentType
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       '200':
+ *         description: Filtered validation logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     logs:
+ *                       type: array
+ *                       items: { type: object }
+ *                     total: { type: integer }
+ *                     limit: { type: integer }
+ *                     offset: { type: integer }
+ *                     agentType: { type: string }
+ *       '500':
+ *         description: Failed to fetch validation logs
+ */
 router.get('/logs/:agentType', (req, res) => {
   try {
     const { agentType } = req.params;
@@ -84,6 +185,44 @@ router.get('/logs/:agentType', (req, res) => {
 });
 
 // Get failed validations only
+/**
+ * @openapi
+ * /api/validation/failed:
+ *   get:
+ *     tags: [validation]
+ *     summary: Get failed validations only with pagination
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       '200':
+ *         description: Failed validation logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     logs:
+ *                       type: array
+ *                       items: { type: object }
+ *                     total: { type: integer }
+ *                     limit: { type: integer }
+ *                     offset: { type: integer }
+ *       '500':
+ *         description: Failed to fetch failed validations
+ */
 router.get('/failed', (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
@@ -115,6 +254,25 @@ router.get('/failed', (req, res) => {
 });
 
 // Get validation summary by agent type
+/**
+ * @openapi
+ * /api/validation/summary:
+ *   get:
+ *     tags: [validation]
+ *     summary: Get validation summary by agent type
+ *     responses:
+ *       '200':
+ *         description: Validation summary
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: object }
+ *       '500':
+ *         description: Failed to generate validation summary
+ */
 router.get('/summary', (req, res) => {
   try {
     const logs = responseValidator.getValidationLogs();
@@ -177,6 +335,25 @@ router.get('/summary', (req, res) => {
 });
 
 // Clear validation logs (for testing/debugging)
+/**
+ * @openapi
+ * /api/validation/clear:
+ *   post:
+ *     tags: [validation]
+ *     summary: Clear validation logs (for testing/debugging)
+ *     responses:
+ *       '200':
+ *         description: Validation logs cleared
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 message: { type: string }
+ *       '500':
+ *         description: Failed to clear validation logs
+ */
 router.post('/clear', (req, res) => {
   try {
     responseValidator.clearLogs();

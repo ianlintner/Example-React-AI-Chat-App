@@ -178,6 +178,32 @@ jobs:
           path: frontend/dist/
           retention-days: 7
 
+  # Docs build (TechDocs)
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install MkDocs + TechDocs plugin
+        run: python -m pip install --upgrade pip && pip install mkdocs mkdocs-techdocs-core
+
+      - name: Build TechDocs site
+        run: python -m mkdocs build --strict
+
+      - name: Upload TechDocs site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: techdocs-site
+          path: site/
+          retention-days: 7
+
   # Security and dependency scanning
   security:
     needs: changes
@@ -357,7 +383,7 @@ jobs:
 
   # Summary job for branch protection
   ci-success:
-    needs: [changes, quality, backend, frontend, security, integration]
+    needs: [changes, quality, backend, frontend, docs, security, integration]
     if: always()
     runs-on: ubuntu-latest
     steps:

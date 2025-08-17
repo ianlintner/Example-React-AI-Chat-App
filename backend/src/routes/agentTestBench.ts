@@ -9,6 +9,37 @@ import { jokeLearningSystem } from '../agents/jokeLearningSystem';
 const router = express.Router();
 
 // Test individual agent response
+/**
+ * @openapi
+ * /api/test-bench/agent/{agentType}/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test an individual agent response
+ *     parameters:
+ *       - in: path
+ *         name: agentType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [general, joke, trivia, gif, account_support, billing_support, website_support, operator_support, hold_agent, story_teller, riddle_master, quote_master, game_host, music_guru]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message: { type: string }
+ *               conversationHistory: { type: array, items: { type: object } }
+ *               userId: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Agent test result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
   try {
     const { agentType } = req.params;
@@ -76,6 +107,28 @@ router.post('/agent/:agentType/test', async (req, res): Promise<void> => {
 });
 
 // Test message classification
+/**
+ * @openapi
+ * /api/test-bench/classifier/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test message classification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Classification result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/classifier/test', async (req, res): Promise<void> => {
   try {
     const { message } = req.body;
@@ -103,6 +156,30 @@ router.post('/classifier/test', async (req, res): Promise<void> => {
 });
 
 // Test RAG service
+/**
+ * @openapi
+ * /api/test-bench/rag/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test RAG service for an agent type and query
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               agentType: { type: string }
+ *               query: { type: string }
+ *               useFullSearch: { type: boolean }
+ *     responses:
+ *       '200':
+ *         description: RAG test result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/rag/test', async (req, res): Promise<void> => {
   try {
     const { agentType, query, useFullSearch = false } = req.body;
@@ -137,6 +214,33 @@ router.post('/rag/test', async (req, res): Promise<void> => {
 });
 
 // Test response validation
+/**
+ * @openapi
+ * /api/test-bench/validator/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test response validator
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               agentType: { type: string }
+ *               userMessage: { type: string }
+ *               agentResponse: { type: string }
+ *               conversationId: { type: string }
+ *               userId: { type: string }
+ *               isProactive: { type: boolean }
+ *     responses:
+ *       '200':
+ *         description: Validation result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/validator/test', async (req, res): Promise<void> => {
   try {
     const {
@@ -187,6 +291,34 @@ router.post('/validator/test', async (req, res): Promise<void> => {
 });
 
 // Test joke learning system
+/**
+ * @openapi
+ * /api/test-bench/joke-learning/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test joke learning system flows
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId: { type: string }
+ *               action: { type: string, enum: [get-profile, record-reaction, generate-prompt] }
+ *               jokeId: { type: string }
+ *               reactionType: { type: string }
+ *               messageId: { type: string }
+ *               jokeCategory: { type: string }
+ *               jokeType: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Joke learning result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/joke-learning/test', async (req, res): Promise<void> => {
   try {
     const {
@@ -267,6 +399,30 @@ router.post('/joke-learning/test', async (req, res): Promise<void> => {
 });
 
 // Test goal-seeking system
+/**
+ * @openapi
+ * /api/test-bench/goal-seeking/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test goal-seeking system flows
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId: { type: string }
+ *               action: { type: string, enum: [get-state, initialize, update-state] }
+ *               message: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Goal-seeking result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/goal-seeking/test', async (req, res): Promise<void> => {
   try {
     const { userId = 'test-user', action, message } = req.body;
@@ -329,6 +485,31 @@ router.post('/goal-seeking/test', async (req, res): Promise<void> => {
 });
 
 // Test conversation management
+/**
+ * @openapi
+ * /api/test-bench/conversation-manager/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test conversation manager flows
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId: { type: string }
+ *               action: { type: string, enum: [get-context, initialize, process-message] }
+ *               message: { type: string }
+ *               agentType: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Conversation manager result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/conversation-manager/test', async (req, res): Promise<void> => {
   try {
     const {
@@ -401,6 +582,31 @@ router.post('/conversation-manager/test', async (req, res): Promise<void> => {
 });
 
 // Test comprehensive system (both goal-seeking and conversation management)
+/**
+ * @openapi
+ * /api/test-bench/comprehensive/test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Test comprehensive system (goal-seeking + conversation manager)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId: { type: string }
+ *               message: { type: string }
+ *               conversationHistory: { type: array, items: { type: object } }
+ *               forcedAgentType: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Comprehensive test result
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/comprehensive/test', async (req, res): Promise<void> => {
   try {
     const {
@@ -442,6 +648,18 @@ router.post('/comprehensive/test', async (req, res): Promise<void> => {
 });
 
 // Get available agents list
+/**
+ * @openapi
+ * /api/test-bench/agents/list:
+ *   get:
+ *     tags: [test-bench]
+ *     summary: Get available agents list
+ *     responses:
+ *       '200':
+ *         description: Agents list
+ *       '500':
+ *         description: Server error
+ */
 router.get('/agents/list', (req, res) => {
   try {
     const agents = agentService.getAvailableAgents();
@@ -462,6 +680,18 @@ router.get('/agents/list', (req, res) => {
 });
 
 // System health check for agent services
+/**
+ * @openapi
+ * /api/test-bench/health:
+ *   get:
+ *     tags: [test-bench]
+ *     summary: System health check for agent services
+ *     responses:
+ *       '200':
+ *         description: Health report
+ *       '500':
+ *         description: Server error
+ */
 router.get('/health', (req, res) => {
   try {
     const health = {
@@ -491,6 +721,32 @@ router.get('/health', (req, res) => {
 });
 
 // Bulk test endpoint for testing multiple agents
+/**
+ * @openapi
+ * /api/test-bench/bulk-test:
+ *   post:
+ *     tags: [test-bench]
+ *     summary: Bulk test multiple agents with a single message
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message: { type: string }
+ *               agentTypes:
+ *                 type: array
+ *                 items: { type: string }
+ *               userId: { type: string }
+ *     responses:
+ *       '200':
+ *         description: Bulk test results
+ *       '400':
+ *         description: Invalid input
+ *       '500':
+ *         description: Server error
+ */
 router.post('/bulk-test', async (req, res): Promise<void> => {
   try {
     const { message, agentTypes = [], userId = 'test-user' } = req.body;

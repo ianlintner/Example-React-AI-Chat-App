@@ -7,7 +7,7 @@ This document provides a comprehensive overview of all the new features added to
 ### 1. RAG (Retrieval-Augmented Generation) System
 
 **Location**: `backend/src/agents/ragService.ts`  
-**Documentation**: [RAG System Documentation](./rag-system.md)
+**Documentation**: [RAG System Documentation](./architecture/components/rag-system.md)
 
 **Overview**: A curated content database providing high-quality, consistent entertainment content for jokes, trivia, and GIFs.
 
@@ -138,7 +138,7 @@ This document provides a comprehensive overview of all the new features added to
 
 ### New Documentation Files
 
-1. **[RAG System Documentation](./rag-system.md)** - Complete RAG system guide
+1. **[RAG System Documentation](./architecture/components/rag-system.md)** - Complete RAG system guide
 2. **[Hold Agent System Documentation](./hold-agent-system.md)** - Hold management system
 3. **[Entertainment Agents Documentation](./entertainment-agents.md)** - Entertainment system guide
 4. **[New Features Overview](./new-features-overview.md)** - This comprehensive overview

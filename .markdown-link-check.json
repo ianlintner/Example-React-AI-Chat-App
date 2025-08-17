@@ -1,0 +1,18 @@
+{
+  "ignorePatterns": [
+    { "pattern": "^http://localhost(:[0-9]+)?/" },
+    { "pattern": "^https?://127\\.0\\.0\\.1(:[0-9]+)?/" },
+    { "pattern": "^http://jaeger(:[0-9]+)?" },
+    { "pattern": "^http://grafana(:[0-9]+)?" },
+    { "pattern": "^http://prometheus(:[0-9]+)?" }
+  ],
+  "httpHeaders": [
+    {
+      "urls": ["https://github.com/**"],
+      "headers": { "User-Agent": "Mozilla/5.0 (compatible; link-checker/1.0)" }
+    }
+  ],
+  "aliveStatusCodes": [200, 206, 301, 302, 303, 307, 308],
+  "retryOn429": true,
+  "timeout": "20s"
+}

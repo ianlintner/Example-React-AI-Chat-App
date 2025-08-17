@@ -42,7 +42,9 @@
     "clean": "npm run clean:backend && npm run clean:frontend",
     "clean:backend": "cd backend && rm -rf dist node_modules",
     "clean:frontend": "cd frontend && rm -rf dist .expo node_modules",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "docs:lint": "markdownlint 'docs/**/*.md' README.md frontend/README.md",
+    "docs:links": "sh -c 'set -e; find docs -name \"*.md\" -print0 | xargs -0 -n1 -I{} npx markdown-link-check -q -c .markdown-link-check.json {}; npx markdown-link-check -q -c .markdown-link-check.json README.md; [ -f frontend/README.md ] && npx markdown-link-check -q -c .markdown-link-check.json frontend/README.md || true'"
   },
   "keywords": [
     "ai",
@@ -71,7 +73,9 @@
     "prettier": "^3.2.5",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "markdownlint-cli": "^0.39.0",
+    "markdown-link-check": "^3.11.2"
   },
   "lint-staged": {
     "*.{json,md,yml,yaml}": [

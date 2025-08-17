@@ -6,6 +6,24 @@ import { storage } from '../storage/memoryStorage';
 const router = express.Router();
 
 // GET /api/conversations - Get all conversations
+/**
+ * @openapi
+ * /api/conversations:
+ *   get:
+ *     tags: [conversations]
+ *     summary: Get all conversations (last message only for list view)
+ *     responses:
+ *       '200':
+ *         description: List of conversations with last message
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Conversation'
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/', (req, res) => {
   try {
     const sortedConversations = storage.getSortedConversations().map(conv => ({
@@ -24,6 +42,30 @@ router.get('/', (req, res) => {
 });
 
 // GET /api/conversations/:id - Get a specific conversation
+/**
+ * @openapi
+ * /api/conversations/{id}:
+ *   get:
+ *     tags: [conversations]
+ *     summary: Get a conversation by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Conversation found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Conversation'
+ *       '404':
+ *         description: Conversation not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.get('/:id', (req, res) => {
   try {
     const { id } = req.params;
@@ -47,6 +89,33 @@ router.get('/:id', (req, res) => {
 });
 
 // POST /api/conversations - Create a new conversation
+/**
+ * @openapi
+ * /api/conversations:
+ *   post:
+ *     tags: [conversations]
+ *     summary: Create a new conversation
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *     responses:
+ *       '201':
+ *         description: Conversation created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Conversation'
+ *       '400':
+ *         description: Invalid request
+ *       '500':
+ *         description: Internal server error
+ */
 router.post('/', (req, res) => {
   try {
     const { title } = req.body;
@@ -78,6 +147,41 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/conversations/:id - Update a conversation
+/**
+ * @openapi
+ * /api/conversations/{id}:
+ *   put:
+ *     tags: [conversations]
+ *     summary: Update a conversation title
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Conversation updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Conversation'
+ *       '400':
+ *         description: Invalid request
+ *       '404':
+ *         description: Conversation not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.put('/:id', (req, res) => {
   try {
     const { id } = req.params;
@@ -113,6 +217,26 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /api/conversations/:id - Delete a conversation
+/**
+ * @openapi
+ * /api/conversations/{id}:
+ *   delete:
+ *     tags: [conversations]
+ *     summary: Delete a conversation
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '204':
+ *         description: Conversation deleted
+ *       '404':
+ *         description: Conversation not found
+ *       '500':
+ *         description: Internal server error
+ */
 router.delete('/:id', (req, res) => {
   try {
     const { id } = req.params;

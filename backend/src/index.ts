@@ -9,7 +9,7 @@ import conversationRoutes from './routes/conversations';
 import reactionRoutes from './routes/reactions';
 import validationRoutes from './routes/validation';
 import agentTestBenchRoutes from './routes/agentTestBench';
-import swaggerDocsRoutes from './routes/swaggerDocs';
+import { createSwaggerSpec, registerSwaggerRoutes } from './routes/swaggerDocs';
 import messageQueueRoutes from './routes/messageQueue';
 import { setupSocketHandlers } from './socket/socketHandlers';
 import { httpMetricsMiddleware, register } from './metrics/prometheus';
@@ -78,9 +78,36 @@ app.use('/api/reactions', reactionRoutes);
 app.use('/api/validation', validationRoutes);
 app.use('/api/test-bench', agentTestBenchRoutes);
 app.use('/api/queue', messageQueueRoutes);
-app.use('/docs', swaggerDocsRoutes);
+/**
+ * Swagger UI and JSON
+ * UI:   /docs
+ * JSON: /docs/json
+ */
+const openApiSpec = createSwaggerSpec();
+registerSwaggerRoutes(app, openApiSpec);
 
 // Health check endpoints
+/**
+ * @openapi
+ * /health:
+ *   get:
+ *     tags: [health]
+ *     summary: Liveness probe
+ *     responses:
+ *       '200':
+ *         description: Service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 app.get('/health', (req, res) => {
   const { tracer } = require('./tracing/tracer');
   const span = tracer.startSpan('health_check');
@@ -98,6 +125,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+/**
+ * @openapi
+ * /api/health:
+ *   get:
+ *     tags: [health]
+ *     summary: API health check
+ *     responses:
+ *       '200':
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
 app.get('/api/health', (req, res) => {
   const { tracer } = require('./tracing/tracer');
   const span = tracer.startSpan('api_health_check');

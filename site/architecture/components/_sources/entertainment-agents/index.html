@@ -1,0 +1,1806 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the project, structured for Backstage TechDocs">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.8">
+    
+    
+      
+        <title>Entertainment Agents Documentation - React Project Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.8608ea7d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#entertainment-agents-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="React Project Docs" class="md-header__button md-logo" aria-label="React Project Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            React Project Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Entertainment Agents Documentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="React Project Docs" class="md-nav__button md-logo" aria-label="React Project Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    React Project Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../system-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Agents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Frontend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../message-queue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Message Queue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag-system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RAG System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Validation System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Operations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/ci-cd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/observability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/prometheus-grafana/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prometheus & Grafana
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/tracing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tracing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/api-reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/code-quality/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Quality
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/docker-setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/test-bench/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Bench
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/test-bench-openapi.yaml" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Bench OpenAPI
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/youtube-embedding/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    YouTube Embedding
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../examples/external-app/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    External App
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entertainment-agent-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entertainment Agent Types
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Entertainment Agent Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-adaptive-joke-master" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Adaptive Joke Master 🎭
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-trivia-master" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Trivia Master 🧠
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-gif-master" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. GIF Master 🎬
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rag-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      RAG Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RAG Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#content-database-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Content Database Structure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smart-content-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Smart Content Selection
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      System Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="System Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agent-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent Classification
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hold-agent-coordination" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hold Agent Coordination
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#goal-seeking-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Goal-Seeking Integration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-experience-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      User Experience Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="User Experience Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-personalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adaptive Personalization
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality-assurance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quality Assurance
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-and-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration and Customization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration and Customization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#agent-personality-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent Personality Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#content-expansion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Content Expansion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Monitoring
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Monitoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#entertainment-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entertainment Metrics
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-content-creators" class="md-nav__link">
+    <span class="md-ellipsis">
+      For Content Creators
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-system-administrators" class="md-nav__link">
+    <span class="md-ellipsis">
+      For System Administrators
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-customer-service-teams" class="md-nav__link">
+    <span class="md-ellipsis">
+      For Customer Service Teams
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Issues
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debug-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debug Information
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Future Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#planned-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Planned Features
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Opportunities
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="entertainment-agents-documentation">Entertainment Agents Documentation<a class="headerlink" href="#entertainment-agents-documentation" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The Entertainment Agents system provides engaging, high-quality entertainment content for customers during hold periods or general interaction. The system includes three specialized agents powered by a curated RAG (Retrieval-Augmented Generation) database, ensuring consistent and delightful user experiences.</p>
+<h2 id="entertainment-agent-types">Entertainment Agent Types<a class="headerlink" href="#entertainment-agent-types" title="Permanent link">&para;</a></h2>
+<h3 id="1-adaptive-joke-master">1. Adaptive Joke Master 🎭<a class="headerlink" href="#1-adaptive-joke-master" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Delivers personalized humor that adapts to user reactions and preferences.</p>
+<p><strong>Key Features</strong>:</p>
+<ul>
+<li><strong>Adaptive Learning</strong>: Learns from user reactions (laughs, groans, etc.)</li>
+<li><strong>Quality-Curated Content</strong>: RAG database with 4-5 star rated jokes</li>
+<li><strong>Multiple Categories</strong>: Dad jokes, tech humor, story jokes, wordplay</li>
+<li><strong>Personalization</strong>: Tailors humor style based on user preferences</li>
+<li><strong>Reaction Tracking</strong>: Monitors user engagement and adjusts accordingly</li>
+</ul>
+<p><strong>Content Categories</strong>:</p>
+<ul>
+<li><code>dad_joke</code> - Classic dad humor and puns</li>
+<li><code>tech_joke</code> - Programming and technology humor</li>
+<li><code>story_joke</code> - Narrative-style jokes with setups and punchlines</li>
+</ul>
+<p><strong>Example Interaction</strong>:</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>User: &quot;Tell me a joke!&quot;
+
+Joke Master: &quot;Why don&#39;t scientists trust atoms? Because they make up everything! 😄
+
+🎭 *Learning from your reaction...* Want to hear another one? I&#39;m adapting my humor based on what makes you laugh!
+
+📚 *From curated joke collection*&quot;
+</code></pre></div></td></tr></table></div>
+<h3 id="2-trivia-master">2. Trivia Master 🧠<a class="headerlink" href="#2-trivia-master" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Shares fascinating facts and educational content to engage and inform users.</p>
+<p><strong>Key Features</strong>:</p>
+<ul>
+<li><strong>Curated Facts Database</strong>: Quality-rated trivia across multiple subjects</li>
+<li><strong>Educational Value</strong>: Combines entertainment with learning</li>
+<li><strong>Diverse Topics</strong>: Science, animals, space, history, human body, mathematics</li>
+<li><strong>Engaging Presentation</strong>: Makes complex facts accessible and interesting</li>
+<li><strong>Follow-up Engagement</strong>: Encourages curiosity and further questions</li>
+</ul>
+<p><strong>Content Categories</strong>:</p>
+<ul>
+<li><code>animals</code> - Animal behavior, biology, and fascinating creature facts</li>
+<li><code>space</code> - Astronomy, planets, and cosmic phenomena</li>
+<li><code>science</code> - Scientific discoveries, physics, and natural phenomena</li>
+<li><code>history</code> - Historical events, civilizations, and cultural facts</li>
+<li><code>food</code> - Food science, nutrition, and culinary discoveries</li>
+<li><code>human_body</code> - Biology, health, and amazing body facts</li>
+<li><code>mathematics</code> - Mathematical concepts, paradoxes, and number theory</li>
+</ul>
+<p><strong>Example Interaction</strong>:</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>User: &quot;Tell me something interesting!&quot;
+
+Trivia Master: &quot;Did you know that octopuses have three hearts and blue blood? Two hearts pump blood to the gills, while the third pumps blood to the rest of the body! 🐙
+
+Isn&#39;t that incredible? Want to hear another fascinating fact?
+
+📚 *From curated trivia collection*&quot;
+</code></pre></div></td></tr></table></div>
+<h3 id="3-gif-master">3. GIF Master 🎬<a class="headerlink" href="#3-gif-master" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Provides visual entertainment through curated, mood-appropriate animated content.</p>
+<p><strong>Key Features</strong>:</p>
+<ul>
+<li><strong>Visual Entertainment</strong>: Animated GIFs for every mood and situation</li>
+<li><strong>Accessibility Features</strong>: Alt text and descriptions for all content</li>
+<li><strong>Contextual Selection</strong>: Chooses GIFs based on conversation context</li>
+<li><strong>Quality Curation</strong>: Hand-selected, appropriate, and entertaining content</li>
+<li><strong>Mood Enhancement</strong>: Brightens conversations with visual humor</li>
+</ul>
+<p><strong>Content Categories</strong>:</p>
+<ul>
+<li><code>funny</code> - General humor and comedy animations</li>
+<li><code>cute</code> - Adorable and heartwarming content</li>
+<li><code>excited</code> - Celebration and joy reactions</li>
+<li><code>surprised</code> - Shock and amazement reactions</li>
+<li><code>applause</code> - Approval and congratulations</li>
+<li><code>party</code> - Celebration and festive content</li>
+<li><code>thumbs_up</code> - Positive approval gestures</li>
+<li><code>facepalm</code> - Disappointment and "oh no" moments</li>
+<li><code>shrug</code> - Confusion and uncertainty</li>
+<li><code>mind_blown</code> - Astonishment and "wow" reactions</li>
+</ul>
+<p><strong>Example Interaction</strong>:</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code>User: &quot;Show me a funny gif!&quot;
+
+GIF Master: &quot;Here&#39;s a perfect GIF for you! 🎬
+
+![Person laughing hysterically](https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif)
+
+*Funny laughing reaction*
+
+📚 *From curated GIF collection* - Want another one? I have GIFs for every mood and situation!&quot;
+</code></pre></div></td></tr></table></div>
+<h2 id="rag-integration">RAG Integration<a class="headerlink" href="#rag-integration" title="Permanent link">&para;</a></h2>
+<h3 id="content-database-structure">Content Database Structure<a class="headerlink" href="#content-database-structure" title="Permanent link">&para;</a></h3>
+<p>Each entertainment agent leverages the RAG system for consistent, high-quality content:</p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Example content items</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke_007&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Why do programmers prefer dark mode? Because light attracts bugs!&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;tech_joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;programming&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;tech&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dark mode&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;bugs&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pun&#39;</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">rating</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span>
+<span class="p">},</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;trivia_001&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;trivia&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Did you know that octopuses have three hearts and blue blood?&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;animals&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;octopus&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;hearts&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;blood&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;marine&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;biology&#39;</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">rating</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span>
+<span class="p">},</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;gif_001&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;gif&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;funny&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;funny&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;laugh&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;comedy&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;silly&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;animated&#39;</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">rating</span><span class="o">:</span><span class="w"> </span><span class="kt">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">metadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Funny laughing reaction&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">alt</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Person laughing hysterically&#39;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="smart-content-selection">Smart Content Selection<a class="headerlink" href="#smart-content-selection" title="Permanent link">&para;</a></h3>
+<p>The system uses intelligent search algorithms to match content to user requests:</p>
+<ol>
+<li><strong>Context Analysis</strong> - Analyzes user message for intent and mood</li>
+<li><strong>Relevance Scoring</strong> - Ranks content by relevance to user request</li>
+<li><strong>Quality Filtering</strong> - Prioritizes highly-rated content (4-5 stars)</li>
+<li><strong>Fallback Strategy</strong> - Provides random quality content if no perfect match</li>
+<li><strong>Variety Ensuring</strong> - Avoids repetition through smart selection</li>
+</ol>
+<h2 id="system-integration">System Integration<a class="headerlink" href="#system-integration" title="Permanent link">&para;</a></h2>
+<h3 id="agent-classification">Agent Classification<a class="headerlink" href="#agent-classification" title="Permanent link">&para;</a></h3>
+<p>Entertainment agents are properly integrated into the message classification system:</p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Classification examples</span>
+<span class="s2">&quot;Tell me a joke&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">joke</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.9</span><span class="p">)</span>
+<span class="s2">&quot;Share a fun fact&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">trivia</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.85</span><span class="p">)</span>
+<span class="s2">&quot;Show me a gif&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">gif</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.9</span><span class="p">)</span>
+<span class="s2">&quot;Make me laugh&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">joke</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.8</span><span class="p">)</span>
+<span class="s2">&quot;Something interesting&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">trivia</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.7</span><span class="p">)</span>
+<span class="s2">&quot;Funny picture&quot;</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">gif</span><span class="w"> </span><span class="p">(</span><span class="nx">confidence</span><span class="o">:</span><span class="w"> </span><span class="kt">0.8</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="hold-agent-coordination">Hold Agent Coordination<a class="headerlink" href="#hold-agent-coordination" title="Permanent link">&para;</a></h3>
+<p>Entertainment agents work seamlessly with the Hold Agent system:</p>
+<ol>
+<li><strong>Introduction Phase</strong> - Hold Agent presents entertainment options</li>
+<li><strong>Selection Handling</strong> - User chooses preferred entertainment type</li>
+<li><strong>Smooth Handoff</strong> - Transition to selected entertainment agent</li>
+<li><strong>Engagement Monitoring</strong> - Track user interaction and satisfaction</li>
+<li><strong>Return Coordination</strong> - Handle returns to Hold Agent for updates</li>
+</ol>
+<h3 id="goal-seeking-integration">Goal-Seeking Integration<a class="headerlink" href="#goal-seeking-integration" title="Permanent link">&para;</a></h3>
+<p>Entertainment agents participate in proactive customer engagement:</p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Example proactive entertainment actions</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;entertainment_offer&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;While you wait, would you like to hear a joke?&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">timing</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;immediate&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;high&#39;</span>
+<span class="p">},</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;engagement_check&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;trivia&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Would you like to learn something fascinating while we wait?&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">timing</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;after_5min&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">priority</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="user-experience-features">User Experience Features<a class="headerlink" href="#user-experience-features" title="Permanent link">&para;</a></h2>
+<h3 id="adaptive-personalization">Adaptive Personalization<a class="headerlink" href="#adaptive-personalization" title="Permanent link">&para;</a></h3>
+<p><strong>Joke Master Personalization</strong>:</p>
+<ul>
+<li>Tracks user reactions to different joke types</li>
+<li>Adjusts humor style based on positive/negative feedback</li>
+<li>Remembers preferred categories (dad jokes vs. tech humor)</li>
+<li>Learns from conversation patterns and timing</li>
+</ul>
+<p><strong>Trivia Master Engagement</strong>:</p>
+<ul>
+<li>Monitors user interest in different topic categories</li>
+<li>Follows up with related facts based on engagement</li>
+<li>Adjusts complexity based on user responses</li>
+<li>Encourages deeper exploration of interesting topics</li>
+</ul>
+<p><strong>GIF Master Context Awareness</strong>:</p>
+<ul>
+<li>Selects mood-appropriate content</li>
+<li>Considers conversation tone and context</li>
+<li>Provides variety while matching user preferences</li>
+<li>Includes accessibility features for all users</li>
+</ul>
+<h3 id="quality-assurance">Quality Assurance<a class="headerlink" href="#quality-assurance" title="Permanent link">&para;</a></h3>
+<p><strong>Content Standards</strong>:</p>
+<ul>
+<li>All content rated 4-5 stars for quality assurance</li>
+<li>Family-friendly and workplace-appropriate</li>
+<li>Factually accurate trivia content</li>
+<li>Tested for engagement and entertainment value</li>
+</ul>
+<p><strong>Accessibility Features</strong>:</p>
+<ul>
+<li>Alt text for all visual content (GIFs)</li>
+<li>Clear, understandable language</li>
+<li>Inclusive humor that doesn't target groups</li>
+<li>Screen reader compatible descriptions</li>
+</ul>
+<h2 id="configuration-and-customization">Configuration and Customization<a class="headerlink" href="#configuration-and-customization" title="Permanent link">&para;</a></h2>
+<h3 id="agent-personality-settings">Agent Personality Settings<a class="headerlink" href="#agent-personality-settings" title="Permanent link">&para;</a></h3>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Joke Master configuration</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Adaptive Joke Master&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">personality</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;witty, adaptive, learning-focused&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">responseStyle</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;casual but professional&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">followUpRate</span><span class="o">:</span><span class="w"> </span><span class="kt">0.8</span><span class="p">,</span><span class="w"> </span><span class="c1">// 80% chance of follow-up engagement</span>
+<span class="w">  </span><span class="nx">adaptationSpeed</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;medium&#39;</span><span class="w"> </span><span class="c1">// How quickly it learns preferences</span>
+<span class="p">}</span>
+
+<span class="c1">// Trivia Master configuration</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Trivia Master&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">personality</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;knowledgeable, enthusiastic, educational&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">responseStyle</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;informative but engaging&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">factAccuracy</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;high&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Requires fact verification</span>
+<span class="w">  </span><span class="nx">topicDiversity</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;high&#39;</span><span class="w"> </span><span class="c1">// Covers many subject areas</span>
+<span class="p">}</span>
+
+<span class="c1">// GIF Master configuration</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GIF Master&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">personality</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;visual, expressive, mood-enhancing&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">responseStyle</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;playful and supportive&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">contentModeration</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;strict&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Family-friendly only</span>
+<span class="w">  </span><span class="nx">accessibilityCompliance</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;full&#39;</span><span class="w"> </span><span class="c1">// Alt text required</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="content-expansion">Content Expansion<a class="headerlink" href="#content-expansion" title="Permanent link">&para;</a></h3>
+<p><strong>Adding New Content</strong>:</p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Example of adding seasonal content</span>
+<span class="nx">ragService</span><span class="p">.</span><span class="nx">addContent</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke_seasonal_001&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Why don&#39;t Christmas trees ever get lost? They always know where their roots are!&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">category</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;seasonal_joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;christmas&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;tree&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;seasonal&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pun&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;family&#39;</span><span class="p">],</span>
+<span class="w">  </span><span class="nx">rating</span><span class="o">:</span><span class="w"> </span><span class="kt">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">metadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">season</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;winter&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">holiday</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;christmas&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="p">});</span>
+</code></pre></div></td></tr></table></div>
+<p><strong>Content Categories Expansion</strong>:</p>
+<ul>
+<li>Seasonal content (holidays, weather)</li>
+<li>Industry-specific humor (healthcare, education, retail)</li>
+<li>Cultural content (different regions, languages)</li>
+<li>Trending topics (current events, viral content)</li>
+</ul>
+<h2 id="performance-monitoring">Performance Monitoring<a class="headerlink" href="#performance-monitoring" title="Permanent link">&para;</a></h2>
+<h3 id="entertainment-metrics">Entertainment Metrics<a class="headerlink" href="#entertainment-metrics" title="Permanent link">&para;</a></h3>
+<p><strong>Engagement Tracking</strong>:</p>
+<ul>
+<li>User response rates to entertainment offers</li>
+<li>Average interaction duration with each agent type</li>
+<li>User satisfaction indicators (reactions, continued engagement)</li>
+<li>Content effectiveness (which jokes/facts get best responses)</li>
+</ul>
+<p><strong>Quality Metrics</strong>:</p>
+<ul>
+<li>Content relevance scores for user requests</li>
+<li>Fallback usage rates (when no perfect match found)</li>
+<li>User preference learning accuracy</li>
+<li>Agent handoff success rates</li>
+</ul>
+<p><strong>Analytics Dashboard Data</strong>:</p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nx">entertainmentSession</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;joke&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">contentDelivered</span><span class="o">:</span><span class="w"> </span><span class="kt">5</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">userEngagement</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;high&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">preferredCategories</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;tech_joke&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;dad_joke&#39;</span><span class="p">],</span>
+<span class="w">    </span><span class="nx">sessionDuration</span><span class="o">:</span><span class="w"> </span><span class="kt">180</span><span class="p">,</span><span class="w"> </span><span class="c1">// seconds</span>
+<span class="w">    </span><span class="nx">satisfactionScore</span><span class="o">:</span><span class="w"> </span><span class="kt">4.2</span><span class="w"> </span><span class="c1">// out of 5</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="for-content-creators">For Content Creators<a class="headerlink" href="#for-content-creators" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Quality First</strong>: Only include 4-5 star rated content</li>
+<li><strong>Test with Audiences</strong>: Validate entertainment value before adding</li>
+<li><strong>Diverse Categories</strong>: Ensure broad appeal across different interests</li>
+<li><strong>Appropriate Content</strong>: Maintain family-friendly, professional standards</li>
+<li><strong>Regular Updates</strong>: Keep content fresh and relevant</li>
+</ol>
+<h3 id="for-system-administrators">For System Administrators<a class="headerlink" href="#for-system-administrators" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Monitor Engagement</strong>: Track which content types perform best</li>
+<li><strong>Update Regularly</strong>: Refresh database with new, trending content</li>
+<li><strong>User Feedback</strong>: Analyze interaction patterns for insights</li>
+<li><strong>Performance Optimization</strong>: Ensure fast content retrieval</li>
+<li><strong>Accessibility Compliance</strong>: Maintain full accessibility features</li>
+</ol>
+<h3 id="for-customer-service-teams">For Customer Service Teams<a class="headerlink" href="#for-customer-service-teams" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Understand Options</strong>: Know what entertainment is available</li>
+<li><strong>Appropriate Timing</strong>: Offer entertainment during natural pauses</li>
+<li><strong>Respect Preferences</strong>: Don't force entertainment on uninterested users</li>
+<li><strong>Monitor Engagement</strong>: Watch for user fatigue or disengagement</li>
+<li><strong>Professional Balance</strong>: Maintain service standards while being entertaining</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h3>
+<p><strong>Users Not Engaging with Entertainment</strong>:</p>
+<ul>
+<li>Review introduction messaging and offer timing</li>
+<li>Consider different entertainment types for different user personalities</li>
+<li>Ensure content quality and relevance to user interests</li>
+</ul>
+<p><strong>Repetitive Content</strong>:</p>
+<ul>
+<li>Check variety algorithms in content selection</li>
+<li>Expand content database with more diverse options</li>
+<li>Implement better rotation logic to avoid repetition</li>
+</ul>
+<p><strong>Inappropriate Content Concerns</strong>:</p>
+<ul>
+<li>Review content rating and approval processes</li>
+<li>Implement stricter content moderation rules</li>
+<li>Add user reporting mechanisms for problematic content</li>
+</ul>
+<h3 id="debug-information">Debug Information<a class="headerlink" href="#debug-information" title="Permanent link">&para;</a></h3>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1">// Entertainment session debugging</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`🎭 Entertainment session: </span><span class="si">${</span><span class="nx">agentType</span><span class="si">}</span><span class="sb"> for user </span><span class="si">${</span><span class="nx">userId</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`🔍 Content search: &quot;</span><span class="si">${</span><span class="nx">query</span><span class="si">}</span><span class="sb">&quot; → </span><span class="si">${</span><span class="nx">results</span><span class="p">.</span><span class="nx">length</span><span class="si">}</span><span class="sb"> matches`</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`⭐ Selected content: </span><span class="si">${</span><span class="nx">selectedContent</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="sb"> (rating: </span><span class="si">${</span><span class="nx">selectedContent</span><span class="p">.</span><span class="nx">rating</span><span class="si">}</span><span class="sb">)`</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`📊 User engagement: </span><span class="si">${</span><span class="nx">engagementLevel</span><span class="si">}</span><span class="sb">`</span><span class="p">);</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="future-enhancements">Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<h3 id="planned-features">Planned Features<a class="headerlink" href="#planned-features" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>AI-Generated Content</strong>: Supplement RAG database with AI-created jokes/facts</li>
+<li><strong>User Preference Learning</strong>: Advanced ML for personalization</li>
+<li><strong>Multi-media Support</strong>: Audio clips, interactive content</li>
+<li><strong>Social Features</strong>: User-generated content, sharing capabilities</li>
+<li><strong>Advanced Analytics</strong>: Detailed entertainment effectiveness metrics</li>
+<li><strong>Real-time Trends</strong>: Integration with trending topics and viral content</li>
+</ol>
+<h3 id="integration-opportunities">Integration Opportunities<a class="headerlink" href="#integration-opportunities" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Calendar Integration</strong>: Seasonal and holiday-appropriate content</li>
+<li><strong>Industry Customization</strong>: Specialized content for different business sectors</li>
+<li><strong>Language Localization</strong>: Multi-language entertainment content</li>
+<li><strong>Accessibility Enhancement</strong>: Voice-based entertainment options</li>
+<li><strong>External API Integration</strong>: Live content from comedy/trivia services</li>
+</ul>
+<p>The Entertainment Agents system provides a comprehensive, professional entertainment experience that enhances customer satisfaction during service interactions while maintaining the highest standards of quality and appropriateness.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.footer", "content.action.edit"], "search": "../../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="../../../../search/main.js"></script>
+      
+    
+  </body>
+</html>

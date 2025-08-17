@@ -4,7 +4,7 @@
 
 ## Table of Contents
 
-- [Demo Portfolio Architecture — AI + Modern Web Engineering Patterns {#demo-portfolio-architecture--ai--modern-web-engineering-patterns}](#demo-portfolio-architecture--ai--modern-web-engineering-patterns-demo-portfolio-architecture--ai--modern-web-engineering-patterns)
+- Demo Portfoloio
   - [Table of Contents](#table-of-contents)
   - [System Overview](#system-overview)
     - [Key Architectural Principles](#key-architectural-principles)
@@ -30,7 +30,7 @@
   - [Deployment Architecture](#deployment-architecture)
     - [Container Architecture](#container-architecture)
     - [Docker Deployment](#docker-deployment)
-  - [Monitoring \& Observability {#monitoring--observability}](#monitoring--observability-monitoring--observability)
+  - Monitoring
     - [Observability Stack](#observability-stack)
     - [Key Performance Indicators (KPIs)](#key-performance-indicators-kpis)
 

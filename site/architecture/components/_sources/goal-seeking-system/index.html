@@ -1,0 +1,1769 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the project, structured for Backstage TechDocs">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.8">
+    
+    
+      
+        <title>Goal-Seeking System Documentation - React Project Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.8608ea7d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#goal-seeking-system-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="React Project Docs" class="md-header__button md-logo" aria-label="React Project Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            React Project Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Goal-Seeking System Documentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="React Project Docs" class="md-nav__button md-logo" aria-label="React Project Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    React Project Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quickstart
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../getting-started/troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../system-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Agents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../backend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../frontend/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Frontend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../message-queue/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Message Queue
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../rag-system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RAG System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../validation-system/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Validation System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Operations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/ci-cd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CI/CD
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/observability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/prometheus-grafana/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prometheus & Grafana
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../operations/tracing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tracing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/api-reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/code-quality/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Quality
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/docker-setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/test-bench/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Bench
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/test-bench-openapi.yaml" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Test Bench OpenAPI
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../reference/youtube-embedding/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    YouTube Embedding
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../examples/external-app/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    External App
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal-driven-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      🎯 Goal-Driven Behavior
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intelligent-agent-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧠 Intelligent Agent Selection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proactive-actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Proactive Actions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-goalseekingsystem-goalseekingsystemts" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. GoalSeekingSystem (goalSeekingSystem.ts)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-agentservice-agentservicets" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. AgentService (agentService.ts)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-socket-integration-sockethandlersts" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Socket Integration (socketHandlers.ts)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      User States
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="User States">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-state-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Current State Types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entertainment-preferences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Entertainment Preferences
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Metrics
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#goal-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Goal Types
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Goal Types">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-entertainment-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Entertainment Goals
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-technical-support-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Technical Support Goals
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-engagement-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Engagement Goals
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementation Details
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Details">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#message-processing-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Message Processing Flow
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proactive-action-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Proactive Action Execution
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1-user-waiting-for-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: User Waiting for Support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2-technical-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: Technical Question
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3-low-engagement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Low Engagement
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#frontend-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Frontend Integration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Frontend Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visual-indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Visual Indicators
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real-time Updates
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#goal-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Goal Templates
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      User Cleanup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Considerations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Memory Management
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scalability" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scalability
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#demo-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Demo Script
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#testing-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing Scenarios
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="goal-seeking-system-documentation">Goal-Seeking System Documentation<a class="headerlink" href="#goal-seeking-system-documentation" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The Goal-Seeking System is an intelligent, proactive chat assistant that dynamically adapts to user needs by pursuing specific goals. It's designed to entertain users while they're on hold and provide technical support when needed.</p>
+<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<h3 id="goal-driven-behavior">🎯 Goal-Driven Behavior<a class="headerlink" href="#goal-driven-behavior" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Entertainment Goals</strong>: Keeps users engaged with jokes, trivia, and conversation while waiting</li>
+<li><strong>Technical Support Goals</strong>: Provides comprehensive technical assistance for programming and development questions</li>
+<li><strong>Engagement Goals</strong>: Maintains active conversation and prevents user abandonment</li>
+</ul>
+<h3 id="intelligent-agent-selection">🧠 Intelligent Agent Selection<a class="headerlink" href="#intelligent-agent-selection" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Technical Agent</strong>: Specialized in programming, debugging, and technical problem-solving</li>
+<li><strong>Dad Joke Master</strong>: Provides groan-worthy dad jokes and puns</li>
+<li><strong>Trivia Master</strong>: Shares fascinating facts and educational content</li>
+<li><strong>General Agent</strong>: Handles casual conversation and general assistance</li>
+</ul>
+<h3 id="proactive-actions">🔄 Proactive Actions<a class="headerlink" href="#proactive-actions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Immediate Actions</strong>: Instant responses to user state changes</li>
+<li><strong>Delayed Actions</strong>: Scheduled interventions (e.g., checking in after inactivity)</li>
+<li><strong>Context-Aware</strong>: Actions based on user preferences and current situation</li>
+</ul>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h3 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h3>
+<h4 id="1-goalseekingsystem-goalseekingsystemts">1. GoalSeekingSystem (<code>goalSeekingSystem.ts</code>)<a class="headerlink" href="#1-goalseekingsystem-goalseekingsystemts" title="Permanent link">&para;</a></h4>
+<p>The central orchestrator that manages user states and goal progression.</p>
+<p><strong>Key Classes:</strong></p>
+<ul>
+<li><code>GoalSeekingSystem</code>: Main system coordinator</li>
+<li><code>UserState</code>: Tracks user context and preferences</li>
+<li><code>Goal</code>: Defines objectives and success criteria</li>
+<li><code>GoalAction</code>: Represents proactive interventions</li>
+</ul>
+<h4 id="2-agentservice-agentservicets">2. AgentService (<code>agentService.ts</code>)<a class="headerlink" href="#2-agentservice-agentservicets" title="Permanent link">&para;</a></h4>
+<p>Enhanced agent service with goal-seeking integration.</p>
+<p><strong>Key Methods:</strong></p>
+<ul>
+<li><code>processMessageWithGoalSeeking()</code>: Processes messages with goal awareness</li>
+<li><code>executeProactiveAction()</code>: Executes system-generated actions</li>
+<li><code>getUserGoalState()</code>: Retrieves user's current goal state</li>
+</ul>
+<h4 id="3-socket-integration-sockethandlersts">3. Socket Integration (<code>socketHandlers.ts</code>)<a class="headerlink" href="#3-socket-integration-sockethandlersts" title="Permanent link">&para;</a></h4>
+<p>Real-time communication with proactive message delivery.</p>
+<p><strong>New Events:</strong></p>
+<ul>
+<li><code>proactive_message</code>: Delivers system-initiated messages</li>
+<li><code>proactive_error</code>: Handles proactive action failures</li>
+</ul>
+<h2 id="user-states">User States<a class="headerlink" href="#user-states" title="Permanent link">&para;</a></h2>
+<h3 id="current-state-types">Current State Types<a class="headerlink" href="#current-state-types" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>on_hold</code>: User is waiting for support</li>
+<li><code>waiting_for_help</code>: User has a specific problem to solve</li>
+<li><code>active_conversation</code>: User is actively engaged</li>
+<li><code>idle</code>: User is present but not actively communicating</li>
+</ul>
+<h3 id="entertainment-preferences">Entertainment Preferences<a class="headerlink" href="#entertainment-preferences" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>jokes</code>: Prefers humor and dad jokes</li>
+<li><code>trivia</code>: Enjoys facts and educational content</li>
+<li><code>general_chat</code>: Likes casual conversation</li>
+<li><code>mixed</code>: Rotates between different entertainment types</li>
+</ul>
+<h3 id="metrics">Metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Engagement Level</strong> (0-1): How actively the user is participating</li>
+<li><strong>Satisfaction Level</strong> (0-1): User's apparent satisfaction with responses</li>
+<li><strong>Technical Context</strong>: Extracted technical information from messages</li>
+</ul>
+<h2 id="goal-types">Goal Types<a class="headerlink" href="#goal-types" title="Permanent link">&para;</a></h2>
+<h3 id="1-entertainment-goals">1. Entertainment Goals<a class="headerlink" href="#1-entertainment-goals" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Keep users entertained while waiting</p>
+<p><strong>Activation Triggers:</strong></p>
+<ul>
+<li>User state is <code>on_hold</code></li>
+<li>Engagement level &lt; 0.6</li>
+<li>User mentions waiting, queue, or hold</li>
+</ul>
+<p><strong>Success Criteria:</strong></p>
+<ul>
+<li>User responds positively to entertainment</li>
+<li>Engagement level &gt; 0.7</li>
+<li>User remains in conversation</li>
+</ul>
+<p><strong>Example Actions:</strong></p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;proactive_message&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;dad_joke&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Time for a dad joke to brighten your wait!&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">timing</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;immediate&#39;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="2-technical-support-goals">2. Technical Support Goals<a class="headerlink" href="#2-technical-support-goals" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Provide effective technical assistance</p>
+<p><strong>Activation Triggers:</strong></p>
+<ul>
+<li>User state is <code>waiting_for_help</code></li>
+<li>Technical context is detected</li>
+<li>User mentions code, error, bug, programming</li>
+</ul>
+<p><strong>Success Criteria:</strong></p>
+<ul>
+<li>User problem is resolved</li>
+<li>Technical accuracy is maintained</li>
+<li>User satisfaction &gt; 0.8</li>
+</ul>
+<p><strong>Example Actions:</strong></p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;technical_check&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;technical&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;I&#39;m here to help with your technical question. What specific issue can I assist you with?&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">timing</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;immediate&#39;</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="3-engagement-goals">3. Engagement Goals<a class="headerlink" href="#3-engagement-goals" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose</strong>: Maintain user engagement and prevent abandonment</p>
+<p><strong>Activation Triggers:</strong></p>
+<ul>
+<li>Engagement level &lt; 0.5</li>
+<li>Time since last interaction &gt; 30 seconds</li>
+<li>User gives short responses</li>
+</ul>
+<p><strong>Success Criteria:</strong></p>
+<ul>
+<li>User continues conversation</li>
+<li>Response time &lt; 5 minutes</li>
+<li>User asks follow-up questions</li>
+</ul>
+<p><strong>Example Actions:</strong></p>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;entertainment_offer&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">agentType</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;general&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;Would you like me to entertain you with a joke, share some trivia, or help with a technical question?&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">timing</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;delayed&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">delayMs</span><span class="o">:</span><span class="w"> </span><span class="kt">30000</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="implementation-details">Implementation Details<a class="headerlink" href="#implementation-details" title="Permanent link">&para;</a></h2>
+<h3 id="message-processing-flow">Message Processing Flow<a class="headerlink" href="#message-processing-flow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>User Message Received</strong></p>
+<ul>
+<li>Initialize user in goal-seeking system</li>
+<li>Update user state based on message content</li>
+<li>Activate relevant goals</li>
+</ul>
+</li>
+<li>
+<p><strong>Agent Selection</strong></p>
+<ul>
+<li>Process message with appropriate agent</li>
+<li>Consider goal priorities and user preferences</li>
+<li>Generate response with confidence scoring</li>
+</ul>
+</li>
+<li>
+<p><strong>Goal Progress Update</strong></p>
+<ul>
+<li>Analyze user response for satisfaction indicators</li>
+<li>Update goal progress and user metrics</li>
+<li>Adjust engagement and satisfaction levels</li>
+</ul>
+</li>
+<li>
+<p><strong>Proactive Action Generation</strong></p>
+<ul>
+<li>Generate actions based on active goals</li>
+<li>Prioritize by goal importance and user needs</li>
+<li>Schedule immediate or delayed execution</li>
+</ul>
+</li>
+</ol>
+<h3 id="proactive-action-execution">Proactive Action Execution<a class="headerlink" href="#proactive-action-execution" title="Permanent link">&para;</a></h3>
+<div class="language-typescript highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">executeProactiveAction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">action</span><span class="o">:</span><span class="w"> </span><span class="kt">GoalAction</span><span class="p">,</span><span class="w"> </span><span class="nx">conversation</span><span class="o">:</span><span class="w"> </span><span class="kt">Conversation</span><span class="p">,</span><span class="w"> </span><span class="nx">socket</span><span class="o">:</span><span class="w"> </span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">io</span><span class="o">:</span><span class="w"> </span><span class="kt">Server</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Execute action using agent service</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">agentService</span><span class="p">.</span><span class="nx">executeProactiveAction</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span><span class="w"> </span><span class="nx">action</span><span class="p">,</span><span class="w"> </span><span class="nx">conversation</span><span class="p">.</span><span class="nx">messages</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// Create proactive message</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">proactiveMessage</span><span class="o">:</span><span class="w"> </span><span class="kt">Message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... message properties</span>
+<span class="w">    </span><span class="nx">isProactive</span><span class="o">:</span><span class="w"> </span><span class="kt">true</span><span class="p">,</span><span class="w"> </span><span class="c1">// Mark as system-initiated</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="c1">// Emit to conversation</span>
+<span class="w">  </span><span class="nx">io</span><span class="p">.</span><span class="nx">to</span><span class="p">(</span><span class="nx">conversationId</span><span class="p">).</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;proactive_message&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">message</span><span class="o">:</span><span class="w"> </span><span class="kt">proactiveMessage</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">actionType</span><span class="o">:</span><span class="w"> </span><span class="kt">action.type</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">agentUsed</span><span class="o">:</span><span class="w"> </span><span class="kt">response.agentUsed</span><span class="p">,</span>
+<span class="w">  </span><span class="p">});</span>
+<span class="p">};</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="example-1-user-waiting-for-support">Example 1: User Waiting for Support<a class="headerlink" href="#example-1-user-waiting-for-support" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>User: &quot;I&#39;m waiting for support&quot;
+System: Activates entertainment goal
+Agent: &quot;I noticed you might be waiting - how about a dad joke to pass the time?&quot;
+Proactive Action: Offers entertainment options after 30 seconds
+</code></pre></div></td></tr></table></div>
+<h3 id="example-2-technical-question">Example 2: Technical Question<a class="headerlink" href="#example-2-technical-question" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>User: &quot;I have a JavaScript error in my code&quot;
+System: Activates technical support goal
+Agent: &quot;I can help you with that JavaScript error. Can you share the error message?&quot;
+Proactive Action: Follows up if user doesn&#39;t respond within 2 minutes
+</code></pre></div></td></tr></table></div>
+<h3 id="example-3-low-engagement">Example 3: Low Engagement<a class="headerlink" href="#example-3-low-engagement" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>System: Detects user giving short responses
+Goal: Engagement goal activates
+Proactive Action: &quot;Is there anything specific I can help you with today?&quot;
+</code></pre></div></td></tr></table></div>
+<h2 id="frontend-integration">Frontend Integration<a class="headerlink" href="#frontend-integration" title="Permanent link">&para;</a></h2>
+<h3 id="visual-indicators">Visual Indicators<a class="headerlink" href="#visual-indicators" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Proactive Message Badge</strong>: Messages initiated by the system show a "🎯 Proactive" badge</li>
+<li><strong>Agent Indicators</strong>: Clear visual distinction between different agent types</li>
+<li><strong>Confidence Scoring</strong>: Shows AI confidence levels for transparency</li>
+</ul>
+<h3 id="real-time-updates">Real-time Updates<a class="headerlink" href="#real-time-updates" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Proactive messages appear automatically</li>
+<li>Smooth integration with existing chat flow</li>
+<li>Error handling for failed proactive actions</li>
+</ul>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<h3 id="goal-templates">Goal Templates<a class="headerlink" href="#goal-templates" title="Permanent link">&para;</a></h3>
+<p>Goals are defined with:</p>
+<ul>
+<li><code>type</code>: Category of goal</li>
+<li><code>priority</code>: Numerical priority (1-10)</li>
+<li><code>success_criteria</code>: Array of success conditions</li>
+<li><code>description</code>: Human-readable description</li>
+</ul>
+<h3 id="user-cleanup">User Cleanup<a class="headerlink" href="#user-cleanup" title="Permanent link">&para;</a></h3>
+<p>Inactive users are automatically cleaned up after 1 hour of inactivity to prevent memory leaks.</p>
+<h2 id="performance-considerations">Performance Considerations<a class="headerlink" href="#performance-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="memory-management">Memory Management<a class="headerlink" href="#memory-management" title="Permanent link">&para;</a></h3>
+<ul>
+<li>User states are stored in-memory for fast access</li>
+<li>Automatic cleanup of inactive users</li>
+<li>Goal progress tracking is lightweight</li>
+</ul>
+<h3 id="scalability">Scalability<a class="headerlink" href="#scalability" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Stateless goal execution</li>
+<li>Efficient user state updates</li>
+<li>Minimal database impact</li>
+</ul>
+<h2 id="future-enhancements">Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Machine Learning Integration</strong></p>
+<ul>
+<li>Learn from user preferences over time</li>
+<li>Predict optimal entertainment types</li>
+<li>Improve goal success rates</li>
+</ul>
+</li>
+<li>
+<p><strong>Advanced Scheduling</strong></p>
+<ul>
+<li>More sophisticated timing algorithms</li>
+<li>Context-aware scheduling</li>
+<li>Priority-based action queuing</li>
+</ul>
+</li>
+<li>
+<p><strong>Analytics Dashboard</strong></p>
+<ul>
+<li>Goal success metrics</li>
+<li>User satisfaction tracking</li>
+<li>Agent performance analytics</li>
+</ul>
+</li>
+<li>
+<p><strong>Custom Goal Types</strong></p>
+<ul>
+<li>User-defined goals</li>
+<li>Business-specific objectives</li>
+<li>Dynamic goal creation</li>
+</ul>
+</li>
+</ol>
+<h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
+<h3 id="demo-script">Demo Script<a class="headerlink" href="#demo-script" title="Permanent link">&para;</a></h3>
+<p>Run the demo to see the goal-seeking system in action:</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>backend
+npm<span class="w"> </span>run<span class="w"> </span>demo:goals<span class="w">  </span><span class="c1"># If script is added to package.json</span>
+<span class="c1"># OR</span>
+npx<span class="w"> </span>ts-node<span class="w"> </span>src/demo/goalSeekingDemo.ts
+</code></pre></div></td></tr></table></div>
+<h3 id="testing-scenarios">Testing Scenarios<a class="headerlink" href="#testing-scenarios" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>On-Hold Experience</strong>: User says "I'm waiting"</li>
+<li><strong>Technical Support</strong>: User asks programming questions</li>
+<li><strong>Entertainment Preferences</strong>: User requests jokes or trivia</li>
+<li><strong>Engagement Recovery</strong>: User becomes less responsive</li>
+</ol>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>The Goal-Seeking System transforms the chat experience from reactive to proactive, ensuring users are entertained while waiting and receive comprehensive technical support when needed. By intelligently managing multiple goals and adapting to user behavior, it creates a more engaging and effective chat assistant.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.footer", "content.action.edit"], "search": "../../../../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+        <script src="../../../../search/main.js"></script>
+      
+    
+  </body>
+</html>

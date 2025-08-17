@@ -53,6 +53,7 @@ export function createSwaggerSpec(): OpenAPIV3.Document {
         { name: 'validation', description: 'Validation and quality' },
         { name: 'test-bench', description: 'Agent test bench' },
         { name: 'queue', description: 'Message queue operations' },
+        { name: 'Message Queue', description: 'Message queue operations' },
         { name: 'health', description: 'Health checks' },
       ],
       components: {

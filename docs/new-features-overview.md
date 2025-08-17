@@ -30,7 +30,7 @@ This document provides a comprehensive overview of all the new features added to
 ### 2. Hold Agent System
 
 **Location**: `backend/src/agents/config.ts` (Hold Agent configuration)  
-**Documentation**: [Hold Agent System Documentation](./hold-agent-system.md)
+**Documentation**: [Hold Agent System Documentation](./architecture/components/agents.md)
 
 **Overview**: Professional customer hold experience management with transparent communication and entertainment coordination.
 
@@ -52,7 +52,7 @@ This document provides a comprehensive overview of all the new features added to
 ### 3. Entertainment Agents System
 
 **Location**: `backend/src/agents/config.ts` (Agent configurations)  
-**Documentation**: [Entertainment Agents Documentation](./entertainment-agents.md)
+**Documentation**: [Entertainment Agents Documentation](./architecture/components/agents.md)
 
 **Overview**: Three specialized entertainment agents providing jokes, trivia, and visual content.
 
@@ -139,8 +139,8 @@ This document provides a comprehensive overview of all the new features added to
 ### New Documentation Files
 
 1. **[RAG System Documentation](./architecture/components/rag-system.md)** - Complete RAG system guide
-2. **[Hold Agent System Documentation](./hold-agent-system.md)** - Hold management system
-3. **[Entertainment Agents Documentation](./entertainment-agents.md)** - Entertainment system guide
+2. **[Hold Agent System Documentation](./architecture/components/agents.md)** - Hold management system
+3. **[Entertainment Agents Documentation](./architecture/components/agents.md)** - Entertainment system guide
 4. **[New Features Overview](./new-features-overview.md)** - This comprehensive overview
 
 ### Updated Documentation

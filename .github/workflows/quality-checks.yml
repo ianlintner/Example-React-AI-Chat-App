@@ -64,6 +64,25 @@ jobs:
       - name: Build frontend
         run: npm run build:frontend
 
+      - name: Lint docs (markdownlint)
+        run: npm run docs:lint
+
+      - name: Check docs links
+        run: npm run docs:links
+
+      - name: OpenAPI smoke test
+        run: |
+          nohup node backend/dist/index.js > server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sf http://localhost:5001/docs/json >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -sf http://localhost:5001/docs/json | tee openapi.json >/dev/null
+          grep -q '"openapi"' openapi.json && grep -q '"paths"' openapi.json
+          pkill -f "backend/dist/index.js" || true
+
       - name: Archive coverage artifacts
         uses: actions/upload-artifact@v4
         with:

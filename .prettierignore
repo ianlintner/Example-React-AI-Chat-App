@@ -48,3 +48,6 @@ junit.xml
 # Coverage reports
 coverage/
 nyc_output/
+
+# Generated test results
+external/Example-React-AI-Chat-App/backend/jest-socket-results.json

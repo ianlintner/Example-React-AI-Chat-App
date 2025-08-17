@@ -166,14 +166,13 @@ CI/Quality
 
 ## Documentation
 
-- Architecture Guide: ./docs/architecture.md
-- Documentation Index: ./docs/INDEX.md
-- Agents: ./docs/agents.md
-- Goal‑Seeking System: ./docs/goal-seeking-system.md
-- Observability & Monitoring: ./docs/observability-monitoring.md
-- Backend Guide: ./docs/backend.md
-- Frontend Guide: ./docs/frontend.md
-- Testing & CI: ./docs/testing-and-ci.md
+Start here: ./docs/index.md
+
+Key pages:
+
+- Getting Started (Quickstart): ./docs/getting-started/quickstart.md
+- Architecture Overview: ./docs/architecture/system-overview.md
+- Operations (Observability): ./docs/operations/observability.md
 
 ## Notes & Non‑Goals
 

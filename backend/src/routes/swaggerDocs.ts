@@ -1,222 +1,165 @@
-import express from 'express';
+import type { Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
-import yaml from 'js-yaml';
-import fs from 'fs';
+import swaggerJSDoc, { Options as SwaggerJSDocOptions } from 'swagger-jsdoc';
 import path from 'path';
+import fs from 'fs';
+import type { OpenAPIV3 } from 'openapi-types';
 
-const router = express.Router();
+/**
+ * Resolve backend root for scanning TS files regardless of where the app is launched from.
+ * - If process.cwd() is the backend directory, use it directly.
+ * - If launched from repo root, use ./backend.
+ */
+function resolveBackendRoot(): string {
+  const cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, 'src'))) {
+    // Likely running from backend directory
+    return cwd;
+  }
+  if (fs.existsSync(path.join(cwd, 'backend', 'src'))) {
+    // Likely running from repo root
+    return path.join(cwd, 'backend');
+  }
+  // Fallback: walk up from compiled dir (dist/.../routes)
+  return path.resolve(__dirname, '../../../../..', 'backend');
+}
 
-// Load OpenAPI spec
-const loadOpenApiSpec = () => {
-  try {
-    // When compiled, files are in backend/dist/backend/src/routes/
-    // Need to go up to project root: ../../../../docs/test-bench-openapi.yaml
-    const specPath = path.join(
-      __dirname,
-      '../../../../docs/test-bench-openapi.yaml',
-    );
-    const fileContents = fs.readFileSync(specPath, 'utf8');
-    return yaml.load(fileContents) as object;
-  } catch (error) {
-    console.error('Error loading OpenAPI spec:', error);
-    return {
-      openapi: '3.0.3',
+/**
+ * Create OpenAPI spec using swagger-jsdoc by scanning JSDoc blocks across route files.
+ * This follows the minimal-refactor approach: annotate existing route handlers and index health endpoints.
+ */
+export function createSwaggerSpec(): OpenAPIV3.Document {
+  const backendRoot = resolveBackendRoot();
+
+  const options: SwaggerJSDocOptions = {
+    definition: {
+      openapi: '3.0.0',
       info: {
-        title: 'AI Chat App Test Bench API',
-        description: 'OpenAPI specification could not be loaded',
+        title: 'AI Chat App API',
         version: '1.0.0',
+        description:
+          'Code-generated OpenAPI docs from JSDoc annotations using swagger-jsdoc + swagger-ui-express.',
       },
-      paths: {},
-    };
-  }
-};
+      servers: [
+        {
+          url: process.env.API_BASE_URL || 'http://localhost:5001',
+          description: 'Local development',
+        },
+      ],
+      tags: [
+        { name: 'chat', description: 'Chat endpoints' },
+        { name: 'conversations', description: 'Conversation management' },
+        { name: 'reactions', description: 'Reactions endpoints' },
+        { name: 'validation', description: 'Validation and quality' },
+        { name: 'test-bench', description: 'Agent test bench' },
+        { name: 'queue', description: 'Message queue operations' },
+        { name: 'Message Queue', description: 'Message queue operations' },
+        { name: 'health', description: 'Health checks' },
+      ],
+      components: {
+        schemas: {
+          Message: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              content: { type: 'string' },
+              role: { type: 'string', enum: ['user', 'assistant'] },
+              timestamp: { type: 'string', format: 'date-time' },
+              conversationId: { type: 'string', format: 'uuid' },
+              agentUsed: { type: 'string', nullable: true },
+              confidence: { type: 'number', nullable: true },
+            },
+            required: ['id', 'content', 'role', 'timestamp', 'conversationId'],
+          },
+          Conversation: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              title: { type: 'string' },
+              messages: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Message' },
+              },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+            required: ['id', 'title', 'messages', 'createdAt', 'updatedAt'],
+          },
+          ChatRequest: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              conversationId: {
+                type: 'string',
+                format: 'uuid',
+                nullable: true,
+              },
+              forceAgent: { type: 'string', nullable: true },
+            },
+            required: ['message'],
+          },
+          ChatResponse: {
+            type: 'object',
+            properties: {
+              message: { $ref: '#/components/schemas/Message' },
+              conversation: { $ref: '#/components/schemas/Conversation' },
+              agentUsed: { type: 'string', nullable: true },
+              confidence: { type: 'number', nullable: true },
+            },
+            required: ['message', 'conversation'],
+          },
+        },
+      },
+    },
+    // Scan TypeScript sources so we can keep annotations next to code.
+    apis: [
+      path.join(backendRoot, 'src', 'routes', '*.ts'),
+      path.join(backendRoot, 'src', 'index.ts'),
+    ],
+  };
 
-const swaggerSpec = loadOpenApiSpec();
+  // Generate spec
+  const spec = swaggerJSDoc(options) as OpenAPIV3.Document;
 
-// Swagger UI options
-const swaggerOptions = {
-  customCss: `
-    .swagger-ui .topbar { display: none; }
-    .swagger-ui .info { margin: 20px 0; }
-    .swagger-ui .scheme-container { background: #fafafa; padding: 20px; border-radius: 4px; }
-  `,
-  customSiteTitle: 'Test Bench API Documentation',
-  customfavIcon: '/favicon.ico',
-  swaggerOptions: {
-    persistAuthorization: true,
-    displayRequestDuration: true,
-    docExpansion: 'list',
-    filter: true,
-    showExtensions: true,
-    showCommonExtensions: true,
-    tryItOutEnabled: true,
-  },
-};
+  // Ensure minimal keys exist to avoid consumers failing on missing props
+  spec.openapi = spec.openapi || '3.0.0';
+  spec.paths = spec.paths || {};
 
-// Serve Swagger UI
-router.use('/api-docs', swaggerUi.serve);
-router.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerOptions));
+  return spec;
+}
 
-// Serve raw OpenAPI spec as JSON
-router.get('/openapi.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.json(swaggerSpec);
-});
+/**
+ * Register Swagger UI and JSON endpoints on the provided Express app.
+ * - UI at /docs
+ * - JSON at /docs/json
+ */
+export function registerSwaggerRoutes(
+  app: Express,
+  spec: OpenAPIV3.Document,
+  options?: { uiPath?: string; jsonPath?: string },
+): void {
+  const uiPath = options?.uiPath ?? '/docs';
+  const jsonPath = options?.jsonPath ?? '/docs/json';
 
-// Serve raw OpenAPI spec as YAML
-router.get('/openapi.yaml', (req, res) => {
-  try {
-    const specPath = path.join(
-      __dirname,
-      '../../../../docs/test-bench-openapi.yaml',
-    );
-    const fileContents = fs.readFileSync(specPath, 'utf8');
-    res.setHeader('Content-Type', 'text/yaml');
-    res.send(fileContents);
-  } catch (error) {
-    res.status(500).json({ error: 'Could not load OpenAPI YAML file' });
-  }
-});
+  const uiOptions = {
+    customCss: `
+      .swagger-ui .topbar { display: none; }
+      .swagger-ui .info { margin: 20px 0; }
+      .swagger-ui .scheme-container { background: #fafafa; padding: 20px; border-radius: 4px; }
+    `,
+    customSiteTitle: 'API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'list',
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+      tryItOutEnabled: true,
+    },
+  };
 
-// API documentation landing page
-router.get('/', (req, res) => {
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Test Bench API Documentation</title>
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          line-height: 1.6;
-          color: #333;
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 20px;
-          background: #f8f9fa;
-        }
-        .container {
-          background: white;
-          padding: 40px;
-          border-radius: 8px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-          color: #2c3e50;
-          border-bottom: 3px solid #3498db;
-          padding-bottom: 10px;
-        }
-        .btn {
-          display: inline-block;
-          padding: 12px 24px;
-          margin: 8px;
-          background: #3498db;
-          color: white;
-          text-decoration: none;
-          border-radius: 4px;
-          transition: background 0.3s;
-        }
-        .btn:hover {
-          background: #2980b9;
-        }
-        .btn-secondary {
-          background: #95a5a6;
-        }
-        .btn-secondary:hover {
-          background: #7f8c8d;
-        }
-        .features {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 20px;
-          margin: 30px 0;
-        }
-        .feature {
-          padding: 20px;
-          background: #f8f9fa;
-          border-radius: 4px;
-          border-left: 4px solid #3498db;
-        }
-        .feature h3 {
-          margin-top: 0;
-          color: #2c3e50;
-        }
-        .endpoint-count {
-          font-size: 2em;
-          font-weight: bold;
-          color: #3498db;
-          text-align: center;
-          margin: 20px 0;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🧪 Test Bench API Documentation</h1>
-        
-        <p>Welcome to the comprehensive API documentation for the AI Chat App Test Bench system. This API provides endpoints to test all agents, system components, and features.</p>
-        
-        <div class="endpoint-count">11 Test Endpoints Available</div>
-        
-        <div class="features">
-          <div class="feature">
-            <h3>🤖 Agent Testing</h3>
-            <p>Test individual agents or run bulk tests across all 14 agent types including support, entertainment, and utility agents.</p>
-          </div>
-          
-          <div class="feature">
-            <h3>🔧 System Components</h3>
-            <p>Test core system components like message classification, RAG service, and response validation.</p>
-          </div>
-          
-          <div class="feature">
-            <h3>🧠 Learning Systems</h3>
-            <p>Test adaptive learning systems including joke learning, goal-seeking, and conversation management.</p>
-          </div>
-          
-          <div class="feature">
-            <h3>💚 System Health</h3>
-            <p>Monitor system health, check component status, and browse available agent directory.</p>
-          </div>
-        </div>
-        
-        <div style="text-align: center; margin: 40px 0;">
-          <a href="/docs/api-docs" class="btn">📖 Interactive API Documentation</a>
-          <a href="/docs/openapi.json" class="btn btn-secondary">📄 OpenAPI JSON</a>
-          <a href="/docs/openapi.yaml" class="btn btn-secondary">📄 OpenAPI YAML</a>
-        </div>
-        
-        <h2>Quick Start Examples</h2>
-        
-        <h3>Test a Joke Agent</h3>
-        <pre><code>curl -X POST http://localhost:5001/api/test-bench/agent/joke/test \\
-  -H "Content-Type: application/json" \\
-  -d '{"message": "Tell me a funny joke!", "userId": "test-user"}'</code></pre>
-        
-        <h3>Check System Health</h3>
-        <pre><code>curl http://localhost:5001/api/test-bench/health</code></pre>
-        
-        <h3>Test Message Classification</h3>
-        <pre><code>curl -X POST http://localhost:5001/api/test-bench/classifier/test \\
-  -H "Content-Type: application/json" \\
-  -d '{"message": "I need billing support"}'</code></pre>
-        
-        <h2>Available Agent Types</h2>
-        <ul>
-          <li><strong>Support Agents:</strong> account_support, billing_support, website_support, operator_support</li>
-          <li><strong>Entertainment Agents:</strong> joke, story_teller, riddle_master, quote_master, game_host, music_guru</li>
-          <li><strong>Utility Agents:</strong> general, trivia, gif, hold_agent</li>
-        </ul>
-        
-        <p><em>For complete documentation, examples, and interactive testing, visit the <a href="/docs/api-docs">Interactive API Documentation</a>.</em></p>
-      </div>
-    </body>
-    </html>
-  `;
-
-  res.send(html);
-});
-
-export default router;
+  // Serve UI and JSON endpoints
+  app.use(uiPath, swaggerUi.serve, swaggerUi.setup(spec, uiOptions as any));
+  app.get(jsonPath, (_req, res) => res.json(spec));
+}

@@ -36,9 +36,6 @@ nav:
 
 plugins:
   - techdocs-core
-  - exclude:
-      glob:
-        - 'architecture/components/_sources/*'
 
 markdown_extensions:
   - admonition

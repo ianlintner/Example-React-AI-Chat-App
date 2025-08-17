@@ -19,6 +19,12 @@ nav:
           - Message Queue: architecture/components/message-queue.md
           - RAG System: architecture/components/rag-system.md
           - Validation System: architecture/components/validation-system.md
+          - Sources:
+              - Agents (notes): architecture/components/_sources/agents.md
+              - Entertainment Agents (notes): architecture/components/_sources/entertainment-agents.md
+              - Goal Seeking System (notes): architecture/components/_sources/goal-seeking-system.md
+              - Hold Agent System (notes): architecture/components/_sources/hold-agent-system.md
+              - New Entertainment Agents Summary: architecture/components/_sources/new-entertainment-agents-summary.md
   - Operations:
       - CI/CD: operations/ci-cd.md
       - Observability: operations/observability.md

@@ -13,3 +13,4 @@ latest-runs*
 external/run-16972773386-jobs.json
 external/workflows.txt
 external/era-run-16990365551.json
+site/*

@@ -1,10 +1,10 @@
-# Demo Portfolio Architecture — AI + Modern Web Engineering Patterns
+# Demo Portfolio Architecture — AI + Modern Web Engineering Patterns {#demo-portfolio-architecture--ai--modern-web-engineering-patterns}
 
 > This guide supports a demo portfolio project. It focuses on patterns, tradeoffs, and implementation details that matter in AI and modern web app engineering. Production hardening and full productization are out of scope.
 
 ## Table of Contents
 
-- [Demo Portfolio Architecture — AI + Modern Web Engineering Patterns](#demo-portfolio-architecture--ai--modern-web-engineering-patterns)
+- Demo Portfoloio
   - [Table of Contents](#table-of-contents)
   - [System Overview](#system-overview)
     - [Key Architectural Principles](#key-architectural-principles)
@@ -30,7 +30,7 @@
   - [Deployment Architecture](#deployment-architecture)
     - [Container Architecture](#container-architecture)
     - [Docker Deployment](#docker-deployment)
-  - [Monitoring \& Observability](#monitoring--observability)
+  - Monitoring
     - [Observability Stack](#observability-stack)
     - [Key Performance Indicators (KPIs)](#key-performance-indicators-kpis)
 
@@ -1051,7 +1051,7 @@ graph TB
     class PrometheusData,GrafanaData,RedisData data
 ```
 
-## Monitoring & Observability
+## Monitoring & Observability {#monitoring--observability}
 
 ### Observability Stack
 

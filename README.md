@@ -168,6 +168,29 @@ CI/Quality
 
 Start here: ./docs/index.md
 
+TechDocs/MkDocs options:
+
+- Docker Compose (recommended, no local Python needed)
+  - Start: docker compose up docs -d
+  - Open: http://localhost:8000
+  - Stop: docker compose stop docs
+
+- Local Python
+  - Install: python3 -m pip install --user mkdocs mkdocs-techdocs-core
+  - Serve: python3 -m mkdocs serve
+  - Build (strict): python3 -m mkdocs build --strict
+
+Backstage integration:
+
+- catalog-info.yaml at repo root includes annotations for TechDocs (backstage.io/techdocs-ref: dir:.).
+- In Backstage, Register Existing Component with the URL to catalog-info.yaml for this repo, then open the entity’s Docs tab.
+
+CI integration:
+
+- docs job added to .github/workflows/ci-optimized.yml (builds TechDocs site and uploads artifact).
+- techdocs job added to .github/workflows/quality-checks.yml (strict mkdocs build).
+- Any changes under docs/ or \*.md trigger the docs build on PRs and main/develop pushes.
+
 Key pages:
 
 - Getting Started (Quickstart): ./docs/getting-started/quickstart.md

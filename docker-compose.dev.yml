@@ -101,6 +101,24 @@ services:
       timeout: 3s
       retries: 3
 
+  # Docs - MkDocs TechDocs site
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    container_name: docs
+    volumes:
+      - ./mkdocs.yml:/site/mkdocs.yml:ro
+      - ./docs:/site/docs:ro
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
 networks:
   observability:
     driver: bridge

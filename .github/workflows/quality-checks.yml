@@ -135,3 +135,20 @@ jobs:
           npm audit --audit-level high --production
           cd backend && npm audit --audit-level high --production
           cd ../frontend && npm audit --audit-level high --production
+
+  techdocs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install MkDocs + TechDocs plugin
+        run: python -m pip install --upgrade pip && pip install mkdocs mkdocs-techdocs-core
+
+      - name: Build TechDocs
+        run: python -m mkdocs build --strict

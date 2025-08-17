@@ -1,0 +1,15 @@
+# Build and serve MkDocs TechDocs locally in a container
+FROM python:3.11-slim
+
+# Install mkdocs and Backstage TechDocs plugin
+RUN pip install --no-cache-dir mkdocs mkdocs-techdocs-core
+
+WORKDIR /site
+# Copy config and docs (will be overridden by bind mounts in compose for live reload)
+COPY mkdocs.yml .
+COPY docs ./docs
+
+EXPOSE 8000
+
+# Serve with live reload on all interfaces
+CMD ["mkdocs", "serve", "-a", "0.0.0.0:8000"]

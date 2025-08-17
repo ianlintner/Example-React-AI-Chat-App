@@ -1,0 +1,90 @@
+name: 'Docs: Build and Publish to GCS'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs-deploy.yml'
+  workflow_dispatch:
+
+# Allows auth via Workload Identity Federation (requires this permission)
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: docs-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      GCS_BUCKET: example-react-app-docs
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('mkdocs.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install MkDocs and plugins
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-techdocs-core pygments
+          # If you later add a theme like Material:
+          # pip install mkdocs-material
+
+      - name: Build MkDocs site
+        run: mkdocs build --strict --clean
+
+      # Authentication option 1: Service Account JSON key (simplest)
+      # Add your key as repo secret GCP_SA_KEY (the JSON content)
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          # One of the following must be set:
+          # 1) Service Account key JSON (recommended only for simple setups)
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          # 2) Workload Identity Federation (preferred)
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # Authentication option 2: Workload Identity Federation (recommended)
+      # Add these repo secrets:
+      # - GCP_WORKLOAD_IDENTITY_PROVIDER: projects/123456789/locations/global/workloadIdentityPools/POOL/providers/PROVIDER
+      # - GCP_SERVICE_ACCOUNT: your-sa@your-project.iam.gserviceaccount.com
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gsutil
+
+      - name: Verify gcloud
+        run: |
+          gcloud --version
+          gsutil --version
+          gcloud auth list
+
+      - name: Upload site/ to GCS
+        run: |
+          gsutil -m rsync -r -d ./site gs://${GCS_BUCKET}
+
+      # Optional: configure website behavior and caching (uncomment to enable)
+      # - name: Configure bucket website and cache headers
+      #   run: |
+      #     gsutil web set -m index.html -e 404.html gs://${GCS_BUCKET}
+      #     gsutil -m setmeta -r -h "Cache-Control:public,max-age=600" gs://${GCS_BUCKET}/**

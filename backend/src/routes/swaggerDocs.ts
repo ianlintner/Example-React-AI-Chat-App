@@ -108,7 +108,7 @@ export function createSwaggerSpec(): OpenAPIV3.Document {
             required: ['message', 'conversation'],
           },
         },
-      }
+      },
     },
     // Scan TypeScript sources so we can keep annotations next to code.
     apis: [

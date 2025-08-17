@@ -33,19 +33,12 @@ nav:
       - YouTube Embedding: reference/youtube-embedding.md
   - Examples:
       - External App: examples/external-app.md
-  - Additional:
-      - System Summary: system-summary.md
-      - Backend (legacy): backend.md
-      - API Reference (legacy): api-reference.md
-      - Architecture (root doc): architecture.md
-      - Docs README: README.md
-      - IA Proposal: IA-PROPOSAL.md
-      - Consolidation Plan: CONSOLIDATION-PLAN.md
-      - Prometheus Grafana Migration: prometheus-grafana-migration.md
-      - Docs Inventory (CSV): docs-inventory.csv
 
 plugins:
   - techdocs-core
+  - exclude:
+      glob:
+        - 'architecture/components/_sources/*'
 
 markdown_extensions:
   - admonition

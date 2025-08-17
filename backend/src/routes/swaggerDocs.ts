@@ -66,9 +66,9 @@ export function createSwaggerSpec(): OpenAPIV3.Document {
               timestamp: { type: 'string', format: 'date-time' },
               conversationId: { type: 'string', format: 'uuid' },
               agentUsed: { type: 'string', nullable: true },
-              confidence: { type: 'number', nullable: true }
+              confidence: { type: 'number', nullable: true },
             },
-            required: ['id', 'content', 'role', 'timestamp', 'conversationId']
+            required: ['id', 'content', 'role', 'timestamp', 'conversationId'],
           },
           Conversation: {
             type: 'object',
@@ -77,21 +77,25 @@ export function createSwaggerSpec(): OpenAPIV3.Document {
               title: { type: 'string' },
               messages: {
                 type: 'array',
-                items: { $ref: '#/components/schemas/Message' }
+                items: { $ref: '#/components/schemas/Message' },
               },
               createdAt: { type: 'string', format: 'date-time' },
-              updatedAt: { type: 'string', format: 'date-time' }
+              updatedAt: { type: 'string', format: 'date-time' },
             },
-            required: ['id', 'title', 'messages', 'createdAt', 'updatedAt']
+            required: ['id', 'title', 'messages', 'createdAt', 'updatedAt'],
           },
           ChatRequest: {
             type: 'object',
             properties: {
               message: { type: 'string' },
-              conversationId: { type: 'string', format: 'uuid', nullable: true },
-              forceAgent: { type: 'string', nullable: true }
+              conversationId: {
+                type: 'string',
+                format: 'uuid',
+                nullable: true,
+              },
+              forceAgent: { type: 'string', nullable: true },
             },
-            required: ['message']
+            required: ['message'],
           },
           ChatResponse: {
             type: 'object',
@@ -99,11 +103,11 @@ export function createSwaggerSpec(): OpenAPIV3.Document {
               message: { $ref: '#/components/schemas/Message' },
               conversation: { $ref: '#/components/schemas/Conversation' },
               agentUsed: { type: 'string', nullable: true },
-              confidence: { type: 'number', nullable: true }
+              confidence: { type: 'number', nullable: true },
             },
-            required: ['message', 'conversation']
-          }
-        }
+            required: ['message', 'conversation'],
+          },
+        },
       }
     },
     // Scan TypeScript sources so we can keep annotations next to code.

@@ -1,7 +1,7 @@
 {
   "ignorePatterns": [
-    { "pattern": "^http://localhost(:[0-9]+)?/" },
-    { "pattern": "^https?://127\\.0\\.0\\.1(:[0-9]+)?/" },
+    { "pattern": "^http://localhost(:[0-9]+)?(/|$)" },
+    { "pattern": "^https?://127\\.0\\.0\\.1(:[0-9]+)?(/|$)" },
     { "pattern": "^http://jaeger(:[0-9]+)?" },
     { "pattern": "^http://grafana(:[0-9]+)?" },
     { "pattern": "^http://prometheus(:[0-9]+)?" }

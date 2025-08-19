@@ -67,7 +67,7 @@
     "@expo/metro-runtime": "~5.0.4"
   },
   "devDependencies": {
-    "@types/react": "^19.1.0",
+    "@types/react": "^19.1.10",
     "concurrently": "^8.2.0",
     "typescript": "~5.8.3",
     "prettier": "^3.2.5",

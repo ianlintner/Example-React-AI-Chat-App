@@ -63,7 +63,7 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-paper": "^5.14.5",
     "react-native-vector-icons": "^10.3.0",
-    "socket.io-client": "^4.7.2",
+    "socket.io-client": "^4.8.1",
     "@expo/metro-runtime": "~5.0.4"
   },
   "devDependencies": {

@@ -1,223 +1,186 @@
 # Implementation Plan
 
 [Overview]
-Consolidate and clean the docs directory by standardizing on docs/index.md as the canonical entry point, merging/creating the indexed section pages, and hard-deleting legacy/duplicate files.
+Evaluate and standardize the docs/ content using existing templates and best practices, consolidate legacy pages, and add comprehensive Mermaid diagrams aligned with the current system.
 
-This effort unifies documentation into a clear information architecture that matches the current repository. The docs/index.md already defines the target structure (Getting Started, Architecture, Operations, Reference, Examples) but several linked pages do not exist yet and multiple legacy/duplicate files remain. We will implement those missing pages by consolidating existing content, remove duplicates, and ensure all internal links resolve. This improves discoverability, reduces drift, and enables link checking in CI.
+This initiative improves information architecture, ensures consistent writing and structure, and visualizes key flows (system overview, queues, RAG, validation, observability, CI/CD). Scope is limited to docs/ only. Navigation will reflect user journeys, duplicate legacy pages will be merged, and diagrams will follow a unified style (colors, direction, legend). Deliverables include refreshed content, added diagrams in priority sections, and mkdocs.yml updates that keep strict builds green.
 
-The cleanup is limited to documentation and CI checks for documentation; application code is not changed. The approach is incremental, with explicit mappings from legacy sources to new consolidated targets, automated link validation, and a small set of scripted operations to minimize mistakes.
+The plan aligns with DOCS-STANDARDIZATION-PLAN.md and uses templates from docs/\_templates. All changes are documentation-only (no runtime code changes), and will be validated via local mkdocs build --strict and CI quality checks.
 
-[Types]  
-Define a simple mapping schema to guide consolidation and enable scripted verification.
+[Types]
+Introduce content schemas and diagram conventions to standardize documentation artifacts.
 
-Type system changes: introduce a consolidation rule model for docs-only scripting/validation.
-
-- interface DocPage {
-  path: string; // repo-relative path to the target page (e.g., "docs/operations/ci-cd.md")
-  title?: string; // optional expected H1
-  mustExist: boolean; // after consolidation, this must exist
-  sources?: string[]; // legacy files whose content will be merged and then deleted
-  notes?: string; // consolidation notes
-  }
-
-- interface LinkRule {
-  fromPath: string; // file containing the link
-  oldLink: string; // original markdown link target
-  newLink: string; // replacement link target
-  }
-
-- enum Action {
-  Create, // create a new consolidated file
-  Merge, // merge multiple sources into target file
-  Delete, // delete a legacy/duplicate file after merge
-  UpdateLinks // update internal links to reflect consolidation
-  }
-
-Validation rules:
-
-- All DocPage.mustExist targets present at end.
-- No dangling links reported by markdown-link-check across docs/ and root README.md.
-- No duplicate basenames in conflicting locations for canonical documents (e.g., api-reference.md must only exist under docs/reference/).
+- Frontmatter (optional; when used):
+  - title: string
+  - status: enum ["Active","Deprecated","Experimental"] (default "Active")
+  - owner: string (team or individual)
+  - last_updated: YYYY-MM-DD
+  - tags: string[]
+- Component Doc Schema (applies to docs/architecture/components/\*.md):
+  - Required sections: Overview, Architecture (with Mermaid), Key Concepts, Configuration, API Reference or Events (if applicable), Integration Points, Monitoring & Observability, Development, Testing Strategy, Deployment, Troubleshooting, Security Considerations, Runbooks, Related
+  - Validation: each component doc must include at least 1 Mermaid diagram and a "Related Documentation" subsection with cross-links
+- ADR Schema (docs/architecture/decisions/ADR-XXX-\*.md):
+  - Required: Status, Date, Authors, Reviewers, Context, Decision, Consequences (Positive/Negative/Neutral), Implementation Notes, Related Decisions
+- Mermaid Diagram Conventions (global):
+  - Direction: TB for system overviews; LR for flows/sequence where appropriate
+  - Class palette (consistent across docs):
+    - service: fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    - external: fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    - data: fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    - queue: fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+  - Always include: clear labels; keep diagrams focused (~10–12 nodes); include a short legend when non-obvious
 
 [Files]
-We will create missing canonical pages, merge content from legacy sources, update links, and remove duplicates.
+Create missing index pages, consolidate legacy documents, enhance component and operations pages with diagrams, and update mkdocs.yml.
 
-New files to be created
+- New files to be created:
+  - docs/architecture/index.md
+    - Purpose: landing for architecture section; links to system overview, components, and decisions.
+  - docs/getting-started/index.md
+    - Purpose: landing for getting started; quick links to quickstart, setup, troubleshooting.
+  - docs/architecture/decisions/README.md
+    - Purpose: ADR intro + index of decisions; guidance on when/how to add ADRs.
+  - docs/examples/code-samples.md
+    - Purpose: centralized small code snippets referenced by docs.
+  - docs/operations/runbooks.md
+    - Purpose: operational runbooks (scale, backup/restore, incidents).
 
-- docs/getting-started/quickstart.md
-  - Purpose: 10-minute TL;DR to run the demo quickly.
-  - Sources: README.md, SETUP-INSTRUCTIONS.md (quickstart portions).
-- docs/getting-started/setup.md
-  - Purpose: Full setup guide (local/docker).
-  - Sources: SETUP-INSTRUCTIONS.md, docs/docker-setup.md, docs/development.md.
-- docs/getting-started/troubleshooting.md
-  - Purpose: Common issues and fixes for local/dev/test.
-  - Sources: SETUP-INSTRUCTIONS.md (troubleshooting parts), docs/development.md (troubleshooting notes if any).
-- docs/architecture/system-overview.md
-  - Purpose: Canonical system overview replacing architecture.md + system-summary.md.
-  - Sources: docs/architecture.md, docs/system-summary.md.
-- docs/architecture/components/agents.md
-  - Purpose: Unified agents documentation with subsections.
-  - Sources: docs/agents.md, docs/goal-seeking-system.md, docs/hold-agent-system.md, docs/entertainment-agents.md, docs/new-entertainment-agents-summary.md, frontend/AGENT_STATUS_IMPLEMENTATION.md (frontend integration subsection).
-- docs/operations/observability.md
-  - Purpose: Single entry for logs/metrics/traces at a high level.
-  - Sources: docs/observability-monitoring.md, docs/docker-observability.md; cross-link Prometheus/Grafana page.
-- docs/operations/tracing.md
-  - Purpose: OTEL/Zipkin tracing operations + 100% sampling section.
-  - Sources: docs/100-percent-sampling-config.md; reference otel-collector-config.yaml.
-- docs/operations/ci-cd.md
-  - Purpose: Consolidated CI/CD guide.
-  - Sources: docs/ci-cd-setup.md, docs/ci-cd-improvements.md, docs/testing-and-ci.md.
-- docs/examples/external-app.md
-  - Purpose: Pointer and integration notes for external example.
-  - Sources: external/Example-React-AI-Chat-App/README.md (curated pointers).
+- Existing files to be modified (content and diagrams):
+  - docs/index.md
+    - Add concise product intro; prominent links to Getting Started and Architecture; add a small overview diagram.
+  - docs/architecture/system-overview.md
+    - Add high-level system diagram: Frontend, API, Message Queue, Agents, RAG, Validator, Metrics/Tracing sinks; cross-link to component pages.
+  - docs/architecture/architecture.md
+    - Merge/retire into docs/architecture/index.md or expand with unique content only; eliminate duplication with system-overview.
+  - docs/architecture/components/agents.md
+    - Add agent types and interactions diagram; list agent responsibilities and data flows.
+  - docs/architecture/components/backend.md
+    - Add flow diagram: HTTP -> routes -> services -> queue -> validator; align to component template (Configuration/API/Monitoring sections).
+  - docs/architecture/components/frontend.md
+    - Add sequence diagram: UI event -> socket/API -> backend -> response -> UI render; align to template.
+  - docs/architecture/components/message-queue.md
+    - Add queue topology and lifecycle diagram including: priority (1–10), delays, retries with exponential backoff, DLQ, and health endpoints; document API endpoints from the excerpt.
+  - docs/architecture/components/rag-system.md
+    - Add sequence diagram: searchForAgent pipeline; clarify ContentItem structure, categories, tags; show fallback behavior.
+  - docs/architecture/components/validation-system.md
+    - Add sequence for validation pipeline; map metrics emitted (counters, histograms) to Prometheus labels; show pass/fail thresholds and issue categories.
+  - docs/operations/observability.md
+    - Add OTEL pipeline diagram: SDKs -> OTEL Collector -> Jaeger (traces) / Prometheus (metrics) -> Grafana; link to dashboards and config files.
+  - docs/operations/tracing.md
+    - Add request trace path diagram (ingress -> components -> egress); mention sampling/exporters knobs and OpenAPI verification context.
+  - docs/operations/ci-cd.md
+    - Add CI pipeline diagram: lint -> type-check -> test -> docs build (strict) -> link checks -> publish (if any); reference .github/workflows/docs-quality.yml.
+  - docs/reference/api-reference.md
+    - Ensure live endpoints, tags, and how to fetch static OpenAPI are documented; add cross-links to relevant routes.
+  - docs/getting-started/quickstart.md, docs/getting-started/setup.md, docs/getting-started/troubleshooting.md
+    - Normalize cross-links and admonitions; ensure consistency with new section landing pages.
 
-Existing files to be modified
+- Files to be deleted or moved (consolidation and cleanup):
+  - docs/backend.md → Merge content into docs/architecture/components/backend.md (then delete).
+  - docs/api-reference.md (root) → Consolidate with docs/reference/api-reference.md (then delete root file).
+  - docs/architecture.md (root) → Merge unique content into docs/architecture/index.md (then delete or convert to redirect note).
+  - docs/system-summary.md → Incorporate relevant content into docs/architecture/index.md (then delete).
+  - docs/architecture/components/\_sources/\* (if present) → integrate source notes into the appropriate component pages, then remove \_sources dir.
+  - Ensure all orphaned docs are either linked in nav or removed if superseded.
 
-- docs/index.md
-  - Update Notes section to remove mention of "legacy files will be removed" once removal is done.
-  - Ensure all links point to the above canonical pages.
-- docs/reference/api-reference.md
-  - Ensure title and intro clarify this is canonical API doc.
-- docs/reference/docker-setup.md
-  - Keep as deep-dive reference; ensure setup.md links here for optional details.
-- README.md (root)
-  - Condense to a short overview + direct link to docs/index.md per docs/docs-inventory.csv guidance.
-- .markdown-link-check.json
-  - Update ignore/include patterns if needed (e.g., ignore Swagger runtime-only endpoints /docs, /docs/json).
-- .github/workflows/quality-checks.yml
-  - Add markdown link check step for docs and root README.
-  - Optionally add remark/markdownlint step if already standardized.
-
-Files to be deleted or moved (hard delete policy for duplicates/legacy)
-
-- Delete duplicates/legacy entry points:
-  - docs/INDEX.md (duplicate index)
-  - docs/README.md (duplicate index/readme)
-- API duplicates:
-  - docs/API.md (legacy)
-  - docs/api-reference.md (duplicate of docs/reference/api-reference.md)
-- Architecture legacy after merge:
-  - docs/architecture.md (merged into architecture/system-overview.md)
-  - docs/system-summary.md (merged into architecture/system-overview.md)
-- Agents legacy after merge:
-  - docs/agents.md
-  - docs/goal-seeking-system.md
-  - docs/hold-agent-system.md
-  - docs/entertainment-agents.md
-  - docs/new-entertainment-agents-summary.md
-- Backend page legacy after confirmation:
-  - docs/backend.md (content must be reflected in docs/architecture/components/backend.md; if gaps exist, merge there first, then delete)
-- Ops legacy after merge:
-  - docs/docker-observability.md (into operations/observability.md)
-  - docs/observability-monitoring.md (into operations/observability.md)
-  - docs/ci-cd-setup.md (into operations/ci-cd.md)
-  - docs/ci-cd-improvements.md (into operations/ci-cd.md)
-  - docs/testing-and-ci.md (into operations/ci-cd.md)
-- Setup legacy after merge:
-  - SETUP-INSTRUCTIONS.md (root) (into getting-started/setup.md and troubleshooting.md)
-- Optional/evaluate (keep for now; not duplicates):
-  - docs/100-percent-sampling-config.md (if fully incorporated into operations/tracing.md, then delete; else keep as deep-dive referenced from tracing.md)
-  - docs/IA-PROPOSAL.md, docs/CONSOLIDATION-PLAN.md (keep as internal notes; do not link from index)
-  - docs/prometheus-grafana-migration.md (link from operations/prometheus-grafana.md if kept as separate deep-dive; otherwise consolidate)
-
-Configuration updates
-
-- Ensure quality checks workflow runs markdown-link-check on:
-  - README.md
-  - docs/\*_/_.md
-- Verify .prettier settings are applied to new files (.prettierrc exists).
-- If adopting remark-lint later, add config at .remarkrc (deferred; not mandatory for this cleanup).
+- Configuration updates:
+  - mkdocs.yml
+    - Add "Getting Started: Overview" (getting-started/index.md) and "Architecture: Overview" (architecture/index.md).
+    - Ensure all component pages are in nav under Architecture > Components.
+    - Add "Technical Decisions" pointing to docs/architecture/decisions/.
+    - Optional: add mkdocs plugins git-revision-date-localized and minify as per standardization plan (ensure CI installs these).
 
 [Functions]
-No runtime code functions are modified; implement a small set of maintenance scripts/commands to automate the consolidation.
+No runtime code functions change; add documentation validation processes and (optional) helper scripts.
 
-New helper commands (to be executed manually during implementation)
-
-- Link validation
-  - npx markdown-link-check -q -c .markdown-link-check.json README.md
-  - find docs -name "\*.md" -print0 | xargs -0 -I{} npx markdown-link-check -q -c .markdown-link-check.json "{}"
-- Duplicate detection (sanity)
-  - find docs -type f -name "\*.md" -exec basename {} \; | awk '{print tolower($0)}' | sort | uniq -c | awk '$1>1{print $0}'
-- Grep for missing canonical targets (post-merge)
-  - grep -R "(./architecture/system-overview.md)" docs || true
-  - grep -R "(./operations/tracing.md)" docs || true
-  - grep -R "(./operations/ci-cd.md)" docs || true
-
-Proposed implementation script stubs (if desired in future; not required to complete)
-
-- scripts/docs/consolidate.sh
-  - merge_files "$target" "${sources[@]}" # manual curated merges
-  - delete_files "${legacy[@]}"
-  - update_links "${rules[@]}"
-
-Modified functions
-
-- None in application code.
-
-Removed functions
-
-- None.
+- New/modified documentation workflows:
+  - Lint docs (markdownlint): enforce structure/style rules.
+  - Spell check (cspell): enforce technical vocabulary list.
+  - Strict build (mkdocs build --strict): gate broken links and structure issues.
+  - Optional link checking against local mkdocs serve (CI).
+  - Soft gate: ensure key component and ops pages contain at least one Mermaid diagram (checked during review).
 
 [Classes]
-No application classes are modified; this is documentation-only reorganization.
+No application classes change. Documentation “classes” are templates and their required sections.
 
-New classes
-
-- None.
-
-Modified classes
-
-- None.
-
-Removed classes
-
-- None.
+- Enforce usage of:
+  - docs/\_templates/component-template.md for component pages.
+  - docs/\_templates/adr-template.md for decisions.
+  - docs/\_templates/how-to-template.md for runbooks/how-to style content.
+- Add an “Authoring Guide” note in docs/architecture/index.md linking to templates to guide contributors.
 
 [Dependencies]
-Introduce or use existing documentation tooling in CI to prevent regressions.
+Documentation tooling updates only.
 
-- markdown-link-check (CLI)
-  - Purpose: Validate internal and external links in markdown.
-  - Integration: Via GitHub Actions (quality-checks.yml).
-  - Version: Use latest stable via npx; no lockfile changes required.
-- Optional (deferred): remark-cli + plugins for linting style (headings, lists, code fences).
+- MkDocs plugins (mkdocs.yml and CI):
+  - mkdocs-git-revision-date-localized-plugin
+  - mkdocs-minify-plugin
+- Existing markdown extensions (pymdownx.superfences with mermaid) remain enabled.
+- CI installs:
+  - pip: mkdocs-material, mkdocs-git-revision-date-localized-plugin, mkdocs-minify-plugin
+  - npm: markdownlint-cli2, cspell
 
 [Testing]
-Validate links, structure, and absence of duplicates to ensure documentation integrity.
+Use CI quality gates and local strict builds to validate changes.
 
-- Automated link checks
-  - Run markdown-link-check across README.md and docs/\*_/_.md.
-  - Configure .markdown-link-check.json to ignore runtime-only URLs (/docs, /docs/json).
-- Structural checks
-  - Verify docs/index.md links resolve (no 404s).
-  - Verify no duplicate canonical basenames (api-reference.md exists only in docs/reference/).
-- Manual spot-checks
-  - Open key consolidated pages to ensure merged content has accurate headings:
-    - docs/architecture/system-overview.md
-    - docs/operations/ci-cd.md
-    - docs/architecture/components/agents.md
-    - docs/getting-started/quickstart.md
+- Local developer checks:
+  - mkdocs build --strict
+  - markdownlint-cli2 "docs/\*_/_.md" "\*.md"
+  - cspell "docs/\*_/_.md" "\*.md"
+- CI (docs-quality.yml):
+  - Ensure steps to install plugins, lint, spell-check, strict build, and optionally run linkchecker against mkdocs serve.
+- Manual visual validation:
+  - Verify all new Mermaid diagrams render and remain readable on narrow widths.
+  - Click-through nav for updated sections; ensure no 404s.
 
 [Implementation Order]
-Execute consolidation in an order that keeps links mostly valid and simplifies deletion.
+Execute in phases to minimize nav breakage and keep builds green.
 
-1. Create missing canonical targets with initial skeleton content:
-   - getting-started/{quickstart.md, setup.md, troubleshooting.md}
-   - architecture/system-overview.md
-   - architecture/components/agents.md
-   - operations/{observability.md, tracing.md, ci-cd.md}
-   - examples/external-app.md
-2. Merge content from legacy sources into the above targets (curated copy/edit), ensuring each target has an H1 and coherent structure.
-3. Update docs/index.md to ensure all links point to the canonical targets (remove “legacy will be removed” note).
-4. Update README.md to be a concise overview with a prominent link to docs/index.md.
-5. Run markdown-link-check across README.md and docs/\*_/_.md; fix any broken links and anchors.
-6. Hard-delete duplicates and legacy files that are now consolidated:
-   - docs/INDEX.md, docs/README.md, docs/API.md, docs/api-reference.md
-   - docs/architecture.md, docs/system-summary.md
-   - agents-related top-level files listed above
-   - docs/backend.md (after confirming parity with components/backend.md)
-   - ops/setup CI docs merged into operations/ci-cd.md
-   - SETUP-INSTRUCTIONS.md (root) merged into getting-started
-7. Re-run link checks; ensure no dangling links remain.
-8. Commit changes with a clear message summarizing the consolidation and deleted files.
+1. Preparation and IA
+   - Create landing pages: docs/architecture/index.md and docs/getting-started/index.md.
+   - Update mkdocs.yml to include new landing pages and add Architecture > Technical Decisions section.
+   - Run mkdocs build --strict to confirm baseline.
+
+2. Consolidate Legacy Content
+   - Merge docs/backend.md → docs/architecture/components/backend.md (then delete original).
+   - Consolidate docs/api-reference.md (root) → docs/reference/api-reference.md (then delete root file).
+   - Merge docs/architecture.md (root) → docs/architecture/index.md (remove duplicate content).
+   - Merge docs/system-summary.md → docs/architecture/index.md.
+   - Remove docs/architecture/components/\_sources/\* after merging any unique content.
+
+3. Component Pages Upgrade (apply component-template)
+   - agents.md: add interaction overview diagram; fill key sections (Integration Points, Monitoring).
+   - backend.md: add flow diagram; document key routes and their relation to services/queue; add Monitoring & Observability section.
+   - frontend.md: add LR sequence diagram from UI to backend and back; add Testing Strategy section.
+   - message-queue.md: add queue lifecycle diagram; document priority/delay/retry/DLQ; embed health/stats endpoints as examples.
+   - rag-system.md: add sequence for searchForAgent; document ContentItem schema and categories/tags.
+   - validation-system.md: add validation pipeline diagram; map metrics (counters/histograms) to labels; document pass/fail and issues.
+
+4. Operations Pages Upgrade
+   - observability.md: add OTEL pipeline diagram; link to provisioning files and dashboards.
+   - tracing.md: add request path and sampling/exporters diagram; cross-link to swagger docs usage during debugging.
+   - ci-cd.md: add pipeline diagram; reference docs-quality.yml checks and common failures with remedies.
+   - Add docs/operations/runbooks.md to centralize operational runbooks; include stubs for scaling and backup/restore.
+
+5. Getting Started Consistency
+   - quickstart.md, setup.md, troubleshooting.md: normalize admonitions, ensure nav links point to new Overview pages; add Related links at bottoms.
+
+6. Examples and Code Samples
+   - Create docs/examples/code-samples.md; extract small, repeated code fragments from reference pages to reduce duplication; link back.
+
+7. Decisions Index
+   - Create docs/architecture/decisions/README.md; seed with ADR links (if any); add guidance for new ADRs.
+
+8. mkdocs.yml Finalization
+   - Ensure every page exists in nav; remove any orphaned files or add to nav intentionally.
+   - Consider enabling mkdocs-git-revision-date-localized-plugin and mkdocs-minify-plugin; ensure CI installs.
+
+9. Quality Gates and Final Verification
+   - Run mkdocs build --strict locally; fix broken links.
+   - Run markdownlint and cspell; tune ignore lists minimally.
+   - Review Mermaid diagrams for consistency of classes and orientation; add short legends if necessary.
+
+10. Completion
+
+- Document changes in docs/IMPLEMENTATION-COMPLETE.md (changelog of documentation refactor).
+- Ensure CI docs-quality workflow passes on PR.

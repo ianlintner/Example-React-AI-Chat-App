@@ -34,10 +34,12 @@ theme:
 nav:
   - Home: index.md
   - Getting Started:
+      - Overview: getting-started/index.md
       - Quick Start: getting-started/quickstart.md
       - Development Setup: getting-started/setup.md
       - Troubleshooting: getting-started/troubleshooting.md
   - Architecture:
+      - Overview: architecture/index.md
       - System Design: architecture/system-overview.md
       - Architecture Guide: architecture/architecture.md
       - Components:
@@ -47,6 +49,7 @@ nav:
           - Message Queue: architecture/components/message-queue.md
           - RAG System: architecture/components/rag-system.md
           - Validation Pipeline: architecture/components/validation-system.md
+      - Technical Decisions: architecture/decisions/
   - Developer Guide:
       - API Reference: reference/api-reference.md
       - Code Quality Standards: reference/code-quality.md

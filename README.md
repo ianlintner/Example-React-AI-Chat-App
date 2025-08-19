@@ -166,6 +166,8 @@ CI/Quality
 
 ## Documentation
 
+📚 **Live Documentation:** http://example-docs.hugecat.net/
+
 Start here: ./docs/index.md
 
 TechDocs/MkDocs options:

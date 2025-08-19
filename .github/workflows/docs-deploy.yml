@@ -62,6 +62,7 @@ jobs:
         with:
           workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+          project_id: kame-457417
 
       - name: Authenticate to Google Cloud (Service Account Key)
         if: env.GCP_SA_KEY != '' && (env.GCP_WORKLOAD_IDENTITY_PROVIDER == '' || env.GCP_SERVICE_ACCOUNT == '')

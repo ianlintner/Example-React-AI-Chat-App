@@ -49,20 +49,22 @@ nav:
           - Message Queue: architecture/components/message-queue.md
           - RAG System: architecture/components/rag-system.md
           - Validation Pipeline: architecture/components/validation-system.md
-      - Technical Decisions: architecture/decisions/
+      - Technical Decisions: architecture/decisions/README.md
   - Developer Guide:
       - API Reference: reference/api-reference.md
       - Code Quality Standards: reference/code-quality.md
       - Docker Setup: reference/docker-setup.md
       - Test Bench: reference/test-bench.md
       - YouTube Embedding: reference/youtube-embedding.md
+  - Examples:
+      - Code Samples: examples/code-samples.md
+      - Integration Examples: examples/external-app.md
   - Operations:
       - Observability: operations/observability.md
+      - Runbooks: operations/runbooks.md
       - CI/CD: operations/ci-cd.md
       - Monitoring: operations/prometheus-grafana.md
       - Tracing: operations/tracing.md
-  - Examples:
-      - Integration Examples: examples/external-app.md
 
 # Enhanced plugins
 plugins:

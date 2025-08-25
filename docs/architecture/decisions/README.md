@@ -116,22 +116,24 @@ Use the [ADR template](../../_templates/adr-template.md) when creating new ADRs:
 
 ## Current ADRs
 
+*Note: ADR files are created as architectural decisions are made. The following represent planned ADRs that will document key system decisions:*
+
 ### Infrastructure and Deployment
 
-- **[ADR-0001: Multi-Agent Architecture](0001-multi-agent-architecture.md)** - Decision to implement specialized agents for different conversation types
-- **[ADR-0002: Message Queue System](0002-message-queue-system.md)** - Selection of Redis-based message queue for asynchronous processing
-- **[ADR-0003: Observability Stack](0003-observability-stack.md)** - OpenTelemetry + Jaeger + Prometheus + Grafana for monitoring
+- **ADR-0001: Multi-Agent Architecture** - Decision to implement specialized agents for different conversation types
+- **ADR-0002: Message Queue System** - Selection of Redis-based message queue for asynchronous processing  
+- **ADR-0003: Observability Stack** - OpenTelemetry + Jaeger + Prometheus + Grafana for monitoring
 
 ### Data and Storage
 
-- **[ADR-0004: Database Strategy](0004-database-strategy.md)** - PostgreSQL for primary data storage with Redis for caching
-- **[ADR-0005: Validation Pipeline](0005-validation-pipeline.md)** - Real-time response validation and quality scoring
+- **ADR-0004: Database Strategy** - PostgreSQL for primary data storage with Redis for caching
+- **ADR-0005: Validation Pipeline** - Real-time response validation and quality scoring
 
 ### Development and Operations
 
-- **[ADR-0006: Development Framework](0006-development-framework.md)** - Node.js + TypeScript + React Native technology stack
-- **[ADR-0007: Container Strategy](0007-container-strategy.md)** - Docker + Docker Compose for development and deployment
-- **[ADR-0008: Testing Strategy](0008-testing-strategy.md)** - Multi-layered testing approach with unit, integration, and E2E tests
+- **ADR-0006: Development Framework** - Node.js + TypeScript + React Native technology stack
+- **ADR-0007: Container Strategy** - Docker + Docker Compose for development and deployment
+- **ADR-0008: Testing Strategy** - Multi-layered testing approach with unit, integration, and E2E tests
 
 ## Creating a New ADR
 
@@ -289,8 +291,3 @@ if read performance becomes a bottleneck (measured by >200ms p95 latency).
 - **[Architecture Decision Records in Action](https://www.thoughtworks.com/insights/blog/architecture/architecture-decision-records-in-action)** - ThoughtWorks article on ADR best practices
 - **[When Should I Write an ADR?](https://engineering.atspotify.com/2020/04/when-should-i-write-an-architecture-decision-record/)** - Spotify Engineering blog post
 - **[Lightweight Architecture Decision Records](https://www.thoughtworks.com/radar/techniques/lightweight-architecture-decision-records)** - ThoughtWorks Technology Radar entry
-
----
-
-*Last updated: 2024*
-*For questions about the ADR process, reach out to the architecture team.*

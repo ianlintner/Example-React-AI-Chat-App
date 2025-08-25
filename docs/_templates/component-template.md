@@ -255,10 +255,10 @@ kubectl scale deployment component-name --replicas=5
 
 ## Related Documentation
 
-- [System Architecture Overview](../system-overview.md)
-- [Related Component Documentation](./related-component.md)
-- [API Reference](../../reference/api-reference.md)
-- [Operations Runbook](../../operations/runbooks.md)
+- [System Architecture Overview](../architecture/system-overview.md)
+- [Related Component Documentation](../architecture/components/agents.md)
+- [API Reference](../reference/api-reference.md)
+- [Operations Runbook](../operations/runbooks.md)
 
 ---
 

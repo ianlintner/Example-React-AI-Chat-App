@@ -11,7 +11,7 @@ This document provides comprehensive information about the mobile application ar
 5. [Navigation](#navigation)
 6. [State Management](#state-management)
 7. [Styling and Theming](#styling-and-theming)
-8. [Real-time Communication](#real-time-communication)
+8. [Real-time Communication](#real-time-communication-architecture)
 9. [API Integration](#api-integration)
 10. [TypeScript Usage](#typescript-usage)
 11. [Development Workflow](#development-workflow)

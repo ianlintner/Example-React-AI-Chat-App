@@ -752,7 +752,7 @@ volumes:
 - **API Reference**: [Reference → API Reference](../reference/api-reference.md) - Complete API documentation
 - **Architecture**: [Architecture → System Overview](../architecture/system-overview.md) - System architecture details
 - **Setup Guide**: [Getting Started → Setup](../getting-started/setup.md) - Development environment setup
-- **Testing Guide**: [Reference → Testing](../reference/testing.md) - Testing strategies and examples
+- **API Reference**: [Reference → API Reference](../reference/api-reference.md) - Complete API documentation
 
 ---
 

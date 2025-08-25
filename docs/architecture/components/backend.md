@@ -19,7 +19,7 @@ This document provides comprehensive information about the backend architecture,
     - [REST API Request Flow](#rest-api-request-flow)
     - [WebSocket Real-time Flow](#websocket-real-time-flow)
   - [Service Integration Architecture](#service-integration-architecture)
-  - [Error Handling \& Resilience](#error-handling--resilience)
+  - [Error Handling \& Resilience {#error-handling--resilience}](#error-handling--resilience-error-handling--resilience)
   - [API Design](#api-design)
     - [RESTful Endpoints](#restful-endpoints)
       - [Health Check](#health-check)
@@ -37,7 +37,7 @@ This document provides comprehensive information about the backend architecture,
     - [Connection Management](#connection-management)
     - [Caching Strategy](#caching-strategy)
   - [Security Implementation](#security-implementation)
-    - [Authentication \& Authorization](#authentication--authorization)
+    - [Authentication \& Authorization {#authentication--authorization}](#authentication--authorization-authentication--authorization)
   - [Benefits](#benefits)
     - [Scalability](#scalability)
     - [Reliability](#reliability)
@@ -372,7 +372,7 @@ graph TB
     class RequestValidator,EventValidator,AuthMiddleware,SocketAuth processing
 ```
 
-## Error Handling & Resilience
+## Error Handling & Resilience {#error-handling--resilience}
 
 ```mermaid
 graph TB
@@ -1124,7 +1124,7 @@ export const cache = new CacheService();
 
 ## Security Implementation
 
-### Authentication & Authorization
+### Authentication & Authorization {#authentication--authorization}
 
 ```typescript
 // JWT-based authentication middleware

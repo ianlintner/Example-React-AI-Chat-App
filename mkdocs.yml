@@ -1,55 +1,106 @@
-site_name: React Project Docs
-site_description: Documentation for the project, structured for Backstage TechDocs
+site_name: AI Chat Demo - Technical Documentation
+site_description: Enterprise-grade AI chat application documentation
 docs_dir: docs
 use_directory_urls: true
+
+# SEO and metadata
+site_author: Engineering Team
+site_url: http://example-docs.hugecat.net/
+
+# Enhanced theme configuration
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - navigation.top
+    - navigation.tabs
+    - search.highlight
+    - search.share
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 nav:
   - Home: index.md
   - Getting Started:
-      - Quickstart: getting-started/quickstart.md
-      - Setup: getting-started/setup.md
+      - Overview: getting-started/index.md
+      - Quick Start: getting-started/quickstart.md
+      - Development Setup: getting-started/setup.md
       - Troubleshooting: getting-started/troubleshooting.md
   - Architecture:
-      - System Overview: architecture/system-overview.md
+      - Overview: architecture/index.md
+      - System Design: architecture/system-overview.md
       - Architecture Guide: architecture/architecture.md
       - Components:
-          - Agents: architecture/components/agents.md
-          - Backend: architecture/components/backend.md
-          - Frontend: architecture/components/frontend.md
+          - Agent System: architecture/components/agents.md
+          - Backend Services: architecture/components/backend.md
+          - Frontend App: architecture/components/frontend.md
           - Message Queue: architecture/components/message-queue.md
           - RAG System: architecture/components/rag-system.md
-          - Validation System: architecture/components/validation-system.md
-          - Sources:
-              - Agents (notes): architecture/components/_sources/agents.md
-              - Entertainment Agents (notes): architecture/components/_sources/entertainment-agents.md
-              - Goal Seeking System (notes): architecture/components/_sources/goal-seeking-system.md
-              - Hold Agent System (notes): architecture/components/_sources/hold-agent-system.md
-              - New Entertainment Agents Summary: architecture/components/_sources/new-entertainment-agents-summary.md
-  - Operations:
-      - CI/CD: operations/ci-cd.md
-      - Observability: operations/observability.md
-      - Prometheus & Grafana: operations/prometheus-grafana.md
-      - Tracing: operations/tracing.md
-  - Reference:
+          - Validation Pipeline: architecture/components/validation-system.md
+      - Technical Decisions: architecture/decisions/README.md
+  - Developer Guide:
       - API Reference: reference/api-reference.md
-      - Code Quality: reference/code-quality.md
+      - Code Quality Standards: reference/code-quality.md
       - Docker Setup: reference/docker-setup.md
       - Test Bench: reference/test-bench.md
-      - Test Bench OpenAPI: reference/test-bench-openapi.yaml
       - YouTube Embedding: reference/youtube-embedding.md
   - Examples:
-      - External App: examples/external-app.md
+      - Code Samples: examples/code-samples.md
+      - Integration Examples: examples/external-app.md
+  - Operations:
+      - Observability: operations/observability.md
+      - Runbooks: operations/runbooks.md
+      - CI/CD: operations/ci-cd.md
+      - Monitoring: operations/prometheus-grafana.md
+      - Tracing: operations/tracing.md
 
+# Enhanced plugins
 plugins:
   - techdocs-core
+  - search:
+      lang: en
 
+# Enhanced markdown extensions
 markdown_extensions:
   - admonition
-  - toc:
-      permalink: true
-  - tables
-  - def_list
   - attr_list
-  - fenced_code
-  - codehilite:
-      guess_lang: false
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: '¤'
+      toc_depth: 3
+  - pymdownx.betterem
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+
+# Enable strict mode for link checking
+strict: true

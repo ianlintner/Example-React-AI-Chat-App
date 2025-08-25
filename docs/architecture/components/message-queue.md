@@ -14,6 +14,164 @@ The message queue system provides:
 - **Real-time Stats**: Monitor queue performance and health
 - **Type Safety**: Full TypeScript support with typed payloads
 
+## Architecture
+
+### Queue Topology
+
+```mermaid
+graph TB
+    %% Define classes for consistent styling
+    classDef queue fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef service fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef data fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef external fill:#fff3e0,stroke:#e65100,stroke-width:2px
+
+    %% Input sources
+    API[API Endpoints]:::service
+    Socket[Socket Events]:::service
+    Goal[Goal System]:::service
+    
+    %% Queue service
+    QS[Queue Service]:::service
+    
+    %% Message queues by priority
+    PQ10[Priority 10: Critical]:::queue
+    PQ9[Priority 9: High Proactive]:::queue
+    PQ8[Priority 8: Stream Chunks]:::queue
+    PQ7[Priority 7: Proactive Actions]:::queue
+    PQ6[Priority 6: Agent Responses]:::queue
+    PQ5[Priority 5: Chat Messages]:::queue
+    PQ1[Priority 1-4: Background]:::queue
+    
+    %% Processing layer
+    Proc[Message Processors]:::service
+    
+    %% Retry and failure handling
+    Retry[Retry Queue]:::queue
+    DLQ[Dead Letter Queue]:::queue
+    
+    %% Storage backends
+    Memory[(In-Memory)]:::data
+    Redis[(Redis)]:::external
+    
+    %% Outputs
+    Agents[AI Agents]:::service
+    Frontend[Frontend via Socket]:::service
+    Metrics[Metrics & Logs]:::data
+
+    %% Input flow
+    API --> QS
+    Socket --> QS
+    Goal --> QS
+    
+    %% Priority routing
+    QS --> PQ10
+    QS --> PQ9
+    QS --> PQ8
+    QS --> PQ7
+    QS --> PQ6
+    QS --> PQ5
+    QS --> PQ1
+    
+    %% Processing flow
+    PQ10 --> Proc
+    PQ9 --> Proc
+    PQ8 --> Proc
+    PQ7 --> Proc
+    PQ6 --> Proc
+    PQ5 --> Proc
+    PQ1 --> Proc
+    
+    %% Failure handling
+    Proc --> Retry
+    Retry --> Proc
+    Retry --> DLQ
+    
+    %% Storage
+    QS --> Memory
+    QS --> Redis
+    
+    %% Output flow
+    Proc --> Agents
+    Proc --> Frontend
+    Proc --> Metrics
+```
+
+### Message Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Q as Queue Service
+    participant P as Processor
+    participant R as Retry Queue
+    participant D as Dead Letter Queue
+    participant A as Agent/Handler
+
+    C->>Q: Enqueue Message (priority: 7)
+    Q->>Q: Validate & prioritize
+    Q->>P: Process by priority
+    
+    alt Processing Success
+        P->>A: Handle message
+        A-->>P: Success response
+        P->>Q: Mark completed
+        Q-->>C: Success callback
+    else Processing Failure
+        P->>R: Send to retry queue
+        R->>R: Wait (exponential backoff)
+        R->>P: Retry processing
+        
+        alt Retry Success
+            P->>A: Handle message
+            A-->>P: Success response
+            P->>Q: Mark completed
+        else Max Retries Exceeded
+            P->>D: Send to dead letter queue
+            D->>Q: Log dead letter event
+            Q-->>C: Failure callback
+        end
+    end
+```
+
+### Priority Processing Flow
+
+```mermaid
+graph LR
+    classDef high fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    classDef med fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef low fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+
+    Input[Incoming Messages]
+    
+    %% Priority classification
+    P10[Priority 10: Critical System]:::high
+    P9[Priority 9: High Proactive]:::high
+    P8[Priority 8: Stream Chunks]:::high
+    P7[Priority 7: Proactive Actions]:::med
+    P6[Priority 6: Agent Responses]:::med
+    P5[Priority 5: Chat Messages]:::med
+    P4[Priority 1-4: Background]:::low
+    
+    Output[Processed Messages]
+    
+    Input --> P10
+    Input --> P9
+    Input --> P8
+    Input --> P7
+    Input --> P6
+    Input --> P5
+    Input --> P4
+    
+    P10 --> Output
+    P9 --> Output
+    P8 --> Output
+    P7 --> Output
+    P6 --> Output
+    P5 --> Output
+    P4 --> Output
+```
+
 ## Quick Start
 
 ### Environment Configuration

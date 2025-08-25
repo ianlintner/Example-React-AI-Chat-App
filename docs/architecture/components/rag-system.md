@@ -6,6 +6,63 @@ The RAG system provides curated, high-quality content for entertainment agents, 
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph "RAG System Architecture"
+        UserQuery[User Query] --> AgentService[Agent Service]
+        
+        subgraph "Content Retrieval Layer"
+            AgentService --> RAGService[RAG Service]
+            RAGService --> ContentDB[(Content Database<br/>30 curated items)]
+            RAGService --> SearchEngine[Search Engine]
+            
+            SearchEngine --> TagMatcher[Tag Matcher<br/>0.3pts per match]
+            SearchEngine --> PhraseMatcher[Phrase Matcher<br/>0.8pts exact match]
+            SearchEngine --> CategoryMatcher[Category Matcher<br/>0.2pts per match]
+            SearchEngine --> QualityBooster[Quality Booster<br/>+0.1pts for rating]
+        end
+        
+        subgraph "Content Types"
+            ContentDB --> JokeContent[Jokes Database<br/>🎭 10 premium jokes]
+            ContentDB --> TriviaContent[Trivia Database<br/>🧠 10 fascinating facts]
+            ContentDB --> GIFContent[GIF Database<br/>🎬 10 curated GIFs]
+        end
+        
+        subgraph "Search Processing"
+            TagMatcher --> RelevanceScorer[Relevance Scorer]
+            PhraseMatcher --> RelevanceScorer
+            CategoryMatcher --> RelevanceScorer
+            QualityBooster --> RelevanceScorer
+            
+            RelevanceScorer --> ResultFilter[Result Filter<br/>Min 0.1 threshold]
+            ResultFilter --> ResultRanker[Result Ranker<br/>Score-based sorting]
+        end
+        
+        subgraph "Content Delivery"
+            ResultRanker --> ContentResponse[Content Response]
+            ContentResponse --> FallbackHandler[Fallback Handler<br/>Random if no matches]
+            FallbackHandler --> QualityValidation[Quality Validation<br/>4-5 star ratings only]
+        end
+        
+        subgraph "Agent Integration"
+            QualityValidation --> JokeAgent[Joke Agent<br/>😄 Humor delivery]
+            QualityValidation --> TriviaAgent[Trivia Agent<br/>🧠 Fact sharing]
+            QualityValidation --> GIFAgent[GIF Agent<br/>🎬 Visual entertainment]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef content fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef agent fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class RAGService,SearchEngine,TagMatcher,PhraseMatcher,CategoryMatcher,QualityBooster,RelevanceScorer,ResultFilter,ResultRanker,FallbackHandler,QualityValidation service
+    class ContentDB,JokeContent,TriviaContent,GIFContent data
+    class UserQuery,ContentResponse external
+    class JokeAgent,TriviaAgent,GIFAgent agent
+```
+
 ### Core Components
 
 1. **RAGService** - Main service class managing content database and search
@@ -117,7 +174,122 @@ Returns content statistics by type.
 
 Gets highest-rated content, optionally filtered by type.
 
-### Search Algorithm
+## Content Retrieval Flow
+
+```mermaid
+sequenceDiagram
+    participant Agent as Entertainment Agent
+    participant RAG as RAG Service
+    participant Search as Search Engine
+    participant DB as Content Database
+    participant Quality as Quality Filter
+
+    Agent->>+RAG: searchForAgent(type, query, fallback)
+    
+    Note over RAG: Query Processing
+    RAG->>RAG: Parse agent type and context
+    RAG->>RAG: Extract search keywords
+    RAG->>RAG: Determine content filters
+    
+    Note over RAG,Search: Search Execution
+    RAG->>+Search: search(query, type, filters)
+    Search->>+DB: Get all content by type
+    DB-->>-Search: Content items array
+    
+    Note over Search: Relevance Scoring
+    Search->>Search: Calculate phrase matches (0.8pts)
+    Search->>Search: Calculate tag matches (0.3pts each)
+    Search->>Search: Calculate category matches (0.2pts)
+    Search->>Search: Apply quality boost (0.1pts)
+    
+    Search->>Search: Filter by threshold (≥0.1)
+    Search->>Search: Sort by relevance score
+    Search-->>-RAG: Ranked results array
+    
+    alt Results Found
+        Note over RAG,Quality: Quality Assurance
+        RAG->>+Quality: Validate top result
+        Quality->>Quality: Check rating (4-5 stars)
+        Quality->>Quality: Verify content appropriateness
+        Quality-->>-RAG: Validated content
+        RAG-->>Agent: High-quality content item
+        
+    else No Results & Fallback Enabled
+        Note over RAG,DB: Fallback Strategy
+        RAG->>+DB: getRandomContent(type)
+        DB-->>-RAG: Random quality content
+        RAG-->>Agent: Fallback content item
+        
+    else No Results & No Fallback
+        RAG-->>-Agent: null (no content found)
+    end
+    
+    Note over Agent,Quality: Content Delivered with Context
+```
+
+## Search Algorithm Architecture
+
+```mermaid
+graph TB
+    subgraph "Search Algorithm Processing"
+        Query[Search Query] --> Preprocessor[Query Preprocessor]
+        
+        subgraph "Text Processing"
+            Preprocessor --> Tokenizer[Text Tokenizer<br/>Split into keywords]
+            Preprocessor --> Normalizer[Text Normalizer<br/>Lowercase, trim spaces]
+            Preprocessor --> StopWords[Stop Word Filter<br/>Remove common words]
+        end
+        
+        subgraph "Matching Strategies"
+            Tokenizer --> ExactPhrase[Exact Phrase Matching<br/>0.8 points maximum]
+            Tokenizer --> TagMatching[Tag Matching<br/>0.3 points per tag]
+            Normalizer --> CategoryMatch[Category Matching<br/>0.2 points per match]
+            StopWords --> KeywordMatch[Keyword Matching<br/>0.1 points per word]
+        end
+        
+        subgraph "Content Analysis"
+            ExactPhrase --> ContentScanner[Content Scanner]
+            TagMatching --> TagDatabase[(Tag Index<br/>100+ searchable tags)]
+            CategoryMatch --> CategoryIndex[(Category Index<br/>15+ content categories)]
+            KeywordMatch --> ContentIndex[(Full-text Index<br/>All content searchable)]
+        end
+        
+        subgraph "Scoring Pipeline"
+            ContentScanner --> BaseScore[Base Relevance Score<br/>Sum of all matches]
+            TagDatabase --> BaseScore
+            CategoryIndex --> BaseScore
+            ContentIndex --> BaseScore
+            
+            BaseScore --> QualityMultiplier[Quality Multiplier<br/>Rating-based boost]
+            QualityMultiplier --> FinalScore[Final Relevance Score<br/>0.0 - 1.0+ range]
+        end
+        
+        subgraph "Result Processing"
+            FinalScore --> ThresholdFilter[Threshold Filter<br/>Minimum 0.1 score]
+            ThresholdFilter --> ScoreSorter[Score-based Sorting<br/>Highest relevance first]
+            ScoreSorter --> LimitApplier[Result Limiter<br/>Top N results]
+        end
+        
+        subgraph "Output"
+            LimitApplier --> RankedResults[Ranked Results<br/>Scored content items]
+            RankedResults --> TopResult[Top Result<br/>Best match for agent]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef processing fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef scoring fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class Preprocessor,Tokenizer,Normalizer,StopWords,ContentScanner,QualityMultiplier,ThresholdFilter,ScoreSorter,LimitApplier service
+    class TagDatabase,CategoryIndex,ContentIndex data
+    class Query,RankedResults,TopResult external
+    class ExactPhrase,TagMatching,CategoryMatch,KeywordMatch processing
+    class BaseScore,FinalScore scoring
+```
+
+### Search Algorithm Scoring
 
 The RAG system uses intelligent relevance scoring:
 
@@ -128,6 +300,129 @@ The RAG system uses intelligent relevance scoring:
 5. **Quality Boost** (up to 0.1 points) - Based on content rating
 
 **Minimum Threshold:** 0.1 relevance score required for results.
+
+## Agent Integration Patterns
+
+```mermaid
+graph TB
+    subgraph "Multi-Agent RAG Integration"
+        AgentRequest[Agent Content Request] --> AgentRouter[Agent Router]
+        
+        subgraph "Agent-Specific Processing"
+            AgentRouter --> JokePath[Joke Agent Path<br/>😄 Humor context]
+            AgentRouter --> TriviaPath[Trivia Agent Path<br/>🧠 Educational context]
+            AgentRouter --> GIFPath[GIF Agent Path<br/>🎬 Visual context]
+        end
+        
+        subgraph "Content Customization"
+            JokePath --> JokeRAG[Joke RAG Service<br/>Dad jokes, tech humor, stories]
+            TriviaPath --> TriviaRAG[Trivia RAG Service<br/>Science, animals, space, history]
+            GIFPath --> GIFRAG[GIF RAG Service<br/>Reactions, emotions, celebrations]
+        end
+        
+        subgraph "Fallback Strategies"
+            JokeRAG --> JokeFallback[Joke Fallback<br/>Random high-quality joke]
+            TriviaRAG --> TriviaFallback[Trivia Fallback<br/>Random fascinating fact]
+            GIFRAG --> GIFFallback[GIF Fallback<br/>Random appropriate GIF]
+        end
+        
+        subgraph "Response Enhancement"
+            JokeFallback --> JokeEnhancer[Joke Response Enhancer<br/>Add reaction prompts & emojis]
+            TriviaFallback --> TriviaEnhancer[Trivia Response Enhancer<br/>Add follow-up questions]
+            GIFFallback --> GIFEnhancer[GIF Response Enhancer<br/>Add context & alt text]
+        end
+        
+        subgraph "Quality Assurance"
+            JokeEnhancer --> QualityGate[Quality Gate<br/>4-5 star content only]
+            TriviaEnhancer --> QualityGate
+            GIFEnhancer --> QualityGate
+            
+            QualityGate --> FinalResponse[Enhanced Agent Response<br/>✅ Curated & contextual]
+        end
+        
+        subgraph "Demo Mode Integration"
+            FinalResponse --> DemoCheck{Demo Mode?}
+            DemoCheck -->|Yes| DemoResponse[Demo Mode Response<br/>RAG content + demo notice]
+            DemoCheck -->|No| ProductionResponse[Production Response<br/>RAG fallback if API fails]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef agent fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef enhancement fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class AgentRouter,JokeRAG,TriviaRAG,GIFRAG,QualityGate,DemoCheck service
+    class JokeFallback,TriviaFallback,GIFFallback data
+    class AgentRequest,FinalResponse,DemoResponse,ProductionResponse external
+    class JokePath,TriviaPath,GIFPath agent
+    class JokeEnhancer,TriviaEnhancer,GIFEnhancer enhancement
+```
+
+## Content Management Workflow
+
+```mermaid
+graph TB
+    subgraph "Content Management System"
+        ContentCreation[Content Creation] --> ContentValidation[Content Validation]
+        
+        subgraph "Quality Assurance"
+            ContentValidation --> RatingCheck[Rating Check<br/>Require 4-5 stars]
+            ContentValidation --> FamilyFriendly[Family-Friendly Check<br/>Appropriate for all ages]
+            ContentValidation --> AccuracyCheck[Accuracy Verification<br/>Fact-checking for trivia]
+            ContentValidation --> AccessibilityCheck[Accessibility Check<br/>Alt text for GIFs]
+        end
+        
+        subgraph "Content Processing"
+            RatingCheck --> TagGeneration[Tag Generation<br/>Extract searchable keywords]
+            FamilyFriendly --> CategoryAssignment[Category Assignment<br/>Assign to content buckets]
+            AccuracyCheck --> MetadataCreation[Metadata Creation<br/>Add descriptions & context]
+            AccessibilityCheck --> ContentFormatting[Content Formatting<br/>Standardize structure]
+        end
+        
+        subgraph "Database Integration"
+            TagGeneration --> TagIndex[Tag Index Update<br/>100+ searchable tags]
+            CategoryAssignment --> CategoryIndex[Category Index Update<br/>15+ content categories]
+            MetadataCreation --> ContentDatabase[(Content Database<br/>Persistent storage)]
+            ContentFormatting --> SearchIndex[Search Index Update<br/>Full-text indexing]
+        end
+        
+        subgraph "Validation & Testing"
+            TagIndex --> SearchTesting[Search Testing<br/>Verify findability]
+            CategoryIndex --> RelevanceTesting[Relevance Testing<br/>Check scoring accuracy]
+            ContentDatabase --> QualityTesting[Quality Testing<br/>User satisfaction validation]
+            SearchIndex --> PerformanceTesting[Performance Testing<br/>Search response times]
+        end
+        
+        subgraph "Deployment"
+            SearchTesting --> ProductionDeployment[Production Deployment<br/>Live content activation]
+            RelevanceTesting --> ProductionDeployment
+            QualityTesting --> ProductionDeployment
+            PerformanceTesting --> ProductionDeployment
+            
+            ProductionDeployment --> MonitoringSetup[Monitoring Setup<br/>Usage analytics & feedback]
+        end
+        
+        subgraph "Continuous Improvement"
+            MonitoringSetup --> UsageAnalytics[Usage Analytics<br/>Track content performance]
+            UsageAnalytics --> ContentOptimization[Content Optimization<br/>Update based on feedback]
+            ContentOptimization --> ContentCreation
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef quality fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef testing fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class ContentValidation,TagGeneration,CategoryAssignment,MetadataCreation,ContentFormatting,ProductionDeployment,MonitoringSetup service
+    class TagIndex,CategoryIndex,ContentDatabase,SearchIndex data
+    class ContentCreation,UsageAnalytics,ContentOptimization external
+    class RatingCheck,FamilyFriendly,AccuracyCheck,AccessibilityCheck quality
+    class SearchTesting,RelevanceTesting,QualityTesting,PerformanceTesting testing
+```
 
 ## Integration with Agents
 

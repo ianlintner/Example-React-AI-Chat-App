@@ -11,7 +11,7 @@ This document provides comprehensive information about the mobile application ar
 5. [Navigation](#navigation)
 6. [State Management](#state-management)
 7. [Styling and Theming](#styling-and-theming)
-8. [Real-time Communication](#real-time-communication)
+8. [Real-time Communication](#real-time-communication-architecture)
 9. [API Integration](#api-integration)
 10. [TypeScript Usage](#typescript-usage)
 11. [Development Workflow](#development-workflow)
@@ -21,6 +21,72 @@ This document provides comprehensive information about the mobile application ar
 ## Overview
 
 The mobile application is built with React Native and Expo, providing a native mobile experience for iOS and Android platforms. It features real-time messaging, AI response validation dashboard, and intelligent agent interactions with cross-platform compatibility.
+
+## Mobile Architecture
+
+```mermaid
+graph TB
+    subgraph "React Native Mobile Architecture"
+        User[Mobile User] --> NativeApp[React Native App]
+        
+        subgraph "Application Layer"
+            NativeApp --> ExpoRouter[Expo Router<br/>File-based navigation]
+            NativeApp --> ComponentTree[Component Tree<br/>React Native components]
+            NativeApp --> StateManager[State Management<br/>React hooks & context]
+        end
+        
+        subgraph "UI Framework Layer"
+            ExpoRouter --> TabNavigation[Tab Navigation<br/>Chat & Dashboard]
+            ComponentTree --> RNPaper[React Native Paper<br/>Material Design UI]
+            ComponentTree --> ExpoComponents[Expo Components<br/>Native platform APIs]
+            
+            StateManager --> ThemeProvider[Theme Provider<br/>Light/Dark mode support]
+            StateManager --> SocketContext[Socket Context<br/>Real-time state]
+        end
+        
+        subgraph "Service Layer"
+            TabNavigation --> ChatScreen[Chat Screen<br/>Real-time messaging]
+            TabNavigation --> DashboardScreen[Dashboard Screen<br/>Validation metrics]
+            
+            SocketContext --> SocketService[Socket Service<br/>WebSocket client]
+            ThemeProvider --> APIService[API Service<br/>HTTP client]
+        end
+        
+        subgraph "Native Platform Integration"
+            ChatScreen --> NativeKeyboard[Native Keyboard<br/>Text input handling]
+            ChatScreen --> NativeGestures[Native Gestures<br/>Touch interactions]
+            DashboardScreen --> NativeRefresh[Native Refresh<br/>Pull-to-refresh]
+            
+            SocketService --> WebSocketAPI[WebSocket API<br/>Real-time backend]
+            APIService --> RESTAPI[REST API<br/>HTTP backend]
+        end
+        
+        subgraph "Device Features"
+            NativeKeyboard --> Haptics[Haptic Feedback<br/>Touch response]
+            NativeGestures --> Animations[Native Animations<br/>Reanimated 3]
+            NativeRefresh --> StatusBar[Status Bar<br/>System integration]
+        end
+        
+        subgraph "External Integration"
+            WebSocketAPI --> Backend[Backend Services<br/>Node.js + Express]
+            RESTAPI --> Backend
+            
+            Haptics --> iOS[iOS Platform<br/>Native features]
+            Haptics --> Android[Android Platform<br/>Native features]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef mobile fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef native fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class NativeApp,ExpoRouter,ComponentTree,StateManager,RNPaper,ExpoComponents,ThemeProvider,SocketContext,SocketService,APIService service
+    class ChatScreen,DashboardScreen,TabNavigation data
+    class User,Backend,WebSocketAPI,RESTAPI,iOS,Android external
+    class NativeKeyboard,NativeGestures,NativeRefresh,Haptics,Animations,StatusBar native
+```
 
 ## Technology Stack
 
@@ -80,23 +146,121 @@ frontend/
 
 ## Component Architecture
 
-### Component Hierarchy
+## React Native Component Flow
 
+```mermaid
+graph TB
+    subgraph "React Native Component Architecture"
+        App[App.tsx<br/>Application Root] --> RootLayout[_layout.tsx<br/>Root Layout Provider]
+        
+        subgraph "Navigation Layer"
+            RootLayout --> ExpoRouter[Expo Router<br/>File-based routing]
+            ExpoRouter --> TabLayout[tabs/_layout.tsx<br/>Tab Navigation]
+            
+            TabLayout --> ChatTab[index.tsx<br/>Chat Tab Screen]
+            TabLayout --> DashboardTab[explore.tsx<br/>Dashboard Tab Screen]
+        end
+        
+        subgraph "Chat Screen Components"
+            ChatTab --> ChatScreen[ChatScreen.tsx<br/>Main chat interface]
+            
+            ChatScreen --> AgentStatus[AgentStatusBar.tsx<br/>🤖 Agent indicator]
+            ChatScreen --> MessageContainer[Message Container<br/>ScrollView wrapper]
+            ChatScreen --> InputContainer[Message Input Container<br/>KeyboardAvoidingView]
+            
+            MessageContainer --> MessageList[Message List<br/>FlatList optimization]
+            MessageList --> MessageBubble[MessageBubble.tsx<br/>Individual message UI]
+            
+            InputContainer --> MessageInput[MessageInput.tsx<br/>Text input + send button]
+            MessageInput --> SendButton[Send Button<br/>IconButton with haptics]
+        end
+        
+        subgraph "Dashboard Screen Components"
+            DashboardTab --> ValidationDash[ValidationDashboard.tsx<br/>Metrics interface]
+            
+            ValidationDash --> MetricsGrid[Metrics Grid<br/>Card-based layout]
+            ValidationDash --> ChartContainer[Chart Container<br/>Visualization wrapper]
+            ValidationDash --> ResponseLog[Response Log<br/>Validation history]
+            
+            MetricsGrid --> QualityCard[Quality Score Card<br/>Progress indicators]
+            MetricsGrid --> AgentCard[Agent Stats Card<br/>Performance metrics]
+            MetricsGrid --> ResponseCard[Response Time Card<br/>Latency tracking]
+            
+            ChartContainer --> QualityChart[Quality Trend Chart<br/>Line chart component]
+            ChartContainer --> AgentPieChart[Agent Usage Chart<br/>Pie chart distribution]
+        end
+        
+        subgraph "Shared UI Components"
+            MessageBubble --> ThemedText[ThemedText.tsx<br/>Theme-aware text]
+            QualityCard --> ThemedView[ThemedView.tsx<br/>Theme-aware container]
+            
+            ThemedText --> ColorScheme[useColorScheme<br/>Dark/Light detection]
+            ThemedView --> ThemeColor[useThemeColor<br/>Dynamic color resolution]
+        end
+        
+        subgraph "Service Integration"
+            ChatScreen --> SocketService[socketService.ts<br/>WebSocket client]
+            ValidationDash --> APIService[apiService.ts<br/>HTTP client]
+            
+            SocketService --> RealTimeEvents[Real-time Events<br/>Message streaming]
+            APIService --> DataFetching[Data Fetching<br/>REST API calls]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef component fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef ui fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class App,RootLayout,ExpoRouter,TabLayout,SocketService,APIService,RealTimeEvents,DataFetching service
+    class ChatScreen,ValidationDash,MessageContainer,MessageList,MetricsGrid,ChartContainer data
+    class ChatTab,DashboardTab,ColorScheme,ThemeColor external
+    class AgentStatus,MessageBubble,MessageInput,QualityCard,AgentCard,ResponseCard,QualityChart,AgentPieChart component
+    class ThemedText,ThemedView,SendButton ui
 ```
-App
-├── RootLayout
-    └── TabLayout
-        ├── ChatTab (index.tsx)
-        │   └── ChatScreen
-        │       ├── AgentStatusBar
-        │       ├── MessageList
-        │       │   └── MessageBubble
-        │       └── MessageInput
-        └── DashboardTab (explore.tsx)
-            └── ValidationDashboard
-                ├── MetricsCards
-                ├── QualityChart
-                └── ResponseList
+
+### Component Hierarchy Tree
+
+```mermaid
+graph LR
+    subgraph "Component Tree Structure"
+        App[📱 App] --> Root[🏠 RootLayout]
+        Root --> Tabs[📑 TabLayout]
+        
+        Tabs --> Chat[💬 ChatTab]
+        Tabs --> Dash[📊 DashboardTab]
+        
+        Chat --> ChatScreen[🖥️ ChatScreen]
+        Dash --> ValDash[📈 ValidationDashboard]
+        
+        ChatScreen --> Agent[🤖 AgentStatusBar]
+        ChatScreen --> Messages[📜 MessageList]
+        ChatScreen --> Input[⌨️ MessageInput]
+        
+        Messages --> Bubble[💭 MessageBubble]
+        Input --> Send[📤 SendButton]
+        
+        ValDash --> Cards[🗃️ MetricsCards]
+        ValDash --> Chart[📊 QualityChart]
+        ValDash --> Log[📋 ResponseList]
+        
+        subgraph "Shared Components"
+            Bubble --> Text[📝 ThemedText]
+            Cards --> View[🎨 ThemedView]
+            Agent --> Status[🔄 ConnectionStatus]
+        end
+    end
+
+    classDef root fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef screen fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef component fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef shared fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class App,Root,Tabs root
+    class Chat,Dash,ChatScreen,ValDash screen
+    class Agent,Messages,Input,Cards,Chart,Log,Bubble,Send component
+    class Text,View,Status shared
 ```
 
 ### Core Components
@@ -441,7 +605,121 @@ export function useThemeColor(
 }
 ```
 
-## Real-time Communication
+## Real-time Communication Architecture
+
+```mermaid
+sequenceDiagram
+    participant User as Mobile User
+    participant App as React Native App
+    participant Socket as Socket Service
+    participant Backend as Backend Server
+    participant AI as AI Agent System
+
+    User->>+App: Launch application
+    App->>+Socket: Initialize connection
+    Socket->>+Backend: WebSocket handshake
+    Backend-->>-Socket: Connection established
+    Socket-->>-App: Connection confirmed
+    App-->>-User: Chat interface ready
+
+    Note over User,AI: Real-time Message Flow
+    User->>+App: Type & send message
+    App->>App: Add message to local state
+    App->>+Socket: Emit 'stream_chat' event
+    Socket->>+Backend: Forward message data
+    
+    Backend->>Backend: Process with agent service
+    Backend->>+AI: Generate streaming response
+    
+    Note over Backend,AI: Streaming Response Chunks
+    loop Response Streaming
+        AI-->>Backend: Response chunk
+        Backend->>Socket: 'stream_chunk' event
+        Socket-->>App: Real-time chunk delivery
+        App->>App: Update message content
+        App-->>User: Display streaming text
+    end
+    
+    AI-->>-Backend: Stream complete
+    Backend->>Socket: 'stream_complete' event
+    Socket-->>App: Final message confirmation
+    App->>App: Mark message as complete
+    App-->>-User: Complete response displayed
+    
+    Note over User,AI: Mobile-Specific Optimizations
+    App->>App: Handle app backgrounding
+    App->>Socket: Maintain connection state
+    Socket->>Backend: Keep-alive pings
+    Backend-->>Socket: Connection health check
+    Socket-->>App: Connection status update
+    App-->>User: Network status indicator
+```
+
+## State Management Flow
+
+```mermaid
+graph TB
+    subgraph "React Native State Management"
+        UserAction[User Interaction] --> ComponentState[Component State]
+        
+        subgraph "Local State Layer"
+            ComponentState --> LocalHooks[React Hooks<br/>useState, useEffect]
+            LocalHooks --> StateUpdate[State Updates<br/>Immutable patterns]
+            
+            StateUpdate --> ChatState[Chat State<br/>Messages, typing status]
+            StateUpdate --> ValidationState[Validation State<br/>Metrics, agent status]
+            StateUpdate --> UIState[UI State<br/>Theme, navigation]
+        end
+        
+        subgraph "Service State Layer"
+            ChatState --> SocketHook[useSocket Hook<br/>WebSocket state management]
+            ValidationState --> APIHook[useAPI Hook<br/>HTTP data fetching]
+            UIState --> ThemeHook[useTheme Hook<br/>Color scheme management]
+            
+            SocketHook --> SocketService[Socket Service<br/>Connection management]
+            APIHook --> HTTPService[HTTP Service<br/>REST API client]
+            ThemeHook --> ThemeProvider[Theme Provider<br/>Context distribution]
+        end
+        
+        subgraph "Persistent State"
+            SocketService --> AsyncStorage[AsyncStorage<br/>Local data persistence]
+            HTTPService --> AsyncStorage
+            ThemeProvider --> AsyncStorage
+            
+            AsyncStorage --> ConversationCache[Conversation Cache<br/>Message history]
+            AsyncStorage --> UserPreferences[User Preferences<br/>Settings & theme]
+            AsyncStorage --> ValidationCache[Validation Cache<br/>Metrics offline access]
+        end
+        
+        subgraph "External State Sync"
+            SocketService --> RealTimeSync[Real-time Sync<br/>WebSocket events]
+            HTTPService --> RESTSync[REST Sync<br/>HTTP requests]
+            
+            RealTimeSync --> BackendState[Backend State<br/>Live data stream]
+            RESTSync --> BackendState
+            
+            BackendState --> StateReconciliation[State Reconciliation<br/>Conflict resolution]
+        end
+        
+        subgraph "UI State Propagation"
+            StateReconciliation --> ComponentRerender[Component Re-render<br/>React reconciliation]
+            ComponentRerender --> UIUpdate[UI Update<br/>Native view changes]
+            UIUpdate --> UserFeedback[User Feedback<br/>Visual & haptic response]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef state fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef ui fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class SocketService,HTTPService,ThemeProvider,RealTimeSync,RESTSync,StateReconciliation service
+    class AsyncStorage,ConversationCache,UserPreferences,ValidationCache,BackendState data
+    class UserAction,UserFeedback external
+    class ComponentState,LocalHooks,StateUpdate,ChatState,ValidationState,UIState,SocketHook,APIHook,ThemeHook state
+    class ComponentRerender,UIUpdate ui
+```
 
 ### Socket.io Service for Mobile
 
@@ -646,7 +924,141 @@ EXPO_PUBLIC_API_URL=https://your-production-api.com
 4. **Flipper** - Advanced debugging
 5. **EAS Build** - Cloud build service
 
+## Mobile UI/UX Patterns
+
+```mermaid
+graph TB
+    subgraph "Mobile UI/UX Architecture"
+        UserInteraction[User Touch] --> GestureHandler[Gesture Handler<br/>Native touch processing]
+        
+        subgraph "Input Processing"
+            GestureHandler --> TouchGestures[Touch Gestures<br/>Tap, swipe, pinch, scroll]
+            TouchGestures --> HapticFeedback[Haptic Feedback<br/>Tactile response]
+            TouchGestures --> InputValidation[Input Validation<br/>Text & gesture validation]
+        end
+        
+        subgraph "Visual Feedback"
+            HapticFeedback --> AnimationEngine[Animation Engine<br/>Reanimated 3]
+            InputValidation --> LoadingStates[Loading States<br/>Skeleton & spinners]
+            
+            AnimationEngine --> TransitionAnim[Transition Animations<br/>Screen & component transitions]
+            AnimationEngine --> MicroInteractions[Micro-interactions<br/>Button press, list scroll]
+            
+            LoadingStates --> ProgressIndicators[Progress Indicators<br/>Message sending, data loading]
+            LoadingStates --> SkeletonLoaders[Skeleton Loaders<br/>Content placeholders]
+        end
+        
+        subgraph "Responsive Design"
+            TransitionAnim --> ScreenAdaptation[Screen Adaptation<br/>Portrait/landscape modes]
+            MicroInteractions --> SafeAreaHandling[Safe Area Handling<br/>Notch & bottom bar]
+            
+            ScreenAdaptation --> DynamicLayout[Dynamic Layout<br/>Flex-based responsive design]
+            SafeAreaHandling --> AccessibilitySupport[Accessibility Support<br/>Screen readers & navigation]
+        end
+        
+        subgraph "Performance Optimization"
+            ProgressIndicators --> LazyLoading[Lazy Loading<br/>Component-based splitting]
+            SkeletonLoaders --> VirtualizedLists[Virtualized Lists<br/>FlatList optimization]
+            
+            DynamicLayout --> MemoryManagement[Memory Management<br/>Component unmounting]
+            AccessibilitySupport --> ImageOptimization[Image Optimization<br/>Caching & compression]
+        end
+        
+        subgraph "Platform Integration"
+            LazyLoading --> NativeFeatures[Native Features<br/>Camera, notifications, sharing]
+            VirtualizedLists --> DeviceAPI[Device API<br/>Battery, network, storage]
+            
+            MemoryManagement --> PlatformSpecific[Platform Specific<br/>iOS/Android differences]
+            ImageOptimization --> NativeBridge[Native Bridge<br/>React Native modules]
+        end
+        
+        subgraph "User Experience"
+            NativeFeatures --> OfflineSupport[Offline Support<br/>Cached data & queue sync]
+            DeviceAPI --> NetworkHandling[Network Handling<br/>Connection status & retry]
+            
+            PlatformSpecific --> ErrorBoundaries[Error Boundaries<br/>Graceful failure handling]
+            NativeBridge --> PerformanceMonitoring[Performance Monitoring<br/>FPS & memory tracking]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef ui fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef optimization fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class GestureHandler,AnimationEngine,LoadingStates,ScreenAdaptation,SafeAreaHandling,LazyLoading,VirtualizedLists,MemoryManagement,ImageOptimization service
+    class ProgressIndicators,SkeletonLoaders,DynamicLayout,AccessibilitySupport,OfflineSupport,NetworkHandling,ErrorBoundaries,PerformanceMonitoring data
+    class UserInteraction,NativeFeatures,DeviceAPI,PlatformSpecific,NativeBridge external
+    class TouchGestures,HapticFeedback,InputValidation,TransitionAnim,MicroInteractions ui
+```
+
 ## Performance Optimization
+
+```mermaid
+graph TB
+    subgraph "Mobile Performance Optimization Strategy"
+        AppLaunch[App Launch] --> StartupOptimization[Startup Optimization]
+        
+        subgraph "Initial Load Optimization"
+            StartupOptimization --> CodeSplitting[Code Splitting<br/>Lazy component loading]
+            StartupOptimization --> BundleOptimization[Bundle Optimization<br/>Tree shaking & minification]
+            StartupOptimization --> PreloadStrategies[Preload Strategies<br/>Critical path resources]
+        end
+        
+        subgraph "Runtime Performance"
+            CodeSplitting --> ComponentOptimization[Component Optimization<br/>React.memo & useMemo]
+            BundleOptimization --> ListOptimization[List Optimization<br/>FlatList virtualization]
+            PreloadStrategies --> ImageOptimization[Image Optimization<br/>Caching & lazy loading]
+            
+            ComponentOptimization --> RenderOptimization[Render Optimization<br/>Minimize re-renders]
+            ListOptimization --> MemoryOptimization[Memory Optimization<br/>Component cleanup]
+            ImageOptimization --> NetworkOptimization[Network Optimization<br/>Request batching & caching]
+        end
+        
+        subgraph "Animation Performance"
+            RenderOptimization --> AnimationOptimization[Animation Optimization<br/>Native driver usage]
+            MemoryOptimization --> GPUAcceleration[GPU Acceleration<br/>Hardware-accelerated transforms]
+            NetworkOptimization --> InteractionOptimization[Interaction Optimization<br/>Touch response priority]
+            
+            AnimationOptimization --> SixtyFPS[60 FPS Target<br/>Smooth animations]
+            GPUAcceleration --> LayerOptimization[Layer Optimization<br/>Composite layer management]
+            InteractionOptimization --> ResponsiveUI[Responsive UI<br/>< 100ms touch response]
+        end
+        
+        subgraph "Data Management"
+            SixtyFPS --> StateOptimization[State Optimization<br/>Selective updates]
+            LayerOptimization --> CacheOptimization[Cache Optimization<br/>Intelligent data caching]
+            ResponsiveUI --> OfflineOptimization[Offline Optimization<br/>Local storage strategy]
+            
+            StateOptimization --> DataNormalization[Data Normalization<br/>Efficient state structure]
+            CacheOptimization --> BackgroundSync[Background Sync<br/>Data updates when inactive]
+            OfflineOptimization --> QueueManagement[Queue Management<br/>Action queuing & replay]
+        end
+        
+        subgraph "Monitoring & Analysis"
+            DataNormalization --> PerformanceMonitoring[Performance Monitoring<br/>FPS & memory tracking]
+            BackgroundSync --> CrashReporting[Crash Reporting<br/>Error tracking & recovery]
+            QueueManagement --> AnalyticsIntegration[Analytics Integration<br/>Performance metrics]
+            
+            PerformanceMonitoring --> OptimizationInsights[Optimization Insights<br/>Bottleneck identification]
+            CrashReporting --> UserExperienceMetrics[UX Metrics<br/>Load times & responsiveness]
+            AnalyticsIntegration --> ContinuousImprovement[Continuous Improvement<br/>Performance iteration]
+        end
+    end
+
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef optimization fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef monitoring fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class StartupOptimization,ComponentOptimization,RenderOptimization,AnimationOptimization,StateOptimization service
+    class CodeSplitting,BundleOptimization,PreloadStrategies,ListOptimization,MemoryOptimization,NetworkOptimization,CacheOptimization,OfflineOptimization,DataNormalization,BackgroundSync,QueueManagement data
+    class AppLaunch external
+    class ImageOptimization,GPUAcceleration,InteractionOptimization,SixtyFPS,LayerOptimization,ResponsiveUI optimization
+    class PerformanceMonitoring,CrashReporting,AnalyticsIntegration,OptimizationInsights,UserExperienceMetrics,ContinuousImprovement monitoring
+```
 
 ### Mobile-specific Optimizations
 

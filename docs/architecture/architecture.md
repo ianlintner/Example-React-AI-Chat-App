@@ -1134,5 +1134,34 @@ graph TB
 ```mermaid
 graph LR
     subgraph "Business KPIs"
-        UserSat[👥 User Satisfaction<br/>• Engagement Score<br
+        UserSat[👥 User Satisfaction<br/>• Engagement Score<br/>• Response Quality<br/>• Issue Resolution Time]
+        
+        UserRet[🔄 User Retention<br/>• Daily Active Users<br/>• Session Duration<br/>• Return Rate]
+        
+        ContentQual[🎯 Content Quality<br/>• Response Relevance<br/>• Humor Success Rate<br/>• Educational Value]
+    end
+    
+    subgraph "Technical KPIs"
+        Performance[⚡ Performance<br/>• Response Time < 2s<br/>• Uptime > 99.9%<br/>• Error Rate < 0.1%]
+        
+        Scalability[📈 Scalability<br/>• Concurrent Users<br/>• Message Throughput<br/>• Resource Efficiency]
+        
+        Reliability[🛡️ Reliability<br/>• Service Availability<br/>• Data Consistency<br/>• Fault Tolerance]
+    end
+    
+    subgraph "Agent KPIs"
+        AgentPerf[🤖 Agent Performance<br/>• Classification Accuracy<br/>• Response Quality<br/>• Goal Achievement]
+        
+        Learning[🧠 Learning Metrics<br/>• Adaptation Speed<br/>• Preference Accuracy<br/>• Context Retention]
+        
+        Engagement[💬 Engagement<br/>• Proactive Success<br/>• User Interaction<br/>• Satisfaction Score]
+    end
+
+    classDef business fill:#e8f5e8
+    classDef technical fill:#e3f2fd  
+    classDef agent fill:#fff3e0
+
+    class UserSat,UserRet,ContentQual business
+    class Performance,Scalability,Reliability technical
+    class AgentPerf,Learning,Engagement agent
 ```

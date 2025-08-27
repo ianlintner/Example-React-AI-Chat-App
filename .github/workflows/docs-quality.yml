@@ -44,6 +44,11 @@ jobs:
           cspell "docs/**/*.md" "*.md"
         continue-on-error: true
 
+      - name: Validate Mermaid diagrams
+        run: |
+          npm run docs:mermaid:ci
+        continue-on-error: true
+
       - name: Build docs (strict mode)
         run: |
           mkdocs build --strict --site-dir ./site

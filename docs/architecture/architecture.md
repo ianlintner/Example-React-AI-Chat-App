@@ -543,44 +543,67 @@ graph TB
 ```mermaid
 graph TB
     subgraph "RAG (Retrieval-Augmented Generation) System"
-        Query[User Query/Request]
-
-        ContentDB[(📚 Curated Content Database<br/>• 10 Premium Jokes (4-5⭐)<br/>• 10 Fascinating Facts<br/>• 10 Entertaining GIFs<br/>• Quality Rated Content)]
-
-        Retriever[🔍 Content Retriever<br/>Semantic Search & Matching]
-
-        Ranker[📊 Content Ranker<br/>• Relevance Scoring<br/>• Quality Rating<br/>• User Preference Matching<br/>• Context Appropriateness]
-
-        Generator[🤖 Response Generator<br/>Enhanced AI Response with Retrieved Content]
-
-        Response[📤 Enhanced Response<br/>High-Quality + AI Generated]
+        UserQuery[User Query/Request] --> AgentService[Agent Service]
+        
+        subgraph "Content Retrieval Layer"
+            AgentService --> RAGService[RAG Service]
+            RAGService --> ContentDB[(Content Database<br/>30 curated items)]
+            RAGService --> SearchEngine[Search Engine]
+            
+            SearchEngine --> TagMatcher[Tag Matcher<br/>0.3pts per match]
+            SearchEngine --> PhraseMatcher[Phrase Matcher<br/>0.8pts exact match]
+            SearchEngine --> CategoryMatcher[Category Matcher<br/>0.2pts per match]
+            SearchEngine --> QualityBooster[Quality Booster<br/>+0.1pts for rating]
+        end
+        
+        subgraph "Content Types"
+            ContentDB --> JokeContent[Jokes Database<br/>🎭 10 premium jokes]
+            ContentDB --> TriviaContent[Trivia Database<br/>🧠 10 fascinating facts]
+            ContentDB --> GIFContent[GIF Database<br/>🎬 10 curated GIFs]
+        end
+        
+        subgraph "Search Processing"
+            TagMatcher --> RelevanceScorer[Relevance Scorer]
+            PhraseMatcher --> RelevanceScorer
+            CategoryMatcher --> RelevanceScorer
+            QualityBooster --> RelevanceScorer
+            
+            RelevanceScorer --> ResultFilter[Result Filter<br/>Min 0.1 threshold]
+            ResultFilter --> ResultRanker[Result Ranker<br/>Score-based sorting]
+        end
+        
+        subgraph "Content Delivery"
+            ResultRanker --> ContentResponse[Content Response]
+            ContentResponse --> FallbackHandler[Fallback Handler<br/>Random if no matches]
+            FallbackHandler --> QualityValidation[Quality Validation<br/>4-5 star ratings only]
+        end
+        
+        subgraph "Agent Integration"
+            QualityValidation --> JokeAgent[Joke Agent<br/>😄 Humor delivery]
+            QualityValidation --> TriviaAgent[Trivia Agent<br/>🧠 Fact sharing]
+            QualityValidation --> GIFAgent[GIF Agent<br/>🎬 Visual entertainment]
+        end
+        
+        subgraph "Demo Mode Support"
+            JokeAgent --> DemoFallback[Demo Mode Fallback<br/>Always available content]
+            TriviaAgent --> DemoFallback
+            GIFAgent --> DemoFallback
+            
+            DemoFallback --> EnhancedResponse[Enhanced Response<br/>RAG + AI Generated]
+        end
     end
 
-    Query --> Retriever
-    ContentDB --> Retriever
-    Retriever --> Ranker
-    Ranker --> Generator
-    Generator --> Response
-
-    subgraph "Content Categories"
-        Jokes[😄 Premium Jokes<br/>• Dad Jokes<br/>• Wordplay<br/>• Tech Humor<br/>• Clean Comedy]
-
-        Trivia[🧠 Fascinating Facts<br/>• Science<br/>• History<br/>• Nature<br/>• Technology]
-
-        Gifs[🎬 Curated GIFs<br/>• Funny Animals<br/>• Reactions<br/>• Celebrations<br/>• Universal Appeal]
-    end
-
-    ContentDB --> Jokes
-    ContentDB --> Trivia
-    ContentDB --> Gifs
-
-    classDef content fill:#e8f5e8
-    classDef process fill:#e3f2fd
-    classDef data fill:#fff3e0
-
-    class Jokes,Trivia,Gifs content
-    class Retriever,Ranker,Generator process
-    class ContentDB,Query,Response data
+    classDef service fill:#e1f5fe,stroke:#01579b,color:#000
+    classDef data fill:#e8f5e8,stroke:#2e7d32,color:#000
+    classDef external fill:#fff3e0,stroke:#ef6c00,color:#000
+    classDef content fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    classDef agent fill:#e8eaf6,stroke:#3f51b5,color:#000
+    
+    class RAGService,SearchEngine,TagMatcher,PhraseMatcher,CategoryMatcher,QualityBooster,RelevanceScorer,ResultFilter,ResultRanker,FallbackHandler,QualityValidation service
+    class ContentDB,JokeContent,TriviaContent,GIFContent data
+    class UserQuery,ContentResponse,EnhancedResponse external
+    class JokeAgent,TriviaAgent,GIFAgent agent
+    class DemoFallback content
 ```
 
 ## Database Design

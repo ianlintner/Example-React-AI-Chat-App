@@ -315,6 +315,73 @@ jobs:
         if: always()
         run: docker compose -f docker-compose.yml -f docker-compose.test.yml down
 
+  # Build and push Docker images to Google Artifact Registry (only on main branch pushes)
+  docker-gar:
+    needs: [backend, frontend, integration]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev --quiet
+
+      - name: Extract metadata (backend)
+        if: matrix.component == 'backend'
+        id: meta_backend_gar
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/react-repo/backend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract metadata (frontend)
+        if: matrix.component == 'frontend'
+        id: meta_frontend_gar
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/react-repo/frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image (backend)
+        if: matrix.component == 'backend'
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          push: true
+          tags: ${{ steps.meta_backend_gar.outputs.tags }}
+          labels: ${{ steps.meta_backend_gar.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Docker image (frontend)
+        if: matrix.component == 'frontend'
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          push: true
+          tags: ${{ steps.meta_frontend_gar.outputs.tags }}
+          labels: ${{ steps.meta_frontend_gar.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # Build Docker images (only on main branch pushes)
   docker:
     needs: [backend, frontend, integration]

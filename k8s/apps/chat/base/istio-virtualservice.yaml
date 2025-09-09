@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: chat-virtualservice
+  labels:
+    app: chat
+spec:
+  hosts:
+    - 'chat.hugecat.net'
+  gateways:
+    - chat-gateway
+  http:
+    - route:
+        - destination:
+            host: chat
+            port:
+              number: 80

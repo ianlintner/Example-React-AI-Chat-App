@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chat
+  name: chat-backend
   labels:
-    app: chat
+    app: chat-backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: chat
+      app: chat-backend
   template:
     metadata:
       labels:
-        app: chat
+        app: chat-backend
     spec:
       serviceAccountName: chat
       containers:
-        - name: chat
-          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat:latest
+        - name: chat-backend
+          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 4000
           resources:
             requests:
               cpu: '250m'

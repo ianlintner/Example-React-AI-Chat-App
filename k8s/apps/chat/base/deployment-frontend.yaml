@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chat
+  name: chat-frontend
   labels:
-    app: chat
+    app: chat-frontend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: chat
+      app: chat-frontend
   template:
     metadata:
       labels:
-        app: chat
+        app: chat-frontend
     spec:
       serviceAccountName: chat
       containers:
-        - name: chat
-          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat:latest
+        - name: chat-frontend
+          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-frontend:latest
           ports:
             - containerPort: 3000
           resources:
@@ -30,8 +30,3 @@ spec:
           env:
             - name: NODE_ENV
               value: 'production'
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets
-                  key: OPENAI_API_KEY

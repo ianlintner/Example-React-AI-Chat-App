@@ -8,3 +8,4 @@ resources:
   - istio-gateway.yaml
   - istio-virtualservice.yaml
   - istio-certificate.yaml
+  - secret.yaml

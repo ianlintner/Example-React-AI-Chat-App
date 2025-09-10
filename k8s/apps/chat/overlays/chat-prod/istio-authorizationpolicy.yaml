@@ -1,0 +1,7 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-chat-frontend
+  namespace: chat-prod
+spec:
+  action: ALLOW

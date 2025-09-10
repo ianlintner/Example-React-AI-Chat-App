@@ -9,3 +9,5 @@ resources:
   - istio-virtualservice.yaml
   - istio-certificate.yaml
   - secret.yaml
+  - redis-secret.yaml
+  - redis-service.yaml

@@ -6,3 +6,4 @@ resources:
   - namespace.yaml
   - dns-records.yaml
   - workload-identity-binding.yaml
+  - redis-instance.yaml

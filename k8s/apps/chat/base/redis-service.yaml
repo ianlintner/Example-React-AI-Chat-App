@@ -4,7 +4,7 @@ metadata:
   name: redis
 spec:
   type: ExternalName
-  externalName: <memorystore-host>
+  externalName: chat-redis.us-central1.gcp.cloud.redislabs.com
   ports:
     - port: 6379
       targetPort: 6379

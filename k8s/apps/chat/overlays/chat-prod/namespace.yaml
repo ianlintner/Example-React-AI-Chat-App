@@ -4,3 +4,4 @@ metadata:
   name: chat-prod
   annotations:
     cnrm.cloud.google.com/project-id: kame-457417
+    sidecar.istio.io/interceptionMode: 'NONE'

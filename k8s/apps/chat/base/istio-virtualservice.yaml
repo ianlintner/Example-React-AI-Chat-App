@@ -10,7 +10,20 @@ spec:
   gateways:
     - chat-gateway
   http:
-    - route:
+    - match:
+        - uri:
+            prefix: /api
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: chat-backend
+            port:
+              number: 4000
+    - match:
+        - uri:
+            prefix: /
+      route:
         - destination:
             host: chat-frontend
             port:

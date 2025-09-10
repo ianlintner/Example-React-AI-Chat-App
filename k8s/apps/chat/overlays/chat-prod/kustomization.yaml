@@ -7,3 +7,20 @@ resources:
   - dns-records.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
+
+patches:
+  - path: patch-deployment-frontend.yaml
+    target:
+      kind: Deployment
+      name: chat-frontend
+      namespace: chat-prod
+  - path: patch-deployment-backend.yaml
+    target:
+      kind: Deployment
+      name: chat-backend
+      namespace: chat-prod
+  - path: patch-istio-gateway.yaml
+    target:
+      kind: Gateway
+      name: chat-gateway
+      namespace: chat-prod

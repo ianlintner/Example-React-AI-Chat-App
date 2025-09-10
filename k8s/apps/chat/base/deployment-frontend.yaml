@@ -5,14 +5,12 @@ metadata:
   labels:
     app: chat-frontend
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: chat-frontend
   template:
     metadata:
-      annotations:
-        sidecar.istio.io/inject: 'true'
       labels:
         app: chat-frontend
     spec:

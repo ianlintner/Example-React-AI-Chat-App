@@ -3,14 +3,15 @@ kind: Kustomization
 resources:
   - deployment-frontend.yaml
   - deployment-backend.yaml
-  - service.yaml
+  - service-frontend.yaml
+  - service-backend.yaml
   - serviceaccount.yaml
-  - istio-gateway.yaml
+  # - istio-gateway.yaml
   - istio-virtualservice.yaml
-  - istio-certificate.yaml
-  - istio-gateway-authz-override.yaml
+  # - istio-certificate.yaml
+  # - istio-gateway-authz-override.yaml
   # - istio-static-ip.yaml
-  - istio-ingressgateway-service.yaml
+  # - istio-ingressgateway-service.yaml
   - secret.yaml
   - redis-secret.yaml
   - redis-service.yaml

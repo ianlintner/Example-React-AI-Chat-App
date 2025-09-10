@@ -19,8 +19,4 @@ patches:
       kind: Deployment
       name: chat-backend
       namespace: chat-prod
-  - path: patch-istio-gateway.yaml
-    target:
-      kind: Gateway
-      name: chat-gateway
-      namespace: chat-prod
+  # removed patch-istio-gateway, using shared portfolio-prod ingressgateway

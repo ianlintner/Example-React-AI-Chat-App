@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: chat-frontend
+      annotations:
+        sidecar.istio.io/inject: 'true'
     spec:
       serviceAccountName: chat
       containers:

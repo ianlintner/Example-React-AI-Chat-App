@@ -11,6 +11,8 @@ spec:
       app: chat-frontend
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: 'true'
       labels:
         app: chat-frontend
     spec:
@@ -19,15 +21,15 @@ spec:
         - name: chat-frontend
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-frontend:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 80
           readinessProbe:
             httpGet:
-              path: /
-              port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 6
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             requests:
               cpu: '250m'

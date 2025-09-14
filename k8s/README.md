@@ -9,7 +9,7 @@ The structure is modeled after the reference in `~/portfolio/k8s`.
 k8s/
   apps/
     chat/
-      base/                # Base manifests (deployment, service, serviceaccount, istio configs)
+      base/                # Base manifests (deployment, service, serviceaccount, istio VirtualService)
       overlays/
         chat-dev/          # Dev environment overlays
         chat-prod/         # Prod environment overlays
@@ -22,10 +22,11 @@ k8s/
   - `deployment.yaml`
   - `service.yaml`
   - `serviceaccount.yaml`
-  - `istio-gateway.yaml`
   - `istio-virtualservice.yaml`
   - `istio-certificate.yaml`
   - `kustomization.yaml`
+
+Note: The environment uses a shared, cluster-level Istio IngressGateway. This app does not define its own `istio-gateway.yaml`; the `VirtualService` routes through the shared gateway.
 
 - Populate `apps/chat/overlays/chat-dev` with:
   - `namespace.yaml`

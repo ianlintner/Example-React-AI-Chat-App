@@ -4,8 +4,8 @@ resources:
   - deployment.yaml
   - service.yaml
   - serviceaccount.yaml
-  - istio-gateway.yaml
   - istio-virtualservice.yaml
+  - acme-challenge-service.yaml
   # - istio-certificate.yaml
   # - istio-gateway-authz-override.yaml
   # - istio-static-ip.yaml

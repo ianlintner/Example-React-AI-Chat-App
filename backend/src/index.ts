@@ -154,7 +154,9 @@ app.get('/api/health', (req, res) => {
     const span = tracer.startSpan('api_health_check');
     span.setAttributes({ 'http.method': 'GET', 'http.route': '/api/health' });
     span.end();
-  } catch (_e) {}
+  } catch (_e) {
+    // ignore tracing failures
+  }
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 

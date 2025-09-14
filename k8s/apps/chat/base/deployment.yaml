@@ -28,9 +28,17 @@ spec:
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-frontend:latest
           ports:
             - containerPort: 80
+          startupProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /index.html
+              path: /
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -77,6 +85,22 @@ spec:
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest
           ports:
             - containerPort: 4000
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             requests:
               cpu: '250m'

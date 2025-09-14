@@ -6,8 +6,8 @@ import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 let CloudTraceExporterCtor: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  CloudTraceExporterCtor = require('@google-cloud/opentelemetry-cloud-trace-exporter')
-    .CloudTraceExporter;
+  CloudTraceExporterCtor =
+    require('@google-cloud/opentelemetry-cloud-trace-exporter').CloudTraceExporter;
 } catch (_e) {
   // Not installed in local dev or CI without network; will fall back to Zipkin
 }

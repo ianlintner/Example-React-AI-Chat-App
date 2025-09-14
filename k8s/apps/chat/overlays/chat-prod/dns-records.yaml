@@ -1,8 +1,8 @@
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
 metadata:
-  name: chat-prod-dns
-  namespace: chat-prod
+  name: prod-dns
+  namespace: prod
 spec:
   name: chat.hugecat.net.
   type: A

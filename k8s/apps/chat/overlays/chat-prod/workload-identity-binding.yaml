@@ -1,12 +1,12 @@
 apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMPolicyMember
 metadata:
-  name: chat-prod-workload-identity
-  namespace: chat-prod
+  name: prod-workload-identity
+  namespace: prod
 spec:
-  member: serviceAccount:kame-457417.svc.id.goog[chat-prod/chat]
+  member: serviceAccount:kame-457417.svc.id.goog[prod/chat]
   role: roles/iam.workloadIdentityUser
   resourceRef:
     apiVersion: iam.cnrm.cloud.google.com/v1beta1
     kind: IAMServiceAccount
-    name: chat-prod-sa
+    name: prod-sa

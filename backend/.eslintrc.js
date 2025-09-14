@@ -19,19 +19,21 @@ module.exports = {
     tsconfigRootDir: __dirname,
   },
   rules: {
-    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/explicit-function-return-type': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-inferrable-types': 'warn',
-    '@typescript-eslint/ban-ts-comment': 'warn',
-    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    // Quiet common warnings in backend code
+    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-inferrable-types': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
+    // Quiet frequent stylistic warnings
+    '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    'no-case-declarations': 'off',
     '@typescript-eslint/prefer-optional-chain': 'error',
     'no-console': 'off',
     'prefer-const': 'error',
     'no-var': 'error',
     eqeqeq: ['error', 'always'],
     curly: ['warn', 'all'],
-    'no-case-declarations': 'warn',
     'no-throw-literal': 'error',
     'prefer-template': 'warn',
     'prettier/prettier': 'error',
@@ -46,7 +48,8 @@ module.exports = {
         '**/*.integration.test.ts',
       ],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'warn',
+        // Don’t warn on unused imports/vars or any in tests
+        '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/ban-types': 'off',

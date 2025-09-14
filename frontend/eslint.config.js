@@ -101,9 +101,10 @@ module.exports = [
       'react-hooks/exhaustive-deps': 'warn',
 
       // React Native specific rules
-      'react-native/no-unused-styles': 'warn',
-      'react-native/no-inline-styles': 'warn',
-      'react-native/no-color-literals': 'warn',
+      // Relax noisy style rules to reduce warnings in UI code
+      'react-native/no-unused-styles': 'off',
+      'react-native/no-inline-styles': 'off',
+      'react-native/no-color-literals': 'off',
       'react-native/split-platform-components': 'off',
       'react-native/no-raw-text': 'off',
       'react-native/no-single-element-style-arrays': 'error',

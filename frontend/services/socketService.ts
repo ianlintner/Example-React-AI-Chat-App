@@ -14,14 +14,20 @@ class SocketService {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Get API URL from environment variable or use default
-      const apiUrl =
+      // Resolve API base URL
+      const isBrowser = typeof window !== 'undefined' && !!window.location;
+      const apiBase =
         process.env.EXPO_PUBLIC_API_URL ||
         process.env.API_URL ||
-        'http://localhost:5001';
-      logger.info('Connecting to socket server at:', apiUrl);
+        (isBrowser ? window.location.origin : 'http://localhost:5001');
 
-      this.socket = io(apiUrl, {
+      // When using same-origin behind a gateway, route socket path via /api
+      const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
+
+      logger.info('Connecting to socket server at:', apiBase, 'path:', socketPath);
+
+      this.socket = io(apiBase, {
+        path: socketPath,
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,

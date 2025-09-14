@@ -25,5 +25,5 @@ spec:
     app: chat-backend
   ports:
     - name: http
-      port: 4000
+      port: 80
       targetPort: 4000

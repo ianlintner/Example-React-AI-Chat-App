@@ -19,6 +19,14 @@ spec:
               number: 8089
     - match:
         - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: chat-backend
+            port:
+              number: 80
+    - match:
+        - uri:
             prefix: /
       route:
         - destination:

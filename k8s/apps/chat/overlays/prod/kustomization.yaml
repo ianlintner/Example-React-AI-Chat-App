@@ -7,6 +7,8 @@ resources:
   - workload-identity-binding.yaml
   - redis-instance.yaml
   - certificate.yaml
+  # - istio-authorizationpolicy.yaml
+  # - istio-authorizationpolicy-global.yaml
 
 patches:
   - path: patch-deployment-frontend.yaml
@@ -17,13 +19,6 @@ patches:
     target:
       kind: Deployment
       name: chat-backend
-patchesJson6902:
-  - target:
-      group: networking.istio.io
-      version: v1beta1
-      kind: VirtualService
-      name: chat-virtualservice
-    path: patch-virtualservice.json
 transformers:
   - cert-namespace-patch.yaml
   - acme-service-namespace-patch.yaml

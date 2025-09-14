@@ -8,7 +8,7 @@ spec:
   hosts:
     - 'chat.hugecat.net'
   gateways:
-    - portfolio-gateway
+    - chat-gateway
   http:
     - match:
         - uri:

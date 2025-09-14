@@ -5,7 +5,7 @@ metadata:
   labels:
     app: chat-frontend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: chat-frontend
@@ -48,7 +48,7 @@ metadata:
   labels:
     app: chat-backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: chat-backend

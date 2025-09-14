@@ -1,7 +1,7 @@
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
 metadata:
-  name: dev-dns
+  name: chat-dev-dns
   namespace: dev
 spec:
   name: dev.hugecat.net.

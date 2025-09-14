@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: prod
 resources:
   - ../../base
-  - namespace.yaml
   - dns-records.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
@@ -20,4 +19,3 @@ patches:
       kind: Deployment
       name: chat-backend
       namespace: prod
-  # removed patch-istio-gateway, using shared portfolio-prod ingressgateway

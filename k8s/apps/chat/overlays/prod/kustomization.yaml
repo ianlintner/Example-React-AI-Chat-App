@@ -7,6 +7,7 @@ resources:
   - dns-records.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
+  - certificate.yaml
 
 patches:
   - path: patch-deployment-frontend.yaml

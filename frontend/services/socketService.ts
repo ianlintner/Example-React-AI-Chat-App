@@ -24,7 +24,12 @@ class SocketService {
       // When using same-origin behind a gateway, route socket path via /api
       const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
 
-      logger.info('Connecting to socket server at:', apiBase, 'path:', socketPath);
+      logger.info(
+        'Connecting to socket server at:',
+        apiBase,
+        'path:',
+        socketPath,
+      );
 
       this.socket = io(apiBase, {
         path: socketPath,

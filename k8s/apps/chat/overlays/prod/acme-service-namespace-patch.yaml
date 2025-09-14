@@ -1,0 +1,13 @@
+apiVersion: builtin
+kind: PatchTransformer
+metadata:
+  name: acme-service-to-infrastructure
+patch: |-
+  - op: replace
+    path: /metadata/namespace
+    value: infrastructure
+target:
+  group: ''
+  version: v1
+  kind: Service
+  name: acme-challenge

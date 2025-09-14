@@ -13,9 +13,17 @@ patches:
     target:
       kind: Deployment
       name: chat-frontend
-      namespace: prod
   - path: patch-deployment-backend.yaml
     target:
       kind: Deployment
       name: chat-backend
-      namespace: prod
+patchesJson6902:
+  - target:
+      group: networking.istio.io
+      version: v1beta1
+      kind: VirtualService
+      name: chat-virtualservice
+    path: patch-virtualservice.json
+transformers:
+  - cert-namespace-patch.yaml
+  - acme-service-namespace-patch.yaml

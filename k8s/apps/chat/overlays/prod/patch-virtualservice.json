@@ -1,0 +1,12 @@
+[
+  {
+    "op": "replace",
+    "path": "/spec/gateways",
+    "value": ["infrastructure/portfolio-gateway"]
+  },
+  {
+    "op": "replace",
+    "path": "/spec/http/0/route/0/destination/host",
+    "value": "acme-challenge.infrastructure.svc.cluster.local"
+  }
+]

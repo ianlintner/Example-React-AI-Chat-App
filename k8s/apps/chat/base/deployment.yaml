@@ -17,7 +17,12 @@ spec:
       annotations:
         sidecar.istio.io/inject: 'true'
     spec:
-      serviceAccountName: chat
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: portfolio-workload-identity
+      # Enable Istio sidecar injection explicitly
+      automountServiceAccountToken: true
       containers:
         - name: chat-frontend
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-frontend:latest
@@ -57,10 +62,16 @@ spec:
     metadata:
       labels:
         app: chat-backend
+        istio-injection: enabled
       annotations:
         sidecar.istio.io/inject: 'true'
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: chat
+      # Enable Istio sidecar injection explicitly
+      automountServiceAccountToken: true
       containers:
         - name: chat-backend
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest

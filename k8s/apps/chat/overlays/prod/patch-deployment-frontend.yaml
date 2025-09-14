@@ -11,9 +11,36 @@ spec:
     metadata:
       labels:
         app: chat-frontend
+        istio-injection: enabled
+      annotations:
+        sidecar.istio.io/inject: 'true'
+        proxy.istio.io/config: '{"holdApplicationUntilProxyStarts": true}'
     spec:
+      serviceAccountName: portfolio-workload-identity
       containers:
         - name: chat-frontend
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 80
+            periodSeconds: 5
+            failureThreshold: 30
           resources:
             requests:
               cpu: '250m'
@@ -24,6 +51,6 @@ spec:
               memory: '1Gi'
               ephemeral-storage: '2Gi'
           securityContext:
-            runAsNonRoot: true
+            runAsNonRoot: false
             allowPrivilegeEscalation: false
       terminationGracePeriodSeconds: 30

@@ -23,12 +23,17 @@ const log = getLogger(false);
 // Initialize OpenTelemetry tracing
 initializeTracing();
 
-// Generate test traces for debugging Zipkin connection
-log.info('🔍 Generating initial test traces for debugging...');
-setTimeout(() => {
-  const { generateTestTraces } = require('./tracing/testTraces');
-  generateTestTraces();
-}, 2000); // Wait 2 seconds after server starts
+// Generate test traces only in non-production when explicitly enabled
+if (
+  (process.env.NODE_ENV || '').toLowerCase() !== 'production' &&
+  (process.env.ENABLE_TRACE_TESTS || '').toLowerCase() === 'true'
+) {
+  log.info('🔍 Generating initial test traces for debugging...');
+  setTimeout(() => {
+    const { generateTestTraces } = require('./tracing/testTraces');
+    generateTestTraces();
+  }, 2000);
+}
 
 const app = express();
 const server = createServer(app);

@@ -114,19 +114,16 @@ registerSwaggerRoutes(app, openApiSpec);
  *                   format: date-time
  */
 app.get('/health', (req, res) => {
-  const { tracer } = require('./tracing/tracer');
-  const span = tracer.startSpan('health_check');
-
-  span.setAttributes({
-    'http.method': 'GET',
-    'http.route': '/health',
-    'http.status_code': 200,
-  });
-
-  span.addEvent('health_check_performed');
-  span.setStatus({ code: 1 }); // OK
-  span.end();
-
+  // Keep health endpoint robust: never throw, tracer optional
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { tracer } = require('./tracing/tracer');
+    const span = tracer.startSpan('health_check');
+    span.setAttributes({ 'http.method': 'GET', 'http.route': '/health' });
+    span.end();
+  } catch (_e) {
+    // ignore tracing failures
+  }
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
@@ -151,20 +148,19 @@ app.get('/health', (req, res) => {
  *                   format: date-time
  */
 app.get('/api/health', (req, res) => {
-  const { tracer } = require('./tracing/tracer');
-  const span = tracer.startSpan('api_health_check');
-
-  span.setAttributes({
-    'http.method': 'GET',
-    'http.route': '/api/health',
-    'http.status_code': 200,
-  });
-
-  span.addEvent('api_health_check_performed');
-  span.setStatus({ code: 1 }); // OK
-  span.end();
-
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { tracer } = require('./tracing/tracer');
+    const span = tracer.startSpan('api_health_check');
+    span.setAttributes({ 'http.method': 'GET', 'http.route': '/api/health' });
+    span.end();
+  } catch (_e) {}
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Minimal startup health endpoint (no tracing)
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('ok');
 });
 
 // Prometheus metrics endpoint

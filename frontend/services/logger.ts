@@ -21,31 +21,31 @@ function shouldLog(level: Level): boolean {
   return levelOrder[level] >= levelOrder[currentLevel];
 }
 
-function formatMessage(args: any[]): any[] {
+function formatMessage(args: unknown[]): unknown[] {
   // Keep formatting simple; attach JSON objects as-is
   return args;
 }
 
 export const logger = {
-  debug: (...args: any[]) => {
+  debug: (...args: unknown[]) => {
     if (shouldLog('debug')) {
       // eslint-disable-next-line no-console
       console.debug(...formatMessage(args));
     }
   },
-  info: (...args: any[]) => {
+  info: (...args: unknown[]) => {
     if (shouldLog('info')) {
       // eslint-disable-next-line no-console
       console.info(...formatMessage(args));
     }
   },
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     if (shouldLog('warn')) {
       // eslint-disable-next-line no-console
       console.warn(...formatMessage(args));
     }
   },
-  error: (...args: any[]) => {
+  error: (...args: unknown[]) => {
     if (shouldLog('error')) {
       // eslint-disable-next-line no-console
       console.error(...formatMessage(args));

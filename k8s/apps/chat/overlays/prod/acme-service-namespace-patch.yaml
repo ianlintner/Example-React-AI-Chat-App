@@ -5,7 +5,7 @@ metadata:
 patch: |-
   - op: replace
     path: /metadata/namespace
-    value: infrastructure
+    value: default
 target:
   group: ''
   version: v1

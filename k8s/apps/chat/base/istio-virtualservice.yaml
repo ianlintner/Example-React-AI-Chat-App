@@ -11,20 +11,16 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /.well-known/acme-challenge/
-      route:
-        - destination:
-            host: cm-acme-http-solver-vqs64
-            port:
-              number: 8089
-    - match:
-        - uri:
             prefix: /api
       route:
         - destination:
             host: chat-backend
             port:
-              number: 80
+              number: 4000
+      headers:
+        request:
+          set:
+            X-Forwarded-Proto: https
     - match:
         - uri:
             prefix: /

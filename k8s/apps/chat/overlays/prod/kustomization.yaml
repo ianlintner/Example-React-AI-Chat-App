@@ -4,6 +4,7 @@ namespace: prod
 resources:
   - ../../base
   - dns-records.yaml
+  - dns-records-frontend.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
   - certificate.yaml
@@ -11,10 +12,10 @@ resources:
   # - istio-authorizationpolicy-global.yaml
 
 patches:
-  - path: patch-deployment-frontend.yaml
-    target:
-      kind: Deployment
-      name: chat-frontend
+  #  - path: patch-deployment-frontend.yaml
+  #    target:
+  #      kind: Deployment
+  #      name: chat-frontend
   - path: patch-deployment-backend.yaml
     target:
       kind: Deployment

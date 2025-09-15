@@ -15,7 +15,7 @@ spec:
         - 'chat.hugecat.net'
       tls:
         mode: SIMPLE
-        credentialName: chat-tls-cert
+        credentialName: chat-alt-tls-cert
     - port:
         number: 80
         name: http

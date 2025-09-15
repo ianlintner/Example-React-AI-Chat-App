@@ -7,7 +7,7 @@ patch: |-
     path: /metadata/namespace
     value: default
 target:
-  group: ''
+  group: cert-manager.io
   version: v1
-  kind: Service
-  name: acme-challenge
+  kind: Certificate
+  name: chat-tls-cert

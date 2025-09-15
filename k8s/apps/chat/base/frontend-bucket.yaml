@@ -1,0 +1,22 @@
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+  name: chat-frontend
+spec:
+  location: US
+  uniformBucketLevelAccess: true
+  website:
+    mainPageSuffix: index.html
+    notFoundPage: index.html
+# d---
+# apiVersion: networking.gke.io/v1
+# kind: BackendConfig
+# metadata:
+#   name: chat-frontend-cdn
+# spec:
+#   cdn:
+#     enabled: true
+#     cachePolicy:
+#       includeHost: true
+#       includeProtocol: true
+#       includeQueryString: true

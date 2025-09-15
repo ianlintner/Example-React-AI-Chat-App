@@ -11,3 +11,17 @@ spec:
     - '34.31.128.59' # Replace with your LoadBalancer IP
   managedZoneRef:
     external: hugecat-zone # Replace with your actual Cloud DNS managed zone name
+---
+apiVersion: dns.cnrm.cloud.google.com/v1beta1
+kind: DNSRecordSet
+metadata:
+  name: chat-backend-prod-dns
+  namespace: prod
+spec:
+  name: chat-backend.hugecat.net.
+  type: A
+  ttl: 300
+  rrdatas:
+    - '34.31.128.59' # Replace with your LoadBalancer IP
+  managedZoneRef:
+    external: hugecat-zone # Replace with your actual Cloud DNS managed zone name

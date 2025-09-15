@@ -6,6 +6,7 @@ metadata:
 spec:
   hosts:
     - 'chat.hugecat.net'
+    - 'chat-backend.hugecat.net'
   gateways:
     - chat-gateway
   http:
@@ -19,17 +20,9 @@ spec:
               number: 80
     - match:
         - uri:
-            prefix: /api
+            prefix: /
       route:
         - destination:
             host: chat-backend
             port:
               number: 4000
-    - match:
-        - uri:
-            prefix: /
-      route:
-        - destination:
-            host: chat-frontend
-            port:
-              number: 80

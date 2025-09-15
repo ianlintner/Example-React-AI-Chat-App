@@ -5,21 +5,21 @@ resources:
   - ../../base
   - dns-records.yaml
   - dns-records-frontend.yaml
+  - frontend-bucket-patch.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
   - certificate.yaml
   # - istio-authorizationpolicy.yaml
   # - istio-authorizationpolicy-global.yaml
-
-patches:
-  #  - path: patch-deployment-frontend.yaml
-  #    target:
-  #      kind: Deployment
-  #      name: chat-frontend
-  - path: patch-deployment-backend.yaml
-    target:
-      kind: Deployment
-      name: chat-backend
-transformers:
-  - cert-namespace-patch.yaml
-  - acme-service-namespace-patch.yaml
+# patches:
+# #  - path: patch-deployment-frontend.yaml
+# #    target:
+# #      kind: Deployment
+# #      name: chat-frontend
+#   - path: patch-deployment-backend.yaml
+#     target:
+#       kind: Deployment
+#       name: chat-backend
+# transformers:
+#   - cert-namespace-patch.yaml
+#   - acme-service-namespace-patch.yaml

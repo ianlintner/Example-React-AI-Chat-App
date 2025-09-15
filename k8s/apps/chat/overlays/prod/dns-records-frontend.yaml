@@ -2,7 +2,7 @@ apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
 metadata:
   name: chat-frontend-dns
-  namespace: chat
+  namespace: prod
 spec:
   name: chat-ui.hugecat.net.
   type: CNAME

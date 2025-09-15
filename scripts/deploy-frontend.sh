@@ -17,7 +17,7 @@ if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "prod" ]]; then
   exit 1
 fi
 
-BUCKET="chat-frontend"
+BUCKET="chat-frontend-prod"
 if [[ "$ENVIRONMENT" == "dev" ]]; then
   BUCKET="chat-frontend-dev"
 fi

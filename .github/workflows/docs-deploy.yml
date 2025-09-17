@@ -59,7 +59,7 @@ jobs:
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/316518955652/locations/global/workloadIdentityPools/github-pool/providers/github
+          workload_identity_provider: projects/316518955652/locations/global/workloadIdentityPools/github-pool/providers/github-oidc
           service_account: kame-house-oidc@kame-457417.iam.gserviceaccount.com
           create_credentials_file: true
           export_environment_variables: true

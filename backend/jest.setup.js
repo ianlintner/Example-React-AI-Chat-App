@@ -20,5 +20,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  console.error.mockRestore();
+  if (console.error && typeof (console.error).mockRestore === 'function') {
+    console.error.mockRestore();
+  }
 });

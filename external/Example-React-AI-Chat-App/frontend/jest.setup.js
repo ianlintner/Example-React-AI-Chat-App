@@ -712,3 +712,13 @@ afterEach(() => {
   console.warn = originalWarn;
   console.error = originalError;
 });
+
+// Ensure no dangling mocks
+afterAll(() => {
+  if (console.error && typeof console.error.mockRestore === 'function') {
+    console.error.mockRestore();
+  }
+  if (console.warn && typeof console.warn.mockRestore === 'function') {
+    console.warn.mockRestore();
+  }
+});

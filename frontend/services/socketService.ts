@@ -15,6 +15,7 @@ class SocketService {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Resolve API base URL
+      const isBrowser = typeof window !== 'undefined' && !!window.location;
       const apiBase = 'wss://chat-backend.hugecat.net';
 
       // const apiBase =
@@ -23,7 +24,7 @@ class SocketService {
       //   (isBrowser ? window.location.origin : 'http://chat-backend.hugecat.net');
 
       // When using same-origin behind a gateway, route socket path via /api
-      const socketPath = '/socket.io';
+      const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
 
       logger.info(
         'Connecting to socket server at:',

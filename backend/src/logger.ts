@@ -1,5 +1,6 @@
 import pino, { Logger } from 'pino';
 import { tracingContextManager } from './tracing/contextManager';
+import { createGcpLoggingPinoConfig } from '@google-cloud/pino-logging-gcp-config';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -46,25 +47,21 @@ const baseOptions = {
     },
   },
 };
-
-const logger: Logger = isProd
-  ? pino({
-      ...baseOptions,
-      // Force single-line JSON output in production for GCP ingestion
-      crlf: false,
-    })
-  : pino({
-      ...baseOptions,
-      transport: {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,host',
-          singleLine: true,
-        },
-      },
-    });
+const logger = pino(createGcpLoggingPinoConfig());
+// const logger: Logger = isProd
+//   ? pino(createGcpLoggingPinoConfig())
+//   : pino({
+//       ...baseOptions,
+//       transport: {
+//         target: 'pino-pretty',
+//         options: {
+//           colorize: true,
+//           translateTime: 'SYS:standard',
+//           ignore: 'pid,host',
+//           singleLine: true,
+//         },
+//       },
+//     });
 
 /**
  * Returns the root logger or a child logger bound with current trace context if available.

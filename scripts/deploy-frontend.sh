@@ -31,4 +31,11 @@ popd > /dev/null
 echo "Deploying to GCS bucket: gs://$BUCKET"
 gcloud storage rsync --recursive frontend/dist "gs://$BUCKET"
 
-echo "Deployment to $ENVIRONMENT complete."
+echo "Invalidating CDN cache for $ENVIRONMENT..."
+if [[ "$ENVIRONMENT" == "prod" ]]; then
+  gcloud compute url-maps invalidate-cdn-cache chat-frontend-prod-url-map --path "/*" --async
+else
+  gcloud compute url-maps invalidate-cdn-cache chat-frontend-dev-url-map --path "/*" --async
+fi
+
+echo "Deployment to $ENVIRONMENT complete. CDN invalidation triggered."

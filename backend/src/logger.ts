@@ -1,5 +1,6 @@
 import pino, { Logger } from 'pino';
 import { tracingContextManager } from './tracing/contextManager';
+import { createGcpLoggingPinoConfig } from '@google-cloud/pino-logging-gcp-config';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -23,28 +24,44 @@ const baseOptions = {
   },
   formatters: {
     level(label: string) {
-      return { level: label };
+      // Map to Google Cloud Logging severity field
+      const severityMap: Record<string, string> = {
+        trace: 'DEBUG',
+        debug: 'DEBUG',
+        info: 'INFO',
+        warn: 'WARNING',
+        error: 'ERROR',
+        fatal: 'CRITICAL',
+      };
+      return { severity: severityMap[label] || label.toUpperCase() };
     },
     bindings(bindings: pino.Bindings) {
       return { pid: bindings.pid, host: bindings.hostname };
     },
+    log(object: Record<string, unknown>) {
+      // Ensure message field is preserved for GCP
+      if (object.message) {
+        return { message: object.message, ...object };
+      }
+      return object;
+    },
   },
 };
-
-const logger: Logger = isProd
-  ? pino(baseOptions)
-  : pino({
-      ...baseOptions,
-      transport: {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,host',
-          singleLine: false,
-        },
-      },
-    });
+const logger = pino(createGcpLoggingPinoConfig());
+// const logger: Logger = isProd
+//   ? pino(createGcpLoggingPinoConfig())
+//   : pino({
+//       ...baseOptions,
+//       transport: {
+//         target: 'pino-pretty',
+//         options: {
+//           colorize: true,
+//           translateTime: 'SYS:standard',
+//           ignore: 'pid,host',
+//           singleLine: true,
+//         },
+//       },
+//     });
 
 /**
  * Returns the root logger or a child logger bound with current trace context if available.

@@ -2,16 +2,39 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: chat-virtualservice
-  labels:
-    app: chat
+  namespace: prod
 spec:
   hosts:
-    - 'chat.hugecat.net'
+    - 'chat-backend.hugecat.net'
   gateways:
     - chat-gateway
   http:
-    - route:
+    - match:
+        - uri:
+            prefix: /.well-known/acme-challenge
+      route:
         - destination:
-            host: chat
+            host: cm-acme-http-solver-hx6fx
+            port:
+              number: 8089
+    - match:
+        - uri:
+            prefix: /api/socket.io
+      route:
+        - destination:
+            host: chat-backend.prod.svc.cluster.local
+            port:
+              number: 80
+      headers:
+        request:
+          set:
+            Connection: upgrade
+            Upgrade: websocket
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: chat-backend.prod.svc.cluster.local
             port:
               number: 80

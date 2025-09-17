@@ -1,25 +1,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chat
+  name: chat-backend
   labels:
-    app: chat
+    app: chat-backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: chat
+      app: chat-backend
   template:
     metadata:
       labels:
-        app: chat
+        app: chat-backend
+        istio-injection: enabled
+      annotations:
+        sidecar.istio.io/inject: 'true'
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: chat
+      # Enable Istio sidecar injection explicitly
+      automountServiceAccountToken: true
       containers:
-        - name: chat
-          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat:latest
+        - name: chat-backend
+          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 3000
+            - containerPort: 5001
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 5001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             requests:
               cpu: '250m'
@@ -28,6 +53,21 @@ spec:
               cpu: '500m'
               memory: '1Gi'
           env:
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PORT
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
             - name: NODE_ENV
               value: 'production'
             - name: OPENAI_API_KEY

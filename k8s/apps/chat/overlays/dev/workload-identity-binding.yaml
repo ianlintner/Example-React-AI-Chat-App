@@ -1,0 +1,7 @@
+apiVersion: iam.cnrm.cloud.google.com/v1
+kind: IAMPolicyMember
+metadata:
+  name: chat-backend-redis-binding-dev
+spec:
+  member: serviceAccount:kame-457417.svc.id.goog[chat-dev/chat]
+  role: roles/redis.editor

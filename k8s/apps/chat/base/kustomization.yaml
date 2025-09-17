@@ -1,11 +1,18 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - deployment-frontend.yaml
-  - deployment-backend.yaml
+  - deployment.yaml
   - service.yaml
   - serviceaccount.yaml
-  - istio-gateway.yaml
   - istio-virtualservice.yaml
-  - istio-certificate.yaml
+  - acme-challenge-service.yaml
+  # - istio-certificate.yaml
+  # - istio-gateway-authz-override.yaml
+  # - istio-static-ip.yaml
+  # - istio-ingressgateway-service.yaml
   - secret.yaml
+  - redis-secret.yaml
+  - redis-service.yaml
+  - istio-gateway.yaml
+  # - frontend-bucket.yaml
+  # - frontend-backendconfig.yaml  # - frontend-backendconfig.yaml

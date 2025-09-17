@@ -2,15 +2,23 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: chat-gateway
-  labels:
-    app: chat
+  namespace: prod
 spec:
   selector:
     istio: ingressgateway
   servers:
     - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - 'chat-backend.hugecat.net'
+      tls:
+        mode: SIMPLE
+        credentialName: chat-backend-tls-cert
+    - port:
         number: 80
         name: http
         protocol: HTTP
       hosts:
-        - 'chat.hugecat.net'
+        - 'chat-backend.hugecat.net'

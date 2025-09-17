@@ -5,11 +5,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./k8s/apps/chat/overlays/chat-prod
+  path: ./k8s/apps/chat/overlays/prod
   prune: true
   sourceRef:
     kind: GitRepository
     name: react
     namespace: flux-system
-  targetNamespace: chat-prod
+  targetNamespace: prod
   timeout: 2m

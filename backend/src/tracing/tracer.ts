@@ -1,6 +1,16 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
+// Lazy-require Cloud Trace exporter to avoid TS module resolution during dev
+// where the dependency may not be installed locally yet.
+let CloudTraceExporterCtor: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  CloudTraceExporterCtor =
+    require('@google-cloud/opentelemetry-cloud-trace-exporter').CloudTraceExporter;
+} catch (_e) {
+  // Not installed in local dev or CI without network; will fall back to Zipkin
+}
 import {
   trace,
   context,
@@ -17,25 +27,43 @@ import {
 } from '@opentelemetry/sdk-trace-base';
 import { tracingContextManager } from './contextManager';
 
-// Configure the trace exporter - FORCED TO USE ZIPKIN
-const createTraceExporter = (): ZipkinExporter => {
+// Configure the trace exporter based on environment
+const createTraceExporter = () => {
+  const exporterPref = (process.env.TRACING_EXPORTER || '').toLowerCase();
+  const isProd = (process.env.NODE_ENV || '').toLowerCase() === 'production';
+
   console.log('🔍 TRACING DEBUG - Environment variables:');
+  console.log('  TRACING_EXPORTER:', exporterPref || '(not set)');
   console.log('  ZIPKIN_ENDPOINT:', process.env.ZIPKIN_ENDPOINT);
   console.log('  OTEL_SERVICE_NAME:', process.env.OTEL_SERVICE_NAME);
-  console.log('  ENABLE_TRACING:', process.env.ENABLE_TRACING);
   console.log('  NODE_ENV:', process.env.NODE_ENV);
 
-  // FORCE ZIPKIN USAGE - Bypassing OTLP
+  // Default to Cloud Trace in production; Zipkin otherwise unless explicitly overridden
+  const useCloudTrace = exporterPref
+    ? exporterPref === 'cloudtrace' || exporterPref === 'gcp'
+    : isProd;
+
+  if (isProd && !exporterPref) {
+    process.env.TRACING_EXPORTER = 'cloudtrace';
+  }
+
+  if (useCloudTrace) {
+    if (CloudTraceExporterCtor) {
+      console.log('🔗 Using Google Cloud Trace exporter (ADC credentials)');
+      return new CloudTraceExporterCtor();
+    }
+    console.warn(
+      '⚠️ Cloud Trace exporter not available. Falling back to Zipkin.',
+    );
+  }
+
   const zipkinEndpoint =
     process.env.ZIPKIN_ENDPOINT || 'http://zipkin:9411/api/v2/spans';
-  console.log('🔗 FORCED to use Zipkin exporter:', zipkinEndpoint);
-  console.log('🔍 Testing Zipkin connection...');
+  console.log('🔗 Using Zipkin exporter:', zipkinEndpoint);
 
-  const zipkinExporter = new ZipkinExporter({
-    url: zipkinEndpoint,
-  });
+  const zipkinExporter = new ZipkinExporter({ url: zipkinEndpoint });
 
-  // Log when traces are being exported to Zipkin
+  // Optional: verbose logging for Zipkin in non-prod
   const originalExport = zipkinExporter.export.bind(zipkinExporter);
   zipkinExporter.export = (
     spans: ReadableSpan[],
@@ -44,36 +72,13 @@ const createTraceExporter = (): ZipkinExporter => {
     console.log(
       `🔍 ZIPKIN EXPORT: Attempting to send ${spans.length} spans to ${zipkinEndpoint}`,
     );
-    console.log(
-      `🔍 ZIPKIN EXPORT: Current timestamp: ${new Date().toISOString()}`,
-    );
-
     spans.forEach((span: ReadableSpan, index: number) => {
       console.log(`  📊 Span ${index + 1}: ${span.name}`);
       console.log(`    - Trace ID: ${span.spanContext().traceId}`);
       console.log(`    - Span ID: ${span.spanContext().spanId}`);
       console.log(`    - Status: ${JSON.stringify(span.status)}`);
-      console.log(`    - Attributes: ${JSON.stringify(span.attributes)}`);
     });
-
-    return originalExport(spans, (result: any) => {
-      console.log(`🔍 ZIPKIN EXPORT: Export attempt completed`);
-      console.log(`🔍 ZIPKIN EXPORT: Result code: ${result.code}`);
-
-      if (result.code === 0) {
-        console.log('✅ ZIPKIN EXPORT: Successfully sent spans to Zipkin');
-      } else {
-        console.error(
-          '❌ ZIPKIN EXPORT: Failed to send spans:',
-          result.error || result.message || 'Unknown error',
-        );
-        console.error(
-          '❌ ZIPKIN EXPORT: Full result:',
-          JSON.stringify(result, null, 2),
-        );
-      }
-      resultCallback(result);
-    });
+    return originalExport(spans, resultCallback);
   };
 
   return zipkinExporter;
@@ -93,12 +98,10 @@ const createSpanProcessors = (): SimpleSpanProcessor[] => {
   console.log('🔍 Adding console span processor for debugging');
   processors.push(new SimpleSpanProcessor(createConsoleExporter()));
 
-  // Add main exporter with direct processing (no buffering)
+  // Add main exporter
   const mainExporter = createTraceExporter();
-  console.log(
-    '🔍 Adding direct span processor for immediate Zipkin export (no buffering)',
-  );
-  processors.push(new SimpleSpanProcessor(mainExporter));
+  console.log('🔍 Adding span processor for primary exporter');
+  processors.push(new SimpleSpanProcessor(mainExporter as any));
 
   return processors;
 };

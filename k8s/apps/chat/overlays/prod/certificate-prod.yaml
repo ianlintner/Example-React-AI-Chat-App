@@ -1,13 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: chat-certificate
-  labels:
-    app: chat
+  name: chat-backend-tls-cert
+  namespace: prod
 spec:
-  secretName: chat-tls
+  secretName: chat-backend-tls-cert
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - 'chat.hugecat.net'
+    - chat-backend.hugecat.net

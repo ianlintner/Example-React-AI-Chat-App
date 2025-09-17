@@ -1,0 +1,16 @@
+apiVersion: networking.gke.io/v1
+kind: BackendConfig
+metadata:
+  name: chat-frontend-backendconfig
+  namespace: prod
+spec:
+  cdn:
+    enabled: true
+    cachePolicy:
+      includeHost: true
+      includeProtocol: true
+      includeQueryString: true
+  connectionDraining:
+    drainingTimeoutSec: 60
+  securityPolicy:
+    name: chat-frontend-security

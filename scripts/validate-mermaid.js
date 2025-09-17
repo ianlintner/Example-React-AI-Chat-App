@@ -2,7 +2,7 @@
 
 /**
  * Mermaid Diagram Validator
- * 
+ *
  * This script validates all Mermaid diagrams in markdown files within the docs/ directory.
  * It extracts Mermaid code blocks and validates them using the Mermaid CLI parser.
  */
@@ -18,7 +18,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   reset: '\x1b[0m',
-  bold: '\x1b[1m'
+  bold: '\x1b[1m',
 };
 
 class MermaidValidator {
@@ -45,7 +45,7 @@ class MermaidValidator {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       if (line.trim() === '```mermaid') {
         inMermaidBlock = true;
         blockStartLine = i + 1;
@@ -57,7 +57,7 @@ class MermaidValidator {
             content: currentBlock.join('\n'),
             startLine: blockStartLine,
             endLine: i,
-            filePath
+            filePath,
           });
         }
       } else if (inMermaidBlock) {
@@ -74,30 +74,41 @@ class MermaidValidator {
   async validateMermaidDiagram(block) {
     try {
       const content = block.content.trim();
-      
+
       if (content.length === 0) {
-        return { 
-          isValid: false, 
-          error: 'Empty diagram content' 
+        return {
+          isValid: false,
+          error: 'Empty diagram content',
         };
       }
 
       // Basic validation - check for common Mermaid diagram types and syntax
       const validDiagramTypes = [
-        'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 
-        'stateDiagram', 'erDiagram', 'journey', 'gantt', 'pie',
-        'gitgraph', 'mindmap', 'timeline', 'quadrantChart', 'requirementDiagram'
+        'graph',
+        'flowchart',
+        'sequenceDiagram',
+        'classDiagram',
+        'stateDiagram',
+        'erDiagram',
+        'journey',
+        'gantt',
+        'pie',
+        'gitgraph',
+        'mindmap',
+        'timeline',
+        'quadrantChart',
+        'requirementDiagram',
       ];
-      
+
       const firstLine = content.split('\n')[0].trim();
-      const hasValidType = validDiagramTypes.some(type => 
-        firstLine.toLowerCase().startsWith(type.toLowerCase())
+      const hasValidType = validDiagramTypes.some(type =>
+        firstLine.toLowerCase().startsWith(type.toLowerCase()),
       );
-      
+
       if (!hasValidType) {
-        return { 
-          isValid: false, 
-          error: `Invalid diagram type. Expected one of: ${validDiagramTypes.join(', ')}`
+        return {
+          isValid: false,
+          error: `Invalid diagram type. Expected one of: ${validDiagramTypes.join(', ')}`,
         };
       }
 
@@ -107,14 +118,14 @@ class MermaidValidator {
         const chars = content.split('');
         let bracketCount = 0;
         let quoteChar = null;
-        
+
         for (let i = 0; i < chars.length; i++) {
           const char = chars[i];
-          
+
           if (!inQuotes && (char === '"' || char === "'")) {
             inQuotes = true;
             quoteChar = char;
-          } else if (inQuotes && char === quoteChar && chars[i-1] !== '\\') {
+          } else if (inQuotes && char === quoteChar && chars[i - 1] !== '\\') {
             inQuotes = false;
             quoteChar = null;
           } else if (!inQuotes) {
@@ -125,18 +136,18 @@ class MermaidValidator {
             }
           }
         }
-        
+
         if (bracketCount !== 0) {
-          return { 
-            isValid: false, 
-            error: 'Unbalanced brackets or parentheses' 
+          return {
+            isValid: false,
+            error: 'Unbalanced brackets or parentheses',
           };
         }
-        
+
         if (inQuotes) {
-          return { 
-            isValid: false, 
-            error: 'Unclosed quote in diagram' 
+          return {
+            isValid: false,
+            error: 'Unclosed quote in diagram',
           };
         }
       }
@@ -144,31 +155,46 @@ class MermaidValidator {
       // Additional checks for specific diagram types
       if (firstLine.toLowerCase().startsWith('sequencediagram')) {
         // Check for proper participant declarations or usage
-        const hasParticipants = content.includes('participant ') || content.includes('actor ') || content.includes('->') || content.includes('->>');
+        const hasParticipants =
+          content.includes('participant ') ||
+          content.includes('actor ') ||
+          content.includes('->') ||
+          content.includes('->>');
         if (!hasParticipants) {
-          return { 
-            isValid: false, 
-            error: 'Sequence diagram should have participants and interactions' 
+          return {
+            isValid: false,
+            error: 'Sequence diagram should have participants and interactions',
           };
         }
       }
-      
-      if (firstLine.toLowerCase().startsWith('graph') || firstLine.toLowerCase().startsWith('flowchart')) {
+
+      if (
+        firstLine.toLowerCase().startsWith('graph') ||
+        firstLine.toLowerCase().startsWith('flowchart')
+      ) {
         // Check for node connections
-        const hasConnections = content.includes('-->') || content.includes('---') || content.includes('-.->') || content.includes('==>');
-        if (!hasConnections && !content.includes('[') && !content.includes('(')) {
-          return { 
-            isValid: false, 
-            error: 'Graph/flowchart should have nodes or connections' 
+        const hasConnections =
+          content.includes('-->') ||
+          content.includes('---') ||
+          content.includes('-.->') ||
+          content.includes('==>');
+        if (
+          !hasConnections &&
+          !content.includes('[') &&
+          !content.includes('(')
+        ) {
+          return {
+            isValid: false,
+            error: 'Graph/flowchart should have nodes or connections',
           };
         }
       }
-      
+
       return { isValid: true, error: null };
     } catch (error) {
-      return { 
-        isValid: false, 
-        error: `Validation error: ${error.message}` 
+      return {
+        isValid: false,
+        error: `Validation error: ${error.message}`,
       };
     }
   }
@@ -180,37 +206,46 @@ class MermaidValidator {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
       const mermaidBlocks = this.extractMermaidBlocks(content, filePath);
-      
+
       if (mermaidBlocks.length === 0) {
         return;
       }
 
-      this.log(`\n📄 Processing ${filePath} (${mermaidBlocks.length} diagram${mermaidBlocks.length === 1 ? '' : 's'})`, 'blue');
-      
+      this.log(
+        `\n📄 Processing ${filePath} (${mermaidBlocks.length} diagram${mermaidBlocks.length === 1 ? '' : 's'})`,
+        'blue',
+      );
+
       for (const block of mermaidBlocks) {
         this.totalDiagrams++;
         const blockInfo = `${filePath}:${block.startLine}-${block.endLine}`;
-        
+
         const result = await this.validateMermaidDiagram(block);
-        
+
         if (result.isValid) {
           this.validDiagrams++;
-          this.log(`  ✅ Diagram at lines ${block.startLine}-${block.endLine}`, 'green');
+          this.log(
+            `  ✅ Diagram at lines ${block.startLine}-${block.endLine}`,
+            'green',
+          );
         } else {
           this.errors.push({
             file: filePath,
             startLine: block.startLine,
             endLine: block.endLine,
             error: result.error,
-            content: block.content
+            content: block.content,
           });
-          this.log(`  ❌ Diagram at lines ${block.startLine}-${block.endLine}: ${result.error}`, 'red');
+          this.log(
+            `  ❌ Diagram at lines ${block.startLine}-${block.endLine}: ${result.error}`,
+            'red',
+          );
         }
       }
     } catch (error) {
       this.errors.push({
         file: filePath,
-        error: `Failed to process file: ${error.message}`
+        error: `Failed to process file: ${error.message}`,
       });
       this.log(`❌ Failed to process ${filePath}: ${error.message}`, 'red');
     }
@@ -221,12 +256,12 @@ class MermaidValidator {
    */
   findMarkdownFiles(dir) {
     const files = [];
-    
+
     const entries = fs.readdirSync(dir, { withFileTypes: true });
-    
+
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      
+
       if (entry.isDirectory()) {
         // Skip hidden directories and node_modules
         if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
@@ -236,7 +271,7 @@ class MermaidValidator {
         files.push(fullPath);
       }
     }
-    
+
     return files;
   }
 
@@ -245,21 +280,24 @@ class MermaidValidator {
    */
   async validate(targetPath = 'docs') {
     this.log(`🔍 Validating Mermaid diagrams in ${targetPath}/...`, 'bold');
-    
+
     if (!fs.existsSync(targetPath)) {
       this.log(`❌ Directory ${targetPath} does not exist`, 'red');
       process.exit(1);
     }
-    
+
     const markdownFiles = this.findMarkdownFiles(targetPath);
-    this.log(`📁 Found ${markdownFiles.length} markdown files to check`, 'blue');
-    
+    this.log(
+      `📁 Found ${markdownFiles.length} markdown files to check`,
+      'blue',
+    );
+
     for (const file of markdownFiles) {
       await this.processFile(file);
     }
-    
+
     this.printSummary();
-    
+
     // Exit with error code if there were validation errors
     if (this.errors.length > 0) {
       process.exit(1);
@@ -273,19 +311,25 @@ class MermaidValidator {
     this.log('\n' + '='.repeat(60), 'bold');
     this.log('📊 MERMAID VALIDATION SUMMARY', 'bold');
     this.log('='.repeat(60), 'bold');
-    
+
     this.log(`Total diagrams found: ${this.totalDiagrams}`, 'blue');
     this.log(`Valid diagrams: ${this.validDiagrams}`, 'green');
-    this.log(`Invalid diagrams: ${this.errors.length}`, this.errors.length > 0 ? 'red' : 'green');
-    
+    this.log(
+      `Invalid diagrams: ${this.errors.length}`,
+      this.errors.length > 0 ? 'red' : 'green',
+    );
+
     if (this.errors.length > 0) {
       this.log('\n❌ VALIDATION ERRORS:', 'red');
       this.log('-'.repeat(40), 'red');
-      
+
       this.errors.forEach((error, index) => {
-        this.log(`\n${index + 1}. ${error.file}${error.startLine ? `:${error.startLine}-${error.endLine}` : ''}`, 'red');
+        this.log(
+          `\n${index + 1}. ${error.file}${error.startLine ? `:${error.startLine}-${error.endLine}` : ''}`,
+          'red',
+        );
         this.log(`   ${error.error}`, 'red');
-        
+
         if (error.content) {
           // Show first few lines of the problematic diagram
           const lines = error.content.split('\n').slice(0, 3);
@@ -308,7 +352,7 @@ class MermaidValidator {
 if (require.main === module) {
   const targetPath = process.argv[2] || 'docs';
   const validator = new MermaidValidator();
-  
+
   validator.validate(targetPath).catch(error => {
     console.error(`${colors.red}Fatal error: ${error.message}${colors.reset}`);
     process.exit(1);

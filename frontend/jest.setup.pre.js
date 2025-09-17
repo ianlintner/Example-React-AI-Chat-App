@@ -2,7 +2,8 @@
 // These mocks run before the environment is set up and before other setup files.
 
 // Reduce noisy logs during tests unless explicitly overridden
-process.env.EXPO_PUBLIC_LOG_LEVEL = process.env.EXPO_PUBLIC_LOG_LEVEL || 'error';
+process.env.EXPO_PUBLIC_LOG_LEVEL =
+  process.env.EXPO_PUBLIC_LOG_LEVEL || 'error';
 process.env.LOG_LEVEL = process.env.LOG_LEVEL || 'error';
 
 // Expo SDK 53’s import.meta polyfill can get pulled in via transforms. Stub it out early.
@@ -26,4 +27,3 @@ if (!globalThis.__ExpoImportMetaRegistry) {
     },
   });
 }
-

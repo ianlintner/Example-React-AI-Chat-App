@@ -33,7 +33,8 @@ const config = {
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',
     // Prevent Expo winter runtime from loading in Jest
-    '^expo/src/winter/runtime(\\.native)?$': '<rootDir>/__mocks__/expo-winter-runtime.js',
+    '^expo/src/winter/runtime(\\.native)?$':
+      '<rootDir>/__mocks__/expo-winter-runtime.js',
     '^expo/winter/runtime$': '<rootDir>/__mocks__/expo-winter-runtime.js',
   },
   transformIgnorePatterns: [

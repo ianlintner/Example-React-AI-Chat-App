@@ -1,11 +1,21 @@
 import OpenAI from 'openai';
 import { MessageClassification, AgentType } from './types';
+import { evaluateEngagement } from './engagementEvaluator';
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null;
+// Lazily initialize OpenAI client so tests can toggle API key at runtime
+let openaiClient: OpenAI | null = null;
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    // Ensure we don't keep a stale client when key is removed between tests
+    openaiClient = null;
+    return null;
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey });
+  }
+  return openaiClient;
+}
 
 const CLASSIFICATION_PROMPT = `You are a message classifier that determines which type of AI agent should handle a user's message.
 
@@ -52,6 +62,19 @@ Message to classify: "{message}"`;
 export async function classifyMessage(
   message: string,
 ): Promise<MessageClassification> {
+  // Engagement evaluator check before fallback classification
+  const engagementSignal = evaluateEngagement(message);
+  if (engagementSignal === 'BOREDOM') {
+    return {
+      agentType: 'hold_agent',
+      confidence: 0.9,
+      reasoning:
+        'Detected boredom signal, escalating to hold/entertainment agent',
+    };
+  }
+  // Note: Do not force GIF on generic entertainment requests. Allow
+  // the keyword classifier below to choose between gif/joke/trivia/general.
+
   // Fallback classification using simple keyword matching
   const fallbackClassification = (): MessageClassification => {
     const technicalKeywords = [
@@ -290,7 +313,8 @@ export async function classifyMessage(
   };
 
   // Try AI classification first
-  if (openai && process.env.OPENAI_API_KEY) {
+  const openai = getOpenAIClient();
+  if (openai) {
     try {
       const completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',

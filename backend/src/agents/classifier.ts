@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { MessageClassification, AgentType } from './types';
+import { evaluateEngagement } from './engagementEvaluator';
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
@@ -52,6 +53,27 @@ Message to classify: "{message}"`;
 export async function classifyMessage(
   message: string,
 ): Promise<MessageClassification> {
+  // Engagement evaluator check before fallback classification
+  const engagementSignal = evaluateEngagement(message);
+  if (engagementSignal) {
+    if (engagementSignal === 'BOREDOM') {
+      return {
+        agentType: 'hold_agent',
+        confidence: 0.9,
+        reasoning:
+          'Detected boredom signal, escalating to hold/entertainment agent',
+      };
+    }
+    if (engagementSignal === 'ENTERTAINMENT_REQUEST') {
+      return {
+        agentType: 'gif',
+        confidence: 0.9,
+        reasoning:
+          'Detected entertainment request, escalating to GIF/entertainment agent',
+      };
+    }
+  }
+
   // Fallback classification using simple keyword matching
   const fallbackClassification = (): MessageClassification => {
     const technicalKeywords = [

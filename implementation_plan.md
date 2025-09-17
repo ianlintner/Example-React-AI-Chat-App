@@ -1,66 +1,80 @@
 # Implementation Plan
 
 [Overview]  
-Migrate the frontend from a Kubernetes pod deployment to a static hosting model using Google Cloud Storage (GCS) buckets with Cloud CDN, accessible at `chat-ui.hugecat.net`.
+The goal is to make backend agents more reactive by reducing multi-turn delays when users express boredom or request entertainment, ensuring faster escalation to appropriate agents (e.g., YouTube Guru) without repetitive back-and-forth.
 
-This change reduces operational overhead, improves scalability, and leverages CDN caching for faster global delivery. The backend remains in Kubernetes, while the frontend build artifacts are pushed to GCS buckets for both `dev` and `prod` environments. Cloud CDN will serve the assets, and DNS will be updated to point `chat-ui.hugecat.net` to the CDN endpoint.
+Currently, the system requires multiple exchanges before switching agents, leading to user frustration. The plan introduces a proactive boredom/entertainment intent evaluator within the backend agent pipeline. This evaluator will detect disengagement signals (e.g., "I am bored", "entertain me") and immediately escalate to entertainment agents. It will integrate with the existing classifier and goal-seeking system to minimize latency and improve responsiveness.
 
 [Types]  
-No new application-level types are required. Infrastructure manifests will define GCP resources.
+We will extend the backend type system to support boredom/engagement detection.
+
+```ts
+// backend/src/agents/types.ts
+export interface EngagementSignal {
+  type: 'boredom' | 'frustration' | 'entertainment_request';
+  confidence: number; // 0-1
+  triggerMessage: string;
+}
+
+export interface AgentEscalation {
+  targetAgent: 'YouTubeGuru' | 'GameHost' | 'QuoteMaster' | 'GeneralAssistant';
+  reason: string;
+  autoEscalated: boolean;
+}
+```
 
 [Files]  
-We will add new Kubernetes Config Connector manifests to provision GCS buckets, IAM bindings, and Cloud CDN backends.
+We will add a new evaluator and modify existing agent orchestration.
 
-- **New files**:
-  - `k8s/apps/chat/base/frontend-bucket.yaml`  
-    Defines a GCS bucket for static frontend hosting.
-  - `k8s/apps/chat/base/frontend-backendconfig.yaml`  
-    Defines Cloud CDN backend service for the bucket.
-  - `k8s/apps/chat/overlays/prod/frontend-bucket-patch.yaml`  
-    Patches bucket name for production.
-  - `k8s/apps/chat/overlays/dev/frontend-bucket-patch.yaml`  
-    Patches bucket name for development.
-  - `k8s/apps/chat/overlays/prod/dns-records-frontend.yaml`  
-    DNS record for `chat-ui.hugecat.net`.
-
-- **Modified files**:
-  - `k8s/apps/chat/base/kustomization.yaml` → include new bucket and CDN manifests.
-  - `k8s/apps/chat/overlays/prod/kustomization.yaml` → include prod patches.
-  - `k8s/apps/chat/overlays/dev/kustomization.yaml` → include dev patches.
-  - Remove `patch-deployment-frontend.yaml` from overlays since frontend pod is no longer needed.
+- **New Files**:
+  - `backend/src/agents/engagementEvaluator.ts` → Detects boredom/entertainment signals and produces `EngagementSignal`.
+- **Modified Files**:
+  - `backend/src/agents/classifier.ts` → Integrate engagement evaluator before classification fallback.
+  - `backend/src/agents/agentService.ts` → Add escalation logic to switch agents immediately when engagement signals are detected.
+  - `backend/src/agents/goalSeekingSystem.ts` → Update to consider engagement signals as high-priority goals.
+- **No deletions**.
+- **Config**:
+  - Update `backend/package.json` if new NLP libraries are required (optional, may use regex + heuristics first).
 
 [Functions]  
-No application functions are modified. CI/CD pipeline will be updated to build frontend and sync artifacts to the GCS bucket.
+We will add new functions and modify existing ones.
 
-- **New CI/CD step**:
-  - `npm run build` in `frontend/`
-  - Use `gcloud storage rsync` to push build artifacts:
-    - `gcloud storage rsync ./dist gs://chat-frontend-prod --recursive` (for prod)
-    - `gcloud storage rsync ./dist gs://chat-frontend-dev --recursive` (for dev)
+- **New Functions**:
+  - `detectEngagement(message: string): EngagementSignal | null` in `engagementEvaluator.ts`  
+    → Uses regex + keyword spotting (e.g., "bored", "entertain", "show me video") with confidence scoring.
+- **Modified Functions**:
+  - `classifyMessage` in `classifier.ts` → Call `detectEngagement` before JSON classification. If engagement detected, short-circuit to escalation.
+  - `processMessage` in `agentService.ts` → Accept `AgentEscalation` and reroute to entertainment agent immediately.
+- **Removed Functions**: None.
 
 [Classes]  
-No new classes are required. No modifications to existing application classes.
+We will extend existing service classes.
 
-[Dependencies]
+- **Modified Classes**:
+  - `AgentService` (`backend/src/agents/agentService.ts`) → Add method `handleEngagementEscalation(signal: EngagementSignal): AgentEscalation`.
+- **New Classes**: None (functional module preferred).
+- **Removed Classes**: None.
 
-- Remove dependency on Nginx container for frontend.
-- Add dependency on GCP Cloud Storage and Cloud CDN.
-- Ensure `ConfigConnector` is enabled in the cluster for GCS and CDN resources.
+[Dependencies]  
+No new dependencies required initially. Regex + heuristics suffice. Optional: add lightweight NLP (e.g., `compromise` or `natural`) if needed.
 
-[Testing]
+[Testing]  
+We will add integration tests to ensure boredom detection triggers immediate escalation.
 
-- Validate that `chat-ui.hugecat.net` serves the built frontend.
-- Confirm `/api` routes still go through Istio to backend.
-- Test cache invalidation by updating assets and verifying CDN refresh.
-- Validate both `dev` and `prod` buckets serve correct builds.
+- **New Tests**:
+  - `backend/src/agents/__tests__/engagementEvaluator.test.ts` → Unit tests for boredom/entertainment detection.
+  - Extend `agentFlow.integration.test.ts` → Add scenario: user says "I am bored" → system escalates to YouTube Guru in one turn.
+- **Modified Tests**:
+  - Update classifier tests to ensure engagement detection bypasses JSON parse errors.
 
-[Implementation Order]
+[Implementation Order]  
+We will implement in the following sequence:
 
-1. Create GCS bucket manifests for dev and prod.
-2. Add Cloud CDN backend configuration.
-3. Update DNS to point `chat-ui.hugecat.net` to CDN.
-4. Remove frontend pod deployment from Kubernetes.
-5. Update CI/CD pipeline to push frontend build artifacts to GCS.
-6. Validate deployment in dev environment.
-7. Roll out to prod and validate.
-8. Decommission old frontend pod resources.
+1. Create `engagementEvaluator.ts` with boredom/entertainment detection.
+2. Integrate evaluator into `classifier.ts` before JSON classification.
+3. Update `agentService.ts` to handle escalations.
+4. Update `goalSeekingSystem.ts` to prioritize engagement signals.
+5. Add unit tests for evaluator.
+6. Add integration tests for end-to-end boredom → YouTube Guru escalation.
+7. Validate with existing test suite.
+8. Optimize thresholds and fallback strategies.

@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import type { Manager } from 'socket.io-client';
 import type {
   Message,
   Conversation,
@@ -50,22 +51,23 @@ class SocketService {
       });
 
       this.socket.on('connect_error', error => {
+        const e = error as Error &
+          Partial<{ description?: string; context?: unknown; type?: string }>;
         logger.error('❌ Socket connection error:', {
-          message: error.message,
-          name: error.name,
-          description: (error as any).description,
-          context: (error as any).context,
-          type: (error as any).type,
-          stack: error.stack,
+          message: e.message,
+          name: e.name,
+          description: e.description,
+          context: e.context,
+          type: e.type,
+          stack: e.stack,
         });
         if (this.socket) {
           try {
-            const ioManager: any = (this.socket as any).io;
+            const ioManager = (this.socket as unknown as { io?: Manager }).io;
             logger.error('🔍 Socket details:', {
               id: this.socket.id,
               connected: this.socket.connected,
-              uri: ioManager?.uri,
-              opts: ioManager?.opts,
+              manager: ioManager as unknown,
             });
           } catch {
             // No-op in tests or when manager shape differs
@@ -76,7 +78,7 @@ class SocketService {
       });
 
       // Guard in case the mock socket in tests doesn't provide a Manager (`.io`)
-      const manager: any = (this.socket as any)?.io;
+      const manager = (this.socket as unknown as { io?: Manager }).io;
       if (manager?.on) {
         manager.on('reconnect_attempt', (attempt: unknown) => {
           logger.info('🔄 Socket reconnect attempt:', attempt);

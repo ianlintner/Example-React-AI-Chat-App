@@ -19,6 +19,7 @@ module.exports = [
       'public/**',
       '*.config.js',
       'jest.setup.js',
+      'jest.setup.pre.js',
       'scripts/**',
       '__mocks__/**',
       '**/*.bundle.js',

@@ -14,14 +14,12 @@ class SocketService {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Resolve API base URL
+      // Resolve API base URL (prefer env for tests and local dev)
       const isBrowser = typeof window !== 'undefined' && !!window.location;
-      const apiBase = 'wss://chat-backend.hugecat.net';
-
-      // const apiBase =
-      //   process.env.EXPO_PUBLIC_API_URL ||
-      //   process.env.API_URL ||
-      //   (isBrowser ? window.location.origin : 'http://chat-backend.hugecat.net');
+      const apiBase =
+        process.env.EXPO_PUBLIC_API_URL ||
+        process.env.API_URL ||
+        (isBrowser ? window.location.origin : 'http://localhost:3000');
 
       // When using same-origin behind a gateway, route socket path via /api
       const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
@@ -61,28 +59,35 @@ class SocketService {
           stack: error.stack,
         });
         if (this.socket) {
-          logger.error('🔍 Socket details:', {
-            id: this.socket.id,
-            connected: this.socket.connected,
-            uri: (this.socket.io as any).uri,
-            opts: (this.socket.io as any).opts,
-          });
+          try {
+            const ioManager: any = (this.socket as any).io;
+            logger.error('🔍 Socket details:', {
+              id: this.socket.id,
+              connected: this.socket.connected,
+              uri: ioManager?.uri,
+              opts: ioManager?.opts,
+            });
+          } catch {
+            // No-op in tests or when manager shape differs
+          }
         }
         this.isConnected = false;
         reject(error);
       });
 
-      this.socket.io.on('reconnect_attempt', attempt => {
-        logger.info('🔄 Socket reconnect attempt:', attempt);
-      });
-
-      this.socket.io.on('reconnect_failed', () => {
-        logger.error('❌ Socket reconnect failed');
-      });
-
-      this.socket.io.on('error', err => {
-        logger.error('⚠️ Socket.io manager error:', err);
-      });
+      // Guard in case the mock socket in tests doesn't provide a Manager (`.io`)
+      const manager: any = (this.socket as any)?.io;
+      if (manager?.on) {
+        manager.on('reconnect_attempt', (attempt: unknown) => {
+          logger.info('🔄 Socket reconnect attempt:', attempt);
+        });
+        manager.on('reconnect_failed', () => {
+          logger.error('❌ Socket reconnect failed');
+        });
+        manager.on('error', (err: unknown) => {
+          logger.error('⚠️ Socket.io manager error:', err);
+        });
+      }
     });
   }
 

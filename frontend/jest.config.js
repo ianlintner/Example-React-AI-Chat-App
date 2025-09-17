@@ -2,6 +2,7 @@ const isCI = process.env.CI === 'true' || process.env.CI === true;
 
 const config = {
   preset: 'jest-expo',
+  setupFiles: ['<rootDir>/jest.setup.pre.js'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/*.(test|spec).(ts|tsx|js)'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
@@ -31,6 +32,9 @@ const config = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/__mocks__/@react-native-async-storage/async-storage.js',
+    // Prevent Expo winter runtime from loading in Jest
+    '^expo/src/winter/runtime(\\.native)?$': '<rootDir>/__mocks__/expo-winter-runtime.js',
+    '^expo/winter/runtime$': '<rootDir>/__mocks__/expo-winter-runtime.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg))',

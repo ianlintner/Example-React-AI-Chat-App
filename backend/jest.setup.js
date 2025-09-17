@@ -19,6 +19,8 @@ beforeAll(() => {
   });
 });
 
+export {};
+
 afterAll(() => {
   if (console.error && typeof console.error.mockRestore === 'function') {
     console.error.mockRestore();

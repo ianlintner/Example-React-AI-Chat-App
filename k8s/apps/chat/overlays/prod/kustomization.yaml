@@ -5,12 +5,21 @@ resources:
   - ../../base
   - dns-records.yaml
   - dns-records-frontend.yaml
-  - frontend-bucket-patch.yaml
+  # - frontend-bucket-patch.yaml
   - workload-identity-binding.yaml
   - redis-instance.yaml
-  - certificate.yaml
+  # - certificate.yaml
+  - certificate-prod.yaml
   # - istio-authorizationpolicy.yaml
   # - istio-authorizationpolicy-global.yaml
+
+configMapGenerator:
+  - name: chat-backend-env
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - TRACING_EXPORTER=cloudtrace
+      - OTEL_SERVICE_NAME=ai-goal-seeking-backend
 # patches:
 # #  - path: patch-deployment-frontend.yaml
 # #    target:

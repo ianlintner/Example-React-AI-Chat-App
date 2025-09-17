@@ -5,24 +5,36 @@ metadata:
   namespace: prod
 spec:
   hosts:
-    - 'chat.hugecat.net'
     - 'chat-backend.hugecat.net'
   gateways:
     - chat-gateway
   http:
     - match:
         - uri:
-            prefix: /.well-known
+            prefix: /.well-known/acme-challenge
       route:
         - destination:
-            host: acme-challenge.default.svc.cluster.local
+            host: cm-acme-http-solver-hx6fx
+            port:
+              number: 8089
+    - match:
+        - uri:
+            prefix: /api/socket.io
+      route:
+        - destination:
+            host: chat-backend.prod.svc.cluster.local
             port:
               number: 80
+      headers:
+        request:
+          set:
+            Connection: upgrade
+            Upgrade: websocket
     - match:
         - uri:
             prefix: /
       route:
         - destination:
-            host: chat-backend
+            host: chat-backend.prod.svc.cluster.local
             port:
-              number: 4000
+              number: 80

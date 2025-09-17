@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: chat-backend-tls-cert
-  namespace: default
+  namespace: prod
 spec:
   secretName: chat-backend-tls-cert
   issuerRef:

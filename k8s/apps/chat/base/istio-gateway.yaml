@@ -12,13 +12,13 @@ spec:
         name: https
         protocol: HTTPS
       hosts:
-        - 'chat.hugecat.net'
+        - 'chat-backend.hugecat.net'
       tls:
         mode: SIMPLE
-        credentialName: chat-alt-tls-cert
+        credentialName: chat-backend-tls-cert
     - port:
         number: 80
         name: http
         protocol: HTTP
       hosts:
-        - 'chat.hugecat.net'
+        - 'chat-backend.hugecat.net'

@@ -15,14 +15,15 @@ class SocketService {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Resolve API base URL
-      const isBrowser = typeof window !== 'undefined' && !!window.location;
-      const apiBase =
-        process.env.EXPO_PUBLIC_API_URL ||
-        process.env.API_URL ||
-        (isBrowser ? window.location.origin : 'http://localhost:5001');
+      const apiBase = 'wss://chat-backend.hugecat.net';
+
+      // const apiBase =
+      //   process.env.EXPO_PUBLIC_API_URL ||
+      //   process.env.API_URL ||
+      //   (isBrowser ? window.location.origin : 'http://chat-backend.hugecat.net');
 
       // When using same-origin behind a gateway, route socket path via /api
-      const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
+      const socketPath = '/socket.io';
 
       logger.info(
         'Connecting to socket server at:',
@@ -50,9 +51,36 @@ class SocketService {
       });
 
       this.socket.on('connect_error', error => {
-        logger.error('Socket connection error:', error);
+        logger.error('❌ Socket connection error:', {
+          message: error.message,
+          name: error.name,
+          description: (error as any).description,
+          context: (error as any).context,
+          type: (error as any).type,
+          stack: error.stack,
+        });
+        if (this.socket) {
+          logger.error('🔍 Socket details:', {
+            id: this.socket.id,
+            connected: this.socket.connected,
+            uri: (this.socket.io as any).uri,
+            opts: (this.socket.io as any).opts,
+          });
+        }
         this.isConnected = false;
         reject(error);
+      });
+
+      this.socket.io.on('reconnect_attempt', attempt => {
+        logger.info('🔄 Socket reconnect attempt:', attempt);
+      });
+
+      this.socket.io.on('reconnect_failed', () => {
+        logger.error('❌ Socket reconnect failed');
+      });
+
+      this.socket.io.on('error', err => {
+        logger.error('⚠️ Socket.io manager error:', err);
       });
     });
   }

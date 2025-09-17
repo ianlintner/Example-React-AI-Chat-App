@@ -43,6 +43,10 @@ const createTraceExporter = () => {
     ? exporterPref === 'cloudtrace' || exporterPref === 'gcp'
     : isProd;
 
+  if (isProd && !exporterPref) {
+    process.env.TRACING_EXPORTER = 'cloudtrace';
+  }
+
   if (useCloudTrace) {
     if (CloudTraceExporterCtor) {
       console.log('🔗 Using Google Cloud Trace exporter (ADC credentials)');

@@ -26,20 +26,21 @@ spec:
       containers:
         - name: chat-backend
           image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 4000
+            - containerPort: 5001
           startupProbe:
             httpGet:
-              path: /
-              port: 4000
+              path: /healthz
+              port: 5001
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /
-              port: 4000
+              path: /health
+              port: 5001
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 2

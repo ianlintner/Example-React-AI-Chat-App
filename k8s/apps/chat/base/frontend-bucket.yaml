@@ -12,7 +12,7 @@ spec:
 apiVersion: networking.gke.io/v1
 kind: BackendConfig
 metadata:
-  name: chat-frontend-cdn
+  name: chat-frontend-prod-cdn
 spec:
   cdn:
     enabled: true

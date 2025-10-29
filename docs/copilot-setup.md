@@ -163,8 +163,9 @@ README.md                           # Main repository README
 - Documentation agent: 456 lines
 - Testing agent: 618 lines
 - Agent README: 121 lines
-- CONTRIBUTING.md: 272 lines
-- **Total: 2,056 lines of guidance**
+- CONTRIBUTING.md: 363 lines
+- Copilot setup doc: 241 lines
+- **Total: 2,388 lines of guidance**
 
 ## Maintenance
 

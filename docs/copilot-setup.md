@@ -222,11 +222,11 @@ Potential improvements:
 ## Resources
 
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
-- [Main Copilot Instructions](.github/copilot-instructions.md)
-- [Coding Agent](.github/agents/coding-agent.md)
-- [Documentation Agent](.github/agents/documentation-agent.md)
-- [Testing Agent](.github/agents/testing-agent.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
+- [Main Copilot Instructions](../.github/copilot-instructions.md)
+- [Coding Agent](../.github/agents/coding-agent.md)
+- [Documentation Agent](../.github/agents/documentation-agent.md)
+- [Testing Agent](../.github/agents/testing-agent.md)
+- [Contributing Guidelines](../CONTRIBUTING.md)
 
 ## Questions or Feedback
 

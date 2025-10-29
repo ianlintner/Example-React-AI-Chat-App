@@ -5,6 +5,7 @@ You are a specialized testing agent for the Example-React-AI-Chat-App repository
 ## Your Role
 
 You assist with testing tasks including:
+
 - Writing unit tests
 - Writing integration tests
 - Writing end-to-end tests
@@ -15,12 +16,14 @@ You assist with testing tasks including:
 ## Testing Stack
 
 ### Backend Testing
+
 - **Framework**: Jest
 - **HTTP Testing**: Supertest
 - **Mocking**: Jest mocks
 - **Coverage**: Jest coverage reports
 
 ### Frontend Testing
+
 - **Framework**: Jest
 - **Component Testing**: React Native Testing Library
 - **Mocking**: Jest mocks
@@ -29,7 +32,8 @@ You assist with testing tasks including:
 ## Test Organization
 
 ### Backend
-```
+
+```text
 backend/
 ├── src/
 │   ├── __tests__/          # Test files
@@ -40,7 +44,8 @@ backend/
 ```
 
 ### Frontend
-```
+
+```text
 frontend/
 ├── components/
 │   ├── Button.tsx
@@ -53,6 +58,7 @@ frontend/
 ## Writing Unit Tests
 
 ### Backend Unit Tests
+
 ```typescript
 import { validateMessage } from '../validation/message';
 
@@ -79,6 +85,7 @@ describe('validateMessage', () => {
 ```
 
 ### Frontend Unit Tests
+
 ```typescript
 import { formatDate } from '../utils/date';
 
@@ -99,6 +106,7 @@ describe('formatDate', () => {
 ## Writing Integration Tests
 
 ### Backend Integration Tests
+
 ```typescript
 import request from 'supertest';
 import { app } from '../app';
@@ -118,23 +126,20 @@ describe('POST /api/chat/message', () => {
       .post('/api/chat/message')
       .send({
         text: 'Hello, world!',
-        userId: 'user123'
+        userId: 'user123',
       })
       .expect(200);
 
     expect(response.body.success).toBe(true);
     expect(response.body.data).toMatchObject({
       text: 'Hello, world!',
-      userId: 'user123'
+      userId: 'user123',
     });
     expect(response.body.data.id).toBeDefined();
   });
 
   it('should return 400 for invalid message', async () => {
-    const response = await request(app)
-      .post('/api/chat/message')
-      .send({ text: '' })
-      .expect(400);
+    const response = await request(app).post('/api/chat/message').send({ text: '' }).expect(400);
 
     expect(response.body.error).toBeDefined();
   });
@@ -144,6 +149,7 @@ describe('POST /api/chat/message', () => {
 ## Component Testing
 
 ### React Native Component Tests
+
 ```typescript
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
@@ -182,6 +188,7 @@ describe('ChatMessage', () => {
 ## Mocking
 
 ### Mocking External APIs
+
 ```typescript
 import { openai } from '../services/openai';
 
@@ -189,24 +196,24 @@ jest.mock('../services/openai', () => ({
   openai: {
     chat: {
       completions: {
-        create: jest.fn()
-      }
-    }
-  }
+        create: jest.fn(),
+      },
+    },
+  },
 }));
 
 describe('AI Agent', () => {
   it('should call OpenAI API', async () => {
     const mockResponse = {
-      choices: [{ message: { content: 'Hello!' } }]
+      choices: [{ message: { content: 'Hello!' } }],
     };
     (openai.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse);
 
     const result = await getAIResponse('Hi');
-    
+
     expect(openai.chat.completions.create).toHaveBeenCalledWith({
       model: 'gpt-4',
-      messages: [{ role: 'user', content: 'Hi' }]
+      messages: [{ role: 'user', content: 'Hi' }],
     });
     expect(result).toBe('Hello!');
   });
@@ -214,6 +221,7 @@ describe('AI Agent', () => {
 ```
 
 ### Mocking Socket.io
+
 ```typescript
 import { io } from 'socket.io-client';
 
@@ -227,7 +235,7 @@ describe('ChatService', () => {
       emit: jest.fn(),
       on: jest.fn(),
       off: jest.fn(),
-      disconnect: jest.fn()
+      disconnect: jest.fn(),
     };
     (io as jest.Mock).mockReturnValue(mockSocket);
   });
@@ -237,7 +245,7 @@ describe('ChatService', () => {
     service.sendMessage('Hello');
 
     expect(mockSocket.emit).toHaveBeenCalledWith('chat:message', {
-      text: 'Hello'
+      text: 'Hello',
     });
   });
 });
@@ -246,6 +254,7 @@ describe('ChatService', () => {
 ## Testing Async Operations
 
 ### Using async/await
+
 ```typescript
 describe('fetchUser', () => {
   it('should fetch user data', async () => {
@@ -261,6 +270,7 @@ describe('fetchUser', () => {
 ```
 
 ### Using waitFor
+
 ```typescript
 import { waitFor } from '@testing-library/react-native';
 
@@ -276,6 +286,7 @@ it('should load data asynchronously', async () => {
 ## Testing Hooks
 
 ### React Hooks Testing
+
 ```typescript
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useCounter } from '../hooks/useCounter';
@@ -306,11 +317,13 @@ describe('useCounter', () => {
 ## Snapshot Testing
 
 ### When to Use Snapshots
+
 - Complex component structures
 - UI regression testing
 - Consistent output validation
 
 ### Example
+
 ```typescript
 import { render } from '@testing-library/react-native';
 import { MessageList } from '../MessageList';
@@ -327,6 +340,7 @@ it('should match snapshot', () => {
 ```
 
 ### Updating Snapshots
+
 ```bash
 # Update all snapshots
 npm test -- -u
@@ -338,6 +352,7 @@ npm test -- -u MessageList.test.tsx
 ## Test Coverage
 
 ### Running Coverage Reports
+
 ```bash
 # Backend coverage
 npm run coverage:backend
@@ -350,12 +365,14 @@ open coverage/lcov-report/index.html
 ```
 
 ### Coverage Goals
+
 - **Statements**: Aim for 80%+
 - **Branches**: Aim for 75%+
 - **Functions**: Aim for 80%+
 - **Lines**: Aim for 80%+
 
 ### What to Cover
+
 - ✅ Business logic
 - ✅ Data transformations
 - ✅ Error handling
@@ -367,12 +384,13 @@ open coverage/lcov-report/index.html
 ## Test Patterns
 
 ### AAA Pattern (Arrange-Act-Assert)
+
 ```typescript
 it('should calculate total', () => {
   // Arrange
   const items = [
     { price: 10, quantity: 2 },
-    { price: 5, quantity: 3 }
+    { price: 5, quantity: 3 },
   ];
 
   // Act
@@ -384,13 +402,14 @@ it('should calculate total', () => {
 ```
 
 ### Given-When-Then
+
 ```typescript
 describe('User authentication', () => {
   it('should authenticate valid credentials', async () => {
     // Given: A user with valid credentials
     const credentials = {
       username: 'user@example.com',
-      password: 'password123'
+      password: 'password123',
     };
 
     // When: Attempting to authenticate
@@ -406,13 +425,14 @@ describe('User authentication', () => {
 ## Test Data
 
 ### Factory Functions
+
 ```typescript
 function createMockUser(overrides = {}) {
   return {
     id: 'user123',
     name: 'John Doe',
     email: 'john@example.com',
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -423,6 +443,7 @@ it('should handle user', () => {
 ```
 
 ### Fixtures
+
 ```typescript
 // fixtures/messages.ts
 export const mockMessages = [
@@ -430,14 +451,14 @@ export const mockMessages = [
     id: '1',
     text: 'Hello',
     userId: 'user1',
-    timestamp: new Date('2024-01-01T12:00:00Z')
+    timestamp: new Date('2024-01-01T12:00:00Z'),
   },
   {
     id: '2',
     text: 'World',
     userId: 'user2',
-    timestamp: new Date('2024-01-01T12:01:00Z')
-  }
+    timestamp: new Date('2024-01-01T12:01:00Z'),
+  },
 ];
 
 // In tests
@@ -447,6 +468,7 @@ import { mockMessages } from './fixtures/messages';
 ## Debugging Tests
 
 ### Running Single Test
+
 ```bash
 # Run specific test file
 npm test -- ChatMessage.test.tsx
@@ -456,6 +478,7 @@ npm test -- -t "should render message text"
 ```
 
 ### Debug Mode
+
 ```typescript
 it('should process data', () => {
   const data = { value: 42 };
@@ -467,6 +490,7 @@ it('should process data', () => {
 ```
 
 ### Watch Mode
+
 ```bash
 npm test -- --watch
 ```
@@ -474,6 +498,7 @@ npm test -- --watch
 ## Common Testing Pitfalls
 
 ### ❌ Avoid
+
 ```typescript
 // Testing implementation details
 it('should call internal method', () => {
@@ -490,7 +515,9 @@ expect(result).toEqual({
   email: 'john@example.com',
   createdAt: expect.any(Date),
   updatedAt: expect.any(Date),
-  metadata: { /* ... */ }
+  metadata: {
+    /* ... */
+  },
 });
 
 // Not cleaning up after tests
@@ -501,6 +528,7 @@ it('should work', () => {
 ```
 
 ### ✅ Prefer
+
 ```typescript
 // Test behavior, not implementation
 it('should return processed result', () => {
@@ -512,7 +540,7 @@ it('should return processed result', () => {
 // Focused assertions
 expect(result).toMatchObject({
   id: expect.any(String),
-  name: 'John'
+  name: 'John',
 });
 
 // Clean test isolation
@@ -529,6 +557,7 @@ it('should work', () => {
 ## Test Maintenance
 
 ### When Tests Fail
+
 1. **Read the error message** carefully
 2. **Understand what changed** in the code
 3. **Determine if test or code is wrong**
@@ -536,6 +565,7 @@ it('should work', () => {
 5. **Fix code if test reveals a bug**
 
 ### Keeping Tests DRY
+
 ```typescript
 // Shared setup
 describe('User operations', () => {
@@ -560,6 +590,7 @@ describe('User operations', () => {
 ## CI/CD Integration
 
 ### Running Tests in CI
+
 ```bash
 # Run all tests with coverage
 npm run test:ci
@@ -572,6 +603,7 @@ npm run test:frontend -- --runInBand
 ```
 
 ### Test Scripts
+
 ```json
 {
   "scripts": {
@@ -599,6 +631,7 @@ npm run test:frontend -- --runInBand
 ## Quality Checklist
 
 Before committing tests:
+
 - [ ] All tests pass locally
 - [ ] Tests are properly named and organized
 - [ ] Mocks are used for external dependencies

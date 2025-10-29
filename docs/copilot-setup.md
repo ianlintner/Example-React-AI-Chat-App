@@ -113,7 +113,7 @@ Update the instructions when:
 
 ## File Structure
 
-```
+```text
 .github/
 ├── agents/
 │   ├── README.md                    # Agent directory overview

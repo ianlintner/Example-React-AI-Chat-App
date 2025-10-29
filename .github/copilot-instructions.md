@@ -13,7 +13,7 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 
 ## Repository Structure
 
-```
+```text
 ├── backend/                 # Node.js backend (TypeScript, Express, Socket.io)
 │   ├── src/agents/          # AI agent classification, routing, goal-seeking, RAG
 │   ├── src/routes/          # REST and WebSocket endpoints
@@ -32,6 +32,7 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 ## Technology Stack
 
 ### Backend
+
 - **Runtime**: Node.js 18+
 - **Framework**: Express 5
 - **Language**: TypeScript (CommonJS modules)
@@ -42,6 +43,7 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 - **Database**: In-memory (demo), with MongoDB/Postgres interfaces
 
 ### Frontend
+
 - **Framework**: React Native 0.79.x
 - **Platform**: Expo ~53.x
 - **Language**: TypeScript
@@ -53,6 +55,7 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 ## Coding Standards
 
 ### TypeScript
+
 - Use TypeScript for all new code (both frontend and backend)
 - Enable strict type checking
 - Avoid `any` types; use proper type definitions
@@ -61,15 +64,17 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 - Use ES modules (`import`/`export`) for frontend
 
 ### Code Style
+
 - **Formatting**: Prettier (config in `.prettierrc`)
 - **Linting**: ESLint (configs in respective directories)
 - **Line Length**: Max 100 characters
-- **Naming**: 
+- **Naming**:
   - camelCase for variables and functions
   - PascalCase for components and classes
   - UPPER_CASE for constants
 
 ### Comments
+
 - Add JSDoc comments for public APIs and complex functions
 - Keep inline comments minimal and meaningful
 - Document "why" not "what" when commenting
@@ -77,6 +82,7 @@ This is a portfolio demo project showcasing AI-enabled, real-time chat applicati
 ## Development Workflow
 
 ### Setup
+
 ```bash
 # Install all dependencies
 npm run install:all
@@ -88,6 +94,7 @@ npm run dev:frontend     # Frontend only
 ```
 
 ### Testing
+
 ```bash
 npm run test             # Run all tests
 npm run test:backend     # Backend tests only
@@ -98,6 +105,7 @@ npm run test:coverage    # Generate coverage report
 ```
 
 ### Quality Checks
+
 ```bash
 npm run lint             # Lint all code
 npm run lint:fix         # Auto-fix linting issues
@@ -107,6 +115,7 @@ npm run type-check       # TypeScript type checking
 ```
 
 ### Building
+
 ```bash
 npm run build            # Build both frontend and backend
 npm run build:backend    # Build backend (TypeScript to JavaScript)
@@ -116,6 +125,7 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## Testing Guidelines
 
 ### Backend Tests
+
 - Place tests in `__tests__` directories or `.test.ts` files
 - Use Jest and appropriate mocking libraries
 - Test structure: Arrange, Act, Assert
@@ -124,6 +134,7 @@ npm run build:frontend   # Build frontend (Expo web export)
 - Integration tests should test complete request/response flows
 
 ### Frontend Tests
+
 - Place tests in `__tests__` directories or `.test.tsx` files
 - Use Jest and React Native Testing Library
 - Test user interactions and component behavior
@@ -132,6 +143,7 @@ npm run build:frontend   # Build frontend (Expo web export)
 - Snapshot tests for complex UI components
 
 ### Test Naming
+
 - Use descriptive test names: `should return error when user is not authenticated`
 - Group related tests with `describe` blocks
 - Use `it` or `test` for individual test cases
@@ -139,12 +151,14 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## AI/Agent Development
 
 ### Agent Structure
+
 - Agents are in `backend/src/agents/`
 - Each agent has classification, routing, and execution logic
 - Use goal-seeking patterns for complex interactions
 - Implement validation and safety checks
 
 ### RAG (Retrieval-Augmented Generation)
+
 - RAG content is curated and stored in `backend/src/agents/rag/`
 - Use RAG for demo scenarios that work without API keys
 - Structure content for easy retrieval and contextual relevance
@@ -152,17 +166,20 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## Observability
 
 ### Logging
+
 - Use Pino logger (structured logging)
 - Include trace context in logs
 - Log levels: debug, info, warn, error
 - Avoid logging sensitive data (API keys, user data)
 
 ### Metrics
+
 - Prometheus metrics in `backend/src/metrics/`
 - Track request counts, durations, errors
 - Custom metrics for agent operations and AI calls
 
 ### Tracing
+
 - OpenTelemetry spans for all major operations
 - Include relevant attributes in spans
 - Trace context propagation across services
@@ -170,6 +187,7 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## API Development
 
 ### REST Endpoints
+
 - Follow RESTful conventions
 - Use proper HTTP methods (GET, POST, PUT, DELETE)
 - Return appropriate status codes
@@ -177,6 +195,7 @@ npm run build:frontend   # Build frontend (Expo web export)
 - Document with Swagger/OpenAPI (available at `/api/docs`)
 
 ### WebSocket Events
+
 - Use Socket.io for real-time communication
 - Event naming: `chat:message`, `agent:response`, etc.
 - Include correlation IDs for tracing
@@ -185,16 +204,19 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## Documentation
 
 ### Code Documentation
+
 - Document complex algorithms and business logic
 - Keep README files updated in subdirectories
 - Use JSDoc for exported functions and classes
 
 ### Project Documentation
+
 - Main documentation in `docs/` (MkDocs format)
 - Update relevant docs when changing features
 - Test documentation builds: `npm run docs:validate`
 
 ### Markdown Standards
+
 - Follow Markdown linting rules (`.markdownlint.yml`)
 - Check links: `npm run docs:links`
 - Validate Mermaid diagrams: `npm run docs:mermaid`
@@ -202,7 +224,9 @@ npm run build:frontend   # Build frontend (Expo web export)
 ## Environment Configuration
 
 ### Backend Environment Variables
+
 Required variables in `backend/.env`:
+
 - `OPENAI_API_KEY`: OpenAI API key (optional for demo with RAG)
 - `PORT`: Server port (default: 3000)
 - `NODE_ENV`: Environment (development/production)
@@ -210,18 +234,22 @@ Required variables in `backend/.env`:
 - `JAEGER_ENDPOINT`: Jaeger collector endpoint
 
 ### Frontend Environment Variables
+
 Optional variables in `frontend/.env`:
+
 - `EXPO_PUBLIC_API_URL`: Backend API URL
 
 ## CI/CD
 
 ### GitHub Actions
+
 - Workflows in `.github/workflows/`
 - CI runs on all PRs: linting, type checking, tests
 - Quality checks enforced before merge
 - Deployment workflows for staging and production
 
 ### Pre-commit Hooks
+
 - Husky configured for pre-commit checks
 - Runs linting and formatting on staged files
 - Validates Mermaid diagrams in docs
@@ -229,6 +257,7 @@ Optional variables in `frontend/.env`:
 ## Common Patterns
 
 ### Error Handling
+
 ```typescript
 // Backend
 try {
@@ -250,24 +279,28 @@ try {
 ```
 
 ### Async Operations
+
 - Use `async`/`await` for asynchronous code
 - Handle promise rejections
 - Use proper cancellation for cleanup
 
 ### State Management
+
 - React hooks for local state
 - Context API for shared state
 - Avoid prop drilling
 
 ## Performance Considerations
 
-### Backend
+### Backend Performance
+
 - Use connection pooling for databases
 - Implement rate limiting for API endpoints
 - Cache responses where appropriate
 - Monitor memory usage with metrics
 
-### Frontend
+### Frontend Performance
+
 - Optimize component re-renders (React.memo, useMemo, useCallback)
 - Lazy load screens and components
 - Optimize images and assets
@@ -275,27 +308,31 @@ try {
 
 ## Security
 
-### Backend
+### Backend Security
+
 - Validate all user inputs
 - Sanitize data before processing
 - Use environment variables for secrets
 - Implement rate limiting
 - Follow OWASP security guidelines
 
-### Frontend
+### Frontend Security
+
 - Don't store sensitive data in AsyncStorage
 - Validate WebSocket messages
 - Handle authentication tokens securely
 
 ## Debugging
 
-### Backend
+### Backend Debugging
+
 - Use debug logs during development
 - Check OpenTelemetry traces in Jaeger
 - Monitor metrics in Grafana
 - Use Node.js debugger or IDE debugging
 
-### Frontend
+### Frontend Debugging
+
 - React Developer Tools
 - Expo Developer Tools
 - Network tab for API calls
@@ -304,12 +341,14 @@ try {
 ## Dependencies
 
 ### Adding Dependencies
+
 - Check for security vulnerabilities before adding
 - Prefer well-maintained packages
 - Document why the dependency is needed
 - Update package.json and package-lock.json
 
 ### Updating Dependencies
+
 - Test thoroughly after updates
 - Check for breaking changes
 - Update CI/CD if needed

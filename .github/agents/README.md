@@ -24,7 +24,9 @@ When you use GitHub Copilot in this repository:
 ## Agent Roles
 
 ### Coding Agent
+
 Assists with:
+
 - Feature implementation
 - Bug fixes
 - Code refactoring
@@ -32,7 +34,9 @@ Assists with:
 - Integration work
 
 ### Documentation Agent
+
 Assists with:
+
 - Technical documentation
 - API documentation
 - README updates
@@ -40,7 +44,9 @@ Assists with:
 - Code comments
 
 ### Testing Agent
+
 Assists with:
+
 - Unit test writing
 - Integration test development
 - Test debugging
@@ -56,6 +62,7 @@ Simply use GitHub Copilot as normal in this repository. The instructions are aut
 ### For Copilot
 
 When assisting with tasks:
+
 1. Always reference the main `copilot-instructions.md` first
 2. For specialized tasks, consult the relevant agent instructions
 3. Follow the patterns and conventions documented
@@ -64,6 +71,7 @@ When assisting with tasks:
 ## Maintaining Instructions
 
 These instructions should be updated when:
+
 - Project structure changes significantly
 - New technologies or frameworks are added
 - Coding standards or conventions change
@@ -81,6 +89,7 @@ These instructions should be updated when:
 ## Examples
 
 ### Good Instruction Example
+
 ```markdown
 ## Error Handling Pattern
 
@@ -88,16 +97,17 @@ Always use try-catch for async operations:
 
 \`\`\`typescript
 try {
-  const result = await operation();
-  return result;
+const result = await operation();
+return result;
 } catch (error) {
-  logger.error({ error }, 'Operation failed');
-  throw new AppError('Operation failed', 500);
+logger.error({ error }, 'Operation failed');
+throw new AppError('Operation failed', 500);
 }
 \`\`\`
 ```
 
 ### Poor Instruction Example
+
 ```markdown
 Handle errors properly.
 ```
@@ -112,6 +122,7 @@ Handle errors properly.
 ## Questions?
 
 If you have questions about these instructions or suggestions for improvements:
+
 - Open an issue with the `documentation` label
 - Submit a pull request with proposed changes
 - Discuss in team meetings or code reviews

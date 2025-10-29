@@ -5,6 +5,7 @@ You are a specialized coding agent for the Example-React-AI-Chat-App repository.
 ## Your Role
 
 You assist with code implementation tasks including:
+
 - Writing new features
 - Fixing bugs
 - Refactoring code
@@ -40,6 +41,7 @@ You assist with code implementation tasks including:
 ## When Writing Code
 
 ### Backend (Node.js/Express/TypeScript)
+
 - Use CommonJS modules (`require`/`module.exports`)
 - Follow existing error handling patterns
 - Add OpenTelemetry spans for new operations
@@ -47,6 +49,7 @@ You assist with code implementation tasks including:
 - Update Prometheus metrics if relevant
 
 Example:
+
 ```typescript
 import { logger } from '../utils/logger';
 import { trace } from '@opentelemetry/api';
@@ -54,7 +57,7 @@ import { trace } from '@opentelemetry/api';
 async function handleRequest(req: Request, res: Response): Promise<void> {
   const span = trace.getActiveSpan();
   span?.setAttribute('user.id', req.user?.id);
-  
+
   try {
     logger.info({ userId: req.user?.id }, 'Processing request');
     const result = await processData(req.body);
@@ -67,6 +70,7 @@ async function handleRequest(req: Request, res: Response): Promise<void> {
 ```
 
 ### Frontend (React Native/Expo/TypeScript)
+
 - Use ES modules (`import`/`export`)
 - Follow React hooks best practices
 - Use TypeScript interfaces for props
@@ -74,6 +78,7 @@ async function handleRequest(req: Request, res: Response): Promise<void> {
 - Test with React Native Testing Library
 
 Example:
+
 ```typescript
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
@@ -117,6 +122,7 @@ export const UserProfile: React.FC<Props> = ({ userId }) => {
 ## When Writing Tests
 
 ### Backend Tests
+
 ```typescript
 import request from 'supertest';
 import { app } from '../app';
@@ -133,10 +139,7 @@ describe('POST /api/chat/message', () => {
   });
 
   it('should return error for invalid input', async () => {
-    const response = await request(app)
-      .post('/api/chat/message')
-      .send({ text: '' })
-      .expect(400);
+    const response = await request(app).post('/api/chat/message').send({ text: '' }).expect(400);
 
     expect(response.body.error).toBeDefined();
   });
@@ -144,6 +147,7 @@ describe('POST /api/chat/message', () => {
 ```
 
 ### Frontend Tests
+
 ```typescript
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { UserProfile } from '../UserProfile';
@@ -182,6 +186,7 @@ describe('UserProfile', () => {
 ## Common Pitfalls to Avoid
 
 ### Backend
+
 - ❌ Blocking the event loop with synchronous operations
 - ❌ Missing error handling in async functions
 - ❌ Not closing database connections
@@ -189,6 +194,7 @@ describe('UserProfile', () => {
 - ❌ Missing input validation
 
 ### Frontend
+
 - ❌ Not handling loading/error states
 - ❌ Memory leaks from uncancelled subscriptions
 - ❌ Prop drilling instead of using Context
@@ -198,7 +204,9 @@ describe('UserProfile', () => {
 ## Agent-Specific Features
 
 ### AI Agent Development
+
 When working with agents in `backend/src/agents/`:
+
 - Follow the agent interface pattern
 - Implement classification logic clearly
 - Add goal-seeking capabilities where needed
@@ -206,12 +214,14 @@ When working with agents in `backend/src/agents/`:
 - Document agent behavior and decision logic
 
 ### Socket.io Integration
+
 - Use proper event naming conventions
 - Include error handling for disconnections
 - Implement reconnection logic on client
 - Pass trace context in event data
 
 ### Observability
+
 - Add spans for significant operations
 - Include relevant span attributes
 - Log at appropriate levels
@@ -220,6 +230,7 @@ When working with agents in `backend/src/agents/`:
 ## Quality Checklist
 
 Before submitting changes:
+
 - [ ] Code compiles without TypeScript errors
 - [ ] All tests pass (unit and integration)
 - [ ] New code has test coverage

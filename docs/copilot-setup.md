@@ -222,11 +222,11 @@ Potential improvements:
 ## Resources
 
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
-- [Main Copilot Instructions](../.github/copilot-instructions.md)
-- [Coding Agent](../.github/agents/coding-agent.md)
-- [Documentation Agent](../.github/agents/documentation-agent.md)
-- [Testing Agent](../.github/agents/testing-agent.md)
-- [Contributing Guidelines](../CONTRIBUTING.md)
+- [Main Copilot Instructions](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/.github/copilot-instructions.md)
+- [Coding Agent](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/.github/agents/coding-agent.md)
+- [Documentation Agent](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/.github/agents/documentation-agent.md)
+- [Testing Agent](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/.github/agents/testing-agent.md)
+- [Contributing Guidelines](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/CONTRIBUTING.md)
 
 ## Questions or Feedback
 

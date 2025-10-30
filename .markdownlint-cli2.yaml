@@ -1,0 +1,19 @@
+# markdownlint-cli2 configuration
+# Extends the base markdownlint configuration
+
+# Use the base config from .markdownlint.yml
+config:
+  extends: .markdownlint.yml
+
+# Globs to ignore
+ignores:
+  # Exclude GitHub Copilot agent instructions from linting
+  # These are internal configuration files, not user-facing documentation
+  - '.github/agents/**'
+  - '.github/copilot-instructions.md'
+  # Exclude generated or external content
+  - 'node_modules/**'
+  - '**/node_modules/**'
+  - 'dist/**'
+  - 'build/**'
+  - '.next/**'

@@ -209,6 +209,14 @@ Key pages:
 - Security controls illustrate approaches; hardening for production is out of scope.
 - Cloud deployment manifests are intentionally minimal.
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### GitHub Copilot Support
+
+This repository includes comprehensive GitHub Copilot Agent Instructions to assist with development. If you use GitHub Copilot, it will automatically provide context-aware suggestions based on our coding standards, patterns, and architecture. See [.github/copilot-instructions.md](.github/copilot-instructions.md) for details.
+
 ## License
 
 MIT — see LICENSE.

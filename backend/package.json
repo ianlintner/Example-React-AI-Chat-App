@@ -56,7 +56,8 @@
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "validator": "13.15.20"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -59,6 +59,7 @@
   "author": "Ian Lintner",
   "license": "MIT",
   "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "^54.0.9",
     "metro": "^0.83.1",
@@ -66,19 +67,18 @@
     "react-native-markdown-display": "^7.0.2",
     "react-native-paper": "^5.14.5",
     "react-native-vector-icons": "^10.3.0",
-    "socket.io-client": "^4.8.1",
-    "@expo/metro-runtime": "~6.1.2"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.13",
     "concurrently": "^9.2.1",
-    "typescript": "~5.9.2",
-    "prettier": "^3.2.5",
     "husky": "^9.0.11",
-    "lint-staged": "^16.1.6",
-    "nyc": "^17.1.0",
+    "lint-staged": "^16.2.6",
+    "markdown-link-check": "^3.11.2",
     "markdownlint-cli": "^0.45.0",
-    "markdown-link-check": "^3.11.2"
+    "nyc": "^17.1.0",
+    "prettier": "^3.2.5",
+    "typescript": "~5.9.2"
   },
   "lint-staged": {
     "*.{json,md,yml,yaml}": [

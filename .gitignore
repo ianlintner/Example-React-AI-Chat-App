@@ -15,3 +15,9 @@ external/workflows.txt
 external/era-run-16990365551.json
 site/*
 backend/jest-socket-results.json
+
+# Azure Kubernetes secrets
+k8s/apps/chat/overlays/azure/secrets.yaml
+k8s/apps/chat/overlays/azure/.env
+*.pem
+*.key

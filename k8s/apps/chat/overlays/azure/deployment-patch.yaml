@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-backend
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: chat-backend
+        version: v1
+      annotations:
+        # Remove Istio sidecar injection for Azure
+        sidecar.istio.io/inject: 'false'
+    spec:
+      containers:
+        - name: chat-backend
+          # Update to use Azure Container Registry (ACR)
+          # Format: <your-acr-name>.azurecr.io/chat-backend:latest
+          image: YOUR_ACR_NAME.azurecr.io/chat-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5001
+              name: http
+          env:
+            - name: AZURE_DEPLOYMENT
+              value: 'true'
+            - name: PORT
+              value: '5001'
+          envFrom:
+            - configMapRef:
+                name: chat-backend-config
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 5001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '512Mi'
+            limits:
+              cpu: '1000m'
+              memory: '1Gi'

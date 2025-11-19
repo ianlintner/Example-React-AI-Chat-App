@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: default
+
+resources:
+  - ../../base
+  - ingress.yaml
+  - configmap.yaml
+  - redis.yaml
+  # Create secrets.yaml from secrets.yaml.example and add it here
+  # - secrets.yaml
+
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: chat-backend
+  - path: service-patch.yaml
+    target:
+      kind: Service
+      name: chat-backend
+
+# Azure-specific configuration
+# This overlay adapts the base configuration for Azure AKS
+# Uses NGINX Ingress Controller instead of Istio
+# Note: Some GCP/Istio resources from base will be included but won't affect Azure deployment

@@ -14,6 +14,7 @@ resources:
   - redis-secret.yaml
   - redis-service.yaml
   - istio-gateway.yaml
-  - frontend-bucket.yaml
-  - frontend-bucket-iam.yaml
+  # Frontend now served from backend pod, no separate bucket needed
+  # - frontend-bucket.yaml
+  # - frontend-bucket-iam.yaml
   # - frontend-backendconfig.yaml

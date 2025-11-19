@@ -101,14 +101,15 @@ services:
       timeout: 3s
       retries: 3
 
-  # Backend - Node.js API with OpenTelemetry tracing
+  # Combined Backend + Frontend - Node.js API with static frontend serving
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: ai-backend
+    container_name: ai-chat-app
     ports:
       - "5001:5001"
+      - "8080:5001"  # Alternative host port for convenience (serves same content as 5001)
     env_file:
       - ./backend/.env
     environment:
@@ -137,26 +138,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-    restart: unless-stopped
-
-  # Frontend - React Native Web served by Nginx
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: ai-frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - observability
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     restart: unless-stopped
 
   # Docs - MkDocs TechDocs site

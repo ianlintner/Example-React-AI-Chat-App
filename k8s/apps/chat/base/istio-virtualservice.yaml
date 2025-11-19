@@ -6,6 +6,7 @@ metadata:
 spec:
   hosts:
     - 'chat-backend.hugecat.net'
+    - 'chat-ui.hugecat.net' # Frontend now served from backend pod
   gateways:
     - chat-gateway
   http:

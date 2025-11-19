@@ -1,0 +1,68 @@
+# Dependencies
+node_modules
+*/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+# The following dist directories are excluded because they are built from source during the Docker build process (see Dockerfile).
+backend/dist
+frontend/dist
+frontend/.expo
+.expo
+
+# Testing
+coverage
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+__tests__
+__mocks__
+
+# Development files
+.git
+.github
+.vscode
+*.md
+docs
+external
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+docker-compose*.yml
+Dockerfile*
+!Dockerfile
+
+# Kubernetes
+k8s
+
+# Monitoring
+prometheus.yml
+grafana
+otel-collector-config.yaml
+
+# Documentation
+mkdocs.yml
+site
+
+# CI/CD
+.husky
+
+# Other
+*.swp
+*.swo
+*~

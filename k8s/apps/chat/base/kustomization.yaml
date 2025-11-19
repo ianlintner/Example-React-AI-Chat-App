@@ -14,5 +14,6 @@ resources:
   - redis-secret.yaml
   - redis-service.yaml
   - istio-gateway.yaml
-  # - frontend-bucket.yaml
-  # - frontend-backendconfig.yaml  # - frontend-backendconfig.yaml
+  - frontend-bucket.yaml
+  - frontend-bucket-iam.yaml
+  # - frontend-backendconfig.yaml

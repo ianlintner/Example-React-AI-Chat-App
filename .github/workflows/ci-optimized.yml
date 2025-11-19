@@ -320,9 +320,6 @@ jobs:
     needs: [backend, frontend, integration]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        component: [backend, frontend]
 
     steps:
       - uses: actions/checkout@v4
@@ -346,47 +343,24 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev --quiet
 
-      - name: Extract metadata (backend)
-        if: matrix.component == 'backend'
-        id: meta_backend_gar
+      - name: Extract metadata (combined)
+        id: meta_combined_gar
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/react-repo/backend
+          images: ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/kame-house-images/chat-backend
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract metadata (frontend)
-        if: matrix.component == 'frontend'
-        id: meta_frontend_gar
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.GCP_ARTIFACT_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/react-repo/frontend
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image (backend)
-        if: matrix.component == 'backend'
+      - name: Build and push combined Docker image
         uses: docker/build-push-action@v5
         with:
-          context: backend
+          context: .
+          file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta_backend_gar.outputs.tags }}
-          labels: ${{ steps.meta_backend_gar.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Docker image (frontend)
-        if: matrix.component == 'frontend'
-        uses: docker/build-push-action@v5
-        with:
-          context: frontend
-          push: true
-          tags: ${{ steps.meta_frontend_gar.outputs.tags }}
-          labels: ${{ steps.meta_frontend_gar.outputs.labels }}
+          tags: ${{ steps.meta_combined_gar.outputs.tags }}
+          labels: ${{ steps.meta_combined_gar.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -395,9 +369,6 @@ jobs:
     needs: [backend, frontend, integration]
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        component: [backend, frontend]
 
     steps:
       - uses: actions/checkout@v4
@@ -412,47 +383,24 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata (backend)
-        if: matrix.component == 'backend'
-        id: meta_backend
+      - name: Extract metadata (combined)
+        id: meta_combined
         uses: docker/metadata-action@v5
         with:
-          images: ianlintner068/example-react-ai-chat-app-backend
+          images: ianlintner068/example-react-ai-chat-app
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract metadata (frontend)
-        if: matrix.component == 'frontend'
-        id: meta_frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ianlintner068/example-react-ai-chat-app-frontend
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image (backend)
-        if: matrix.component == 'backend'
+      - name: Build and push combined Docker image
         uses: docker/build-push-action@v5
         with:
-          context: backend
+          context: .
+          file: ./Dockerfile
           push: ${{ github.repository_owner == 'ianlintner' }}
-          tags: ${{ steps.meta_backend.outputs.tags }}
-          labels: ${{ steps.meta_backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Docker image (frontend)
-        if: matrix.component == 'frontend'
-        uses: docker/build-push-action@v5
-        with:
-          context: frontend
-          push: ${{ github.repository_owner == 'ianlintner' }}
-          tags: ${{ steps.meta_frontend.outputs.tags }}
-          labels: ${{ steps.meta_frontend.outputs.labels }}
+          tags: ${{ steps.meta_combined.outputs.tags }}
+          labels: ${{ steps.meta_combined.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

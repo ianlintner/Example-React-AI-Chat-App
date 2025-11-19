@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { initializeTracing } from './tracing/tracer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -37,10 +38,13 @@ if (
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-  path: '/api/socket.io',
-  cors: {
-    origin: process.env.FRONTEND_URL || [
+
+// CORS configuration - allow same origin in production, multiple origins in dev
+const allowedOrigins = process.env.FRONTEND_URL
+  ? Array.isArray(process.env.FRONTEND_URL)
+    ? process.env.FRONTEND_URL
+    : [process.env.FRONTEND_URL]
+  : [
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
@@ -48,7 +52,13 @@ const io = new Server(server, {
       'http://localhost:5177',
       'http://localhost:5178',
       'http://localhost:8080',
-    ],
+      'http://localhost:5001', // Same origin when combined
+    ];
+
+const io = new Server(server, {
+  path: '/api/socket.io',
+  cors: {
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
@@ -58,15 +68,7 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:5176',
-      'http://localhost:5177',
-      'http://localhost:5178',
-      'http://localhost:8080',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -174,6 +176,24 @@ app.get('/metrics', async (req, res) => {
   } catch (ex) {
     res.status(500).end(ex);
   }
+});
+
+// Serve static frontend files
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res, next) => {
+  // Skip API routes, health checks, metrics, docs, and socket.io
+  if (
+    req.path.startsWith('/api/') ||
+    req.path.startsWith('/health') ||
+    req.path.startsWith('/metrics') ||
+    req.path.startsWith('/docs')
+  ) {
+    return next();
+  }
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // Socket.IO setup

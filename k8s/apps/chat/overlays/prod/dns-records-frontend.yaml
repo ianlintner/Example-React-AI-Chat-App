@@ -5,9 +5,9 @@ metadata:
   namespace: prod
 spec:
   name: chat-ui.hugecat.net.
-  type: CNAME
+  type: A
   ttl: 300
   managedZoneRef:
     name: hugecat-net-zone
   rrdatas:
-    - chat-frontend-cdn.endpoints.hugecat.net.
+    - '34.31.128.59' # LoadBalancer IP - frontend now served from backend pod

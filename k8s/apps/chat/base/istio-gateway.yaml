@@ -13,6 +13,7 @@ spec:
         protocol: HTTPS
       hosts:
         - 'chat-backend.hugecat.net'
+        - 'chat-ui.hugecat.net' # Frontend now served from backend pod
       tls:
         mode: SIMPLE
         credentialName: chat-backend-tls-cert
@@ -22,3 +23,4 @@ spec:
         protocol: HTTP
       hosts:
         - 'chat-backend.hugecat.net'
+        - 'chat-ui.hugecat.net' # Frontend now served from backend pod

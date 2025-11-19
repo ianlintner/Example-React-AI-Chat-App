@@ -65,6 +65,8 @@ nav:
       - CI/CD: operations/ci-cd.md
       - Monitoring: operations/prometheus-grafana.md
       - Tracing: operations/tracing.md
+  - Deployment:
+      - Frontend GCS Deployment: deployment/frontend-gcs-deployment.md
 
 # Enhanced plugins
 plugins:

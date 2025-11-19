@@ -44,9 +44,23 @@ jobs:
       - name: Deploy to GCS (Dev)
         if: github.ref != 'refs/heads/main'
         run: |
-          gcloud storage rsync --recursive frontend/dist gs://chat-frontend-dev
+          gcloud storage rsync --recursive --delete-unmatched-destination-objects \
+            --cache-control="public, max-age=3600" \
+            frontend/dist gs://chat-frontend-dev
+
+          # Set proper IAM policy for public read access
+          gcloud storage buckets add-iam-policy-binding gs://chat-frontend-dev \
+            --member=allUsers \
+            --role=roles/storage.objectViewer
 
       - name: Deploy to GCS (Prod)
         if: github.ref == 'refs/heads/main'
         run: |
-          gcloud storage rsync --recursive frontend/dist gs://chat-frontend
+          gcloud storage rsync --recursive --delete-unmatched-destination-objects \
+            --cache-control="public, max-age=3600" \
+            frontend/dist gs://chat-frontend
+
+          # Set proper IAM policy for public read access
+          gcloud storage buckets add-iam-policy-binding gs://chat-frontend \
+            --member=allUsers \
+            --role=roles/storage.objectViewer

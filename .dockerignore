@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build artifacts
+# The following dist directories are excluded because they are built from source during the Docker build process (see Dockerfile).
 backend/dist
 frontend/dist
 frontend/.expo

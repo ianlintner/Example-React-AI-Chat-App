@@ -92,7 +92,7 @@ Updated to use combined service:
 
 Disabled `.github/workflows/deploy-frontend.yaml`:
 
-- Renamed to `.github/workflows/deploy-frontend.yaml.disabled`
+- Disabled by renaming to `.github/workflows/deploy-frontend.yaml.disabled`
 - This workflow deployed frontend to GCS bucket, which is no longer needed
 
 ### 7. Docker Ignore (`.dockerignore`)

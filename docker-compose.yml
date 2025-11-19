@@ -109,7 +109,7 @@ services:
     container_name: ai-chat-app
     ports:
       - "5001:5001"
-      - "8080:5001"  # Alternative port mapping for frontend access
+      - "8080:5001"  # Alternative host port for convenience (serves same content as 5001)
     env_file:
       - ./backend/.env
     environment:

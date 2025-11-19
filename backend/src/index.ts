@@ -184,16 +184,21 @@ app.use(express.static(publicPath));
 
 // SPA fallback - serve index.html for all non-API routes
 app.get('*', (req, res, next) => {
-  // Skip API routes, health checks, metrics, docs, and socket.io
+  // Skip API routes, health checks (/health, /healthz), metrics, docs, and socket.io
   if (
     req.path.startsWith('/api/') ||
-    req.path.startsWith('/health') ||
+    ['/health', '/healthz'].includes(req.path) ||
     req.path.startsWith('/metrics') ||
     req.path.startsWith('/docs')
   ) {
     return next();
   }
-  res.sendFile(path.join(publicPath, 'index.html'));
+  res.sendFile(path.join(publicPath, 'index.html'), err => {
+    if (err) {
+      log.error({ err, path: publicPath }, 'Failed to serve index.html');
+      res.status(500).send('Frontend files not available');
+    }
+  });
 });
 
 // Socket.IO setup

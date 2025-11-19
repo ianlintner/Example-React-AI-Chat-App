@@ -47,7 +47,7 @@ jobs:
           gcloud storage rsync --recursive --delete-unmatched-destination-objects \
             --cache-control="public, max-age=3600" \
             frontend/dist gs://chat-frontend-dev
-          
+
           # Set proper IAM policy for public read access
           gcloud storage buckets add-iam-policy-binding gs://chat-frontend-dev \
             --member=allUsers \
@@ -59,7 +59,7 @@ jobs:
           gcloud storage rsync --recursive --delete-unmatched-destination-objects \
             --cache-control="public, max-age=3600" \
             frontend/dist gs://chat-frontend
-          
+
           # Set proper IAM policy for public read access
           gcloud storage buckets add-iam-policy-binding gs://chat-frontend \
             --member=allUsers \

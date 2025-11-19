@@ -183,7 +183,7 @@ const publicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(publicPath));
 
 // SPA fallback - serve index.html for all non-API routes
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
   // Skip API routes, health checks (/health, /healthz), metrics, docs, and socket.io
   if (
     req.path.startsWith('/api/') ||
@@ -193,6 +193,7 @@ app.get('*', (req, res, next) => {
   ) {
     return next();
   }
+  // Serve index.html for all other routes (SPA fallback)
   res.sendFile(path.join(publicPath, 'index.html'), err => {
     if (err) {
       log.error({ err, path: publicPath }, 'Failed to serve index.html');

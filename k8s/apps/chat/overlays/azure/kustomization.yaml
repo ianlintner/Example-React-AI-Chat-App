@@ -11,9 +11,15 @@ resources:
   # Create secrets.yaml from secrets.yaml.example and add it here
   # - secrets.yaml
 
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - service-patch.yaml
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: chat-backend
+  - path: service-patch.yaml
+    target:
+      kind: Service
+      name: chat-backend
 
 # Azure-specific configuration
 # This overlay adapts the base configuration for Azure AKS

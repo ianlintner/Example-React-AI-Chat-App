@@ -50,12 +50,12 @@ jobs:
         run: |
           docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}
-          
-          # Also push with 'latest' tag for main branch
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
-          fi
+
+      - name: 'Tag and push latest'
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
 
       - name: 'Deploy to Azure AKS'
         env:
@@ -68,9 +68,19 @@ jobs:
             --name ${CLUSTER_NAME} \
             --overwrite-existing
           
-          # Update the deployment with the new image
-          kubectl set image deployment/chat-backend \
-            chat-backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} \
-            -n ${NAMESPACE} || echo "Deployment not found or not yet created"
-          
-          echo "Image pushed successfully: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"
+          # Check if deployment exists
+          if kubectl get deployment chat-backend -n ${NAMESPACE} &> /dev/null; then
+            echo "Updating existing deployment..."
+            kubectl set image deployment/chat-backend \
+              chat-backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} \
+              -n ${NAMESPACE}
+            
+            # Wait for rollout to complete
+            kubectl rollout status deployment/chat-backend -n ${NAMESPACE} --timeout=5m
+            
+            echo "✅ Deployment updated successfully: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"
+          else
+            echo "⚠️  Deployment 'chat-backend' not found in namespace '${NAMESPACE}'"
+            echo "Please create the deployment first using: kubectl apply -k k8s/apps/chat/overlays/azure/"
+            echo "Image is available at: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"
+          fi

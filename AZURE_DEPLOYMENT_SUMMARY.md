@@ -8,36 +8,36 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 
 ### 1. Kubernetes Manifests (`k8s/apps/chat/overlays/azure/`)
 
-| File | Purpose | Size |
-|------|---------|------|
-| `kustomization.yaml` | Main Kustomize configuration | 648 bytes |
-| `deployment-patch.yaml` | Azure-specific deployment settings | 1.7 KB |
-| `service-patch.yaml` | Service configuration for Azure | 333 bytes |
-| `ingress.yaml` | NGINX Ingress with WebSocket support | 1.7 KB |
-| `configmap.yaml` | Environment configuration | 365 bytes |
-| `redis.yaml` | In-cluster Redis deployment | 1.2 KB |
-| `secrets.yaml.example` | Secrets template | 503 bytes |
-| `README.md` | Comprehensive configuration guide | 9.3 KB |
-| `GETTING_STARTED.md` | Quick start guide | 4.3 KB |
-| `.env.example` | Environment variables template | 1.8 KB |
+| File                    | Purpose                              | Size      |
+| ----------------------- | ------------------------------------ | --------- |
+| `kustomization.yaml`    | Main Kustomize configuration         | 648 bytes |
+| `deployment-patch.yaml` | Azure-specific deployment settings   | 1.7 KB    |
+| `service-patch.yaml`    | Service configuration for Azure      | 333 bytes |
+| `ingress.yaml`          | NGINX Ingress with WebSocket support | 1.7 KB    |
+| `configmap.yaml`        | Environment configuration            | 365 bytes |
+| `redis.yaml`            | In-cluster Redis deployment          | 1.2 KB    |
+| `secrets.yaml.example`  | Secrets template                     | 503 bytes |
+| `README.md`             | Comprehensive configuration guide    | 9.3 KB    |
+| `GETTING_STARTED.md`    | Quick start guide                    | 4.3 KB    |
+| `.env.example`          | Environment variables template       | 1.8 KB    |
 
 **Total: 10 files, ~22 KB**
 
 ### 2. Deployment Scripts (`scripts/azure/`)
 
-| File | Purpose | Size |
-|------|---------|------|
-| `deploy-aks.sh` | Automated deployment script | 6.6 KB |
-| `validate-config.sh` | Configuration validation | 3.0 KB |
+| File                 | Purpose                     | Size   |
+| -------------------- | --------------------------- | ------ |
+| `deploy-aks.sh`      | Automated deployment script | 6.6 KB |
+| `validate-config.sh` | Configuration validation    | 3.0 KB |
 
 **Total: 2 files, ~10 KB**
 
 ### 3. Documentation (`docs/`)
 
-| File | Purpose | Size |
-|------|---------|------|
-| `azure-deployment.md` | Complete deployment guide | 12.1 KB |
-| `azure-quick-setup.md` | Quick setup guide | 3.2 KB |
+| File                   | Purpose                   | Size    |
+| ---------------------- | ------------------------- | ------- |
+| `azure-deployment.md`  | Complete deployment guide | 12.1 KB |
+| `azure-quick-setup.md` | Quick setup guide         | 3.2 KB  |
 
 **Total: 2 files, ~15 KB**
 
@@ -49,6 +49,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 ## Key Features
 
 ### 🚀 Automated Deployment
+
 - One command deploys complete infrastructure
 - Creates resource group, ACR, AKS cluster
 - Installs NGINX Ingress Controller
@@ -56,6 +57,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 - Multiple deployment modes (full, cluster-only, update, cleanup)
 
 ### 📦 Production-Ready Configuration
+
 - **High Availability**: 2 replicas with proper health checks
 - **Resource Management**: CPU/memory limits and requests
 - **Security**: Security contexts, non-root containers
@@ -64,6 +66,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 - **SSL/TLS Ready**: Instructions for cert-manager setup
 
 ### 📊 Monitoring & Observability
+
 - Health checks (startup, readiness, liveness)
 - Prometheus metrics endpoint
 - Azure Monitor integration (enabled by default)
@@ -71,6 +74,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 - Easy log access via kubectl
 
 ### 💰 Cost Optimization
+
 - **Production**: ~$185/month
   - 2 × Standard_D2s_v3 nodes (~$140)
   - Load Balancer (~$25)
@@ -83,6 +87,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 - Easy cleanup to avoid charges
 
 ### 🔒 Security Best Practices
+
 - Secrets template (never committed)
 - .gitignore updated for sensitive files
 - Azure Key Vault integration guidance
@@ -93,6 +98,7 @@ This implementation provides complete Azure Kubernetes Service (AKS) deployment 
 ## Deployment Options
 
 ### Option 1: Quick Start (5 Commands)
+
 ```bash
 az login
 export AZURE_ACR_NAME="aichat$(date +%s)"
@@ -102,6 +108,7 @@ cd /path/to/repo
 ```
 
 ### Option 2: Customized Deployment
+
 ```bash
 export AZURE_RESOURCE_GROUP="my-custom-rg"
 export AZURE_CLUSTER_NAME="my-cluster"
@@ -113,6 +120,7 @@ export AZURE_NODE_SIZE="Standard_D4s_v3"
 ```
 
 ### Option 3: Manual Step-by-Step
+
 Follow the comprehensive guide in `docs/azure-deployment.md`
 
 ## Architecture
@@ -166,17 +174,19 @@ All configurations have been validated:
 ✅ Environment variables properly set  
 ✅ Health checks configured  
 ✅ Resource limits defined  
-✅ Security contexts enabled  
+✅ Security contexts enabled
 
 ## Documentation Coverage
 
 ### Quick References
+
 - ✅ 5-command quick start
 - ✅ Prerequisites checklist
 - ✅ Common commands
 - ✅ Troubleshooting quick fixes
 
 ### Comprehensive Guides
+
 - ✅ Automated deployment
 - ✅ Manual step-by-step deployment
 - ✅ Configuration customization
@@ -188,6 +198,7 @@ All configurations have been validated:
 - ✅ Advanced topics (Azure Redis, Key Vault)
 
 ### Configuration Details
+
 - ✅ Environment variables
 - ✅ Secrets management
 - ✅ Resource sizing
@@ -225,6 +236,7 @@ All configurations have been validated:
    - Prevents ongoing charges
 
 ### validate-config.sh Features
+
 - Validates Kustomize build
 - Checks for required resources
 - Verifies Azure-specific settings
@@ -233,6 +245,7 @@ All configurations have been validated:
 ## Integration with Existing Infrastructure
 
 The Azure overlay:
+
 - ✅ Uses base Kubernetes manifests from `../../base`
 - ✅ Applies Azure-specific patches
 - ✅ Compatible with existing CI/CD
@@ -260,17 +273,20 @@ The workflow uses OpenID Connect (OIDC) authentication with Azure, which is more
 #### Setting Up Azure OIDC for GitHub Actions
 
 1. **Create an Azure AD Application**:
+
    ```bash
    az ad app create --display-name "GitHub-Actions-OIDC"
    ```
 
 2. **Create a Service Principal**:
+
    ```bash
    APP_ID=$(az ad app list --display-name "GitHub-Actions-OIDC" --query "[0].appId" -o tsv)
    az ad sp create --id $APP_ID
    ```
 
 3. **Configure Federated Credentials** (allows GitHub to authenticate):
+
    ```bash
    az ad app federated-credential create \
      --id $APP_ID \
@@ -284,10 +300,11 @@ The workflow uses OpenID Connect (OIDC) authentication with Azure, which is more
    ```
 
 4. **Assign Role to Service Principal**:
+
    ```bash
    SUBSCRIPTION_ID=$(az account show --query id -o tsv)
    SP_ID=$(az ad sp list --display-name "GitHub-Actions-OIDC" --query "[0].id" -o tsv)
-   
+
    az role assignment create \
      --assignee $SP_ID \
      --role Contributor \
@@ -303,11 +320,13 @@ For more details, see the [Azure OIDC documentation](https://learn.microsoft.com
 ### Manual Deployment
 
 1. **Deploy to Azure**
+
    ```bash
    ./scripts/azure/deploy-aks.sh deploy
    ```
 
 2. **Configure Secrets**
+
    ```bash
    cp k8s/apps/chat/overlays/azure/secrets.yaml.example \
       k8s/apps/chat/overlays/azure/secrets.yaml
@@ -321,6 +340,7 @@ For more details, see the [Azure OIDC documentation](https://learn.microsoft.com
    - Install cert-manager for SSL
 
 4. **Enable Auto-scaling** (Optional)
+
    ```bash
    kubectl autoscale deployment chat-backend --cpu-percent=50 --min=2 --max=10
    ```

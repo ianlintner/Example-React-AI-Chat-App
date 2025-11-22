@@ -80,16 +80,19 @@ export AZURE_ACR_NAME="aichatacr$(date +%s)"  # Unique ACR name
 ```
 
 This creates:
+
 - AKS cluster with 2 nodes
 - Azure Container Registry
 - NGINX Ingress Controller
 - Load Balancer with public IP
 
 **Documentation:**
+
 - 📖 [Azure Quick Setup Guide](docs/azure-quick-setup.md) - Get started in 5 commands
 - 📖 [Azure Deployment Guide](docs/azure-deployment.md) - Complete deployment documentation
 
 **What you get:**
+
 - Application accessible via public IP
 - Auto-scaling support
 - Azure Monitor integration
@@ -100,6 +103,7 @@ This creates:
 ### Other Cloud Providers
 
 The repository includes Kubernetes manifests that can be adapted for:
+
 - Google Cloud (GKE) - See `k8s/apps/chat/overlays/prod/`
 - AWS (EKS) - Similar setup to Azure
 - Any Kubernetes cluster - Use base manifests in `k8s/apps/chat/base/`

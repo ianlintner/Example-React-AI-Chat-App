@@ -28,14 +28,18 @@ azure/
 ## Configuration Files
 
 ### kustomization.yaml
+
 Main Kustomize file that:
+
 - References base manifests from `../../base`
 - Applies Azure-specific patches
 - Includes Azure resources (Ingress, ConfigMap, Redis)
 - Sets namespace to `default`
 
 ### deployment-patch.yaml
+
 Modifies the deployment for Azure:
+
 - **Replicas**: 2 (for high availability)
 - **Image**: Uses Azure Container Registry (ACR)
 - **Annotations**: Disables Istio sidecar injection
@@ -44,28 +48,35 @@ Modifies the deployment for Azure:
 - **Probes**: Startup, readiness, and liveness checks
 
 ### service-patch.yaml
+
 Configures the service for Azure:
+
 - **Type**: ClusterIP (internal to cluster)
 - **Annotations**: Azure Load Balancer settings
 - **Port**: Exposes port 80, targets container port 5001
 
 ### ingress.yaml
+
 NGINX Ingress Controller configuration:
+
 - **Class**: nginx
 - **WebSocket Support**: Long timeouts for Socket.io
 - **CORS**: Enabled for cross-origin requests
 - **SSL**: Configurable with cert-manager
-- **Routing**: 
+- **Routing**:
   - Domain-based (chat.yourdomain.com)
   - IP-based (fallback for initial access)
 
 Key annotations:
+
 - `nginx.ingress.kubernetes.io/websocket-services: chat-backend` - WebSocket support
 - `nginx.ingress.kubernetes.io/upstream-hash-by: '$binary_remote_addr'` - Session affinity
 - `nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"` - Long-lived connections
 
 ### configmap.yaml
+
 Non-sensitive configuration:
+
 - `NODE_ENV`: production
 - `LOG_LEVEL`: info
 - `PORT`: 5001
@@ -75,7 +86,9 @@ Non-sensitive configuration:
 - `REDIS_PORT`: 6379
 
 ### redis.yaml
+
 In-cluster Redis deployment:
+
 - **Image**: redis:7-alpine
 - **Replicas**: 1
 - **Authentication**: Password-protected
@@ -86,12 +99,15 @@ In-cluster Redis deployment:
 Alternative: Use Azure Redis Cache for production.
 
 ### secrets.yaml.example
+
 Template for Kubernetes secrets:
+
 - `OPENAI_API_KEY`: OpenAI API key
 - `REDIS_PASSWORD`: Redis authentication
 - Additional secrets as needed
 
-**Important**: 
+**Important**:
+
 1. Copy to `secrets.yaml`: `cp secrets.yaml.example secrets.yaml`
 2. Update with actual values
 3. **Never commit** `secrets.yaml` to git (in .gitignore)
@@ -100,11 +116,13 @@ Template for Kubernetes secrets:
 ## Deployment Options
 
 ### Option 1: Automated Script (Recommended)
+
 ```bash
 ./scripts/azure/deploy-aks.sh deploy
 ```
 
 ### Option 2: Manual with kubectl
+
 ```bash
 # Create secrets
 cp k8s/apps/chat/overlays/azure/secrets.yaml.example \
@@ -116,6 +134,7 @@ kubectl apply -k k8s/apps/chat/overlays/azure/
 ```
 
 ### Option 3: Preview before deployment
+
 ```bash
 # Generate manifests
 kubectl kustomize k8s/apps/chat/overlays/azure/ > /tmp/azure-manifests.yaml
@@ -130,30 +149,36 @@ kubectl apply -f /tmp/azure-manifests.yaml
 ## Customization
 
 ### Change Number of Replicas
+
 Edit `deployment-patch.yaml`:
+
 ```yaml
 spec:
-  replicas: 3  # Change from 2 to 3
+  replicas: 3 # Change from 2 to 3
 ```
 
 ### Change Node Resources
+
 Edit `deployment-patch.yaml`:
+
 ```yaml
 resources:
   requests:
-    cpu: '500m'      # Increase from 250m
-    memory: '1Gi'    # Increase from 512Mi
+    cpu: '500m' # Increase from 250m
+    memory: '1Gi' # Increase from 512Mi
   limits:
-    cpu: '2000m'     # Increase from 1000m
-    memory: '2Gi'    # Increase from 1Gi
+    cpu: '2000m' # Increase from 1000m
+    memory: '2Gi' # Increase from 1Gi
 ```
 
 ### Add Custom Domain
+
 Edit `ingress.yaml`:
+
 ```yaml
 spec:
   rules:
-    - host: chat.yourcompany.com  # Your domain
+    - host: chat.yourcompany.com # Your domain
       http:
         paths:
           - path: /
@@ -166,8 +191,10 @@ spec:
 ```
 
 ### Enable SSL/TLS
+
 1. Install cert-manager in your cluster
 2. Uncomment TLS section in `ingress.yaml`:
+
 ```yaml
 spec:
   tls:
@@ -177,6 +204,7 @@ spec:
 ```
 
 ### Use Azure Redis Cache
+
 1. Create Azure Redis Cache
 2. Update `configmap.yaml` with Redis connection details
 3. Remove or comment out redis.yaml in `kustomization.yaml`
@@ -185,12 +213,15 @@ spec:
 ## Environment Variables
 
 ### Required (via secrets)
+
 - `OPENAI_API_KEY` - OpenAI API key (or use RAG mode without)
 
 ### Optional
+
 - `REDIS_PASSWORD` - Redis authentication (if using password)
 
 ### Available in ConfigMap
+
 - `NODE_ENV` - Environment (production/development)
 - `LOG_LEVEL` - Logging verbosity (debug/info/warn/error)
 - `PORT` - Application port (default: 5001)
@@ -202,13 +233,16 @@ spec:
 ## Networking
 
 ### Internal Communication
+
 - **chat-backend** ↔ **redis-service**: Port 6379
 - All pods communicate via Kubernetes DNS
 
 ### External Access
+
 - **Internet** → **Azure Load Balancer** → **NGINX Ingress** → **chat-backend service** → **chat-backend pods**
 
 ### Ports
+
 - **5001**: Application port (internal)
 - **80**: Service port (internal)
 - **80/443**: Ingress ports (external, via Load Balancer)
@@ -216,18 +250,22 @@ spec:
 ## Monitoring
 
 ### Application Metrics
+
 Prometheus metrics available at `/metrics`:
+
 ```bash
 kubectl port-forward svc/chat-backend 5001:80
 curl http://localhost:5001/metrics
 ```
 
 ### Health Checks
+
 - **Startup**: `/healthz` - Checks if app has started
 - **Readiness**: `/health` - Checks if app is ready for traffic
 - **Liveness**: `/health` - Checks if app is still running
 
 ### Logs
+
 ```bash
 # Backend logs
 kubectl logs -l app=chat-backend -f
@@ -240,7 +278,9 @@ kubectl logs -l app -f
 ```
 
 ### Azure Monitor
+
 View metrics in Azure Portal:
+
 1. Navigate to your AKS cluster
 2. Click "Insights" in the left menu
 3. View workload details and logs
@@ -248,6 +288,7 @@ View metrics in Azure Portal:
 ## Troubleshooting
 
 ### Pods not starting
+
 ```bash
 # Check pod status
 kubectl get pods
@@ -260,7 +301,9 @@ kubectl logs <pod-name>
 ```
 
 ### Image pull errors
+
 Ensure ACR is attached to AKS:
+
 ```bash
 az aks update \
   --resource-group $RESOURCE_GROUP \
@@ -269,6 +312,7 @@ az aks update \
 ```
 
 ### Ingress not working
+
 ```bash
 # Check ingress
 kubectl get ingress
@@ -280,6 +324,7 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
 ```
 
 ### Redis connection issues
+
 ```bash
 # Check Redis pod
 kubectl get pods -l app=redis
@@ -320,6 +365,7 @@ kubectl run -it --rm redis-test --image=redis:7-alpine --restart=Never -- \
 ## Scaling
 
 ### Manual Scaling
+
 ```bash
 # Scale deployment
 kubectl scale deployment chat-backend --replicas=5
@@ -334,6 +380,7 @@ az aks scale \
 ### Auto-scaling
 
 #### Horizontal Pod Autoscaler
+
 ```bash
 kubectl autoscale deployment chat-backend \
   --cpu-percent=50 \
@@ -342,6 +389,7 @@ kubectl autoscale deployment chat-backend \
 ```
 
 #### Cluster Autoscaler
+
 ```bash
 az aks update \
   --resource-group $RESOURCE_GROUP \
@@ -354,11 +402,13 @@ az aks update \
 ## Cleanup
 
 ### Remove application
+
 ```bash
 kubectl delete -k k8s/apps/chat/overlays/azure/
 ```
 
 ### Remove everything (cluster included)
+
 ```bash
 ./scripts/azure/deploy-aks.sh cleanup
 ```

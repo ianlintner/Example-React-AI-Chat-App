@@ -2,7 +2,7 @@ name: Azure Docker Build and Push
 
 # This workflow builds and pushes Docker images to Azure Container Registry (ACR)
 # and deploys to Azure Kubernetes Service (AKS)
-# 
+#
 # Infrastructure:
 # - Cluster Name: bigboy
 # - Registry: gabby (via REGISTRY_LOGIN_SERVER secret)
@@ -35,7 +35,7 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write  # Required for OIDC authentication
+  id-token: write # Required for OIDC authentication
 
 jobs:
   build-and-push:
@@ -50,7 +50,6 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          
 
       - name: 'Build and push image'
         run: |

@@ -16,6 +16,7 @@ This is a streamlined guide to get the AI Chat App running on Azure AKS quickly.
 az login
 
 # 2. Set your ACR name (must be globally unique)
+# Note: The default registry is "gabby" - only set this if creating a new registry
 export AZURE_ACR_NAME="aichatacr$(date +%s)"  # Creates unique name with timestamp
 
 # 3. Clone and navigate to the repository (if not already done)

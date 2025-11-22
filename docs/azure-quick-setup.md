@@ -16,6 +16,7 @@ This is a streamlined guide to get the AI Chat App running on Azure AKS quickly.
 az login
 
 # 2. Set your ACR name (must be globally unique)
+# Note: The default registry is "gabby" - only set this if creating a new registry
 export AZURE_ACR_NAME="aichatacr$(date +%s)"  # Creates unique name with timestamp
 
 # 3. Clone and navigate to the repository (if not already done)
@@ -30,9 +31,9 @@ cd /path/to/Example-React-AI-Chat-App
 
 ## What Gets Created
 
-- **Resource Group**: `ai-chat-rg` (in East US by default)
-- **AKS Cluster**: `ai-chat-aks` with 2 nodes
-- **Container Registry**: Your unique ACR name
+- **Resource Group**: `nekoc` (in East US by default)
+- **AKS Cluster**: `bigboy` with 2 nodes
+- **Container Registry**: `gabby` (Azure Container Registry)
 - **Load Balancer**: Created automatically by Kubernetes
 - **Application**: Deployed and accessible via public IP
 

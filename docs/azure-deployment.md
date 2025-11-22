@@ -528,7 +528,7 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 
 For issues or questions:
 
-1. Check the [main README](../../README.md)
+1. Check the [main README](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/README.md)
 2. Review Azure AKS documentation
 3. Open an issue on GitHub
 

@@ -1,5 +1,14 @@
 name: Azure Docker Build and Push
 
+# This workflow builds and pushes Docker images to Azure Container Registry (ACR)
+# and deploys to Azure Kubernetes Service (AKS)
+# 
+# Infrastructure:
+# - Cluster Name: bigboy
+# - Registry: gabby (via REGISTRY_LOGIN_SERVER secret)
+# - Resource Group: nekoc (via RESOURCE_GROUP secret)
+# - Namespace: default
+
 on:
   push:
     branches: [main, develop]
@@ -49,16 +58,19 @@ jobs:
           fi
 
       - name: 'Deploy to Azure AKS'
+        env:
+          CLUSTER_NAME: bigboy
+          NAMESPACE: default
         run: |
           # Get AKS credentials
           az aks get-credentials \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name bigboy \
+            --name ${CLUSTER_NAME} \
             --overwrite-existing
           
           # Update the deployment with the new image
           kubectl set image deployment/chat-backend \
             chat-backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} \
-            -n default || echo "Deployment not found or not yet created"
+            -n ${NAMESPACE} || echo "Deployment not found or not yet created"
           
           echo "Image pushed successfully: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"

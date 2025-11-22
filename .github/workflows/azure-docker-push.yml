@@ -45,6 +45,8 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+        # Note: Using username/password for simplicity with existing secrets.
+        # For enhanced security, consider using managed identity or service principal with ACR.
 
       - name: 'Build and push image'
         run: |
@@ -61,6 +63,7 @@ jobs:
         env:
           CLUSTER_NAME: bigboy
           NAMESPACE: default
+          ROLLOUT_TIMEOUT: 10m
         run: |
           # Get AKS credentials
           az aks get-credentials \
@@ -69,18 +72,19 @@ jobs:
             --overwrite-existing
           
           # Check if deployment exists
-          if kubectl get deployment chat-backend -n ${NAMESPACE} &> /dev/null; then
+          if kubectl get deployment chat-backend -n ${NAMESPACE} 2>/dev/null; then
             echo "Updating existing deployment..."
             kubectl set image deployment/chat-backend \
               chat-backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} \
               -n ${NAMESPACE}
             
             # Wait for rollout to complete
-            kubectl rollout status deployment/chat-backend -n ${NAMESPACE} --timeout=5m
+            kubectl rollout status deployment/chat-backend -n ${NAMESPACE} --timeout=${ROLLOUT_TIMEOUT}
             
             echo "✅ Deployment updated successfully: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"
           else
             echo "⚠️  Deployment 'chat-backend' not found in namespace '${NAMESPACE}'"
             echo "Please create the deployment first using: kubectl apply -k k8s/apps/chat/overlays/azure/"
             echo "Image is available at: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"
+            exit 0  # Don't fail the workflow if deployment doesn't exist yet
           fi

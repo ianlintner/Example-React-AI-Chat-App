@@ -30,9 +30,9 @@ cd /path/to/Example-React-AI-Chat-App
 
 ## What Gets Created
 
-- **Resource Group**: `ai-chat-rg` (in East US by default)
-- **AKS Cluster**: `ai-chat-aks` with 2 nodes
-- **Container Registry**: Your unique ACR name
+- **Resource Group**: `nekoc` (in East US by default)
+- **AKS Cluster**: `bigboy` with 2 nodes
+- **Container Registry**: `gabby` (Azure Container Registry)
 - **Load Balancer**: Created automatically by Kubernetes
 - **Application**: Deployed and accessible via public IP
 

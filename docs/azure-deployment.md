@@ -31,10 +31,10 @@ Use the provided deployment script to set up everything automatically:
 
 ```bash
 # Set environment variables (optional, defaults provided)
-export AZURE_RESOURCE_GROUP="ai-chat-rg"
-export AZURE_CLUSTER_NAME="ai-chat-aks"
+export AZURE_RESOURCE_GROUP="nekoc"
+export AZURE_CLUSTER_NAME="bigboy"
 export AZURE_LOCATION="eastus"
-export AZURE_ACR_NAME="aichatacr"  # Must be globally unique, lowercase letters/numbers only
+export AZURE_ACR_NAME="gabby"  # Must be globally unique, lowercase letters/numbers only
 
 # Run the deployment script
 ./scripts/azure/deploy-aks.sh deploy
@@ -62,10 +62,10 @@ az login
 #### 2. Set Environment Variables
 
 ```bash
-export RESOURCE_GROUP="ai-chat-rg"
-export CLUSTER_NAME="ai-chat-aks"
+export RESOURCE_GROUP="nekoc"
+export CLUSTER_NAME="bigboy"
 export LOCATION="eastus"
-export ACR_NAME="aichatacr"  # Must be globally unique
+export ACR_NAME="gabby"  # Must be globally unique
 ```
 
 #### 3. Create Resource Group
@@ -197,10 +197,10 @@ The deployment script accepts these environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `AZURE_RESOURCE_GROUP` | `ai-chat-rg` | Azure resource group name |
-| `AZURE_CLUSTER_NAME` | `ai-chat-aks` | AKS cluster name |
+| `AZURE_RESOURCE_GROUP` | `nekoc` | Azure resource group name |
+| `AZURE_CLUSTER_NAME` | `bigboy` | AKS cluster name |
 | `AZURE_LOCATION` | `eastus` | Azure region |
-| `AZURE_ACR_NAME` | `aichatacr` | Container registry name (must be globally unique) |
+| `AZURE_ACR_NAME` | `gabby` | Container registry name (must be globally unique) |
 | `AZURE_NODE_COUNT` | `2` | Number of nodes in the cluster |
 | `AZURE_NODE_SIZE` | `Standard_D2s_v3` | VM size for nodes |
 

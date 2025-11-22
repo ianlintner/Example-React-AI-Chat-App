@@ -1,0 +1,64 @@
+name: Azure Docker Build and Push
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'shared/**'
+      - 'Dockerfile'
+      - '.github/workflows/azure-docker-push.yml'
+
+# Prevent multiple runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Login to Azure Container Registry'
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: 'Build and push image'
+        run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}
+          
+          # Also push with 'latest' tag for main branch
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
+          fi
+
+      - name: 'Deploy to Azure AKS'
+        run: |
+          # Get AKS credentials
+          az aks get-credentials \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name bigboy \
+            --overwrite-existing
+          
+          # Update the deployment with the new image
+          kubectl set image deployment/chat-backend \
+            chat-backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }} \
+            -n default || echo "Deployment not found or not yet created"
+          
+          echo "Image pushed successfully: ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:${{ github.sha }}"

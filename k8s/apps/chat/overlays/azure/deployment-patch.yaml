@@ -17,7 +17,7 @@ spec:
         - name: chat-backend
           # Update to use Azure Container Registry (ACR)
           # Format: <your-acr-name>.azurecr.io/chat-backend:latest
-          image: YOUR_ACR_NAME.azurecr.io/chat-backend:latest
+          image: gabby.azurecr.io/chat-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

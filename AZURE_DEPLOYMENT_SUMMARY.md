@@ -253,7 +253,7 @@ The workflow uses OpenID Connect (OIDC) authentication with Azure, which is more
 2. **AZURE_TENANT_ID**: Azure AD tenant ID
 3. **AZURE_SUBSCRIPTION_ID**: Azure subscription ID
 4. **REGISTRY_LOGIN_SERVER**: ACR login server (e.g., myregistry.azurecr.io)
-5. **DOCKER_USERNAME**: ACR username
+5. **REGISTRY_USERNAME**: ACR username
 6. **REGISTRY_PASSWORD**: ACR password or access token
 7. **RESOURCE_GROUP**: Azure resource group name
 

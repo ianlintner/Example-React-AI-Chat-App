@@ -52,6 +52,9 @@ services:
     
   # Frontend with test configuration  
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
       - REACT_APP_API_URL=http://backend:5001
@@ -84,7 +87,7 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      jaeger:
+      zipkin:
         condition: service_healthy
     networks:
       - observability

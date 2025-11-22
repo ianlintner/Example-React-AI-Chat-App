@@ -49,7 +49,7 @@ jobs:
         with:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-          login-server: 'gabby.azurecr.io'
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           
 
       - name: 'Build and push image'

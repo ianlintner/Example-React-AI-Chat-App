@@ -241,6 +241,67 @@ The Azure overlay:
 
 ## Next Steps for Users
 
+### GitHub Actions CI/CD Setup
+
+The repository includes a GitHub Actions workflow (`.github/workflows/azure-docker-push.yml`) that automatically builds and deploys the application to Azure AKS on pushes to main/develop branches.
+
+#### Required GitHub Secrets for OIDC Authentication
+
+The workflow uses OpenID Connect (OIDC) authentication with Azure, which is more secure than using long-lived credentials. You need to set up these secrets in your GitHub repository:
+
+1. **AZURE_CLIENT_ID**: Azure AD application (client) ID
+2. **AZURE_TENANT_ID**: Azure AD tenant ID
+3. **AZURE_SUBSCRIPTION_ID**: Azure subscription ID
+4. **REGISTRY_LOGIN_SERVER**: ACR login server (e.g., myregistry.azurecr.io)
+5. **DOCKER_USERNAME**: ACR username
+6. **REGISTRY_PASSWORD**: ACR password or access token
+7. **RESOURCE_GROUP**: Azure resource group name
+
+#### Setting Up Azure OIDC for GitHub Actions
+
+1. **Create an Azure AD Application**:
+   ```bash
+   az ad app create --display-name "GitHub-Actions-OIDC"
+   ```
+
+2. **Create a Service Principal**:
+   ```bash
+   APP_ID=$(az ad app list --display-name "GitHub-Actions-OIDC" --query "[0].appId" -o tsv)
+   az ad sp create --id $APP_ID
+   ```
+
+3. **Configure Federated Credentials** (allows GitHub to authenticate):
+   ```bash
+   az ad app federated-credential create \
+     --id $APP_ID \
+     --parameters '{
+       "name": "github-federated-credential",
+       "issuer": "https://token.actions.githubusercontent.com",
+       "subject": "repo:YOUR_GITHUB_USERNAME/Example-React-AI-Chat-App:ref:refs/heads/main",
+       "description": "GitHub Actions OIDC",
+       "audiences": ["api://AzureADTokenExchange"]
+     }'
+   ```
+
+4. **Assign Role to Service Principal**:
+   ```bash
+   SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+   SP_ID=$(az ad sp list --display-name "GitHub-Actions-OIDC" --query "[0].id" -o tsv)
+   
+   az role assignment create \
+     --assignee $SP_ID \
+     --role Contributor \
+     --scope /subscriptions/$SUBSCRIPTION_ID
+   ```
+
+5. **Add Secrets to GitHub Repository**:
+   - Go to your repository Settings → Secrets and variables → Actions
+   - Add each required secret listed above
+
+For more details, see the [Azure OIDC documentation](https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure).
+
+### Manual Deployment
+
 1. **Deploy to Azure**
    ```bash
    ./scripts/azure/deploy-aks.sh deploy

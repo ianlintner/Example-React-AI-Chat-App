@@ -26,7 +26,7 @@ spec:
   #     secretName: chat-backend-tls
   rules:
     # Update with your domain or use IP-based routing initially
-    - host: chat.yourdomain.com  # Replace with your actual domain
+    - host: chat.yourdomain.com # Replace with your actual domain
       http:
         paths:
           - path: /

@@ -20,7 +20,6 @@ patches:
     target:
       kind: Service
       name: chat-backend
-
 # Azure-specific configuration
 # This overlay adapts the base configuration for Azure AKS
 # Uses NGINX Ingress Controller instead of Istio

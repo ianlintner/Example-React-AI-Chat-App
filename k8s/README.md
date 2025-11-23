@@ -1,42 +1,64 @@
-# Chat Kubernetes Manifests
+# Kubernetes Configuration
 
-This directory contains the Kubernetes manifests for deploying the **chat** application into a Google Kubernetes Engine (GKE) cluster.  
-The structure is modeled after the reference in `~/portfolio/k8s`.
+Azure AKS deployment configuration for the AI Chat application.
 
 ## Structure
 
 ```
 k8s/
-  apps/
-    chat/
-      base/                # Base manifests (deployment, service, serviceaccount, istio VirtualService)
-      overlays/
-        chat-dev/          # Dev environment overlays
-        chat-prod/         # Prod environment overlays
-  flux/                    # FluxCD kustomizations for environments
+├── apps/chat/              # Chat backend application
+│   ├── base/               # Base Kubernetes resources
+│   └── overlays/azure/     # Azure-specific configuration
+└── observability/          # OpenTelemetry Collector for tracing
 ```
 
-## Next Steps
+## Quick Deploy
 
-- Populate `apps/chat/base` with:
-  - `deployment.yaml`
-  - `service.yaml`
-  - `serviceaccount.yaml`
-  - `istio-virtualservice.yaml`
-  - `istio-certificate.yaml`
-  - `kustomization.yaml`
+```bash
+# Deploy to Azure AKS
+kubectl apply -k k8s/apps/chat/overlays/azure
 
-Note: The environment uses a shared, cluster-level Istio IngressGateway. This app does not define its own `istio-gateway.yaml`; the `VirtualService` routes through the shared gateway.
+# Deploy observability stack
+kubectl apply -f k8s/observability/otel-collector.yaml
+```
 
-- Populate `apps/chat/overlays/chat-dev` with:
-  - `namespace.yaml`
-  - `dns-record.yaml`
-  - `kustomization.yaml`
+## Configuration
 
-- Populate `apps/chat/overlays/chat-prod` with:
-  - `namespace.yaml`
-  - `dns-records.yaml`
-  - `workload-identity-binding.yaml`
-  - `kustomization.yaml`
+### Azure Overlay
 
-- Add FluxCD kustomizations under `k8s/flux`.
+The Azure overlay (`overlays/azure/`) includes:
+- Azure-specific ConfigMaps (environment variables)
+- Ingress configuration with SSL/TLS
+- Secrets (via Azure Key Vault or manual creation)
+- Redis configuration
+- Service patches
+
+### Base Resources
+
+Base Kubernetes resources include:
+- Backend Deployment
+- Service definitions
+- ServiceAccount
+- Secret templates
+- Redis Service and Secret
+
+## Environment Variables
+
+Key environment variables configured in `overlays/azure/configmap.yaml`:
+- `ENABLE_TRACING=true` - OpenTelemetry tracing
+- `TRACING_EXPORTER=otlp` - OTLP export to collector
+- `OTEL_EXPORTER_OTLP_ENDPOINT` - Collector endpoint
+- `OTEL_TRACES_SAMPLER_RATIO` - Sampling rate
+
+## Observability
+
+OpenTelemetry Collector deployed separately:
+- Receives traces via OTLP (gRPC: 4317, HTTP: 4318)
+- Exports to debug console (ready for Azure Monitor)
+- Resource limits configured (CPU: 500m, Memory: 512Mi)
+
+## See Also
+
+- [Azure Deployment Guide](../docs/azure-deployment.md)
+- [Azure Quick Setup](../docs/azure-quick-setup.md)
+- [Tracing Documentation](../docs/operations/tracing-azure-monitor.md)

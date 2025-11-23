@@ -1,0 +1,144 @@
+---
+# OpenTelemetry Collector ConfigMap (imports base config from repository)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  labels:
+    app: otel-collector
+    component: observability
+  annotations:
+    description: Base OpenTelemetry Collector configuration with Azure Monitor exporter
+
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+        send_batch_max_size: 2048
+
+      memory_limiter:
+        limit_mib: 512
+        spike_limit_mib: 128
+        check_interval: 5s
+
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: 'production'
+            action: upsert
+
+    exporters:
+      debug:
+        verbosity: detailed
+      zipkin:
+        endpoint: http://zipkin:9411/api/v2/spans
+        format: json
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [debug]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [debug]
+---
+# Secret holding Azure Monitor / Application Insights connection string
+apiVersion: v1
+kind: Secret
+metadata:
+  name: azure-monitor-conn
+  labels:
+    app: otel-collector
+stringData:
+  connection-string: "REPLACE_ME_WITH_INSTRUMENTATION_KEY"
+  otlp-endpoint: "https://westus-0.in.applicationinsights.azure.com/v1/traces"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector:latest
+          imagePullPolicy: IfNotPresent
+          args: ["--config=/conf/otel-collector-config.yaml"]
+          env:
+            - name: AZURE_MONITOR_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: azure-monitor-conn
+                  key: connection-string
+            - name: AZURE_MONITOR_OTLP_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: azure-monitor-conn
+                  key: otlp-endpoint
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+            - name: otlp-http
+              containerPort: 4318
+            - name: health
+              containerPort: 13133
+          volumeMounts:
+            - name: otel-config-vol
+              mountPath: /conf
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: otel-config-vol
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+  type: ClusterIP

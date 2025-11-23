@@ -1,6 +1,7 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-otlp-http';
 // Lazy-require Cloud Trace exporter to avoid TS module resolution during dev
 // where the dependency may not be installed locally yet.
 let CloudTraceExporterCtor: any = null;
@@ -22,8 +23,9 @@ import {
 import {
   ConsoleSpanExporter,
   SimpleSpanProcessor,
-  AlwaysOnSampler,
   ReadableSpan,
+  ParentBasedSampler,
+  TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { tracingContextManager } from './contextManager';
 
@@ -37,6 +39,14 @@ const createTraceExporter = () => {
   console.log('  ZIPKIN_ENDPOINT:', process.env.ZIPKIN_ENDPOINT);
   console.log('  OTEL_SERVICE_NAME:', process.env.OTEL_SERVICE_NAME);
   console.log('  NODE_ENV:', process.env.NODE_ENV);
+
+  // If explicit request for OTLP, prefer that first (AKS / Azure Monitor path)
+  if (exporterPref === 'otlp') {
+    const endpoint =
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces';
+    console.log('🔗 Using OTLP HTTP trace exporter:', endpoint);
+    return new OTLPTraceExporter({ url: endpoint });
+  }
 
   // Default to Cloud Trace in production; Zipkin otherwise unless explicitly overridden
   const useCloudTrace = exporterPref
@@ -106,16 +116,24 @@ const createSpanProcessors = (): SimpleSpanProcessor[] => {
   return processors;
 };
 
-// Create and configure the Node SDK with 100% sampling
+// Create and configure the Node SDK with adjustable sampling
 const createSDK = (): NodeSDK => {
   const serviceName =
     process.env.OTEL_SERVICE_NAME || 'ai-goal-seeking-backend';
   console.log('🔍 Creating Node SDK with service name:', serviceName);
-  console.log('🔍 Configuring 100% trace sampling (AlwaysOnSampler)');
+  // Determine sampling ratio: production defaults to 0.1 unless overridden
+  const ratioStr = process.env.OTEL_TRACES_SAMPLER_RATIO || (process.env.NODE_ENV === 'production' ? '0.1' : '1');
+  let ratio = parseFloat(ratioStr);
+  if (Number.isNaN(ratio) || ratio <= 0 || ratio > 1) {
+    console.warn(`⚠️ Invalid OTEL_TRACES_SAMPLER_RATIO='${ratioStr}', falling back to 1.0`);
+    ratio = 1;
+  }
+  console.log(`🔍 Configuring ParentBased TraceIdRatio sampler (ratio=${ratio})`);
 
   return new NodeSDK({
     serviceName: serviceName,
-    sampler: new AlwaysOnSampler(), // 100% sampling
+    // ParentBased ensures child spans follow parent sampling decision
+    sampler: new ParentBasedSampler({ root: new TraceIdRatioBasedSampler(ratio) }),
     spanProcessors: createSpanProcessors(),
     instrumentations: [
       getNodeAutoInstrumentations({
@@ -153,6 +171,8 @@ export const initializeTracing = (): void => {
     console.log('🔍 Starting OpenTelemetry SDK initialization...');
     sdk.start();
     console.log('✅ OpenTelemetry tracing initialized successfully');
+    console.log('🔍 Active exporter preference:', (process.env.TRACING_EXPORTER || '').toLowerCase() || '(default logic)');
+    console.log('🔍 Sampling ratio:', process.env.OTEL_TRACES_SAMPLER_RATIO || (process.env.NODE_ENV === 'production' ? '0.1' : '1'));
 
     // Create a test span to verify tracing is working
     createTestSpan();

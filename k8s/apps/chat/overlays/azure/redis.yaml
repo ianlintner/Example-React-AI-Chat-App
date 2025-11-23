@@ -22,7 +22,7 @@ spec:
               name: redis
           args:
             - '--requirepass'
-            - 'your-redis-password-here'
+            - 'redisPass3453clrtjlHFEnf139@!'
           resources:
             requests:
               cpu: '100m'

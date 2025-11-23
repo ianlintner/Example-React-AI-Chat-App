@@ -1,0 +1,314 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  id-token: write # for optional Azure/OIDC flows
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docs: ${{ steps.filter.outputs.docs }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'shared/**'
+            frontend:
+              - 'frontend/**'
+              - 'shared/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+            workflows:
+              - '.github/workflows/**'
+
+  quality:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install root deps
+        run: npm ci
+      - name: Install all workspaces
+        run: npm run install:all
+      - name: Format check
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run type-check
+      - name: Docs lint (markdownlint)
+        run: npm run docs:lint || echo "Docs lint non-blocking"
+      - name: Docs spell check (cspell)
+        run: npm run docs:spell || echo "Spell check non-blocking"
+      - name: Validate Mermaid diagrams
+        run: npm run docs:mermaid:ci || echo "Mermaid validation non-blocking"
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - name: Install
+        working-directory: backend
+        run: npm ci
+      - name: Test (coverage)
+        working-directory: backend
+        run: npm run test:ci
+        env:
+          NODE_ENV: test
+          REDIS_URL: redis://localhost:6379
+      - name: Build
+        working-directory: backend
+        run: npm run build
+      - name: OpenAPI smoke test
+        working-directory: backend
+        run: |
+          nohup node dist/index.js > server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sf http://localhost:5001/docs/json >/dev/null; then break; fi
+            sleep 2
+          done
+          curl -sf http://localhost:5001/docs/json | grep -q '"openapi"'
+          pkill -f dist/index.js || true
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          directory: backend/coverage
+          flags: backend
+          fail_ci_if_error: false
+      - name: Upload backend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist/
+          retention-days: 7
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Test (coverage)
+        working-directory: frontend
+        run: npm run test:ci
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('mkdocs.yml') }}
+          restore-keys: ${{ runner.os }}-pip-
+      - name: Install MkDocs
+        run: python -m pip install --upgrade pip && pip install mkdocs mkdocs-techdocs-core linkchecker
+      - name: Build TechDocs site (strict)
+        run: python -m mkdocs build --strict
+      - name: Link check (local serve)
+        run: |
+          python -m mkdocs serve --dev-addr=127.0.0.1:8000 &
+          PID=$!
+          sleep 8
+          linkchecker http://127.0.0.1:8000 --no-warnings --output=text || echo "Link check non-blocking"
+          kill $PID || true
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: techdocs-site
+          path: site/
+          retention-days: 7
+
+  security:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+      - name: Dependency audit backend
+        if: needs.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: npm audit --audit-level=moderate || true
+      - name: Dependency audit frontend
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: frontend
+        run: npm audit --audit-level=moderate || true
+
+  integration:
+    needs: [changes, backend, frontend]
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare env files
+        run: |
+          if [ -f backend/.env.example ] && [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; fi
+          if [ -f frontend/.env.example ] && [ ! -f frontend/.env ]; then cp frontend/.env.example frontend/.env; fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+      - name: Start services
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --wait redis zipkin otel-collector backend
+          timeout=60
+          while ! curl -sf http://localhost:5001/health >/dev/null && [ $timeout -gt 0 ]; do
+            echo "Waiting for backend... ($timeout s left)"; sleep 2; timeout=$((timeout-2));
+          done
+          [ $timeout -gt 0 ] || (echo "Backend failed to start"; docker compose ps; docker compose logs backend; exit 1)
+      - name: Run integration tests
+        working-directory: backend
+        run: |
+          if npm run | grep -q test:integration; then npm run test:integration; else curl -f http://localhost:5001/health; fi
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.test.yml down
+
+  docker:
+    needs: [backend, frontend, integration]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login Docker Hub
+        if: github.repository_owner == 'ianlintner'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build & push combined image (Docker Hub)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.repository_owner == 'ianlintner' }}
+          tags: ianlintner068/example-react-ai-chat-app:latest,ianlintner068/example-react-ai-chat-app:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Azure ACR login
+        if: secrets.REGISTRY_LOGIN_SERVER != ''
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Push image to ACR
+        if: secrets.REGISTRY_LOGIN_SERVER != ''
+        run: |
+          docker tag ianlintner068/example-react-ai-chat-app:latest ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
+
+  ci-success:
+    needs: [changes, quality, backend, frontend, docs, security, integration]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aggregate results
+        run: |
+          echo "Changes: ${{ needs.changes.result }}"
+          echo "Quality: ${{ needs.quality.result }}"
+          echo "Backend: ${{ needs.backend.result }}"
+          echo "Frontend: ${{ needs.frontend.result }}"
+          echo "Docs: ${{ needs.docs.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Integration: ${{ needs.integration.result }}"
+          [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
+          [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
+          [ "${{ needs.quality.result }}" != "failure" ] || { echo "❌ quality failed"; exit 1; }
+          [ "${{ needs.security.result }}" != "failure" ] || { echo "❌ security failed"; exit 1; }
+          [ "${{ needs.integration.result }}" != "failure" ] || { echo "❌ integration failed"; exit 1; }
+          echo "✅ Consolidated pipeline passed"

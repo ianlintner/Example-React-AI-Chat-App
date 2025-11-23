@@ -6,7 +6,7 @@
 - [ ] Azure CLI installed (`az --version`)
 - [ ] kubectl installed (`kubectl version --client`)
 - [ ] Docker installed (`docker --version`)
-- [ ] Helm installed (optional, for NGINX Ingress) (`helm version`)
+- [ ] Istio enabled on AKS (configured via Azure Portal)
 
 ## 5-Minute Quick Start
 
@@ -44,15 +44,17 @@ http://<DISPLAYED_IP_ADDRESS>
 If you have a domain:
 
 1. Point your domain's A record to the displayed IP
-2. Update `k8s/apps/chat/overlays/azure/ingress.yaml` with your domain
-3. Redeploy: `./scripts/azure/deploy-aks.sh update`
+2. Update `k8s/apps/chat/overlays/azure/istio-gateway.yaml` with your domain
+3. Update `k8s/apps/chat/overlays/azure/istio-virtualservice.yaml` with your domain
+4. Redeploy: `./scripts/azure/deploy-aks.sh update`
 
 ## What Gets Created
 
 ✅ **Resource Group**: `ai-chat-rg`
 ✅ **Azure Container Registry**: Your unique ACR name
 ✅ **AKS Cluster**: 2-node cluster with Standard_D2s_v3 VMs
-✅ **NGINX Ingress Controller**: Manages routing and load balancing
+✅ **Istio Service Mesh**: Managed by AKS add-on
+✅ **Istio Ingress Gateway**: Manages routing and load balancing
 ✅ **Azure Load Balancer**: Public IP for external access
 ✅ **Application**: Chat backend with Redis
 
@@ -79,7 +81,8 @@ export AZURE_NODE_SIZE=Standard_B2s
 ```bash
 kubectl get pods              # Check application pods
 kubectl get services          # Check services
-kubectl get ingress           # Check ingress and IP
+kubectl get gateway           # Check Istio gateway
+kubectl get virtualservice    # Check Istio virtual service
 ```
 
 ### View Logs
@@ -169,11 +172,14 @@ export AZURE_ACR_NAME="aichatjd$(date +%s)"
 ### Can't Access Application
 
 ```bash
-# Check if ingress has IP
-kubectl get ingress chat-backend-ingress
+# Check if Istio gateway is ready
+kubectl get gateway chat-gateway-external
 
-# Check NGINX controller
-kubectl get pods -n ingress-nginx
+# Check Istio ingress service for external IP
+kubectl get svc -n aks-istio-ingress
+
+# Check Istio pods
+kubectl get pods -n aks-istio-system
 ```
 
 ### Deployment Failed

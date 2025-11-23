@@ -5,7 +5,7 @@ namespace: default
 
 resources:
   - ../../base
-  - ingress.yaml
+  - istio-virtualservice.yaml
   - configmap.yaml
   - redis.yaml
   # Create secrets.yaml from secrets.yaml.example and add it here
@@ -20,7 +20,11 @@ patches:
     target:
       kind: Service
       name: chat-backend
+  - path: gateway-patch.yaml
+    target:
+      kind: Gateway
+      name: chat-gateway
 # Azure-specific configuration
-# This overlay adapts the base configuration for Azure AKS
-# Uses NGINX Ingress Controller instead of Istio
-# Note: Some GCP/Istio resources from base will be included but won't affect Azure deployment
+# This overlay adapts the base configuration for Azure AKS with Istio
+# Uses AKS-managed Istio service mesh (configured via Azure portal)
+# Gateway selector: istio: aks-istio-ingressgateway-external

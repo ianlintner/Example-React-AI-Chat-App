@@ -1,0 +1,18 @@
+#!/bin/bash
+# Git pre-commit hook to prevent committing secrets
+# Install: ln -s ../../scripts/git-hooks/pre-commit .git/hooks/pre-commit
+
+echo "🔒 Running secrets check..."
+./scripts/check-secrets.sh
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Commit blocked: Potential secrets detected"
+    echo "If this is a false positive, you can:"
+    echo "  1. Fix the issue and commit again"
+    echo "  2. Bypass with: git commit --no-verify (NOT RECOMMENDED)"
+    exit 1
+fi
+
+echo "✅ Secrets check passed"
+exit 0

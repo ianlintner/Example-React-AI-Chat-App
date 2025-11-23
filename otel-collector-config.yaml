@@ -37,6 +37,12 @@ exporters:
   debug:
     verbosity: detailed
 
+  azuremonitor:
+    # Connection string supplied via env var AZURE_MONITOR_CONNECTION_STRING in Deployment
+    connection_string: ${AZURE_MONITOR_CONNECTION_STRING}
+    # Optional: role instance & name auto-derived from resource attributes
+    # max_instrumentation_key_telemetry_items_per_second: 20
+
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
@@ -53,12 +59,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [zipkin, debug]
+      exporters: [azuremonitor, zipkin, debug]
 
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
-      exporters: [debug]
+      exporters: [azuremonitor, debug]
 
   telemetry:
     logs:

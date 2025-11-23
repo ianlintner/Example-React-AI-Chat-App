@@ -16,17 +16,20 @@ This project now uses a **single consolidated GitHub Actions workflow** (`.githu
 | docker | Build & push combined image to Docker Hub (+ optional Azure ACR) | docker/build-push-action |
 | ci-success | Aggregates required job results for branch protection | Bash guard script |
 
-## Removed / Deprecated
+## Removed Workflows
 
-| Removed | Reason |
-|---------|--------|
-| `docs-deploy.yml` (stub) | GCS documentation publishing removed; retained as manual noop for history |
-| `deploy-frontend.yaml.disabled` (stub) | Static frontend GCS hosting deprecated (container image used) |
-| `gcp-auth.yaml` (stub) | GCP OIDC auth test no longer required |
-| `azure-docker-push.yml` (stub) | Folded into unified pipeline (`docker` job) |
-| `docs-quality.yml` & `quality-checks.yml` (stubs) | Steps merged into `quality` / `docs` jobs |
-| `ci-optimized.yml` (stub) | Superseded by consolidated `ci.yml` |
-| `ci.yml.disabled` (stub) | Legacy simplified CI retained as noop for reference |
+The following workflows have been deleted and their functionality consolidated into `ci.yml`:
+
+| Removed Workflow | Reason |
+|------------------|--------|
+| `docs-deploy.yml` | GCS documentation publishing removed |
+| `deploy-frontend.yaml.disabled` | Static frontend GCS hosting deprecated (container image used) |
+| `gcp-auth.yaml` | GCP OIDC auth test no longer required |
+| `azure-docker-push.yml` | Folded into unified pipeline (`docker` job) |
+| `docs-quality.yml` | Steps merged into `quality` / `docs` jobs |
+| `quality-checks.yml` | Steps merged into `quality` / `docs` jobs |
+| `ci-optimized.yml` | Superseded by consolidated `ci.yml` |
+| `ci.yml.disabled` | Legacy simplified CI no longer needed |
 
 ## Branch Protection
 

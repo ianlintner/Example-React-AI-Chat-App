@@ -17,8 +17,9 @@ See [Azure Deployment Guide](../../../docs/azure-deployment.md) for complete ins
 azure/
 ├── kustomization.yaml          # Main Kustomize configuration
 ├── deployment-patch.yaml       # Deployment overrides for Azure
-├── service-patch.yaml          # Service configuration for Azure LB
-├── ingress.yaml                # NGINX Ingress Controller routing
+├── service-patch.yaml          # Service configuration for Azure
+├── istio-gateway.yaml          # Istio Gateway configuration
+├── istio-virtualservice.yaml   # Istio VirtualService routing
 ├── configmap.yaml              # Azure-specific environment config
 ├── redis.yaml                  # In-cluster Redis deployment
 ├── secrets.yaml.example        # Template for secrets
@@ -33,8 +34,9 @@ Main Kustomize file that:
 
 - References base manifests from `../../base`
 - Applies Azure-specific patches
-- Includes Azure resources (Ingress, ConfigMap, Redis)
+- Includes Azure resources (Istio Gateway, VirtualService, ConfigMap, Redis)
 - Sets namespace to `default`
+- Uses AKS-managed Istio service mesh
 
 ### deployment-patch.yaml
 
@@ -52,26 +54,39 @@ Modifies the deployment for Azure:
 Configures the service for Azure:
 
 - **Type**: ClusterIP (internal to cluster)
-- **Annotations**: Azure Load Balancer settings
+- **Annotations**: Azure-specific service settings
 - **Port**: Exposes port 80, targets container port 5001
 
-### ingress.yaml
+### istio-gateway.yaml
 
-NGINX Ingress Controller configuration:
+Istio Gateway configuration for external traffic:
 
-- **Class**: nginx
-- **WebSocket Support**: Long timeouts for Socket.io
+- **Selector**: `istio: aks-istio-ingressgateway-external` (AKS-managed Istio)
+- **Protocol**: HTTP on port 80
+- **Hosts**: Wildcard (`*`) for all domains
+- **TLS**: Configurable for HTTPS (commented out by default)
+
+### istio-virtualservice.yaml
+
+Istio VirtualService routing rules:
+
+- **WebSocket Support**: Extended timeouts (3600s) for Socket.io connections
 - **CORS**: Enabled for cross-origin requests
-- **SSL**: Configurable with cert-manager
+- **Socket.io CORS**: Dedicated policy on `/socket.io` route to allow browser upgrades through Istio
 - **Routing**:
-  - Domain-based (chat.yourdomain.com)
-  - IP-based (fallback for initial access)
+  - `/api/*` - API endpoints with 60s timeout
+  - `/socket.io/*` - WebSocket connections with long-lived timeout
+  - `/health`, `/healthz` - Health check endpoints
+  - `/docs` - API documentation
+  - `/metrics` - Prometheus metrics endpoint
+  - `/` - Root and all other paths
 
-Key annotations:
+Key features:
 
-- `nginx.ingress.kubernetes.io/websocket-services: chat-backend` - WebSocket support
-- `nginx.ingress.kubernetes.io/upstream-hash-by: '$binary_remote_addr'` - Session affinity
-- `nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"` - Long-lived connections
+- Automatic WebSocket upgrade for Socket.io
+- CORS policy with wildcard origins
+- Extended timeouts for long-lived connections
+- Service mesh observability with Istio
 
 ### configmap.yaml
 
@@ -173,35 +188,42 @@ resources:
 
 ### Add Custom Domain
 
-Edit `ingress.yaml`:
+Edit `istio-gateway.yaml`:
 
 ```yaml
 spec:
-  rules:
-    - host: chat.yourcompany.com # Your domain
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: chat-backend
-                port:
-                  number: 80
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "chat.yourcompany.com" # Your domain instead of "*"
 ```
 
-### Enable SSL/TLS
-
-1. Install cert-manager in your cluster
-2. Uncomment TLS section in `ingress.yaml`:
+Update `istio-virtualservice.yaml`:
 
 ```yaml
 spec:
-  tls:
-    - hosts:
-        - chat.yourcompany.com
-      secretName: chat-backend-tls
+  hosts:
+  - "chat.yourcompany.com" # Your domain instead of "*"
+  gateways:
+  - chat-gateway-external
 ```
+
+### Enable SSL/TLS (Optional)
+
+**Note**: SSL/TLS setup is handled separately in the infrastructure repository. See [OPTIONAL_SSL_SETUP.md](./OPTIONAL_SSL_SETUP.md) for complete instructions on:
+
+- Installing cert-manager
+- Configuring DNS-01 challenges with various providers
+- Creating Let's Encrypt certificates
+- Copying secrets to Istio namespace
+
+The Gateway is already configured to:
+- Serve HTTPS on port 443 (when TLS secret is provided)
+- Redirect HTTP (port 80) to HTTPS automatically
+- Use domain: `example-chat.cat-herding.net`
 
 ### Use Azure Redis Cache
 
@@ -239,7 +261,8 @@ spec:
 
 ### External Access
 
-- **Internet** → **Azure Load Balancer** → **NGINX Ingress** → **chat-backend service** → **chat-backend pods**
+- **Internet** → **Azure Load Balancer** → **Istio Ingress Gateway** → **chat-backend service** → **chat-backend pods**
+- Istio service mesh provides traffic management, observability, and security
 
 ### Ports
 
@@ -311,16 +334,22 @@ az aks update \
   --attach-acr $ACR_NAME
 ```
 
-### Ingress not working
+### Istio Gateway not working
 
 ```bash
-# Check ingress
-kubectl get ingress
-kubectl describe ingress chat-backend-ingress
+# Check Istio installation
+kubectl get pods -n aks-istio-system
 
-# Check NGINX controller
-kubectl get pods -n ingress-nginx
-kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
+# Check gateway
+kubectl get gateway
+kubectl describe gateway chat-gateway-external
+
+# Check virtual service
+kubectl get virtualservice
+kubectl describe virtualservice chat-vs-external
+
+# Get external IP
+kubectl get svc -n aks-istio-ingress
 ```
 
 ### Redis connection issues
@@ -418,5 +447,6 @@ kubectl delete -k k8s/apps/chat/overlays/azure/
 - [Main Azure Deployment Guide](../../../docs/azure-deployment.md)
 - [Quick Setup Guide](../../../docs/azure-quick-setup.md)
 - [AKS Documentation](https://docs.microsoft.com/en-us/azure/aks/)
+- [AKS Istio Add-on](https://docs.microsoft.com/en-us/azure/aks/istio-about)
 - [Kustomize Documentation](https://kustomize.io/)
-- [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)
+- [Istio Documentation](https://istio.io/latest/docs/)

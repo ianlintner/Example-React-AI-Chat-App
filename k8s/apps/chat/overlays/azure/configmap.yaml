@@ -11,4 +11,5 @@ data:
   # Redis configuration (update with your Azure Redis Cache or AKS-hosted Redis)
   REDIS_HOST: 'redis-service'
   REDIS_PORT: '6379'
+  API_URL: 'http://chat.cat-herding.net:5001'
   # Add other non-sensitive configuration here

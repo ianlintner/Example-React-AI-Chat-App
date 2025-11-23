@@ -1,0 +1,27 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: chat-gateway
+spec:
+  selector:
+    istio: aks-istio-ingressgateway-external
+  servers:
+  # HTTPS with TLS certificate (configure your own TLS secret)
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: cat-herding-tls  # Wildcard cert covers *.cat-herding.net
+    hosts:
+    - "example-chat.cat-herding.net"
+  # HTTP redirect to HTTPS
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "example-chat.cat-herding.net"
+    tls:
+      httpsRedirect: true

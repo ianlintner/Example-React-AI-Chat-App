@@ -5,27 +5,40 @@ This guide explains how to securely manage secrets using Azure Key Vault with th
 ## Overview
 
 Azure Key Vault integration provides:
-- ✅ **Secure Secret Storage** - Secrets stored in Azure Key Vault, not in Git
-- ✅ **Automatic Secret Rotation** - CSI driver can auto-update secrets
+- ✅ **Secure Secret Storage** - Secrets stored in Azure Key Vault (`ai-chat-kv-1763873634`), not in Git
+- ✅ **Automatic Secret Rotation** - CSI driver can auto-update secrets (2-minute sync interval)
 - ✅ **Managed Identity** - No credentials needed, uses AKS kubelet identity
 - ✅ **Audit Logging** - Track all secret access in Azure
 - ✅ **Production Ready** - Enterprise-grade secret management
 
+**Current Status:** ✅ OpenAI API key (`OPENAI-API-KEY`) is already stored in Key Vault
+
 ## Architecture
 
 ```
-┌─────────────┐
-│   AKS Pod   │
-│             │
-│  ┌───────┐  │      ┌──────────────────┐
-│  │ App   │  │      │  Azure Key Vault │
-│  │       │◄─┼──────┤                  │
-│  └───────┘  │      │  - OPENAI_API_KEY│
-│             │      │  - REDIS_PASSWORD│
-│  CSI Driver │      └──────────────────┘
-│  Volume     │              ▲
-└─────────────┘              │
-                      Kubelet Identity
+┌─────────────────────┐
+│   Azure Key Vault   │
+│ ai-chat-kv-17638... │
+│                     │
+│ Secret:             │
+│ OPENAI-API-KEY      │
+└──────────┬──────────┘
+           │
+           │ CSI Driver syncs secret
+           │
+           ▼
+┌─────────────────────┐
+│   AKS Pod           │
+│                     │
+│ Volume Mount:       │
+│ /mnt/secrets-store  │
+│                     │
+│ K8s Secret (sync):  │
+│ kv-openai-secret    │
+│                     │
+│ Env Var:            │
+│ OPENAI_API_KEY      │
+└─────────────────────┘
 ```
 
 ## Quick Setup (5 minutes)
@@ -35,86 +48,83 @@ Azure Key Vault integration provides:
 - Azure CLI installed and logged in: `az login`
 - kubectl configured for your AKS cluster
 - Existing AKS cluster deployed
+- **✅ COMPLETED:** OpenAI API key already stored in Key Vault (`ai-chat-kv-1763873634`)
 
-### Step 1: Run Setup Script
-
-```bash
-# Make the script executable
-chmod +x scripts/azure/setup-keyvault.sh
-
-# Run the setup script
-./scripts/azure/setup-keyvault.sh
-```
-
-The script will:
-1. Create Azure Key Vault
-2. Enable CSI driver addon on AKS
-3. Configure access policies for kubelet identity
-4. Create placeholder secrets
-5. Generate configuration file
-
-### Step 2: Update OpenAI API Key
-
-After the script completes, update the OpenAI API key:
+### Step 1: Enable CSI Secrets Store Driver on AKS
 
 ```bash
-# Get Key Vault name from the output or config file
-KEY_VAULT_NAME=$(grep AZURE_KEY_VAULT_NAME k8s/apps/chat/overlays/azure/.keyvault-config | cut -d= -f2)
-
-# Set your OpenAI API key
-az keyvault secret set \
-  --vault-name "$KEY_VAULT_NAME" \
-  --name "OPENAI-API-KEY" \
-  --value "sk-proj-YOUR_ACTUAL_OPENAI_KEY_HERE"
+# Enable the addon if not already enabled
+az aks enable-addons \
+  --addons azure-keyvault-secrets-provider \
+  --resource-group ai-chat-rg \
+  --name <your-aks-cluster-name>
 ```
 
-### Step 3: Configure SecretProviderClass
-
-Update the SecretProviderClass with your Key Vault details:
+### Step 2: Get AKS Managed Identity Client ID
 
 ```bash
-# Get configuration values
-source k8s/apps/chat/overlays/azure/.keyvault-config
+# Get the kubelet identity (managed identity used by AKS)
+IDENTITY_CLIENT_ID=$(az aks show \
+  --resource-group ai-chat-rg \
+  --name <your-aks-cluster-name> \
+  --query identityProfile.kubeletidentity.clientId \
+  --output tsv)
 
-# Update secret-provider-class.yaml
-sed -i '' "s/<KEY_VAULT_NAME>/$AZURE_KEY_VAULT_NAME/g" \
-  k8s/apps/chat/overlays/azure/secret-provider-class.yaml
-
-sed -i '' "s/<TENANT_ID>/$AZURE_TENANT_ID/g" \
-  k8s/apps/chat/overlays/azure/secret-provider-class.yaml
+echo "Managed Identity Client ID: $IDENTITY_CLIENT_ID"
 ```
 
-### Step 4: Enable Key Vault Integration
-
-Edit `k8s/apps/chat/overlays/azure/kustomization.yaml` and uncomment the Key Vault patch:
-
-```yaml
-patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: chat-backend
-  - path: deployment-keyvault-patch.yaml  # Uncomment this
-    target:                                # and this
-      kind: Deployment                     # and this
-      name: chat-backend                   # and this
-```
-
-### Step 5: Deploy Application
+### Step 3: Grant Key Vault Access
 
 ```bash
-# Apply the configuration
-kubectl apply -k k8s/apps/chat/overlays/azure/
+# Get Key Vault resource ID
+KV_ID=$(az keyvault show \
+  --name ai-chat-kv-1763873634 \
+  --query id \
+  --output tsv)
 
-# Verify the secret is mounted
+# Assign "Key Vault Secrets User" role
+az role assignment create \
+  --role "Key Vault Secrets User" \
+  --assignee "${IDENTITY_CLIENT_ID}" \
+  --scope "${KV_ID}"
+```
+
+### Step 4: Deploy the Application with Key Vault Integration
+
+The manifests are already configured. Simply apply them:
+
+```bash
+# Apply all resources including SecretProviderClass
+kubectl apply -k k8s/apps/chat/base/
+
+# Verify SecretProviderClass is created
 kubectl get secretproviderclass
-kubectl get pods
-kubectl describe pod <pod-name> | grep -A 10 "Mounts:"
+
+# Check pod status
+kubectl get pods -l app=chat-backend
+
+# Verify secret is synced
+kubectl get secret kv-openai-secret
+```
+
+### Step 5: Verify Secret Mounting
+
+```bash
+# Describe the pod to see volume mounts
+POD_NAME=$(kubectl get pods -l app=chat-backend -o jsonpath='{.items[0].metadata.name}')
+kubectl describe pod $POD_NAME
+
+# Check if environment variable is set
+kubectl exec $POD_NAME -- env | grep OPENAI_API_KEY
+
+# Verify the secret content (optional - be careful with this in production)
+kubectl get secret kv-openai-secret -o jsonpath='{.data.OPENAI_API_KEY}' | base64 --decode
+echo ""
 ```
 
 ## Manual Configuration (Alternative)
 
-If you prefer manual setup:
+If you prefer manual setup or need to troubleshoot:
 
 ### 1. Create Key Vault
 

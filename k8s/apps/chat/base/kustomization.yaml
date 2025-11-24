@@ -7,3 +7,4 @@ resources:
   - secret.yaml
   - redis-secret.yaml
   - redis-service.yaml
+  - secretproviderclass.yaml

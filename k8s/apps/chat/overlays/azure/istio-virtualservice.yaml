@@ -4,6 +4,7 @@ metadata:
   name: chat-vs-external
 spec:
   hosts:
+  - "chat.hugecat.net"
   - "example-chat.cat-herding.net"
   gateways:
   - chat-gateway

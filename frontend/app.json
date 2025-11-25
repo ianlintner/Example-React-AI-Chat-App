@@ -41,7 +41,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "http://localhost:5001"
+      "apiUrl": "https://chat.hugecat.net"
     }
   }
 }

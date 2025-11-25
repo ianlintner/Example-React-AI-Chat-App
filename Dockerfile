@@ -13,6 +13,9 @@ RUN npm ci
 # Copy frontend source
 COPY frontend/ ./
 
+# Set production API URL for build
+ENV EXPO_PUBLIC_API_URL=https://chat.hugecat.net
+
 # Build frontend for web
 RUN npm run build
 

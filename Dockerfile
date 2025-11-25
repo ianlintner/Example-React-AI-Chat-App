@@ -56,8 +56,10 @@ COPY --from=backend-builder --chown=nodejs:nodejs /backend/dist ./dist
 COPY --from=backend-builder --chown=nodejs:nodejs /backend/node_modules ./node_modules
 COPY --from=backend-builder --chown=nodejs:nodejs /backend/package*.json ./
 
-# Copy frontend built application
-COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./public
+# Copy frontend built application into location expected by backend static server
+# Backend code serves from path: dist/backend/public
+RUN mkdir -p dist/backend/public
+COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./dist/backend/public
 
 # Switch to nodejs user
 USER nodejs

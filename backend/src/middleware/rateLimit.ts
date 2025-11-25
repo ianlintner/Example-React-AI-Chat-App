@@ -42,10 +42,9 @@ export const apiRateLimiter = rateLimit({
   //   sendCommand: (...args: Array<string>) => redisClient.sendCommand(args),
   //   prefix: 'rl:api:',
   // }),
-  keyGenerator: (req: Request) => {
-    // Use user ID if authenticated, otherwise use IP
-    return req.userId || req.ip || 'unknown';
-  },
+  // Using default IPv6-safe key generator (req.ip). Removed custom user/IP merge
+  // to eliminate IPv6 validation warnings. Can be reintroduced with helper once
+  // library types are confirmed.
   handler: (req, res) => {
     const identifier = req.userId ? `user ${req.userId}` : `IP ${req.ip}`;
     logger.warn({ identifier }, 'API rate limit exceeded');
@@ -79,10 +78,7 @@ export const chatRateLimiter = rateLimit({
   //   sendCommand: (...args: Array<string>) => redisClient.sendCommand(args),
   //   prefix: 'rl:chat:',
   // }),
-  keyGenerator: (req: Request) => {
-    // Must be authenticated to chat
-    return req.userId || req.ip || 'unknown';
-  },
+  // Default key generator (req.ip) used for IPv6 safety.
   handler: (req, res) => {
     const identifier = req.userId ? `user ${req.userId}` : `IP ${req.ip}`;
     logger.warn({ identifier }, 'Chat rate limit exceeded');
@@ -111,9 +107,7 @@ export const authRateLimiter = rateLimit({
   //   sendCommand: (...args: Array<string>) => redisClient.sendCommand(args),
   //   prefix: 'rl:auth:',
   // }),
-  keyGenerator: (req: Request) => {
-    return req.ip || 'unknown';
-  },
+  // Default key generator (req.ip) used for IPv6 safety.
   handler: (req, res) => {
     logger.warn({ ip: req.ip }, 'Auth rate limit exceeded');
     res.status(429).json({
@@ -138,9 +132,7 @@ export const socketConnectionLimiter = rateLimit({
   //   sendCommand: (...args: Array<string>) => redisClient.sendCommand(args),
   //   prefix: 'rl:socket:',
   // }),
-  keyGenerator: (req: Request) => {
-    return req.userId || req.ip || 'unknown';
-  },
+  // Default key generator (req.ip) used for IPv6 safety.
   handler: (req, res) => {
     logger.warn(
       { ip: req.ip, userId: req.userId },

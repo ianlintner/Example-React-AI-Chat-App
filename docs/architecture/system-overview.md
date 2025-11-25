@@ -215,8 +215,8 @@ This system demonstrates several key architectural principles:
 
 ## Related Documentation
 
-- **Getting Started**: [Setup and Configuration](../getting-started/)
-- **Component Details**: [Architecture Components](./components/)
-- **Operations**: [Monitoring and Observability](../operations/)
+- **Getting Started**: [Setup and Configuration](../getting-started/index.md)
+- **Component Details**: [Architecture Components](./components/agents.md)
+- **Operations**: [Monitoring and Observability](../operations/observability.md)
 - **API Reference**: [Endpoint Documentation](../reference/api-reference.md)
-- **Examples**: [Integration Examples](../examples/)
+- **Examples**: [Integration Examples](../examples/code-samples.md)

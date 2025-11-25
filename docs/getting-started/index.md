@@ -61,10 +61,10 @@ cd frontend && npm install && npm start
 
 After setup, explore these key areas:
 
-1. **System Architecture** - Understanding the [system design](../architecture/) and components
+1. **System Architecture** - Understanding the [system design](../architecture/index.md) and components
 2. **API Documentation** - Interactive Swagger UI at `http://localhost:5001/docs`
-3. **Operations** - [Monitoring and observability](../operations/) tools
-4. **Examples** - [Integration examples](../examples/) and code samples
+3. **Operations** - [Monitoring and observability](../operations/observability.md) tools
+4. **Examples** - [Integration examples](../examples/code-samples.md) and code samples
 
 ## Getting Help
 
@@ -74,8 +74,8 @@ After setup, explore these key areas:
 
 ## Related Documentation
 
-- [System Architecture](../architecture/)
-- [Operations Guide](../operations/)
+- [System Architecture](../architecture/index.md)
+- [Operations Guide](../operations/observability.md)
 - [API Reference](../reference/api-reference.md)
 - [Docker Setup Details](../reference/docker-setup.md)
 - [Code Quality Standards](../reference/code-quality.md)

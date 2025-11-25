@@ -353,4 +353,4 @@ For issues or questions:
 1. Check troubleshooting section above
 2. Review CSI driver logs: `kubectl logs -n kube-system -l app=secrets-store-csi-driver`
 3. Check Key Vault access logs in Azure Portal
-4. See [Azure deployment documentation](azure-deployment.md)
+4. See [Azure deployment documentation](../azure-deployment.md)

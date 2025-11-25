@@ -25,7 +25,7 @@ spec:
       automountServiceAccountToken: true
       containers:
         - name: chat-backend
-          image: us-central1-docker.pkg.dev/kame-457417/kame-house-images/chat-backend:latest
+          image: gabby.azurecr.io/chat-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

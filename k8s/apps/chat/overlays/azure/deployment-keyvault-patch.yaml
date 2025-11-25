@@ -23,11 +23,6 @@ spec:
                 secretKeyRef:
                   name: chat-secrets-from-keyvault
                   key: OPENAI_API_KEY
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets-from-keyvault
-                  key: REDIS_PASSWORD
       # Add volume for CSI driver
       volumes:
         - name: secrets-store

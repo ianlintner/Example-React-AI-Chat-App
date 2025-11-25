@@ -8,13 +8,22 @@ import type {
   AgentStatus,
 } from '../types';
 import { logger } from './logger';
+import authService from './authService';
 
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
 
-  connect(): Promise<void> {
+  async connect(): Promise<void> {
+    // Get authentication token
+    const token = await authService.getToken();
+
     return new Promise((resolve, reject) => {
+      if (!token) {
+        reject(new Error('No authentication token available'));
+        return;
+      }
+
       // Resolve API base URL (prefer env for tests and local dev)
       const isBrowser = typeof window !== 'undefined' && !!window.location;
       const apiBase =
@@ -37,6 +46,9 @@ class SocketService {
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
+        auth: {
+          token, // Send JWT token for authentication
+        },
       });
 
       this.socket.on('connect', () => {

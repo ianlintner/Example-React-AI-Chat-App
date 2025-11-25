@@ -27,6 +27,11 @@ COPY backend/package*.json ./
 # Install backend dependencies
 RUN npm ci
 
+# Copy shared types first
+COPY shared/ /shared/
+# Duplicate shared types into backend workspace to satisfy TS relative imports
+COPY shared/ /backend/shared/
+
 # Copy backend source
 COPY backend/ ./
 
@@ -53,8 +58,10 @@ COPY --from=backend-builder --chown=nodejs:nodejs /backend/dist ./dist
 COPY --from=backend-builder --chown=nodejs:nodejs /backend/node_modules ./node_modules
 COPY --from=backend-builder --chown=nodejs:nodejs /backend/package*.json ./
 
-# Copy frontend built application
-COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./public
+# Copy frontend built application into location expected by backend static server
+# Backend code serves from path: dist/backend/public
+RUN mkdir -p dist/backend/public
+COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./dist/backend/public
 
 # Switch to nodejs user
 USER nodejs
@@ -68,4 +75,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/backend/src/index.js"]

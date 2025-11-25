@@ -8,6 +8,10 @@ resources:
   - istio-virtualservice.yaml
   - configmap.yaml
   - redis.yaml
+  - secret-provider-class.yaml
+  - clusterissuer.yaml
+  - certificate.yaml
+  - authz-policy.yaml
 
 patches:
   - path: deployment-patch.yaml

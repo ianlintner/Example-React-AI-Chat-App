@@ -115,6 +115,8 @@ services:
     environment:
       - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
+      - SESSION_SECRET=${SESSION_SECRET:-your_session_secret_change_in_production}
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_change_in_production}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       - OTEL_RESOURCE_ATTRIBUTES=service.name=ai-goal-seeking-backend,service.version=1.0.0,deployment.environment=docker,sampling.enabled=true,sampling.rate=1.0
       - OTEL_SERVICE_NAME=ai-goal-seeking-backend

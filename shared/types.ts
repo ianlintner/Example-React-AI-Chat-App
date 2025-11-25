@@ -19,6 +19,10 @@ export interface User {
   email: string;
   name: string;
   createdAt: Date;
+  provider: 'github' | 'google';
+  providerId: string;
+  avatar?: string;
+  lastLoginAt?: Date;
 }
 
 export interface ChatRequest {

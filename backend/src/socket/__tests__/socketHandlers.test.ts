@@ -57,6 +57,12 @@ describe('Socket Handlers', () => {
       emit: jest.fn(),
       to: jest.fn().mockReturnThis(),
       on: jest.fn(),
+      handshake: {
+        auth: {
+          token: 'mock-jwt-token',
+        },
+        query: {},
+      },
     };
 
     // Mock io
@@ -64,6 +70,11 @@ describe('Socket Handlers', () => {
       on: jest.fn(),
       to: jest.fn().mockReturnThis(),
       emit: jest.fn(),
+      use: jest.fn((middleware) => {
+        // Authentication middleware - mock it to call next()
+        // In real tests, you could test auth logic here
+        return mockIo;
+      }),
     } as any;
 
     // Mock storage

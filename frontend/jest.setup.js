@@ -386,6 +386,38 @@ jest.mock('expo-web-browser', () => ({
 // Make mockOpenBrowserAsync available globally for tests
 global.mockOpenBrowserAsync = mockOpenBrowserAsync;
 
+// Mock expo-auth-session
+jest.mock('expo-auth-session', () => ({
+  makeRedirectUri: jest.fn(() => 'exp://localhost:19000/--/auth/callback'),
+  useAuthRequest: jest.fn(() => [
+    null, // request
+    null, // response
+    jest.fn(), // promptAsync
+  ]),
+  useAutoDiscovery: jest.fn(() => null),
+  fetchDiscoveryAsync: jest.fn().mockResolvedValue({
+    authorizationEndpoint: 'https://example.com/auth',
+    tokenEndpoint: 'https://example.com/token',
+    revocationEndpoint: 'https://example.com/revoke',
+  }),
+  AuthRequest: jest.fn(),
+  AuthSessionResult: {},
+  ResponseType: {
+    Code: 'code',
+    Token: 'token',
+  },
+  CodeChallengeMethod: {
+    S256: 'S256',
+    Plain: 'plain',
+  },
+  Prompt: {
+    None: 'none',
+    Login: 'login',
+    Consent: 'consent',
+    SelectAccount: 'select_account',
+  },
+}));
+
 // Mock expo-constants
 jest.mock('expo-constants', () => ({
   default: {
@@ -452,6 +484,15 @@ jest.mock('expo-haptics', () => ({
 // Mock expo-modules-core
 jest.mock('expo-modules-core', () => ({
   NativeModulesProxy: {},
+  requireNativeModule: jest.fn(() => ({
+    // Mock native module methods that expo-auth-session might need
+    getStateAsync: jest.fn().mockResolvedValue(null),
+    setStateAsync: jest.fn().mockResolvedValue(undefined),
+  })),
+  requireNativeViewManager: jest.fn(),
+  EventEmitter: jest.fn(),
+  Subscription: jest.fn(),
+  UnavailabilityError: class UnavailabilityError extends Error {},
 }));
 
 // Mock useColorScheme hook for React Native

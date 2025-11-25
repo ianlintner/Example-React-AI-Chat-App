@@ -43,7 +43,8 @@ const createTraceExporter = () => {
   // If explicit request for OTLP, prefer that first (AKS / Azure Monitor path)
   if (exporterPref === 'otlp') {
     const endpoint =
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces';
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+      'http://localhost:4318/v1/traces';
     console.log('🔗 Using OTLP HTTP trace exporter:', endpoint);
     return new OTLPTraceExporter({ url: endpoint });
   }
@@ -122,18 +123,26 @@ const createSDK = (): NodeSDK => {
     process.env.OTEL_SERVICE_NAME || 'ai-goal-seeking-backend';
   console.log('🔍 Creating Node SDK with service name:', serviceName);
   // Determine sampling ratio: production defaults to 0.1 unless overridden
-  const ratioStr = process.env.OTEL_TRACES_SAMPLER_RATIO || (process.env.NODE_ENV === 'production' ? '0.1' : '1');
+  const ratioStr =
+    process.env.OTEL_TRACES_SAMPLER_RATIO ||
+    (process.env.NODE_ENV === 'production' ? '0.1' : '1');
   let ratio = parseFloat(ratioStr);
   if (Number.isNaN(ratio) || ratio <= 0 || ratio > 1) {
-    console.warn(`⚠️ Invalid OTEL_TRACES_SAMPLER_RATIO='${ratioStr}', falling back to 1.0`);
+    console.warn(
+      `⚠️ Invalid OTEL_TRACES_SAMPLER_RATIO='${ratioStr}', falling back to 1.0`,
+    );
     ratio = 1;
   }
-  console.log(`🔍 Configuring ParentBased TraceIdRatio sampler (ratio=${ratio})`);
+  console.log(
+    `🔍 Configuring ParentBased TraceIdRatio sampler (ratio=${ratio})`,
+  );
 
   return new NodeSDK({
     serviceName: serviceName,
     // ParentBased ensures child spans follow parent sampling decision
-    sampler: new ParentBasedSampler({ root: new TraceIdRatioBasedSampler(ratio) }),
+    sampler: new ParentBasedSampler({
+      root: new TraceIdRatioBasedSampler(ratio),
+    }),
     spanProcessors: createSpanProcessors(),
     instrumentations: [
       getNodeAutoInstrumentations({
@@ -171,8 +180,15 @@ export const initializeTracing = (): void => {
     console.log('🔍 Starting OpenTelemetry SDK initialization...');
     sdk.start();
     console.log('✅ OpenTelemetry tracing initialized successfully');
-    console.log('🔍 Active exporter preference:', (process.env.TRACING_EXPORTER || '').toLowerCase() || '(default logic)');
-    console.log('🔍 Sampling ratio:', process.env.OTEL_TRACES_SAMPLER_RATIO || (process.env.NODE_ENV === 'production' ? '0.1' : '1'));
+    console.log(
+      '🔍 Active exporter preference:',
+      (process.env.TRACING_EXPORTER || '').toLowerCase() || '(default logic)',
+    );
+    console.log(
+      '🔍 Sampling ratio:',
+      process.env.OTEL_TRACES_SAMPLER_RATIO ||
+        (process.env.NODE_ENV === 'production' ? '0.1' : '1'),
+    );
 
     // Create a test span to verify tracing is working
     createTestSpan();

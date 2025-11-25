@@ -8,3 +8,5 @@ resources:
   - redis-secret.yaml
   - redis-service.yaml
   - secretproviderclass.yaml
+  - istio-gateway.yaml
+  - istio-virtualservice.yaml

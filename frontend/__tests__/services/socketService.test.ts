@@ -1,6 +1,16 @@
 import { socketService } from '../../services/socketService';
 import { io } from 'socket.io-client';
 
+// Mock authService with default export
+jest.mock('../../services/authService', () => ({
+  __esModule: true,
+  default: {
+    getToken: jest.fn().mockResolvedValue('mock-jwt-token'),
+    getUser: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com' }),
+    isAuthenticated: jest.fn().mockResolvedValue(true),
+  },
+}));
+
 // Mock socket.io-client
 jest.mock('socket.io-client');
 
@@ -84,9 +94,14 @@ describe('SocketService', () => {
   });
 
   describe('disconnect', () => {
-    it('should disconnect socket when connected', () => {
+    it('should disconnect socket when connected', async () => {
       // First connect
-      socketService.connect();
+      mockSocket.on.mockImplementation((event: string, callback: any) => {
+        if (event === 'connect') {
+          setTimeout(() => callback(), 0);
+        }
+      });
+      await socketService.connect();
 
       socketService.disconnect();
 

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import session from 'express-session';
 import { initializeTracing } from './tracing/tracer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -12,10 +13,15 @@ import validationRoutes from './routes/validation';
 import agentTestBenchRoutes from './routes/agentTestBench';
 import { createSwaggerSpec, registerSwaggerRoutes } from './routes/swaggerDocs';
 import messageQueueRoutes from './routes/messageQueue';
+import authRoutes from './routes/auth';
 import { setupSocketHandlers } from './socket/socketHandlers';
 import { httpMetricsMiddleware, register } from './metrics/prometheus';
 import { createQueueService } from './messageQueue/queueService';
 import { getLogger, patchConsole } from './logger';
+import { authenticateToken } from './middleware/auth';
+import { apiRateLimiter, chatRateLimiter } from './middleware/rateLimit';
+import { initializePassport } from './services/authService';
+import passport from './services/authService';
 
 dotenv.config();
 patchConsole();
@@ -23,6 +29,9 @@ const log = getLogger(false);
 
 // Initialize OpenTelemetry tracing
 initializeTracing();
+
+// Initialize Passport authentication
+initializePassport();
 
 // Generate test traces only in non-production when explicitly enabled
 if (
@@ -76,16 +85,41 @@ app.use(
 );
 app.use(express.json());
 
+// Session middleware (for Passport OAuth)
+app.use(
+  session({
+    secret:
+      process.env.SESSION_SECRET || 'your_session_secret_change_in_production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }),
+);
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Prometheus metrics middleware
 app.use(httpMetricsMiddleware);
 
-// Routes
-app.use('/api/chat', chatRoutes);
-app.use('/api/conversations', conversationRoutes);
-app.use('/api/reactions', reactionRoutes);
-app.use('/api/validation', validationRoutes);
-app.use('/api/test-bench', agentTestBenchRoutes);
-app.use('/api/queue', messageQueueRoutes);
+// Global API rate limiter (applies to all routes)
+app.use(apiRateLimiter);
+
+// Routes - Authentication (public)
+app.use('/api/auth', authRoutes);
+
+// Protected routes - require authentication
+app.use('/api/chat', authenticateToken, chatRateLimiter, chatRoutes);
+app.use('/api/conversations', authenticateToken, conversationRoutes);
+app.use('/api/reactions', authenticateToken, reactionRoutes);
+app.use('/api/validation', authenticateToken, validationRoutes);
+app.use('/api/test-bench', authenticateToken, agentTestBenchRoutes);
+app.use('/api/queue', authenticateToken, messageQueueRoutes);
 /**
  * Swagger UI and JSON
  * UI:   /docs

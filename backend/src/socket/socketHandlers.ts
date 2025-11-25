@@ -1,11 +1,13 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
 import { GoalAction } from '../agents/goalSeekingSystem';
 import { AgentType } from '../agents/types';
 import { metrics } from '../metrics/prometheus';
+import userStorage from '../storage/userStorage';
 import {
   createConversationSpan,
   createGoalSeekingSpan,
@@ -14,6 +16,12 @@ import {
   endSpan,
 } from '../tracing/tracer';
 import { tracingContextManager } from '../tracing/contextManager';
+
+// Extend socket with user information
+interface AuthenticatedSocket extends Socket {
+  userId?: string;
+  userEmail?: string;
+}
 
 // Helper function to generate conversation title
 const generateConversationTitle = (message: string): string => {
@@ -153,14 +161,71 @@ export const setupSocketHandlers = (
     process.env.OPENAI_API_KEY ? 'Present' : 'Missing',
   );
 
-  io.on('connection', socket => {
-    console.log(`Client connected: ${socket.id}`);
+  // Authentication middleware for Socket.IO
+  io.use(async (socket: AuthenticatedSocket, next) => {
+    try {
+      const token = socket.handshake.auth.token || socket.handshake.query.token;
+
+      if (!token) {
+        console.warn(
+          `Socket connection rejected: No token provided from ${socket.handshake.address}`,
+        );
+        return next(new Error('Authentication required'));
+      }
+
+      const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';
+
+      // Verify JWT token
+      const decoded = jwt.verify(token, jwtSecret) as {
+        userId: string;
+        email: string;
+      };
+
+      // Verify user exists in storage
+      const user = await userStorage.getUser(decoded.userId);
+
+      if (!user) {
+        console.warn(
+          `Socket connection rejected: User ${decoded.userId} not found`,
+        );
+        return next(new Error('User not found'));
+      }
+
+      // Attach user info to socket
+      socket.userId = user.id;
+      socket.userEmail = user.email;
+
+      console.log(`Socket authenticated for user ${user.email} (${user.id})`);
+      next();
+    } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        console.warn(
+          `Socket connection rejected: Invalid JWT - ${error.message}`,
+        );
+        return next(new Error('Invalid token'));
+      }
+
+      if (error instanceof jwt.TokenExpiredError) {
+        console.warn('Socket connection rejected: Token expired');
+        return next(new Error('Token expired'));
+      }
+
+      console.error('Socket authentication error:', error);
+      return next(new Error('Authentication failed'));
+    }
+  });
+
+  io.on('connection', (socket: AuthenticatedSocket) => {
+    const userId = socket.userId || socket.id;
+    console.log(
+      `Client connected: ${socket.id} (User: ${socket.userEmail || 'Unknown'})`,
+    );
 
     // Track WebSocket connection metrics
     metrics.activeConnections.inc();
 
-    // Initialize user in goal-seeking system immediately
-    agentService.initializeUserGoals(socket.id);
+    // Initialize user in goal-seeking system with actual user ID
+    agentService.initializeUserGoals(userId);
 
     // Enhanced agent status with proactive context polling
     const sendAgentStatus = (): void => {

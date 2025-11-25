@@ -27,6 +27,9 @@ COPY backend/package*.json ./
 # Install backend dependencies
 RUN npm ci
 
+# Copy shared types first
+COPY shared/ /shared/
+
 # Copy backend source
 COPY backend/ ./
 
@@ -68,4 +71,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/backend/src/index.js"]

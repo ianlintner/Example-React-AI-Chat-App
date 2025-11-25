@@ -18,10 +18,6 @@ patches:
     target:
       kind: Deployment
       name: chat-backend
-  - path: deployment-keyvault-patch.yaml
-    target:
-      kind: Deployment
-      name: chat-backend
   - path: service-patch.yaml
     target:
       kind: Service

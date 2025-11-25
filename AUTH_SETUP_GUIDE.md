@@ -302,6 +302,16 @@ FRONTEND_URL=https://your-domain.com
 REDIS_URL=redis://redis:6379
 ```
 
+**Important:** The OAuth callback URLs must match exactly what you configure in your OAuth provider settings:
+
+- **GitHub:** Settings → Developer settings → OAuth Apps → Your App → Authorization callback URL
+- **Google:** Google Cloud Console → APIs & Services → Credentials → Your OAuth 2.0 Client → Authorized redirect URIs
+
+**Common Issue:** If callbacks go to `localhost:5001` in production, verify:
+1. Environment variables are set correctly in your deployment (Kubernetes ConfigMap, Docker Compose, etc.)
+2. OAuth provider settings use the production domain (not localhost)
+3. The backend is reading the correct environment variables (check logs on startup)
+
 ### Generating Secrets
 
 ```bash

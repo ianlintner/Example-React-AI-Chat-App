@@ -208,6 +208,65 @@ CI/Quality
 └── docker-compose.yml       # Monitoring stack (Prometheus, Grafana, Jaeger)
 ```
 
+## Frontend Production Assets (Static Serving)
+
+In production the backend Express server serves the compiled web build of the Expo/React Native app as a Single Page Application (SPA).
+
+### Build Process (Combined Image)
+The root `Dockerfile` performs a multi‑stage build:
+
+1. Frontend stage runs `npm run build` inside `frontend/` which executes:
+  ```bash
+  expo export --platform web --output-dir dist
+  ```
+  producing static assets (HTML, JS, CSS) under `frontend/dist`.
+2. Backend stage compiles TypeScript sources under `backend/`.
+3. Production stage copies:
+  - Backend compiled code to `./dist`
+  - Frontend web build to `./dist/backend/public` (path expected by server)
+
+### Runtime Resolution
+The server resolves the static directory using:
+```ts
+const distPublicPath = path.join(__dirname, '..', 'public'); // dist/backend/public
+const rootPublicPath = path.join(process.cwd(), 'public');   // fallback
+```
+If the primary path is missing (older image layouts), it falls back to `/app/public` automatically.
+
+### Common Deployment Issue: “Frontend files not available”
+This message occurs when `index.html` cannot be found at either resolved path. Fixes:
+1. Ensure `frontend/dist` is produced (run `npm run build` in `frontend`).
+2. Rebuild the combined image so that assets are copied into `dist/backend/public`.
+3. Verify the container has `dist/backend/public/index.html`:
+  ```bash
+  docker run --rm <image> ls dist/backend/public | grep index.html
+  ```
+
+### Local Verification (Without Docker)
+You can mimic production static serving locally:
+```bash
+cd frontend
+npm run build
+cp -R dist ../backend/dist/backend/public
+cd ../backend
+npm run dev
+open http://localhost:5001
+```
+
+### Separate Frontend Container?
+Not required. The backend already handles:
+* Static file delivery (`express.static`)
+* SPA fallback routing (serves `index.html` for non‑API routes)
+* Health endpoints unaffected by asset presence
+
+Use a standalone frontend (nginx) only if you need distinct scaling, caching policies, or specialized CDN configuration.
+
+### Environment Variables for Web Build
+Set `EXPO_PUBLIC_API_URL` in `frontend/.env` (or build environment) to point to the backend API when deploying separately. For combined image builds the default relative API paths work.
+
+---
+If you encounter further asset resolution issues, inspect logs for `Static asset directory resolved` entries which show the chosen path.
+
 ## Documentation
 
 📚 **Live Documentation:** http://example-docs.hugecat.net/

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import session from 'express-session';
 import { initializeTracing } from './tracing/tracer';
 import { createServer } from 'http';
@@ -212,9 +213,20 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
-// Serve static frontend files
-const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
+// Serve static frontend files with resilient path resolution
+// Primary expected location after build: dist/backend/public (relative to compiled __dirname)
+const distPublicPath = path.join(__dirname, '..', 'public');
+// Fallback location when assets copied to root (e.g., /app/public in container)
+const rootPublicPath = path.join(process.cwd(), 'public');
+// Final resolution: prefer dist path, else root path, else dist path (will trigger 500 on access)
+const publicPathResolved = fs.existsSync(distPublicPath)
+  ? distPublicPath
+  : fs.existsSync(rootPublicPath)
+    ? rootPublicPath
+    : distPublicPath;
+
+log.info({ publicPathResolved }, '🔧 Static asset directory resolved');
+app.use(express.static(publicPathResolved));
 
 // SPA fallback - serve index.html for all non-API routes
 app.use((req, res, next) => {
@@ -227,10 +239,14 @@ app.use((req, res, next) => {
   ) {
     return next();
   }
-  // Serve index.html for all other routes (SPA fallback)
-  res.sendFile(path.join(publicPath, 'index.html'), err => {
+  const indexPath = path.join(publicPathResolved, 'index.html');
+  if (!fs.existsSync(indexPath)) {
+    log.error({ indexPath }, 'Frontend index.html missing');
+    return res.status(500).send('Frontend files not available');
+  }
+  res.sendFile(indexPath, err => {
     if (err) {
-      log.error({ err, path: publicPath }, 'Failed to serve index.html');
+      log.error({ err, indexPath }, 'Failed to serve index.html');
       res.status(500).send('Frontend files not available');
     }
   });

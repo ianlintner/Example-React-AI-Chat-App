@@ -29,6 +29,8 @@ RUN npm ci
 
 # Copy shared types first
 COPY shared/ /shared/
+# Duplicate shared types into backend workspace to satisfy TS relative imports
+COPY shared/ /backend/shared/
 
 # Copy backend source
 COPY backend/ ./

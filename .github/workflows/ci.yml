@@ -280,14 +280,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Azure ACR login
-        if: ${{ secrets.REGISTRY_LOGIN_SERVER != '' }}
+        if: env.REGISTRY_LOGIN_SERVER != ''
+        env:
+          REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
         uses: azure/docker-login@v2
         with:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Push image to ACR
-        if: ${{ secrets.REGISTRY_LOGIN_SERVER != '' }}
+        if: env.REGISTRY_LOGIN_SERVER != ''
+        env:
+          REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
         run: |
           docker tag ianlintner068/example-react-ai-chat-app:latest ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest

@@ -12,4 +12,8 @@ data:
   REDIS_HOST: 'redis-service'
   REDIS_PORT: '6379'
   API_URL: 'http://chat.cat-herding.net:5001'
+  # OAuth Configuration
+  GITHUB_CALLBACK_URL: 'https://chat.hugecat.net/api/auth/github/callback'
+  GOOGLE_CALLBACK_URL: 'https://chat.hugecat.net/api/auth/google/callback'
+  FRONTEND_URL: 'https://chat.hugecat.net'
   # Add other non-sensitive configuration here

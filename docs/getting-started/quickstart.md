@@ -191,6 +191,6 @@ If you encounter issues during quickstart:
 
 ### 🏛️ System Architecture
 To understand the system design in depth:
-**→ [Architecture Overview](../architecture/)**
+**→ [Architecture Overview](../architecture/index.md)**
 
 ###

@@ -388,7 +388,7 @@ If you encounter problems during setup:
 
 ### 🏗️ Architecture Understanding
 To learn about system design and components:
-**→ [Architecture Overview](../architecture/)**
+**→ [Architecture Overview](../architecture/index.md)**
 
 ### 📊 Monitoring & Observability
 To set up advanced monitoring:
@@ -400,4 +400,4 @@ To set up testing and code quality tools:
 
 ---
 
-**Need Help?** Check our [Troubleshooting Guide](./troubleshooting.md) or review the [Architecture Documentation](../architecture/) for system understanding.
+**Need Help?** Check our [Troubleshooting Guide](./troubleshooting.md) or review the [Architecture Documentation](../architecture/index.md) for system understanding.

@@ -20,7 +20,7 @@ Detailed documentation for each system component:
 
 ## Technical Decisions
 
-- **[Architecture Decision Records](./decisions/)** - Documented architectural decisions and their rationale
+- **[Architecture Decision Records](./decisions/README.md)** - Documented architectural decisions and their rationale
 
 ## System Overview Diagram
 
@@ -84,6 +84,6 @@ When contributing to architecture documentation, please use the provided templat
 
 ## Related Documentation
 
-- [Getting Started Guide](../getting-started/)
-- [Operations & Monitoring](../operations/)
+- [Getting Started Guide](../getting-started/index.md)
+- [Operations & Monitoring](../operations/observability.md)
 - [API Reference](../reference/api-reference.md)

@@ -224,12 +224,12 @@ For security concerns or questions:
 
 1. Review this document
 2. Run `./scripts/check-secrets.sh` for diagnostics
-3. Check [Azure Key Vault Setup Guide](./deployment/azure-keyvault-setup.md)
+3. Check [Azure Key Vault Setup Guide](../deployment/azure-keyvault-setup.md)
 4. Contact security team if secrets were exposed
 
 ## References
 
-- [Azure Key Vault Integration](./deployment/azure-keyvault-setup.md)
+- [Azure Key Vault Integration](../deployment/azure-keyvault-setup.md)
 - [GitHub Secret Scanning](https://docs.github.com/en/code-security/secret-scanning)
 - [Git Filter-Branch](https://git-scm.com/docs/git-filter-branch)
 - [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) (alternative to filter-branch)

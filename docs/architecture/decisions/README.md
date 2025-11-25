@@ -275,7 +275,7 @@ if read performance becomes a bottleneck (measured by >200ms p95 latency).
 
 - **[ADR Template](../../_templates/adr-template.md)** - Standard template for creating new ADRs
 - **[Architecture Overview](../system-overview.md)** - High-level system architecture
-- **[Component Documentation](../components/)** - Detailed component architecture
+- **[Component Documentation](../components/agents.md)** - Detailed component architecture
 - **[Development Guidelines](../../reference/code-quality.md)** - Development standards and practices
 
 ## Resources

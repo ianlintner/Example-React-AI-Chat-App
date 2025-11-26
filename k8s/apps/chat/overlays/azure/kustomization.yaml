@@ -27,7 +27,6 @@ patches:
       kind: Gateway
       name: chat-gateway
   - path: secrets-patch.yaml
-
 # Azure-specific configuration
 # This overlay adapts the base configuration for Azure AKS with Istio
 # Uses AKS-managed Istio service mesh (configured via Azure portal)

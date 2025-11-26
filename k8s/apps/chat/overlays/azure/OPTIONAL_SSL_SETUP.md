@@ -62,17 +62,17 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - dns01:
-        azureDNS:
-          subscriptionID: YOUR_SUBSCRIPTION_ID
-          resourceGroupName: YOUR_DNS_RG
-          hostedZoneName: cat-herding.net
-          environment: AzurePublicCloud
-          clientID: YOUR_CLIENT_ID
-          clientSecretSecretRef:
-            name: azuredns-config
-            key: client-secret
-          tenantID: YOUR_TENANT_ID
+      - dns01:
+          azureDNS:
+            subscriptionID: YOUR_SUBSCRIPTION_ID
+            resourceGroupName: YOUR_DNS_RG
+            hostedZoneName: cat-herding.net
+            environment: AzurePublicCloud
+            clientID: YOUR_CLIENT_ID
+            clientSecretSecretRef:
+              name: azuredns-config
+              key: client-secret
+            tenantID: YOUR_TENANT_ID
 ```
 
 ### 4. Certificate Resource
@@ -89,7 +89,7 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-  - example-chat.cat-herding.net
+    - example-chat.cat-herding.net
 ```
 
 ### 5. Copy Secret to Istio Namespace
@@ -109,7 +109,7 @@ The Gateway is already configured to use TLS. Update the `credentialName` in `ga
 ```yaml
 tls:
   mode: SIMPLE
-  credentialName: example-chat-tls  # Your TLS secret name
+  credentialName: example-chat-tls # Your TLS secret name
 ```
 
 ## DNS Provider Options
@@ -118,36 +118,36 @@ tls:
 
 ```yaml
 solvers:
-- dns01:
-    cloudflare:
-      apiTokenSecretRef:
-        name: cloudflare-api-token
-        key: api-token
+  - dns01:
+      cloudflare:
+        apiTokenSecretRef:
+          name: cloudflare-api-token
+          key: api-token
 ```
 
 ### AWS Route53
 
 ```yaml
 solvers:
-- dns01:
-    route53:
-      region: us-east-1
-      accessKeyID: YOUR_ACCESS_KEY_ID
-      secretAccessKeySecretRef:
-        name: route53-credentials
-        key: secret-access-key
+  - dns01:
+      route53:
+        region: us-east-1
+        accessKeyID: YOUR_ACCESS_KEY_ID
+        secretAccessKeySecretRef:
+          name: route53-credentials
+          key: secret-access-key
 ```
 
 ### Google Cloud DNS
 
 ```yaml
 solvers:
-- dns01:
-    cloudDNS:
-      project: your-gcp-project
-      serviceAccountSecretRef:
-        name: clouddns-dns01-solver-sa
-        key: key.json
+  - dns01:
+      cloudDNS:
+        project: your-gcp-project
+        serviceAccountSecretRef:
+          name: clouddns-dns01-solver-sa
+          key: key.json
 ```
 
 ## Verification

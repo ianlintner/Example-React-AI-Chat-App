@@ -9,11 +9,13 @@ The application now requires users to authenticate via GitHub or Google OAuth be
 ## Rate Limits
 
 ### Authenticated Users
+
 - **Chat Messages**: 50 messages per hour
 - **API Requests**: 500 requests per hour
 - **Socket Connections**: 20 connections per 5 minutes
 
 ### Unauthenticated (Auth Endpoints Only)
+
 - **Authentication Attempts**: 10 requests per 15 minutes per IP
 
 ## Setup Instructions
@@ -21,6 +23,7 @@ The application now requires users to authenticate via GitHub or Google OAuth be
 ### 1. Create OAuth Applications
 
 #### GitHub OAuth App
+
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Click "New OAuth App"
 3. Fill in the details:
@@ -31,6 +34,7 @@ The application now requires users to authenticate via GitHub or Google OAuth be
 5. Copy the **Client ID** and **Client Secret**
 
 #### Google OAuth App
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
 3. Navigate to "APIs & Services" > "Credentials"
@@ -74,11 +78,13 @@ FRONTEND_URL=http://localhost:19006
 Redis is required for user storage, session management, and rate limiting.
 
 #### Using Docker Compose (Recommended)
+
 ```bash
 docker-compose up redis -d
 ```
 
 #### Using Local Redis
+
 ```bash
 # macOS (Homebrew)
 brew install redis
@@ -92,6 +98,7 @@ sudo systemctl start redis-server
 ### 4. Start the Application
 
 #### Backend
+
 ```bash
 cd backend
 npm install  # Dependencies already installed
@@ -101,6 +108,7 @@ npm run dev
 The backend will start on `http://localhost:5001`
 
 #### Frontend
+
 ```bash
 cd frontend
 npm install  # Dependencies already installed
@@ -108,6 +116,7 @@ npm start
 ```
 
 The frontend will start via Expo. You can:
+
 - Press `i` for iOS Simulator
 - Press `a` for Android Emulator
 - Scan QR code with Expo Go app on your device
@@ -244,16 +253,19 @@ websocket_connections_active
 ## Troubleshooting
 
 ### "Authentication required" error on socket connection
+
 - Ensure JWT token is being sent with socket connection
 - Check that the token hasn't expired (7-day expiry by default)
 - Verify Redis is running and accessible
 
 ### "No authentication token available" when connecting socket
+
 - User may not be logged in
 - Token may have been cleared from AsyncStorage
 - Try logging out and logging in again
 
 ### Rate limit errors (429 Too Many Requests)
+
 - You've exceeded the hourly limit
 - Wait for the rate limit window to reset (shown in `Retry-After` header)
 - For development, you can restart Redis to clear rate limit counters:
@@ -262,12 +274,14 @@ websocket_connections_active
   ```
 
 ### OAuth callback not working
+
 - Verify OAuth app callback URLs match exactly
 - Check that CLIENT_ID and CLIENT_SECRET are correct
 - Ensure backend is accessible at the callback URL
 - For mobile: ensure the `aichat://` scheme is registered
 
 ### Redis connection errors
+
 - Ensure Redis is running: `docker-compose ps redis`
 - Check REDIS_URL in backend/.env
 - Try connecting manually: `redis-cli ping` (should return PONG)
@@ -308,6 +322,7 @@ REDIS_URL=redis://redis:6379
 - **Google:** Google Cloud Console → APIs & Services → Credentials → Your OAuth 2.0 Client → Authorized redirect URIs
 
 **Common Issue:** If callbacks go to `localhost:5001` in production, verify:
+
 1. Environment variables are set correctly in your deployment (Kubernetes ConfigMap, Docker Compose, etc.)
 2. OAuth provider settings use the production domain (not localhost)
 3. The backend is reading the correct environment variables (check logs on startup)
@@ -326,14 +341,14 @@ openssl rand -hex 64
 
 ### Authentication Endpoints
 
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/api/auth/github` | GET | Initiate GitHub OAuth | No |
-| `/api/auth/github/callback` | GET | GitHub OAuth callback | No |
-| `/api/auth/google` | GET | Initiate Google OAuth | No |
-| `/api/auth/google/callback` | GET | Google OAuth callback | No |
-| `/api/auth/me` | GET | Get current user profile | Yes |
-| `/api/auth/logout` | POST | Logout user | No |
+| Endpoint                    | Method | Description              | Auth Required |
+| --------------------------- | ------ | ------------------------ | ------------- |
+| `/api/auth/github`          | GET    | Initiate GitHub OAuth    | No            |
+| `/api/auth/github/callback` | GET    | GitHub OAuth callback    | No            |
+| `/api/auth/google`          | GET    | Initiate Google OAuth    | No            |
+| `/api/auth/google/callback` | GET    | Google OAuth callback    | No            |
+| `/api/auth/me`              | GET    | Get current user profile | Yes           |
+| `/api/auth/logout`          | POST   | Logout user              | No            |
 
 ### Protected Endpoints
 
@@ -353,8 +368,8 @@ Socket.io connections require authentication:
 ```javascript
 const socket = io('http://localhost:5001', {
   auth: {
-    token: 'your-jwt-token-here'
-  }
+    token: 'your-jwt-token-here',
+  },
 });
 ```
 

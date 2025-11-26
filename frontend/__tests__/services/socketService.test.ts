@@ -6,7 +6,9 @@ jest.mock('../../services/authService', () => ({
   __esModule: true,
   default: {
     getToken: jest.fn().mockResolvedValue('mock-jwt-token'),
-    getUser: jest.fn().mockResolvedValue({ id: '1', email: 'test@example.com' }),
+    getUser: jest
+      .fn()
+      .mockResolvedValue({ id: '1', email: 'test@example.com' }),
     isAuthenticated: jest.fn().mockResolvedValue(true),
   },
 }));

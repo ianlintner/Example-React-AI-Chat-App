@@ -193,12 +193,12 @@ Edit `istio-gateway.yaml`:
 ```yaml
 spec:
   servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "chat.yourcompany.com" # Your domain instead of "*"
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'chat.yourcompany.com' # Your domain instead of "*"
 ```
 
 Update `istio-virtualservice.yaml`:
@@ -206,9 +206,9 @@ Update `istio-virtualservice.yaml`:
 ```yaml
 spec:
   hosts:
-  - "chat.yourcompany.com" # Your domain instead of "*"
+    - 'chat.yourcompany.com' # Your domain instead of "*"
   gateways:
-  - chat-gateway-external
+    - chat-gateway-external
 ```
 
 ### Enable SSL/TLS (Optional)
@@ -221,6 +221,7 @@ spec:
 - Copying secrets to Istio namespace
 
 The Gateway is already configured to:
+
 - Serve HTTPS on port 443 (when TLS secret is provided)
 - Redirect HTTP (port 80) to HTTPS automatically
 - Use domain: `example-chat.cat-herding.net`

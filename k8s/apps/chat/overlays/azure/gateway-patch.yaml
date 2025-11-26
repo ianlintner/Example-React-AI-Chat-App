@@ -6,33 +6,33 @@ spec:
   selector:
     istio: aks-istio-ingressgateway-external
   servers:
-  # HTTPS with TLS certificate for chat.hugecat.net
-  - port:
-      number: 443
-      name: https-chat-hugecat
-      protocol: HTTPS
-    tls:
-      mode: SIMPLE
-      credentialName: chat-hugecat-tls-cert
-    hosts:
-    - "chat.hugecat.net"
-  # HTTPS with TLS certificate for cat-herding.net
-  - port:
-      number: 443
-      name: https-cat-herding
-      protocol: HTTPS
-    tls:
-      mode: SIMPLE
-      credentialName: cat-herding-tls
-    hosts:
-    - "example-chat.cat-herding.net"
-  # HTTP redirect to HTTPS
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "chat.hugecat.net"
-    - "example-chat.cat-herding.net"
-    tls:
-      httpsRedirect: true
+    # HTTPS with TLS certificate for chat.hugecat.net
+    - port:
+        number: 443
+        name: https-chat-hugecat
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: chat-hugecat-tls-cert
+      hosts:
+        - 'chat.hugecat.net'
+    # HTTPS with TLS certificate for cat-herding.net
+    - port:
+        number: 443
+        name: https-cat-herding
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: cat-herding-tls
+      hosts:
+        - 'example-chat.cat-herding.net'
+    # HTTP redirect to HTTPS
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'chat.hugecat.net'
+        - 'example-chat.cat-herding.net'
+      tls:
+        httpsRedirect: true

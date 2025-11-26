@@ -68,8 +68,8 @@ metadata:
   labels:
     app: otel-collector
 stringData:
-  connection-string: "REPLACE_ME_WITH_INSTRUMENTATION_KEY"
-  otlp-endpoint: "https://westus-0.in.applicationinsights.azure.com/v1/traces"
+  connection-string: 'REPLACE_ME_WITH_INSTRUMENTATION_KEY'
+  otlp-endpoint: 'https://westus-0.in.applicationinsights.azure.com/v1/traces'
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -91,7 +91,7 @@ spec:
         - name: otel-collector
           image: otel/opentelemetry-collector:latest
           imagePullPolicy: IfNotPresent
-          args: ["--config=/conf/otel-collector-config.yaml"]
+          args: ['--config=/conf/otel-collector-config.yaml']
           env:
             - name: AZURE_MONITOR_CONNECTION_STRING
               valueFrom:

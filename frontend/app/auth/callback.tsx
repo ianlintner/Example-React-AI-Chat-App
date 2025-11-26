@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../../components/AuthProvider';
+import authService from '../../services/authService';
 
 export default function CallbackScreen() {
   const { refreshAuth } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   useEffect(() => {
     handleCallback();
@@ -14,8 +16,31 @@ export default function CallbackScreen() {
 
   const handleCallback = async () => {
     try {
-      // The token should already be stored by authService
-      // Just refresh the auth state and navigate
+      // Extract token from URL query parameters
+      const token = params.token as string;
+      
+      if (!token) {
+        console.error('No token found in callback URL');
+        router.replace('/auth/login');
+        return;
+      }
+
+      // Store the token
+      await authService.setToken(token);
+
+      // Fetch user data with the token
+      const user = await authService.fetchCurrentUser(token);
+      
+      if (!user) {
+        console.error('Failed to fetch user data');
+        router.replace('/auth/login');
+        return;
+      }
+
+      // Store user data
+      await authService.setUser(user);
+
+      // Refresh auth state in context
       await refreshAuth();
 
       // Small delay to ensure state is updated

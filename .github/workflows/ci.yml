@@ -109,7 +109,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
           NODE_ENV: test
         run: |
-          nohup node dist/index.js > server.log 2>&1 &
+          nohup node dist/backend/src/index.js > server.log 2>&1 &
           SERVER_PID=$!
           for i in {1..30}; do
             if curl -sf http://localhost:5001/docs/json >/dev/null; then break; fi
@@ -121,7 +121,7 @@ jobs:
             echo "=== Server log ===" && cat server.log
             exit 1
           fi
-          pkill -f dist/index.js || true
+          pkill -f dist/backend/src/index.js || true
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:

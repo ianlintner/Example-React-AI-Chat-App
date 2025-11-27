@@ -7,6 +7,7 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 ### 1. New Istio Configuration Files
 
 #### `istio-gateway.yaml`
+
 - **Purpose**: Defines the Istio Gateway for external traffic
 - **Selector**: `istio: aks-istio-ingressgateway-external` (AKS-managed Istio)
 - **Protocol**: HTTP on port 80 (HTTPS configuration commented out)
@@ -14,6 +15,7 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 - **TLS Ready**: Includes commented configuration for HTTPS/TLS
 
 #### `istio-virtualservice.yaml`
+
 - **Purpose**: Defines traffic routing rules for the chat application
 - **Key Features**:
   - WebSocket support with `websocketUpgrade: true` for Socket.io
@@ -30,14 +32,18 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 ### 2. Updated Configuration Files
 
 #### `kustomization.yaml`
+
 **Changed**:
+
 - Removed: `- ingress.yaml`
 - Added: `- istio-gateway.yaml`
 - Added: `- istio-virtualservice.yaml`
 - Updated comments to reflect Istio usage
 
 #### `README.md`
+
 **Updated Sections**:
+
 - Directory structure
 - Component descriptions
 - Domain configuration instructions
@@ -47,7 +53,9 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 - References
 
 #### `GETTING_STARTED.md`
+
 **Updated**:
+
 - Prerequisites (removed Helm, added Istio requirement)
 - Domain setup instructions
 - What gets created section
@@ -57,12 +65,14 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 ### 3. Archived Files
 
 #### `ingress.yaml.bak`
+
 - Original NGINX Ingress configuration
 - Kept as backup for reference
 
 ## Istio vs NGINX Comparison
 
 ### NGINX Ingress (Previous)
+
 - ✅ Simple to set up
 - ✅ Well-documented
 - ❌ Requires separate installation
@@ -71,6 +81,7 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 - ❌ Annotations-based configuration
 
 ### Istio Service Mesh (Current)
+
 - ✅ Managed by AKS (no installation needed when configured in portal)
 - ✅ Advanced traffic management
 - ✅ Built-in observability (metrics, traces)
@@ -82,7 +93,9 @@ This document describes the migration from NGINX Ingress Controller to AKS-manag
 ## Deployment Instructions
 
 ### Prerequisites
+
 Ensure Istio is enabled on your AKS cluster via Azure Portal:
+
 1. Navigate to your AKS cluster
 2. Go to Service mesh
 3. Enable Istio add-on
@@ -143,6 +156,7 @@ curl -i -N \
 Istio provides enhanced observability out of the box:
 
 ### Metrics
+
 ```bash
 # View Istio metrics
 kubectl exec -n aks-istio-system <istio-pod> -- \
@@ -150,10 +164,13 @@ kubectl exec -n aks-istio-system <istio-pod> -- \
 ```
 
 ### Traces
+
 Istio automatically generates distributed traces for all traffic passing through the mesh.
 
 ### Dashboards
+
 Access Istio dashboards (if configured):
+
 - Kiali: Service mesh visualization
 - Grafana: Istio metrics
 - Jaeger: Distributed tracing
@@ -161,34 +178,38 @@ Access Istio dashboards (if configured):
 ## Custom Domain Setup
 
 ### 1. Update Gateway
+
 Edit `istio-gateway.yaml`:
 
 ```yaml
 spec:
   servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "chat.yourdomain.com"  # Your domain
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'chat.yourdomain.com' # Your domain
 ```
 
 ### 2. Update VirtualService
+
 Edit `istio-virtualservice.yaml`:
 
 ```yaml
 spec:
   hosts:
-  - "chat.yourdomain.com"  # Your domain
+    - 'chat.yourdomain.com' # Your domain
   gateways:
-  - chat-gateway-external
+    - chat-gateway-external
 ```
 
 ### 3. Configure DNS
+
 Point your domain's A record to the Istio ingress gateway's external IP.
 
 ### 4. Redeploy
+
 ```bash
 kubectl apply -k k8s/apps/chat/overlays/azure/
 ```
@@ -196,6 +217,7 @@ kubectl apply -k k8s/apps/chat/overlays/azure/
 ## TLS/HTTPS Setup
 
 ### 1. Create TLS Secret
+
 ```bash
 kubectl create secret tls chat-backend-tls \
   --cert=path/to/cert.crt \
@@ -204,23 +226,25 @@ kubectl create secret tls chat-backend-tls \
 ```
 
 ### 2. Update Gateway
+
 Uncomment the HTTPS section in `istio-gateway.yaml`:
 
 ```yaml
 spec:
   servers:
-  - port:
-      number: 443
-      name: https
-      protocol: HTTPS
-    tls:
-      mode: SIMPLE
-      credentialName: chat-backend-tls
-    hosts:
-    - "chat.yourdomain.com"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: chat-backend-tls
+      hosts:
+        - 'chat.yourdomain.com'
 ```
 
 ### 3. Redeploy
+
 ```bash
 kubectl apply -k k8s/apps/chat/overlays/azure/
 ```
@@ -228,6 +252,7 @@ kubectl apply -k k8s/apps/chat/overlays/azure/
 ## Troubleshooting
 
 ### Gateway Not Ready
+
 ```bash
 # Check gateway status
 kubectl describe gateway chat-gateway-external
@@ -240,6 +265,7 @@ kubectl logs -n aks-istio-ingress -l app=istio-ingressgateway
 ```
 
 ### VirtualService Issues
+
 ```bash
 # Check virtual service
 kubectl describe virtualservice chat-vs-external
@@ -249,6 +275,7 @@ istioctl analyze -n default
 ```
 
 ### No External IP
+
 ```bash
 # Check ingress service
 kubectl get svc -n aks-istio-ingress
@@ -258,6 +285,7 @@ kubectl describe svc -n aks-istio-ingress <service-name>
 ```
 
 ### WebSocket Connection Failures
+
 ```bash
 # Check virtual service routes
 kubectl get virtualservice chat-vs-external -o yaml
@@ -283,6 +311,7 @@ kubectl get virtualservice chat-vs-external -o jsonpath='{.spec.http[?(@.match[0
 If you need to revert to NGINX Ingress:
 
 1. Restore the backup:
+
    ```bash
    mv istio-gateway.yaml istio-gateway.yaml.bak
    mv istio-virtualservice.yaml istio-virtualservice.yaml.bak
@@ -290,6 +319,7 @@ If you need to revert to NGINX Ingress:
    ```
 
 2. Update `kustomization.yaml`:
+
    ```yaml
    resources:
      - ingress.yaml
@@ -298,6 +328,7 @@ If you need to revert to NGINX Ingress:
    ```
 
 3. Install NGINX Ingress Controller:
+
    ```bash
    helm install ingress-nginx ingress-nginx/ingress-nginx \
      --namespace ingress-nginx --create-namespace

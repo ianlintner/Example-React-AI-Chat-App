@@ -9,6 +9,7 @@ Successfully migrated deployment from root domain `cat-herding.net` to subdomain
 ### 1. Cleanup of Let's Encrypt/SSL Setup Files
 
 Removed the following files (SSL setup now handled in separate infrastructure repo):
+
 - `setup-ssl.sh` - SSL setup automation script
 - `setup-letsencrypt.sh` - Let's Encrypt certificate setup script
 - `acme-http-solver.yaml` - ACME HTTP-01 challenge VirtualService
@@ -21,19 +22,23 @@ Removed the following files (SSL setup now handled in separate infrastructure re
 ### 2. Configuration Updates
 
 **gateway-patch.yaml:**
+
 - Updated host from `*.cat-herding.net` to `example-chat.cat-herding.net`
 - Reverted credentialName to `cat-herding-tls` (wildcard cert covers subdomain)
 - Configured HTTPS on port 443 with HTTP redirect on port 80
 
 **istio-virtualservice.yaml:**
+
 - Updated host from `cat-herding.net` to `example-chat.cat-herding.net`
 - Routing remains unchanged (Socket.io, API, health, docs, metrics)
 
 **kustomization.yaml:**
+
 - Removed references to `cert-manager-issuer.yaml`
 - Removed references to `certificate.yaml`
 
 **README.md:**
+
 - Simplified SSL/TLS setup section
 - Referenced new `OPTIONAL_SSL_SETUP.md` for detailed instructions
 - Updated domain references to `example-chat.cat-herding.net`
@@ -41,6 +46,7 @@ Removed the following files (SSL setup now handled in separate infrastructure re
 ### 3. New Documentation
 
 **OPTIONAL_SSL_SETUP.md:**
+
 - Comprehensive SSL/TLS setup guide
 - cert-manager installation instructions
 - DNS-01 challenge examples for multiple providers (Azure DNS, Cloudflare, Route53, GCP)
@@ -50,6 +56,7 @@ Removed the following files (SSL setup now handled in separate infrastructure re
 ### 4. DNS Configuration
 
 Created DNS A record:
+
 ```bash
 az network dns record-set a add-record \
   --resource-group nekoc \
@@ -59,6 +66,7 @@ az network dns record-set a add-record \
 ```
 
 **Result:**
+
 - FQDN: `example-chat.cat-herding.net`
 - IP: `52.182.228.75` (AKS Istio ingress external IP)
 - TTL: 3600 seconds
@@ -66,12 +74,14 @@ az network dns record-set a add-record \
 ## Current Configuration
 
 ### Domain
+
 - **Live URL**: https://example-chat.cat-herding.net
 - **DNS Zone**: cat-herding.net (Azure DNS)
 - **Record Type**: A record
 - **IP Address**: 52.182.228.75
 
 ### SSL/TLS
+
 - **Certificate**: Wildcard Let's Encrypt certificate (`*.cat-herding.net`)
 - **Secret Name**: `cat-herding-tls`
 - **Secret Location**: `aks-istio-ingress` namespace
@@ -79,6 +89,7 @@ az network dns record-set a add-record \
 - **Auto-renewal**: Enabled via cert-manager
 
 ### Kubernetes Resources
+
 - **Namespace**: default
 - **Gateway**: chat-gateway (Istio Gateway)
 - **VirtualService**: chat-vs-external
@@ -90,17 +101,20 @@ az network dns record-set a add-record \
 ### Test Results (2025-11-23)
 
 ✅ **HTTPS Root**: HTTP/2 200
+
 ```bash
 curl -I https://example-chat.cat-herding.net
 ```
 
 ✅ **API Health Endpoint**: Returns JSON health status
+
 ```bash
 curl https://example-chat.cat-herding.net/api/health
 # {"status":"OK","timestamp":"2025-11-23T04:22:17.914Z"}
 ```
 
 ✅ **HTTP Redirect**: 301 to HTTPS
+
 ```bash
 curl -I http://example-chat.cat-herding.net
 # HTTP/1.1 301 Moved Permanently
@@ -108,6 +122,7 @@ curl -I http://example-chat.cat-herding.net
 ```
 
 ✅ **Certificate Verification**: Valid Let's Encrypt wildcard certificate
+
 ```bash
 echo | openssl s_client -servername example-chat.cat-herding.net \
   -connect example-chat.cat-herding.net:443 2>/dev/null | \
@@ -196,15 +211,18 @@ kubectl logs -n aks-istio-system -l app=istiod -f
 ## Maintenance
 
 ### Certificate Renewal
+
 - Automatic via cert-manager (30 days before expiration)
 - Monitor: `kubectl get certificate -n default -w`
 
 ### DNS Updates
+
 - Managed via Azure DNS
 - Update A record if load balancer IP changes
 - TTL: 3600 seconds (1 hour propagation)
 
 ### Kubernetes Resources
+
 - Gateway and VirtualService configurations in `k8s/apps/chat/overlays/azure/`
 - Apply changes: `kubectl apply -k k8s/apps/chat/overlays/azure/`
 - Rollback: `kubectl rollout undo deployment/chat-backend`

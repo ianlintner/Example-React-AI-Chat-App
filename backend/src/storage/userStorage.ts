@@ -60,15 +60,18 @@ class UserStorage {
     if (this.useMemory) return;
     this.useMemory = true;
     logger.warn({ reason }, '⚠️ Falling back to in-memory UserStorage');
-    this.cleanupInterval = setInterval(() => {
-      const now = Date.now();
-      for (const [id, u] of this.memoryUsers) {
-        if (u._expiresAt <= now) this.memoryUsers.delete(id);
-      }
-      for (const [key, userId] of this.providerIndex) {
-        if (!this.memoryUsers.get(userId)) this.providerIndex.delete(key);
-      }
-    }, 60 * 60 * 1000).unref();
+    this.cleanupInterval = setInterval(
+      () => {
+        const now = Date.now();
+        for (const [id, u] of this.memoryUsers) {
+          if (u._expiresAt <= now) this.memoryUsers.delete(id);
+        }
+        for (const [key, userId] of this.providerIndex) {
+          if (!this.memoryUsers.get(userId)) this.providerIndex.delete(key);
+        }
+      },
+      60 * 60 * 1000,
+    ).unref();
   }
 
   static getInstance(): UserStorage {
@@ -76,7 +79,13 @@ class UserStorage {
     return this.instance;
   }
 
-  async createUser(userData: { email: string; name: string; provider: 'github' | 'google'; providerId: string; avatar?: string }): Promise<User> {
+  async createUser(userData: {
+    email: string;
+    name: string;
+    provider: 'github' | 'google';
+    providerId: string;
+    avatar?: string;
+  }): Promise<User> {
     await this.connect();
     const providerKey = `provider:${userData.provider}:${userData.providerId}`;
     let existingId: string | undefined | null = null;
@@ -95,9 +104,22 @@ class UserStorage {
       }
     }
 
-    const user: User = { id: uuidv4(), email: userData.email, name: userData.name, provider: userData.provider, providerId: userData.providerId, avatar: userData.avatar, createdAt: new Date(), lastLoginAt: new Date() };
+    const user: User = {
+      id: uuidv4(),
+      email: userData.email,
+      name: userData.name,
+      provider: userData.provider,
+      providerId: userData.providerId,
+      avatar: userData.avatar,
+      createdAt: new Date(),
+      lastLoginAt: new Date(),
+    };
     if (!this.useMemory && this.client) {
-      await this.client.setEx(`user:${user.id}`, this.USER_TTL, JSON.stringify(user));
+      await this.client.setEx(
+        `user:${user.id}`,
+        this.USER_TTL,
+        JSON.stringify(user),
+      );
       await this.client.setEx(providerKey, this.USER_TTL, user.id);
     } else {
       const expiresAt = Date.now() + this.USER_TTL * 1000;
@@ -121,13 +143,17 @@ class UserStorage {
     const entry = this.memoryUsers.get(userId);
     if (!entry) return null;
     if (entry._expiresAt <= Date.now()) {
-      this.memoryUsers.delete(userId); return null;
+      this.memoryUsers.delete(userId);
+      return null;
     }
     const { _expiresAt, ...user } = entry;
     return user;
   }
 
-  async getUserByProvider(provider: 'github' | 'google', providerId: string): Promise<User | null> {
+  async getUserByProvider(
+    provider: 'github' | 'google',
+    providerId: string,
+  ): Promise<User | null> {
     await this.connect();
     const providerKey = `provider:${provider}:${providerId}`;
     let userId: string | null | undefined;
@@ -144,7 +170,11 @@ class UserStorage {
     await this.connect();
     const providerKey = `provider:${user.provider}:${user.providerId}`;
     if (!this.useMemory && this.client) {
-      await this.client.setEx(`user:${user.id}`, this.USER_TTL, JSON.stringify(user));
+      await this.client.setEx(
+        `user:${user.id}`,
+        this.USER_TTL,
+        JSON.stringify(user),
+      );
       await this.client.setEx(providerKey, this.USER_TTL, user.id);
     } else {
       const expiresAt = Date.now() + this.USER_TTL * 1000;
@@ -198,7 +228,8 @@ class UserStorage {
 
   async close(): Promise<void> {
     if (this.cleanupInterval) clearInterval(this.cleanupInterval);
-    if (!this.useMemory && this.client && this.client.isOpen) await this.client.quit();
+    if (!this.useMemory && this.client && this.client.isOpen)
+      await this.client.quit();
   }
 }
 

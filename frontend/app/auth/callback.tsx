@@ -18,7 +18,7 @@ export default function CallbackScreen() {
     try {
       // Extract token from URL query parameters
       const token = params.token as string;
-      
+
       if (!token) {
         console.error('No token found in callback URL');
         router.replace('/auth/login');
@@ -30,7 +30,7 @@ export default function CallbackScreen() {
 
       // Fetch user data with the token
       const user = await authService.fetchCurrentUser(token);
-      
+
       if (!user) {
         console.error('Failed to fetch user data');
         router.replace('/auth/login');

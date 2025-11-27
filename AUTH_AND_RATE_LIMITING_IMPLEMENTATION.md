@@ -17,6 +17,7 @@ This document summarizes the OAuth authentication and rate limiting features add
 ## 🎯 Requirements Met
 
 ### ✅ Social Login Integration
+
 - GitHub OAuth integration
 - Google OAuth integration
 - JWT-based authentication
@@ -24,6 +25,7 @@ This document summarizes the OAuth authentication and rate limiting features add
 - User profile persistence
 
 ### ✅ Rate Limiting
+
 - Per-user rate limiting (authenticated users)
 - Multiple rate limit tiers:
   - **Chat Messages:** 50 messages/hour per user
@@ -185,11 +187,11 @@ graph TB
         C[Auth Rate Limiter<br/>10 req/15min per IP]
         D[Socket Rate Limiter<br/>20 conn/5min per user]
     end
-    
+
     subgraph "Storage"
         E[(Redis<br/>Rate Limit Counters)]
     end
-    
+
     A --> E
     B --> E
     C --> E
@@ -198,29 +200,31 @@ graph TB
 
 ### Key Technologies Used
 
-| Component | Technology |
-|-----------|-----------|
-| Backend Framework | Express 5 + TypeScript |
-| Authentication | Passport.js (GitHub, Google strategies) |
-| Token Management | JSON Web Tokens (JWT) |
-| Rate Limiting | express-rate-limit + rate-limit-redis |
-| Storage | Redis (users, sessions, rate limits) |
-| Frontend Framework | React Native + Expo |
-| OAuth Client | expo-auth-session + expo-web-browser |
-| Token Storage | @react-native-async-storage/async-storage |
-| Real-time | Socket.io (with JWT auth) |
+| Component          | Technology                                |
+| ------------------ | ----------------------------------------- |
+| Backend Framework  | Express 5 + TypeScript                    |
+| Authentication     | Passport.js (GitHub, Google strategies)   |
+| Token Management   | JSON Web Tokens (JWT)                     |
+| Rate Limiting      | express-rate-limit + rate-limit-redis     |
+| Storage            | Redis (users, sessions, rate limits)      |
+| Frontend Framework | React Native + Expo                       |
+| OAuth Client       | expo-auth-session + expo-web-browser      |
+| Token Storage      | @react-native-async-storage/async-storage |
+| Real-time          | Socket.io (with JWT auth)                 |
 
 ---
 
 ## ✅ Quality Validation Results
 
 ### Backend Validation
+
 - ✅ **Linting:** PASSED (ESLint + Prettier)
 - ✅ **Type Checking:** PASSED (TypeScript strict mode)
 - ✅ **Build:** PASSED (TypeScript compilation)
 - ✅ **Tests:** PASSED (17/17 test suites, 376/376 tests)
 
 ### Frontend Validation
+
 - ✅ **Linting:** PASSED (ESLint + Prettier)
 - ✅ **Type Checking:** PASSED (TypeScript strict mode)
 - ✅ **Tests:** PASSED (12/12 test suites, 114/114 tests)
@@ -228,12 +232,14 @@ graph TB
 ### Test Coverage
 
 #### Backend Tests
+
 - All existing tests updated to work with authentication
 - Socket handler authentication middleware tested
 - Rate limiting middleware tested via integration tests
 - All test mocks properly configured (Socket.io, Redis, Passport)
 
 #### Frontend Tests
+
 - New authService tests
 - Socket connection with JWT tested
 - Component tests updated with AuthProvider
@@ -246,6 +252,7 @@ graph TB
 ### Quick Start
 
 1. **Install Dependencies:**
+
    ```bash
    cd backend && npm install
    cd ../frontend && npm install
@@ -257,6 +264,7 @@ graph TB
    - See `AUTH_SETUP_GUIDE.md` for detailed instructions
 
 3. **Set Environment Variables:**
+
    ```bash
    # backend/.env
    GITHUB_CLIENT_ID=your_github_client_id
@@ -269,11 +277,13 @@ graph TB
    ```
 
 4. **Start Redis:**
+
    ```bash
    docker-compose up -d redis
    ```
 
 5. **Run Application:**
+
    ```bash
    # Terminal 1: Backend
    cd backend && npm run dev
@@ -287,6 +297,7 @@ graph TB
 ## 🔐 Security Features
 
 ### Authentication
+
 - ✅ JWT tokens with 7-day expiration
 - ✅ Secure HTTP-only cookies for sessions
 - ✅ CSRF protection with express-session
@@ -294,12 +305,14 @@ graph TB
 - ✅ OAuth state parameter validation
 
 ### Rate Limiting
+
 - ✅ Per-user rate limiting (prevents abuse)
 - ✅ Redis-backed counters (distributed rate limiting)
 - ✅ Graduated rate limits (API, chat, auth, socket)
 - ✅ Automatic cleanup of expired rate limit keys
 
 ### Data Protection
+
 - ✅ User data in Redis with 7-day TTL
 - ✅ Minimal user data stored (email, name, avatar, providerId)
 - ✅ No passwords stored (OAuth only)
@@ -309,12 +322,12 @@ graph TB
 
 ## 📊 Rate Limit Configuration
 
-| Endpoint Type | Limit | Window | Scope |
-|--------------|-------|--------|-------|
-| API Endpoints | 500 requests | 1 hour | Per authenticated user |
-| Chat Messages | 50 messages | 1 hour | Per authenticated user |
-| Auth Endpoints | 10 requests | 15 minutes | Per IP address |
-| Socket Connections | 20 connections | 5 minutes | Per authenticated user |
+| Endpoint Type      | Limit          | Window     | Scope                  |
+| ------------------ | -------------- | ---------- | ---------------------- |
+| API Endpoints      | 500 requests   | 1 hour     | Per authenticated user |
+| Chat Messages      | 50 messages    | 1 hour     | Per authenticated user |
+| Auth Endpoints     | 10 requests    | 15 minutes | Per IP address         |
+| Socket Connections | 20 connections | 5 minutes  | Per authenticated user |
 
 ### Adjusting Rate Limits
 
@@ -338,7 +351,7 @@ export const apiRateLimiter = rateLimit({
 # Backend
 cd backend && npm test
 
-# Frontend  
+# Frontend
 cd frontend && npm test
 ```
 
@@ -374,7 +387,7 @@ This implementation adds enterprise-grade authentication and rate limiting to th
 ✅ **Redis-backed storage** for users, sessions, and rate limits  
 ✅ **Complete test coverage** with all tests passing  
 ✅ **Production-ready code** with TypeScript, linting, and type safety  
-✅ **Comprehensive documentation** for setup and usage  
+✅ **Comprehensive documentation** for setup and usage
 
 The app is now **ready for demo deployment** with proper access control and abuse protection while maintaining a smooth user experience.
 

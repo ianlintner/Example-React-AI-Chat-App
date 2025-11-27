@@ -27,6 +27,7 @@ kubectl apply -f k8s/observability/otel-collector.yaml
 ### Azure Overlay
 
 The Azure overlay (`overlays/azure/`) includes:
+
 - Azure-specific ConfigMaps (environment variables)
 - Ingress configuration with SSL/TLS
 - Secrets (via Azure Key Vault or manual creation)
@@ -36,6 +37,7 @@ The Azure overlay (`overlays/azure/`) includes:
 ### Base Resources
 
 Base Kubernetes resources include:
+
 - Backend Deployment
 - Service definitions
 - ServiceAccount
@@ -45,6 +47,7 @@ Base Kubernetes resources include:
 ## Environment Variables
 
 Key environment variables configured in `overlays/azure/configmap.yaml`:
+
 - `ENABLE_TRACING=true` - OpenTelemetry tracing
 - `TRACING_EXPORTER=otlp` - OTLP export to collector
 - `OTEL_EXPORTER_OTLP_ENDPOINT` - Collector endpoint
@@ -53,6 +56,7 @@ Key environment variables configured in `overlays/azure/configmap.yaml`:
 ## Observability
 
 OpenTelemetry Collector deployed separately:
+
 - Receives traces via OTLP (gRPC: 4317, HTTP: 4318)
 - Exports to debug console (ready for Azure Monitor)
 - Resource limits configured (CPU: 500m, Memory: 512Mi)

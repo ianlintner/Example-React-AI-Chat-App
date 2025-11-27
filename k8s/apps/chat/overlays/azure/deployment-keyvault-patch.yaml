@@ -14,7 +14,7 @@ spec:
           # Add volume mount for Key Vault secrets
           volumeMounts:
             - name: secrets-store
-              mountPath: "/mnt/secrets-store"
+              mountPath: '/mnt/secrets-store'
               readOnly: true
           # Use secrets from Key Vault via the Kubernetes secret created by CSI driver
           env:

@@ -105,13 +105,22 @@ jobs:
         run: npm run build
       - name: OpenAPI smoke test
         working-directory: backend
+        env:
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
         run: |
           nohup node dist/index.js > server.log 2>&1 &
+          SERVER_PID=$!
           for i in {1..30}; do
             if curl -sf http://localhost:5001/docs/json >/dev/null; then break; fi
+            echo "Waiting for server... (attempt $i/30)"
             sleep 2
           done
-          curl -sf http://localhost:5001/docs/json | grep -q '"openapi"'
+          # Show server log for debugging if curl fails
+          if ! curl -sf http://localhost:5001/docs/json | grep -q '"openapi"'; then
+            echo "=== Server log ===" && cat server.log
+            exit 1
+          fi
           pkill -f dist/index.js || true
       - name: Upload coverage
         uses: codecov/codecov-action@v4

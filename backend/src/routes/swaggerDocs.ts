@@ -159,7 +159,8 @@ export function registerSwaggerRoutes(
     },
   };
 
-  // Serve UI and JSON endpoints
-  app.use(uiPath, swaggerUi.serve, swaggerUi.setup(spec, uiOptions as any));
+  // Serve JSON endpoint BEFORE UI so it doesn't get caught by swagger-ui middleware
   app.get(jsonPath, (_req, res) => res.json(spec));
+  // Serve UI endpoint
+  app.use(uiPath, swaggerUi.serve, swaggerUi.setup(spec, uiOptions as any));
 }

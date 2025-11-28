@@ -19,8 +19,8 @@ export interface User {
   email: string;
   name: string;
   createdAt: Date;
-  provider: 'github' | 'google';
-  providerId: string;
+  provider?: string;
+  providerId?: string;
   avatar?: string;
   lastLoginAt?: Date;
 }

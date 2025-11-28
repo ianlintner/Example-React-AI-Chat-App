@@ -44,12 +44,38 @@ export default function HomeScreen() {
       }
     };
 
+    // Setup connection state listeners
+    const handleConnect = () => {
+      console.log('[HomeScreen] Socket connected - clearing error state');
+      setIsConnected(true);
+      setError(null); // Clear any previous errors on successful connection
+      setIsLoading(false);
+    };
+
+    const handleDisconnect = () => {
+      console.log('[HomeScreen] Socket disconnected');
+      setIsConnected(false);
+    };
+
+    const handleConnectError = (err: Error) => {
+      console.error('[HomeScreen] Socket connection error:', err);
+      setError('Failed to connect to server. Please check your connection.');
+      setIsConnected(false);
+      setIsLoading(false);
+    };
+
+    // Register connection state listeners
+    socketService.onConnect(handleConnect);
+    socketService.onDisconnect(handleDisconnect);
+    socketService.onConnectError(handleConnectError);
+
     initializeApp();
 
     // Handle app state changes
     const handleAppStateChange = (nextAppState: string) => {
       if (nextAppState === 'active' && !socketService.isSocketConnected()) {
         // Reconnect when app becomes active
+        setError(null); // Clear error before reconnecting
         initializeApp();
       }
     };
@@ -344,7 +370,8 @@ export default function HomeScreen() {
     });
   };
 
-  if (error) {
+  // Only show error overlay if we're truly not connected (not just if error was set previously)
+  if (error && !isConnected) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorTitle}>Connection Error</Text>

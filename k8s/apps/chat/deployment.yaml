@@ -16,10 +16,10 @@ spec:
         version: v1
       annotations:
         sidecar.istio.io/inject: 'true'
-        sidecar.istio.io/proxyCPU: "20m"
-        sidecar.istio.io/proxyMemory: "64Mi"
-        sidecar.istio.io/proxyCPULimit: "200m"
-        sidecar.istio.io/proxyMemoryLimit: "256Mi"
+        sidecar.istio.io/proxyCPU: "50m"
+        sidecar.istio.io/proxyMemory: "128Mi"
+        sidecar.istio.io/proxyCPULimit: "500m"
+        sidecar.istio.io/proxyMemoryLimit: "512Mi"
     spec:
       securityContext:
         seccompProfile:

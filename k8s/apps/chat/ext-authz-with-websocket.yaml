@@ -123,6 +123,20 @@ spec:
             envoy.filters.http.ext_authz:
               '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
               disabled: true
+    # Disable ext_authz for chat.cat-herding.net (main chat app)
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: 'chat.cat-herding.net:443'
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.ext_authz:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+              disabled: true
     # Disable ext_authz for portfolio.hugecat.net
     - applyTo: VIRTUAL_HOST
       match:

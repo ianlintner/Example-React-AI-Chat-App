@@ -118,9 +118,13 @@ class SocketService {
       // In unit tests we often use a very small mock that doesn't implement
       // the full Socket.IO client surface. onAny is helpful in development
       // but must be optional so tests (and lightweight mocks) don't fail.
-      const socketAny = (this.socket as unknown as {
-        onAny?: (handler: (eventName: string, ...args: unknown[]) => void) => void;
-      }).onAny;
+      const socketAny = (
+        this.socket as unknown as {
+          onAny?: (
+            handler: (eventName: string, ...args: unknown[]) => void,
+          ) => void;
+        }
+      ).onAny;
       if (typeof socketAny === 'function') {
         socketAny((eventName, ...args) => {
           console.log(

@@ -46,6 +46,7 @@ class SocketService {
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
+        withCredentials: true, // Send cookies for oauth2-proxy session
         auth: {
           token, // Send JWT token for authentication
         },

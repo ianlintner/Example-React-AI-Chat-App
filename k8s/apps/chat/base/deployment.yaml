@@ -4,6 +4,7 @@ metadata:
   name: chat-backend
   labels:
     app: chat-backend
+    auth.cat-herding.net/enabled: "true"
 spec:
   replicas: 1
   selector:

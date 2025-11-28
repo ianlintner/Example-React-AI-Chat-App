@@ -166,6 +166,38 @@ export const setupSocketHandlers = (
     try {
       const token = socket.handshake.auth.token || socket.handshake.query.token;
 
+      // Check for oauth2-proxy headers first (passed through from Istio/oauth2-proxy)
+      const proxyEmail = socket.handshake.headers['x-auth-request-email'] as string | undefined;
+      const proxyUser = socket.handshake.headers['x-auth-request-user'] as string | undefined;
+
+      // If oauth2-proxy headers are present, use them for authentication
+      if (proxyEmail) {
+        console.log(`Socket using oauth2-proxy auth for: ${proxyEmail}`);
+        
+        // Find or create user based on proxy email
+        let user = await userStorage.getUserByEmail(proxyEmail);
+        
+        if (!user) {
+          // Create a new user from oauth2-proxy authentication
+          const displayName = proxyUser || proxyEmail.split('@')[0];
+          console.log(`Creating new user from oauth2-proxy: ${proxyEmail}`);
+          user = await userStorage.createUser({
+            email: proxyEmail,
+            displayName,
+            provider: 'oauth2-proxy',
+            providerId: proxyEmail,
+          });
+        }
+
+        // Attach user info to socket
+        socket.userId = user.id;
+        socket.userEmail = user.email;
+
+        console.log(`Socket authenticated via oauth2-proxy for user ${user.email} (${user.id})`);
+        return next();
+      }
+
+      // Fall back to JWT token authentication
       if (!token) {
         console.warn(
           `Socket connection rejected: No token provided from ${socket.handshake.address}`,

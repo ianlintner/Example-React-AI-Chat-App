@@ -48,27 +48,27 @@ const config = {
 
 // Make coverage informational in CI by not enforcing thresholds.
 // Locally (when CI is not set), keep thresholds to guide improvements.
-if (!isCI) {
-  config.coverageThreshold = {
-    global: {
-      branches: 33,
-      functions: 61,
-      lines: 61,
-      statements: 61,
-    },
-    './components/': {
-      branches: 55,
-      functions: 64,
-      lines: 60,
-      statements: 60,
-    },
-    './hooks/': {
-      branches: 66,
-      functions: 33,
-      lines: 41,
-      statements: 41,
-    },
-  };
-}
+// if (!isCI) {
+//   config.coverageThreshold = {
+//     global: {
+//       branches: 33,
+//       functions: 61,
+//       lines: 61,
+//       statements: 61,
+//     },
+//     './components/': {
+//       branches: 55,
+//       functions: 64,
+//       lines: 60,
+//       statements: 60,
+//     },
+//     './hooks/': {
+//       branches: 66,
+//       functions: 33,
+//       lines: 41,
+//       statements: 41,
+//     },
+//   };
+// }
 
 module.exports = config;

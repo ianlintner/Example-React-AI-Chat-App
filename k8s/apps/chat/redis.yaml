@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: redis
+      annotations:
+        sidecar.istio.io/inject: 'false'
     spec:
       containers:
         - name: redis
@@ -22,7 +24,7 @@ spec:
               name: redis
           args:
             - '--requirepass'
-            - 'simpleRedisPass123'
+            - 'redisPass3453clrtjlHFEnf139@!'
           resources:
             requests:
               cpu: '100m'

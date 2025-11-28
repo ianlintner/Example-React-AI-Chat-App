@@ -56,6 +56,14 @@ class SocketService {
         resolve();
       });
 
+      this.socket.on('error', err => {
+        logger.error('⚠️ Socket error event:', err);
+      });
+
+      this.socket.on('disconnect', reason => {
+        logger.warn('Socket disconnected:', reason);
+      });
+
       this.socket.on('disconnect', () => {
         logger.info('Socket disconnected');
         this.isConnected = false;
@@ -132,11 +140,21 @@ class SocketService {
   // Streaming chat
   sendStreamingMessage(request: ChatRequest): void {
     if (this.socket) {
+      const start = Date.now();
       logger.info('📤 Emitting stream_chat request', {
         hasConversationId: !!request.conversationId,
         messageLength: request.message?.length || 0,
       });
-      this.socket.emit('stream_chat', request);
+      try {
+        this.socket.emit('stream_chat', request, (ack?: unknown) => {
+          const ms = Date.now() - start;
+          logger.info('✅ Ack for stream_chat', { latencyMs: ms, ack });
+        });
+      } catch (err) {
+        logger.error('❌ Failed to emit stream_chat', err);
+      }
+    } else {
+      logger.error('❌ Cannot emit stream_chat - socket not initialized');
     }
   }
 

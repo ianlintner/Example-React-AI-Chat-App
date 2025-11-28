@@ -212,6 +212,17 @@ export const setupSocketHandlers = (
         return next();
       }
 
+      // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
+      // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
+      const cookieHeader = socket.handshake.headers['cookie'] as string | undefined;
+      if (cookieHeader && /_oauth2_proxy=/.test(cookieHeader)) {
+        console.log('Socket allowing connection with oauth2-proxy session cookie present (no headers)');
+        // Attach minimal identity (anonymous) - downstream features remain available for demo streaming
+        socket.userId = socket.id;
+        socket.userEmail = 'Anonymous';
+        return next();
+      }
+
       // Fall back to JWT token authentication
       if (!token) {
         console.warn(

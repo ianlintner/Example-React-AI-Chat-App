@@ -17,7 +17,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: 'true'
         sidecar.istio.io/proxyCPU: "50m"
-        sidecar.istio.io/proxyMemory: "128Mi"
+        sidecar.istio.io/proxyMemory: "32Mi"
         sidecar.istio.io/proxyCPULimit: "500m"
         sidecar.istio.io/proxyMemoryLimit: "512Mi"
     spec:
@@ -96,8 +96,8 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              cpu: '100m'
-              memory: '384Mi'
+              cpu: '25m'
+              memory: '32Mi'
             limits:
               cpu: '500m'
               memory: '768Mi'

@@ -268,6 +268,25 @@ export const setupSocketHandlers = (
       `Client connected: ${socket.id} (User: ${socket.userEmail || 'Unknown'})`,
     );
 
+    // Debug: log all incoming socket events to diagnose missing stream events
+    try {
+      socket.onAny((event: string, ...args: any[]) => {
+        try {
+          const preview =
+            args && args.length > 0
+              ? JSON.stringify(args[0]).slice(0, 200)
+              : '';
+          console.log(
+            `📥 Socket event received: ${event} ${preview ? '- ' + preview : ''}`,
+          );
+        } catch {
+          console.log(`📥 Socket event received: ${event}`);
+        }
+      });
+    } catch {
+      // ignore if onAny not available in tests
+    }
+
     // Track WebSocket connection metrics
     metrics.activeConnections.inc();
 

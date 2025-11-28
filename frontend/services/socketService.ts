@@ -133,6 +133,10 @@ class SocketService {
   // Streaming chat
   sendStreamingMessage(request: ChatRequest): void {
     if (this.socket) {
+      logger.info('📤 Emitting stream_chat request', {
+        hasConversationId: !!request.conversationId,
+        messageLength: request.message?.length || 0,
+      });
       this.socket.emit('stream_chat', request);
     }
   }

@@ -144,20 +144,35 @@ export default function App() {
           return newConversation;
         }
 
-        // Check if this conversation is different from current one
+        // If the current conversation has a temporary ID, migrate it to the server-provided ID
+        let working = prev;
         if (prev.id !== data.conversationId) {
-          return prev; // Don't add message from different conversation
+          // Treat a mismatched ID as a first-message case (client created temp id before server generated one)
+          // Migrate conversation id and all messages to the server id so subsequent chunks apply correctly
+          logger.info('🔁 Migrating temp conversation ID to server ID', {
+            from: prev.id,
+            to: data.conversationId,
+          });
+          working = {
+            ...prev,
+            id: data.conversationId,
+            messages: prev.messages.map(m => ({
+              ...m,
+              conversationId: data.conversationId,
+            })),
+            updatedAt: new Date(),
+          };
         }
 
         // Check if message already exists
-        const existingMessage = prev.messages.find(
+        const existingMessage = working.messages.find(
           m => m.id === data.messageId,
         );
         if (existingMessage) {
           // Update existing message to streaming
           return {
-            ...prev,
-            messages: prev.messages.map(m =>
+            ...working,
+            messages: working.messages.map(m =>
               m.id === data.messageId
                 ? { ...m, status: 'streaming' as const }
                 : m,
@@ -168,9 +183,9 @@ export default function App() {
 
         // Add new streaming message
         return {
-          ...prev,
+          ...working,
           messages: [
-            ...prev.messages,
+            ...working.messages,
             {
               id: data.messageId,
               content: '',
@@ -189,6 +204,7 @@ export default function App() {
       messageId: string;
       content: string;
       isComplete: boolean;
+      conversationId?: string;
     }) => {
       logger.info('📝 Stream chunk received:', chunk.content.slice(-20));
 
@@ -196,9 +212,26 @@ export default function App() {
       setConversation(prev => {
         if (!prev) return prev;
 
+        // Migrate temp conversation id if needed using chunk payload (defensive in case stream_start was missed)
+        let working = prev;
+        if (chunk.conversationId && prev.id !== chunk.conversationId) {
+          logger.info('🔁 Migrating temp conversation ID on chunk', {
+            from: prev.id,
+            to: chunk.conversationId,
+          });
+          working = {
+            ...prev,
+            id: chunk.conversationId,
+            messages: prev.messages.map(m => ({
+              ...m,
+              conversationId: chunk.conversationId as string,
+            })),
+          };
+        }
+
         return {
-          ...prev,
-          messages: prev.messages.map(m =>
+          ...working,
+          messages: working.messages.map(m =>
             m.id === chunk.messageId
               ? {
                   ...m,
@@ -227,9 +260,22 @@ export default function App() {
       setConversation(prev => {
         if (!prev) return data.conversation;
 
+        // Ensure conversation id matches server
+        let working = prev;
+        if (prev.id !== data.conversationId) {
+          working = {
+            ...prev,
+            id: data.conversationId,
+            messages: prev.messages.map(m => ({
+              ...m,
+              conversationId: data.conversationId,
+            })),
+          };
+        }
+
         return {
-          ...prev,
-          messages: prev.messages.map(m =>
+          ...working,
+          messages: working.messages.map(m =>
             m.id === data.messageId
               ? {
                   ...m,

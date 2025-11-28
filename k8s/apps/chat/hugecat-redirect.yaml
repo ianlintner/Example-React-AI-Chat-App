@@ -1,0 +1,18 @@
+---
+# VirtualService to route chat.hugecat.net to the redirect sidecar
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: hugecat-redirect-vs
+  namespace: default
+spec:
+  hosts:
+    - 'chat.hugecat.net'
+  gateways:
+    - chat-gateway
+  http:
+    - route:
+        - destination:
+            host: chat-redirect
+            port:
+              number: 80

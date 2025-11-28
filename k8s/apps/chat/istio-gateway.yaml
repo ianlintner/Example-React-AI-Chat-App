@@ -16,6 +16,16 @@ spec:
         credentialName: cat-herding-wildcard-tls
       hosts:
         - 'chat.cat-herding.net'
+    # HTTPS for hugecat.net - will be redirected to cat-herding.net
+    - port:
+        number: 443
+        name: https-chat-hugecat
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: chat-hugecat-tls-cert
+      hosts:
+        - 'chat.hugecat.net'
     # HTTP redirect to HTTPS
     - port:
         number: 80
@@ -23,5 +33,6 @@ spec:
         protocol: HTTP
       hosts:
         - 'chat.cat-herding.net'
+        - 'chat.hugecat.net'
       tls:
         httpsRedirect: true

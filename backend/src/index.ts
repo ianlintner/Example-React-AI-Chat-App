@@ -44,6 +44,7 @@ const app = express();
 const server = createServer(app);
 
 // CORS configuration - allow same origin in production, multiple origins in dev
+const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = process.env.FRONTEND_URL
   ? Array.isArray(process.env.FRONTEND_URL)
     ? process.env.FRONTEND_URL
@@ -57,13 +58,17 @@ const allowedOrigins = process.env.FRONTEND_URL
       'http://localhost:5178',
       'http://localhost:8080',
       'http://localhost:5001', // Same origin when combined
+      // Production domains
+      'https://chat.hugecat.net',
+      'https://chat.cat-herding.net',
     ];
 
 const io = new Server(server, {
   path: '/api/socket.io',
   cors: {
-    origin: allowedOrigins,
+    origin: isProduction ? true : allowedOrigins, // Allow all origins in production (behind oauth2-proxy)
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   },
 });
 

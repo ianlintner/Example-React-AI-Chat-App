@@ -15,15 +15,10 @@ class SocketService {
   private isConnected = false;
 
   async connect(): Promise<void> {
-    // Get authentication token
+    // Try to get authentication token (may be null with oauth2-proxy)
     const token = await authService.getToken();
 
     return new Promise((resolve, reject) => {
-      if (!token) {
-        reject(new Error('No authentication token available'));
-        return;
-      }
-
       // Resolve API base URL (prefer env for tests and local dev)
       const isBrowser = typeof window !== 'undefined' && !!window.location;
       const apiBase =
@@ -41,15 +36,19 @@ class SocketService {
         socketPath,
       );
 
+      // Build auth object - include token if available, otherwise rely on cookies
+      const authConfig: { token?: string } = {};
+      if (token) {
+        authConfig.token = token;
+      }
+
       this.socket = io(apiBase, {
         path: socketPath,
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
         withCredentials: true, // Send cookies for oauth2-proxy session
-        auth: {
-          token, // Send JWT token for authentication
-        },
+        auth: authConfig,
       });
 
       this.socket.on('connect', () => {

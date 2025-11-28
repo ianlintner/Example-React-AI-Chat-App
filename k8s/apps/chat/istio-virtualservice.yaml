@@ -5,7 +5,7 @@ metadata:
 spec:
   hosts:
     - 'chat.hugecat.net'
-    - 'example-chat.cat-herding.net'
+    - 'chat.cat-herding.net'
   gateways:
     - chat-gateway
   http:

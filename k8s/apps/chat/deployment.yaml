@@ -5,6 +5,7 @@ metadata:
   labels:
     app: chat-backend
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: chat-backend
@@ -95,10 +96,10 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              cpu: '25m'
-              memory: '32Mi'
+              cpu: '250m'
+              memory: '256Mi'
             limits:
-              cpu: '500m'
+              cpu: '1000m'
               memory: '768Mi'
           volumeMounts:
             - name: secrets-store

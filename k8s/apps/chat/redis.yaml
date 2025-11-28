@@ -60,3 +60,6 @@ spec:
       port: 6379
       targetPort: 6379
       protocol: TCP
+# Note: Redis credentials are now stored in Azure Key Vault
+# and synced via SecretProviderClass (azure-keyvault-chat-secrets)
+# to K8s secret 'chat-secrets-from-keyvault'

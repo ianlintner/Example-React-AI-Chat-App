@@ -39,17 +39,17 @@ spec:
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: redis-secret
+                  name: chat-secrets-from-keyvault
                   key: REDIS_HOST
             - name: REDIS_PORT
               valueFrom:
                 secretKeyRef:
-                  name: redis-secret
+                  name: chat-secrets-from-keyvault
                   key: REDIS_PORT
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: redis-secret
+                  name: chat-secrets-from-keyvault
                   key: REDIS_PASSWORD
             - name: JWT_SECRET
               valueFrom:
@@ -59,7 +59,7 @@ spec:
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: chat-secrets
+                  name: chat-secrets-from-keyvault
                   key: OPENAI_API_KEY
             # Note: OAuth is handled at cluster level via oauth2-proxy
           envFrom:
@@ -96,3 +96,14 @@ spec:
             limits:
               cpu: '500m'
               memory: '768Mi'
+          volumeMounts:
+            - name: secrets-store
+              mountPath: '/mnt/secrets-store'
+              readOnly: true
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: 'azure-keyvault-chat-secrets'

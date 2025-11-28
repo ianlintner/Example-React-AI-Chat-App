@@ -167,25 +167,38 @@ export const setupSocketHandlers = (
       const token = socket.handshake.auth.token || socket.handshake.query.token;
 
       // Check for oauth2-proxy headers first (passed through from Istio/oauth2-proxy)
-      const proxyEmail = socket.handshake.headers['x-auth-request-email'] as string | undefined;
-      const proxyUser = socket.handshake.headers['x-auth-request-user'] as string | undefined;
+      const proxyEmail = socket.handshake.headers['x-auth-request-email'] as
+        | string
+        | undefined;
+      const proxyUser = socket.handshake.headers['x-auth-request-user'] as
+        | string
+        | undefined;
 
       // If oauth2-proxy headers are present, use them for authentication
       if (proxyEmail) {
         console.log(`Socket using oauth2-proxy auth for: ${proxyEmail}`);
-        
-        // Find or create user based on proxy email
-        let user = await userStorage.getUserByEmail(proxyEmail);
-        
+
+        // Use the provider from headers or default to github (oauth2-proxy typically uses github)
+        const providerHeader = (
+          (socket.handshake.headers['x-auth-request-provider'] as string) ||
+          'github'
+        ).toLowerCase();
+        const provider: 'github' | 'google' =
+          providerHeader === 'google' ? 'google' : 'github';
+        const providerId = proxyUser || proxyEmail;
+
+        // Find or create user based on provider
+        let user = await userStorage.getUserByProvider(provider, providerId);
+
         if (!user) {
           // Create a new user from oauth2-proxy authentication
           const displayName = proxyUser || proxyEmail.split('@')[0];
           console.log(`Creating new user from oauth2-proxy: ${proxyEmail}`);
           user = await userStorage.createUser({
             email: proxyEmail,
-            displayName,
-            provider: 'oauth2-proxy',
-            providerId: proxyEmail,
+            name: displayName,
+            provider,
+            providerId,
           });
         }
 
@@ -193,7 +206,9 @@ export const setupSocketHandlers = (
         socket.userId = user.id;
         socket.userEmail = user.email;
 
-        console.log(`Socket authenticated via oauth2-proxy for user ${user.email} (${user.id})`);
+        console.log(
+          `Socket authenticated via oauth2-proxy for user ${user.email} (${user.id})`,
+        );
         return next();
       }
 

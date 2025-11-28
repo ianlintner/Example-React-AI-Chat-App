@@ -4,7 +4,7 @@ metadata:
   name: chat-backend
   labels:
     app: chat-backend
-    auth.cat-herding.net/enabled: "true"
+    auth.cat-herding.net/enabled: 'true'
 spec:
   replicas: 1
   selector:
@@ -16,12 +16,12 @@ spec:
         app: chat-backend
         istio-injection: enabled
         # Propagate the auth label to pods for potential future use
-        auth.cat-herding.net/enabled: "true"
+        auth.cat-herding.net/enabled: 'true'
       annotations:
         sidecar.istio.io/inject: 'true'
         # Annotation to document what auth protection is enabled
-        auth.cat-herding.net/provider: "oauth2-proxy"
-        auth.cat-herding.net/domain: "chat.cat-herding.net"
+        auth.cat-herding.net/provider: 'oauth2-proxy'
+        auth.cat-herding.net/domain: 'chat.cat-herding.net'
     spec:
       securityContext:
         seccompProfile:

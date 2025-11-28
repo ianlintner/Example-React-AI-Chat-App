@@ -120,8 +120,8 @@ spec:
               name: redirect
           resources:
             requests:
-              cpu: '10m'
-              memory: '16Mi'
+              cpu: '5m'
+              memory: '8Mi'
             limits:
               cpu: '50m'
               memory: '32Mi'

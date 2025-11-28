@@ -19,15 +19,19 @@ class SocketService {
     const token = await authService.getToken();
 
     return new Promise((resolve, reject) => {
-      // Resolve API base URL (prefer env for tests and local dev)
+      // Resolve API base URL - prefer explicit env var for local dev
       const isBrowser = typeof window !== 'undefined' && !!window.location;
-      // Force same-origin when running inside a port-forwarded environment to avoid cross-domain oauth requirements
-      const apiBase = (isBrowser ? window.location.origin : process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001');
+      const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
+      
+      // Use explicit env URL if set, otherwise use window origin for production/port-forwarded scenarios
+      // Local development (Expo web) should use the env var to connect to the separate backend server
+      const apiBase = envApiUrl || (isBrowser ? window.location.origin : 'http://localhost:5001');
 
-      // When using same-origin behind a gateway, route socket path via /api
-      const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
+      // When using same-origin, route socket path via /api. When connecting to separate backend, use /socket.io
+      const isSameOrigin = isBrowser && !envApiUrl;
+      const socketPath = isSameOrigin ? '/api/socket.io' : '/socket.io';
 
-      console.log('[DEBUG] socketService resolved apiBase=', apiBase, 'socketPath=', socketPath);
+      console.log('[DEBUG] socketService resolved apiBase=', apiBase, 'socketPath=', socketPath, 'envApiUrl=', envApiUrl);
       logger.info(
         'Connecting to socket server at:',
         apiBase,

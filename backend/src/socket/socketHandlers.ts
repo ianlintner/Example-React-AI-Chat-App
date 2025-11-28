@@ -156,10 +156,12 @@ export const setupSocketHandlers = (
     data: any,
   ) => void;
 } => {
+  console.log('[DEBUG] setupSocketHandlers called');
   console.log(
     'OpenAI API Key status:',
     process.env.OPENAI_API_KEY ? 'Present' : 'Missing',
   );
+  console.log('[DEBUG] Registering io.use auth middleware...');
 
   // Authentication middleware for Socket.IO
   io.use(async (socket: AuthenticatedSocket, next) => {
@@ -276,7 +278,10 @@ export const setupSocketHandlers = (
     }
   });
 
+  console.log('[DEBUG] Auth middleware registered, setting up connection handler...');
+  
   io.on('connection', (socket: AuthenticatedSocket) => {
+    console.log('[DEBUG] New connection event triggered');
     const userId = socket.userId || socket.id;
     console.log(
       `Client connected: ${socket.id} (User: ${socket.userEmail || 'Unknown'})`,
@@ -1063,6 +1068,8 @@ export const setupSocketHandlers = (
     io.to(conversationId).emit(event, data);
   };
 
+  console.log('[DEBUG] setupSocketHandlers completed successfully');
+  
   // Export helper functions for use in routes
   return {
     emitToConversation,

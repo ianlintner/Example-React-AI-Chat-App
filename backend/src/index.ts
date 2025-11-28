@@ -25,8 +25,34 @@ dotenv.config();
 patchConsole();
 const log = getLogger(false);
 
+// Enable verbose debugging
+const DEBUG = process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production';
+const debugLog = (...args: any[]) => DEBUG && console.log('[DEBUG]', new Date().toISOString(), ...args);
+
+debugLog('🚀 Starting server initialization...');
+debugLog('Environment:', { NODE_ENV: process.env.NODE_ENV, PORT: process.env.PORT });
+
+// Global error handlers for uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ UNCAUGHT EXCEPTION:', err);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ UNHANDLED REJECTION:', reason);
+  console.error('Promise:', promise);
+});
+
+debugLog('Global error handlers registered');
+
 // Initialize OpenTelemetry tracing
-initializeTracing();
+try {
+  debugLog('Initializing OpenTelemetry tracing...');
+  initializeTracing();
+  debugLog('OpenTelemetry tracing initialized successfully');
+} catch (err) {
+  console.error('❌ Failed to initialize tracing:', err);
+}
 
 // Generate test traces only in non-production when explicitly enabled
 if (
@@ -40,8 +66,10 @@ if (
   }, 2000);
 }
 
+debugLog('Creating Express app and HTTP server...');
 const app = express();
 const server = createServer(app);
+debugLog('Express app and HTTP server created');
 
 // CORS configuration - allow same origin in production, multiple origins in dev
 const isProduction = process.env.NODE_ENV === 'production';
@@ -63,6 +91,7 @@ const allowedOrigins = process.env.FRONTEND_URL
       'https://chat.cat-herding.net',
     ];
 
+debugLog('Creating Socket.IO server...');
 const io = new Server(server, {
   path: '/api/socket.io',
   cors: {
@@ -71,6 +100,7 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+debugLog('Socket.IO server created with path /api/socket.io');
 
 const PORT = process.env.PORT || 5001;
 
@@ -206,7 +236,9 @@ const publicPathResolved = fs.existsSync(distPublicPath)
     : distPublicPath;
 
 log.info({ publicPathResolved }, '🔧 Static asset directory resolved');
+debugLog('Static asset directory:', publicPathResolved);
 app.use(express.static(publicPathResolved));
+debugLog('Static file middleware registered');
 
 // SPA fallback - serve index.html for all non-API routes
 app.use((req, res, next) => {
@@ -233,13 +265,24 @@ app.use((req, res, next) => {
 });
 
 // Socket.IO setup
-setupSocketHandlers(io);
+debugLog('Setting up Socket.IO handlers...');
+try {
+  setupSocketHandlers(io);
+  debugLog('Socket.IO handlers setup complete');
+} catch (err) {
+  console.error('❌ Failed to setup Socket.IO handlers:', err);
+  throw err;
+}
 
 // Initialize message queue system
+debugLog('Creating queue service...');
 const queueService = createQueueService(io);
+debugLog('Queue service created');
 
 // Start server
+debugLog('Starting server on port', PORT);
 server.listen(PORT, async () => {
+  debugLog('Server listen callback triggered');
   log.info(`🚀 Server running on port ${PORT}`);
   log.info(
     `🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`,

@@ -10,5 +10,3 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - chat.hugecat.net
-  # Optional: Add wildcard if needed
-  # - "*.chat.hugecat.net"

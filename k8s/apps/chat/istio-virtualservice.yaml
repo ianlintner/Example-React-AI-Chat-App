@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: chat-vs-external
+  name: chat-virtualservice
 spec:
   hosts:
     - 'chat.hugecat.net'
@@ -41,7 +41,6 @@ spec:
             port:
               number: 80
       timeout: 60s
-      # WebSocket support for Socket.io
       corsPolicy:
         allowOrigins:
           - regex: '.*'

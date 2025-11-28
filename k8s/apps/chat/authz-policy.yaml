@@ -4,27 +4,16 @@ metadata:
   name: chat-app-authz
   namespace: default
 spec:
-  # Apply to chat-backend pods
   selector:
     matchLabels:
       app: chat-backend
   action: ALLOW
   rules:
-    # Allow all requests (you can customize this for more security)
     - from:
         - source:
-            # Allow all sources - customize for production
             principals: ['*']
       to:
         - operation:
-            # Allow all HTTP methods
             methods:
               ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH']
             paths: ['/*']
-  # Example: Restrict admin endpoints (uncomment and customize)
-  # - from:
-  #   - source:
-  #       requestPrincipals: ["admin@hugecat.net"]
-  #   to:
-  #   - operation:
-  #       paths: ["/api/admin/*"]

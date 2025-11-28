@@ -8,10 +8,8 @@ data:
   PORT: '5001'
   ENABLE_TRACING: 'false'
   ENABLE_METRICS: 'true'
-  # Redis configuration (update with your Azure Redis Cache or AKS-hosted Redis)
   REDIS_HOST: 'redis-service'
   REDIS_PORT: '6379'
   API_URL: 'http://chat.cat-herding.net:5001'
   FRONTEND_URL: 'https://chat.hugecat.net'
   # Note: OAuth is handled at cluster level via oauth2-proxy
-  # Add other non-sensitive configuration here

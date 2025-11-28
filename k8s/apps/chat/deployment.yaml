@@ -2,21 +2,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chat-backend
+  labels:
+    app: chat-backend
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: chat-backend
   template:
     metadata:
       labels:
         app: chat-backend
         version: v1
       annotations:
-        # Remove Istio sidecar injection for Azure
         sidecar.istio.io/inject: 'false'
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: chat
+      automountServiceAccountToken: true
       containers:
         - name: chat-backend
-          # Update to use Azure Container Registry (ACR)
-          # Format: <your-acr-name>.azurecr.io/chat-backend:latest
           image: gabby.azurecr.io/chat-backend:latest
           imagePullPolicy: Always
           ports:

@@ -26,14 +26,19 @@ patchConsole();
 const log = getLogger(false);
 
 // Enable verbose debugging
-const DEBUG = process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production';
-const debugLog = (...args: any[]) => DEBUG && console.log('[DEBUG]', new Date().toISOString(), ...args);
+const DEBUG =
+  process.env.DEBUG === 'true' || process.env.NODE_ENV !== 'production';
+const debugLog = (...args: any[]) =>
+  DEBUG && console.log('[DEBUG]', new Date().toISOString(), ...args);
 
 debugLog('🚀 Starting server initialization...');
-debugLog('Environment:', { NODE_ENV: process.env.NODE_ENV, PORT: process.env.PORT });
+debugLog('Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+});
 
 // Global error handlers for uncaught exceptions
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', err => {
   console.error('❌ UNCAUGHT EXCEPTION:', err);
   console.error(err.stack);
 });

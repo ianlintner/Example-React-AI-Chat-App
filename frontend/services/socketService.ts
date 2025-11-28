@@ -10,9 +10,52 @@ import type {
 import { logger } from './logger';
 import authService from './authService';
 
+// Type definitions for stored callbacks
+type StreamStartCallback = (data: {
+  messageId: string;
+  conversationId: string;
+}) => void;
+type StreamChunkCallback = (chunk: StreamChunk) => void;
+type StreamCompleteCallback = (data: {
+  messageId: string;
+  conversationId: string;
+  conversation: Conversation;
+}) => void;
+type NewMessageCallback = (message: Message) => void;
+type ProactiveMessageCallback = (data: { message: Message }) => void;
+type StreamErrorCallback = (error: { code: string; message: string }) => void;
+type AgentStatusCallback = (status: AgentStatus) => void;
+
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
+
+  // Store callbacks so we can re-register them on reconnect
+  private storedCallbacks: {
+    stream_start?: StreamStartCallback;
+    stream_chunk?: StreamChunkCallback;
+    stream_complete?: StreamCompleteCallback;
+    new_message?: NewMessageCallback;
+    proactive_message?: ProactiveMessageCallback;
+    stream_error?: StreamErrorCallback;
+    agent_status_update?: AgentStatusCallback;
+  } = {};
+
+  // Register all stored callbacks on the current socket
+  private registerStoredCallbacks(): void {
+    if (!this.socket) return;
+    console.log(
+      '[DEBUG] Registering stored callbacks on socket',
+      this.socket.id,
+    );
+
+    for (const [event, callback] of Object.entries(this.storedCallbacks)) {
+      if (callback) {
+        console.log('[DEBUG] Re-registering callback for event:', event);
+        this.socket.on(event, callback as (...args: unknown[]) => void);
+      }
+    }
+  }
 
   async connect(): Promise<void> {
     // Try to get authentication token (may be null with oauth2-proxy)
@@ -22,15 +65,24 @@ class SocketService {
       // Resolve API base URL - prefer explicit env var for local dev
       const isBrowser = typeof window !== 'undefined' && !!window.location;
       const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
-      
+
       // Use explicit env URL if set, otherwise use window origin for production/port-forwarded scenarios
       // Local development (Expo web) should use the env var to connect to the separate backend server
-      const apiBase = envApiUrl || (isBrowser ? window.location.origin : 'http://localhost:5001');
+      const apiBase =
+        envApiUrl ||
+        (isBrowser ? window.location.origin : 'http://localhost:5001');
 
       // Socket.IO path is always /api/socket.io to match backend configuration
       const socketPath = '/api/socket.io';
 
-      console.log('[DEBUG] socketService resolved apiBase=', apiBase, 'socketPath=', socketPath, 'envApiUrl=', envApiUrl);
+      console.log(
+        '[DEBUG] socketService resolved apiBase=',
+        apiBase,
+        'socketPath=',
+        socketPath,
+        'envApiUrl=',
+        envApiUrl,
+      );
       logger.info(
         'Connecting to socket server at:',
         apiBase,
@@ -55,8 +107,20 @@ class SocketService {
 
       this.socket.on('connect', () => {
         logger.info('Socket connected:', this.socket?.id);
+        console.log('[DEBUG] Socket connected with id:', this.socket?.id);
         this.isConnected = true;
+        // Re-register any stored callbacks when socket connects/reconnects
+        this.registerStoredCallbacks();
         resolve();
+      });
+
+      // Debug: Log ALL incoming events to see what's being received
+      this.socket.onAny((eventName, ...args) => {
+        console.log(
+          '[DEBUG] Socket received event:',
+          eventName,
+          JSON.stringify(args).slice(0, 200),
+        );
       });
 
       this.socket.on('error', err => {
@@ -161,24 +225,59 @@ class SocketService {
     }
   }
 
-  // Event listeners
+  // Event listeners - callbacks are stored and re-registered on reconnect
   onNewMessage(callback: (message: Message) => void): void {
+    this.storedCallbacks.new_message = callback;
     if (this.socket) {
+      console.log(
+        '[DEBUG] Registering new_message listener on socket',
+        this.socket.id,
+      );
       this.socket.on('new_message', callback);
+    } else {
+      console.log(
+        '[DEBUG] Storing new_message callback for later registration',
+      );
     }
   }
 
   onStreamStart(
     callback: (data: { messageId: string; conversationId: string }) => void,
   ): void {
+    // Wrap callback to add debug logging
+    const wrappedCallback: StreamStartCallback = data => {
+      console.log(
+        '[DEBUG] stream_start callback invoked with:',
+        JSON.stringify(data),
+      );
+      callback(data);
+    };
+    this.storedCallbacks.stream_start = wrappedCallback;
     if (this.socket) {
-      this.socket.on('stream_start', callback);
+      console.log(
+        '[DEBUG] Registering stream_start listener on socket',
+        this.socket.id,
+      );
+      this.socket.on('stream_start', wrappedCallback);
+    } else {
+      console.log(
+        '[DEBUG] Storing stream_start callback for later registration',
+      );
     }
   }
 
   onStreamChunk(callback: (chunk: StreamChunk) => void): void {
+    this.storedCallbacks.stream_chunk = callback;
     if (this.socket) {
+      console.log(
+        '[DEBUG] Registering stream_chunk listener on socket',
+        this.socket.id,
+      );
       this.socket.on('stream_chunk', callback);
+    } else {
+      console.log(
+        '[DEBUG] Storing stream_chunk callback for later registration',
+      );
     }
   }
 
@@ -191,14 +290,24 @@ class SocketService {
       confidence?: number;
     }) => void,
   ): void {
+    this.storedCallbacks.stream_complete = callback as StreamCompleteCallback;
     if (this.socket) {
+      console.log(
+        '[DEBUG] Registering stream_complete listener on socket',
+        this.socket.id,
+      );
       this.socket.on('stream_complete', callback);
+    } else {
+      console.log(
+        '[DEBUG] Storing stream_complete callback for later registration',
+      );
     }
   }
 
   onStreamError(
     callback: (error: { message: string; code: string }) => void,
   ): void {
+    this.storedCallbacks.stream_error = callback as StreamErrorCallback;
     if (this.socket) {
       this.socket.on('stream_error', callback);
     }
@@ -237,7 +346,13 @@ class SocketService {
       confidence: number;
     }) => void,
   ): void {
+    this.storedCallbacks.proactive_message =
+      callback as ProactiveMessageCallback;
     if (this.socket) {
+      console.log(
+        '[DEBUG] Registering proactive_message listener on socket',
+        this.socket.id,
+      );
       this.socket.on('proactive_message', data => {
         logger.info(
           '🎁 Proactive message received in mobile socket service:',
@@ -245,6 +360,10 @@ class SocketService {
         );
         callback(data);
       });
+    } else {
+      console.log(
+        '[DEBUG] Storing proactive_message callback for later registration',
+      );
     }
   }
 
@@ -262,11 +381,21 @@ class SocketService {
 
   // Agent status updates
   onAgentStatusUpdate(callback: (status: AgentStatus) => void): void {
+    const wrappedCallback: AgentStatusCallback = status => {
+      logger.info('📊 Agent status update received:', status);
+      callback(status);
+    };
+    this.storedCallbacks.agent_status_update = wrappedCallback;
     if (this.socket) {
-      this.socket.on('agent_status_update', status => {
-        logger.info('📊 Agent status update received:', status);
-        callback(status);
-      });
+      console.log(
+        '[DEBUG] Registering agent_status_update listener on socket',
+        this.socket.id,
+      );
+      this.socket.on('agent_status_update', wrappedCallback);
+    } else {
+      console.log(
+        '[DEBUG] Storing agent_status_update callback for later registration',
+      );
     }
   }
 
@@ -292,12 +421,16 @@ class SocketService {
 
   // Remove event listeners
   removeAllListeners(): void {
+    // Clear stored callbacks
+    this.storedCallbacks = {};
     if (this.socket) {
       this.socket.removeAllListeners();
     }
   }
 
   removeListener(event: string): void {
+    // Clear stored callback for this event
+    delete this.storedCallbacks[event as keyof typeof this.storedCallbacks];
     if (this.socket) {
       this.socket.off(event);
     }

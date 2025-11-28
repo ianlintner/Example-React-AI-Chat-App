@@ -216,9 +216,13 @@ export const setupSocketHandlers = (
 
       // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
       // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
-      const cookieHeader = socket.handshake.headers['cookie'] as string | undefined;
+      const cookieHeader = socket.handshake.headers['cookie'] as
+        | string
+        | undefined;
       if (cookieHeader && /_oauth2_proxy=/.test(cookieHeader)) {
-        console.log('Socket allowing connection with oauth2-proxy session cookie present (no headers)');
+        console.log(
+          'Socket allowing connection with oauth2-proxy session cookie present (no headers)',
+        );
         // Attach minimal identity (anonymous) - downstream features remain available for demo streaming
         socket.userId = socket.id;
         socket.userEmail = 'Anonymous';
@@ -278,8 +282,10 @@ export const setupSocketHandlers = (
     }
   });
 
-  console.log('[DEBUG] Auth middleware registered, setting up connection handler...');
-  
+  console.log(
+    '[DEBUG] Auth middleware registered, setting up connection handler...',
+  );
+
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log('[DEBUG] New connection event triggered');
     const userId = socket.userId || socket.id;
@@ -289,7 +295,9 @@ export const setupSocketHandlers = (
 
     // Per-connection diagnostics correlation ID
     const correlationId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    console.log(`🧩 Socket diagnostics initialized: socketId=${socket.id}, userId=${userId}, correlationId=${correlationId}`);
+    console.log(
+      `🧩 Socket diagnostics initialized: socketId=${socket.id}, userId=${userId}, correlationId=${correlationId}`,
+    );
 
     // Debug: log all incoming socket events to diagnose missing stream events
     try {
@@ -313,17 +321,26 @@ export const setupSocketHandlers = (
     // Explicit listeners for key events to ensure visibility
     socket.on('stream_chat', (payload: unknown) => {
       try {
-        const preview = payload && typeof payload === 'object' ? JSON.stringify(payload).slice(0, 200) : String(payload ?? '').slice(0, 200);
-        console.log(`📥 [${correlationId}] stream_chat received on ${socket.id} - payload=${preview}`);
+        const preview =
+          payload && typeof payload === 'object'
+            ? JSON.stringify(payload).slice(0, 200)
+            : String(payload ?? '').slice(0, 200);
+        console.log(
+          `📥 [${correlationId}] stream_chat received on ${socket.id} - payload=${preview}`,
+        );
       } catch {
-        console.log(`📥 [${correlationId}] stream_chat received on ${socket.id}`);
+        console.log(
+          `📥 [${correlationId}] stream_chat received on ${socket.id}`,
+        );
       }
     });
     socket.on('error', (err: unknown) => {
       console.error(`⚠️ [${correlationId}] Socket error on ${socket.id}:`, err);
     });
     socket.on('disconnect', (reason: unknown) => {
-      console.log(`🔌 [${correlationId}] Socket disconnected ${socket.id} - reason=${String(reason)}`);
+      console.log(
+        `🔌 [${correlationId}] Socket disconnected ${socket.id} - reason=${String(reason)}`,
+      );
     });
 
     // Track WebSocket connection metrics
@@ -587,7 +604,7 @@ export const setupSocketHandlers = (
                   return 'Give me a brain teaser or riddle right now. I want to challenge my mind!';
                 case 'quote_master':
                   return 'Share an inspiring or entertaining quote with me right now. I want some wisdom or humor!';
-              // (diagnostic listeners are set up at connection time)
+                // (diagnostic listeners are set up at connection time)
                 case 'game_host':
                   return 'Start a fun interactive game with me right now. I want to play something engaging!';
                 case 'music_guru':
@@ -781,7 +798,9 @@ export const setupSocketHandlers = (
               );
             } else {
               // Create new conversation (or replace temporary ID with a real one)
-              console.log(`Creating new conversation (temp ID was: ${conversationId || 'none'})`);
+              console.log(
+                `Creating new conversation (temp ID was: ${conversationId || 'none'})`,
+              );
               conversation = {
                 id: uuidv4(),
                 title: generateConversationTitle(message),
@@ -1072,7 +1091,7 @@ export const setupSocketHandlers = (
   };
 
   console.log('[DEBUG] setupSocketHandlers completed successfully');
-  
+
   // Export helper functions for use in routes
   return {
     emitToConversation,

@@ -9,13 +9,15 @@ spec:
   gateways:
     - chat-gateway
   http:
-    # Socket.io WebSocket endpoint - MUST be before /api route
+    # Socket.io WebSocket endpoint - MUST be before redirect and /api route
     - match:
         - uri:
             prefix: /api/socket.io
           headers:
             upgrade:
               exact: websocket
+          authority:
+            exact: chat.cat-herding.net
       route:
         - destination:
             host: chat-backend

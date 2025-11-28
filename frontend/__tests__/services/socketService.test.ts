@@ -164,7 +164,11 @@ describe('SocketService', () => {
 
       socketService.sendStreamingMessage(request);
 
-      expect(mockSocket.emit).toHaveBeenCalledWith('stream_chat', request);
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'stream_chat',
+        request,
+        expect.any(Function),
+      );
     });
   });
 
@@ -191,7 +195,12 @@ describe('SocketService', () => {
 
       socketService.onStreamStart(callback);
 
-      expect(mockSocket.on).toHaveBeenCalledWith('stream_start', callback);
+      // onStreamStart wraps the callback to add debug logging, so we only
+      // assert that a function was registered for the correct event.
+      expect(mockSocket.on).toHaveBeenCalledWith(
+        'stream_start',
+        expect.any(Function),
+      );
     });
 
     it('should set up stream chunk listener', () => {

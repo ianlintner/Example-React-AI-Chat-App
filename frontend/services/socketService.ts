@@ -114,14 +114,22 @@ class SocketService {
         resolve();
       });
 
-      // Debug: Log ALL incoming events to see what's being received
-      this.socket.onAny((eventName, ...args) => {
-        console.log(
-          '[DEBUG] Socket received event:',
-          eventName,
-          JSON.stringify(args).slice(0, 200),
-        );
-      });
+      // Debug: Log ALL incoming events to see what's being received.
+      // In unit tests we often use a very small mock that doesn't implement
+      // the full Socket.IO client surface. onAny is helpful in development
+      // but must be optional so tests (and lightweight mocks) don't fail.
+      const socketAny = (this.socket as unknown as {
+        onAny?: (handler: (eventName: string, ...args: unknown[]) => void) => void;
+      }).onAny;
+      if (typeof socketAny === 'function') {
+        socketAny((eventName, ...args) => {
+          console.log(
+            '[DEBUG] Socket received event:',
+            eventName,
+            JSON.stringify(args).slice(0, 200),
+          );
+        });
+      }
 
       this.socket.on('error', err => {
         logger.error('⚠️ Socket error event:', err);

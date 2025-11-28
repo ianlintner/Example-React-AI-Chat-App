@@ -21,14 +21,13 @@ class SocketService {
     return new Promise((resolve, reject) => {
       // Resolve API base URL (prefer env for tests and local dev)
       const isBrowser = typeof window !== 'undefined' && !!window.location;
-      const apiBase =
-        process.env.EXPO_PUBLIC_API_URL ||
-        process.env.API_URL ||
-        (isBrowser ? window.location.origin : 'http://localhost:3000');
+      // Force same-origin when running inside a port-forwarded environment to avoid cross-domain oauth requirements
+      const apiBase = (isBrowser ? window.location.origin : process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5001');
 
       // When using same-origin behind a gateway, route socket path via /api
       const socketPath = isBrowser ? '/api/socket.io' : '/socket.io';
 
+      console.log('[DEBUG] socketService resolved apiBase=', apiBase, 'socketPath=', socketPath);
       logger.info(
         'Connecting to socket server at:',
         apiBase,

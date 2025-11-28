@@ -226,9 +226,12 @@ export const setupSocketHandlers = (
       // Fall back to JWT token authentication
       if (!token) {
         console.warn(
-          `Socket connection rejected: No token provided from ${socket.handshake.address}`,
+          `Socket connection missing auth from ${socket.handshake.address} - allowing anonymous for demo`,
         );
-        return next(new Error('Authentication required'));
+        // Allow anonymous socket for demo fallback (no user storage record)
+        socket.userId = socket.id;
+        socket.userEmail = 'Anonymous';
+        return next();
       }
 
       const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';

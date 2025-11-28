@@ -38,7 +38,7 @@ class SocketService {
     new_message?: NewMessageCallback;
     proactive_message?: ProactiveMessageCallback;
     stream_error?: StreamErrorCallback;
-    agent_status_update?: AgentStatusCallback;
+    agent_status?: AgentStatusCallback;
   } = {};
 
   // Register all stored callbacks on the current socket
@@ -114,26 +114,14 @@ class SocketService {
         resolve();
       });
 
-      // Debug: Log ALL incoming events to see what's being received.
-      // In unit tests we often use a very small mock that doesn't implement
-      // the full Socket.IO client surface. onAny is helpful in development
-      // but must be optional so tests (and lightweight mocks) don't fail.
-      const socketAny = (
-        this.socket as unknown as {
-          onAny?: (
-            handler: (eventName: string, ...args: unknown[]) => void,
-          ) => void;
-        }
-      ).onAny;
-      if (typeof socketAny === 'function') {
-        socketAny((eventName, ...args) => {
-          console.log(
-            '[DEBUG] Socket received event:',
-            eventName,
-            JSON.stringify(args).slice(0, 200),
-          );
-        });
+      // Register stored disconnect and error callbacks if they exist
+      if (this.disconnectCallback) {
+        this.socket.on('disconnect', this.disconnectCallback);
       }
+      if (this.connectErrorCallback) {
+        this.socket.on('connect_error', this.connectErrorCallback);
+      }
+
 
       this.socket.on('error', err => {
         logger.error('⚠️ Socket error event:', err);

@@ -4,20 +4,17 @@ metadata:
   name: chat-virtualservice
 spec:
   hosts:
-    - 'chat.hugecat.net'
     - 'chat.cat-herding.net'
   gateways:
     - chat-gateway
   http:
-    # Socket.io WebSocket endpoint - MUST be before redirect and /api route
+    # Socket.io WebSocket endpoint - MUST be before /api route
     - match:
         - uri:
             prefix: /api/socket.io
           headers:
             upgrade:
               exact: websocket
-          authority:
-            exact: chat.cat-herding.net
       route:
         - destination:
             host: chat-backend

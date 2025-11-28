@@ -13,12 +13,37 @@ spec:
     - match:
         - uri:
             prefix: /api/socket.io
+          headers:
+            upgrade:
+              exact: websocket
       route:
         - destination:
             host: chat-backend
             port:
               number: 80
-      timeout: 3600s # Extended timeout for WebSocket connections
+      timeout: 86400s # 24h timeout for WebSocket connections
+      corsPolicy:
+        allowOrigins:
+          - regex: '.*'
+        allowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowHeaders:
+          - '*'
+        allowCredentials: true
+    # Socket.io polling fallback (non-websocket)
+    - match:
+        - uri:
+            prefix: /api/socket.io
+      route:
+        - destination:
+            host: chat-backend
+            port:
+              number: 80
+      timeout: 3600s
       corsPolicy:
         allowOrigins:
           - regex: '.*'

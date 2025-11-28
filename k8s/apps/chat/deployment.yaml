@@ -96,11 +96,11 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              cpu: '250m'
-              memory: '256Mi'
+              cpu: '150m'
+              memory: '128Mi'
             limits:
-              cpu: '1000m'
-              memory: '768Mi'
+              cpu: '2000m'
+              memory: '1024Mi'
           volumeMounts:
             - name: secrets-store
               mountPath: '/mnt/secrets-store'

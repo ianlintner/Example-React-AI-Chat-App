@@ -761,8 +761,10 @@ export const setupSocketHandlers = (
             }
 
             // Find or create conversation
+            // Temporary conversation IDs (temp-*) from frontend are treated as "create new"
+            const isTemporaryId = conversationId?.startsWith('temp-');
             let conversation: Conversation;
-            if (conversationId) {
+            if (conversationId && !isTemporaryId) {
               const foundConversation = storage.getConversation(conversationId);
               if (!foundConversation) {
                 socket.emit('stream_error', {
@@ -778,7 +780,8 @@ export const setupSocketHandlers = (
                 `Socket ${socket.id} joined conversation ${conversation.id}`,
               );
             } else {
-              // Create new conversation
+              // Create new conversation (or replace temporary ID with a real one)
+              console.log(`Creating new conversation (temp ID was: ${conversationId || 'none'})`);
               conversation = {
                 id: uuidv4(),
                 title: generateConversationTitle(message),

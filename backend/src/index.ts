@@ -85,6 +85,7 @@ const allowedOrigins = process.env.FRONTEND_URL
       'http://localhost:5177',
       'http://localhost:5178',
       'http://localhost:8080',
+      'http://localhost:8081', // Expo web dev server
       'http://localhost:5001', // Same origin when combined
       // Production domains
       'https://chat.hugecat.net',

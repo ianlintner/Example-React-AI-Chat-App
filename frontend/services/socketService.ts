@@ -27,9 +27,8 @@ class SocketService {
       // Local development (Expo web) should use the env var to connect to the separate backend server
       const apiBase = envApiUrl || (isBrowser ? window.location.origin : 'http://localhost:5001');
 
-      // When using same-origin, route socket path via /api. When connecting to separate backend, use /socket.io
-      const isSameOrigin = isBrowser && !envApiUrl;
-      const socketPath = isSameOrigin ? '/api/socket.io' : '/socket.io';
+      // Socket.IO path is always /api/socket.io to match backend configuration
+      const socketPath = '/api/socket.io';
 
       console.log('[DEBUG] socketService resolved apiBase=', apiBase, 'socketPath=', socketPath, 'envApiUrl=', envApiUrl);
       logger.info(

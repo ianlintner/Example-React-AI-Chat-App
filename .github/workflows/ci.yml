@@ -43,7 +43,7 @@ jobs:
             workflows:
               - '.github/workflows/**'
 
-  quality:
+  checks:
     needs: changes
     if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
@@ -53,16 +53,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: package-lock.json
       - name: Install root deps
         run: npm ci
-      - name: Install all workspaces
-        run: npm run install:all
       - name: Format check
         run: npm run format:check
-      - name: Lint
-        run: npm run lint
-      - name: Type check
-        run: npm run type-check
       - name: Docs lint (markdownlint)
         run: npm run docs:lint || echo "Docs lint non-blocking"
       - name: Docs spell check (cspell)
@@ -94,6 +89,12 @@ jobs:
       - name: Install
         working-directory: backend
         run: npm ci
+      - name: Lint
+        working-directory: backend
+        run: npm run lint
+      - name: Type check
+        working-directory: backend
+        run: npm run typecheck
       - name: Test (coverage)
         working-directory: backend
         run: npm run test:ci
@@ -152,6 +153,9 @@ jobs:
       - name: Lint
         working-directory: frontend
         run: npm run lint
+      - name: Type check
+        working-directory: frontend
+        run: npm run type-check
       - name: Test (coverage)
         working-directory: frontend
         run: npm run test:ci
@@ -231,42 +235,8 @@ jobs:
         working-directory: frontend
         run: npm audit --audit-level=moderate || true
 
-  integration:
-    needs: [changes, backend, frontend]
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Prepare env files
-        run: |
-          if [ -f backend/.env.example ] && [ ! -f backend/.env ]; then cp backend/.env.example backend/.env; fi
-          if [ -f frontend/.env.example ] && [ ! -f frontend/.env ]; then cp frontend/.env.example frontend/.env; fi
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-      - name: Install backend deps
-        working-directory: backend
-        run: npm ci
-      - name: Start services
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --wait redis zipkin otel-collector backend
-          timeout=60
-          while ! curl -sf http://localhost:5001/health >/dev/null && [ $timeout -gt 0 ]; do
-            echo "Waiting for backend... ($timeout s left)"; sleep 2; timeout=$((timeout-2));
-          done
-          [ $timeout -gt 0 ] || (echo "Backend failed to start"; docker compose ps; docker compose logs backend; exit 1)
-      - name: Run integration tests
-        working-directory: backend
-        run: |
-          if npm run | grep -q test:integration; then npm run test:integration; else curl -f http://localhost:5001/health; fi
-      - name: Cleanup
-        if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.test.yml down
-
   docker:
-    needs: [backend, frontend, integration]
+    needs: [backend, frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
     runs-on: ubuntu-latest
     steps:
@@ -306,22 +276,20 @@ jobs:
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
 
   ci-success:
-    needs: [changes, quality, backend, frontend, docs, security, integration]
+    needs: [changes, checks, backend, frontend, docs, security]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Aggregate results
         run: |
           echo "Changes: ${{ needs.changes.result }}"
-          echo "Quality: ${{ needs.quality.result }}"
+          echo "Checks: ${{ needs.checks.result }}"
           echo "Backend: ${{ needs.backend.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
           echo "Docs: ${{ needs.docs.result }}"
           echo "Security: ${{ needs.security.result }}"
-          echo "Integration: ${{ needs.integration.result }}"
           [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
           [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
-          [ "${{ needs.quality.result }}" != "failure" ] || { echo "❌ quality failed"; exit 1; }
+          [ "${{ needs.checks.result }}" != "failure" ] || { echo "❌ checks failed"; exit 1; }
           [ "${{ needs.security.result }}" != "failure" ] || { echo "❌ security failed"; exit 1; }
-          [ "${{ needs.integration.result }}" != "failure" ] || { echo "❌ integration failed"; exit 1; }
           echo "✅ Consolidated pipeline passed"

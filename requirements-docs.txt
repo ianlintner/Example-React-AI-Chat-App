@@ -1,0 +1,4 @@
+# MkDocs documentation dependencies
+# Used by GitHub Pages workflow and local development
+mkdocs>=1.6.0,<2.0.0
+mkdocs-techdocs-core>=1.4.0,<2.0.0

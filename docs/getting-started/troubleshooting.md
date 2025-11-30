@@ -14,6 +14,7 @@ node --version && npm --version
 # Verify services
 docker-compose ps
 curl -f http://localhost:5001/health || echo "Backend not responding"
+# Frontend is accessed via Expo Go app or web browser
 ```
 
 ## Environment Setup Issues

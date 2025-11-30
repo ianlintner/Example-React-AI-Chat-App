@@ -114,7 +114,7 @@ frontend/
 ├── app/                    # Expo Router app directory
 │   ├── (tabs)/            # Tab navigation group
 │   │   ├── _layout.tsx    # Tab layout
-│   │   └── index.tsx      # Home tab (Chat interface)
+│   │   └── index.tsx      # Home tab (main entry point with chat and input)
 │   ├── _layout.tsx        # Root layout
 │   └── +not-found.tsx     # 404 page
 ├── components/            # React Native components
@@ -160,7 +160,7 @@ graph TB
         end
         
         subgraph "Home Screen Components"
-            HomeTab --> HomeScreen[HomeScreen<br/>Main app entry point]
+            HomeTab --> HomeScreen[HomeScreen.tsx<br/>Main app entry point]
             
             HomeScreen --> ChatScreen[ChatScreen.tsx<br/>Chat interface]
             HomeScreen --> InputContainer[Message Input Container<br/>KeyboardAvoidingView]
@@ -242,7 +242,11 @@ graph LR
 
 #### 1. HomeScreen (index.tsx)
 
-The main entry point and coordinator for the chat experience. Located at `app/(tabs)/index.tsx`.
+The main entry point and coordinator for the chat experience. Located at `app/(tabs)/index.tsx`. This component manages:
+- Socket connection lifecycle
+- Conversation state management
+- Message event handlers (new messages, streaming, proactive messages)
+- UI coordination between ChatScreen and MessageInput
 
 ```typescript
 import React, { useState, useEffect } from 'react';
@@ -258,17 +262,24 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
 
+  // Initialize socket connection on app start
   useEffect(() => {
     const initializeApp = async () => {
       await socketService.connect();
       setIsConnected(true);
       setIsLoading(false);
+      
+      // Auto-send initial support request for demo
+      setTimeout(() => {
+        socketService.sendStreamingMessage({
+          message: "Hello, I need technical support...",
+          conversationId: undefined,
+        });
+      }, 1000);
     };
     initializeApp();
 
-    return () => {
-      socketService.disconnect();
-    };
+    return () => socketService.disconnect();
   }, []);
 
   // Handles socket events: new messages, streaming, proactive messages

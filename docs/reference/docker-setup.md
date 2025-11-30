@@ -71,12 +71,12 @@ Clean everything and start fresh:
 
 When running in detached mode, access services at:
 
-- **Frontend**: http://localhost:8080
-- **Backend API**: http://localhost:5001
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Jaeger UI**: http://localhost:16686
-- **Prometheus**: http://localhost:9090
-- **Redis**: redis://localhost:6379
+- **Frontend**: `http://localhost:8080`
+- **Backend API**: `http://localhost:5001`
+- **Grafana**: `http://localhost:3000` (admin/admin)
+- **Jaeger UI**: `http://localhost:16686`
+- **Prometheus**: `http://localhost:9090`
+- **Redis**: `redis://localhost:6379`
 
 ## Manual Docker Compose Commands
 
@@ -225,7 +225,7 @@ docker-compose -f docker-compose.yml -f docker-compose.test.yml run --rm trace-v
 
 ### Grafana Dashboards
 
-Access Grafana at http://localhost:3000:
+Access Grafana at `http://localhost:3000`:
 
 - Username: `admin`
 - Password: `admin`
@@ -237,7 +237,7 @@ Pre-configured data sources:
 
 ### Jaeger Tracing
 
-Access Jaeger UI at http://localhost:16686:
+Access Jaeger UI at `http://localhost:16686`:
 
 - View distributed traces
 - Search by service name: `ai-goal-seeking-backend`
@@ -245,7 +245,7 @@ Access Jaeger UI at http://localhost:16686:
 
 ### Prometheus Metrics
 
-Access Prometheus at http://localhost:9090:
+Access Prometheus at `http://localhost:9090`:
 
 - Monitor application metrics
 - Query custom business metrics

@@ -360,18 +360,18 @@ Context-aware conversation flow management:
 
 ### Available Agent Types
 
-| Agent Type | Specialization | Key Features |
-|------------|----------------|--------------|
-| `general` | General Assistant | Versatile conversation, general knowledge, task assistance |
-| `joke` | Adaptive Joke Master | Learning humor system, personalized comedy, reaction tracking |
-| `trivia` | Trivia Master | Fascinating facts, educational content, knowledge sharing |
-| `gif` | GIF Master | Visual entertainment, curated animated content, mood enhancement |
-| `dnd_master` | D&D Master | RPG experiences, character generation, dice rolling, storytelling |
-| `account_support` | Account Support | Authentication, profile management, account security |
-| `billing_support` | Billing Support | Payments, subscriptions, refunds, financial matters |
-| `website_support` | Website Issues | Browser problems, performance issues, technical support |
-| `operator_support` | Customer Operator | General support routing, comprehensive assistance |
-| `hold_agent` | Hold Management | Wait time updates, entertainment during holds |
+| Agent Type         | Specialization       | Key Features                                               |
+| ------------------ | -------------------- | ---------------------------------------------------------- |
+| `general`          | General Assistant    | Versatile conversation, general knowledge, task assistance |
+| `joke`             | Adaptive Joke Master | Learning humor system, personalized comedy, reaction tracking |
+| `trivia`           | Trivia Master        | Fascinating facts, educational content, knowledge sharing  |
+| `gif`              | GIF Master           | Visual entertainment, curated animated content, mood enhancement |
+| `dnd_master`       | D&D Master           | RPG experiences, character generation, dice rolling, storytelling |
+| `account_support`  | Account Support      | Authentication, profile management, account security       |
+| `billing_support`  | Billing Support      | Payments, subscriptions, refunds, financial matters        |
+| `website_support`  | Website Issues       | Browser problems, performance issues, technical support    |
+| `operator_support` | Customer Operator    | General support routing, comprehensive assistance          |
+| `hold_agent`       | Hold Management      | Wait time updates, entertainment during holds              |
 
 ### Agent Configuration Properties
 

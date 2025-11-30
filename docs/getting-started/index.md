@@ -41,10 +41,11 @@ graph LR
 ```
 
 ### Fast Track (Docker)
+
 ```bash
 # Clone and run with Docker
-git clone https://github.com/ianlintner/React.git
-cd React
+git clone https://github.com/ianlintner/Example-React-AI-Chat-App.git
+cd Example-React-AI-Chat-App
 docker-compose up -d
 ```
 

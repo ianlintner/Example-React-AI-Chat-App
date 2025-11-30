@@ -19,7 +19,7 @@ This document provides comprehensive information about the backend architecture,
     - [REST API Request Flow](#rest-api-request-flow)
     - [WebSocket Real-time Flow](#websocket-real-time-flow)
   - [Service Integration Architecture](#service-integration-architecture)
-  - [Error Handling \& Resilience](#error-handling--resilience)
+  - [Error Handling and Resilience](#error-handling-and-resilience)
   - [API Design](#api-design)
     - [RESTful Endpoints](#restful-endpoints)
       - [Health Check](#health-check)
@@ -37,7 +37,7 @@ This document provides comprehensive information about the backend architecture,
     - [Connection Management](#connection-management)
     - [Caching Strategy](#caching-strategy)
   - [Security Implementation](#security-implementation)
-    - [Authentication \& Authorization](#authentication--authorization)
+    - [Authentication and Authorization](#authentication-and-authorization)
   - [Benefits](#benefits)
     - [Scalability](#scalability)
     - [Reliability](#reliability)
@@ -141,7 +141,7 @@ graph TB
 
 ## Project Structure
 
-```
+```text
 backend/
 ├── src/
 │   ├── routes/            # API route handlers
@@ -372,7 +372,7 @@ graph TB
     class RequestValidator,EventValidator,AuthMiddleware,SocketAuth processing
 ```
 
-## Error Handling & Resilience {#error-handling--resilience}
+## Error Handling and Resilience
 
 ```mermaid
 graph TB
@@ -1124,7 +1124,7 @@ export const cache = new CacheService();
 
 ## Security Implementation
 
-### Authentication & Authorization {#authentication--authorization}
+### Authentication and Authorization
 
 ```typescript
 // JWT-based authentication middleware
@@ -1240,4 +1240,3 @@ export const authService = new AuthService();
 - **Testing Support**: Built-in testing frameworks and utilities
 
 The backend system provides a robust, scalable foundation for the AI chat application with enterprise-grade security, performance optimization, and comprehensive error handling that ensures reliable operation under various load conditions.
-```

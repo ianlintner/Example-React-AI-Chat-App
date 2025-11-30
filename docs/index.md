@@ -59,9 +59,9 @@ Welcome to the project documentation. This site is structured for Backstage Tech
 ## How to View These Docs
 
 - Local MkDocs preview:
-  1. Install MkDocs: pip install mkdocs
-  2. Serve locally from repo root: mkdocs serve
-  3. Open http://127.0.0.1:8000
+  1. Install MkDocs: `pip install mkdocs`
+  2. Serve locally from repo root: `mkdocs serve`
+  3. Open `http://127.0.0.1:8000`
 
 - Backstage TechDocs:
   - Ensure your Backstage instance is configured for TechDocs.

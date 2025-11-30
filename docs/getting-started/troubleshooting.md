@@ -13,8 +13,7 @@ node --version && npm --version
 
 # Verify services
 docker-compose ps
-curl -f http://localhost:3001/health || echo "Backend not responding"
-curl -f http://localhost:8080/api/health || echo "Frontend not responding"
+curl -f http://localhost:5001/health || echo "Backend not responding"
 ```
 
 ## Environment Setup Issues
@@ -70,9 +69,9 @@ cp frontend/.env.example frontend/.env
 
 ```bash
 # Find and kill process using port
-lsof -ti:3001 | xargs kill -9
+lsof -ti:5001 | xargs kill -9
 # Or use different port
-PORT=3002 npm run dev
+PORT=5002 npm run dev
 ```
 
 **Symptom**: Database connection errors
@@ -95,7 +94,7 @@ npm run db:migrate
 
 ```bash
 # Verify backend is running
-curl http://localhost:3001/health
+curl http://localhost:5001/health
 
 # Check swagger configuration
 grep -r "swagger\|openapi" backend/src/
@@ -296,7 +295,7 @@ curl http://localhost:14268/api/traces
 curl http://localhost:9090/api/v1/targets
 
 # Verify metrics endpoint
-curl http://localhost:3001/metrics
+curl http://localhost:5001/metrics
 
 # Check Prometheus configuration
 docker-compose exec prometheus cat /etc/prometheus/prometheus.yml

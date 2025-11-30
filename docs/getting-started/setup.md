@@ -13,12 +13,12 @@ This guide covers the complete setup process for local development, from install
 
 ### Required Software
 
-| Software | Version | Purpose |
-|----------|---------|---------|
-| **Node.js** | 18+ | Backend runtime and frontend tooling |
-| **npm/yarn** | Latest | Package management |
-| **Git** | Latest | Version control |
-| **Docker** | Latest | Container orchestration (optional) |
+| Software    | Version | Purpose                              |
+| ----------- | ------- | ------------------------------------ |
+| **Node.js** | 18+     | Backend runtime and frontend tooling |
+| **npm/yarn**| Latest  | Package management                   |
+| **Git**     | Latest  | Version control                      |
+| **Docker**  | Latest  | Container orchestration (optional)   |
 
 ### Platform Support
 
@@ -61,10 +61,11 @@ docker-compose ps
 ```
 
 **Services Running:**
-- 🚀 Backend API: http://localhost:5001
-- 📊 Prometheus: http://localhost:9090  
-- 📈 Grafana: http://localhost:3000
-- 🔍 Jaeger: http://localhost:16686
+
+- 🚀 Backend API: `http://localhost:5001`
+- 📊 Prometheus: `http://localhost:9090`
+- 📈 Grafana: `http://localhost:3000`
+- 🔍 Jaeger: `http://localhost:16686`
 - 📱 Frontend: Expo development server
 
 ### Method 2: Local Development
@@ -172,11 +173,13 @@ EXPO_PUBLIC_DEBUG_LOGGING=true
 ### OpenAI API Key Setup (Optional)
 
 **For AI Functionality:**
-1. Sign up at https://openai.com/api
+
+1. Sign up at [OpenAI API](https://openai.com/api)
 2. Generate an API key
 3. Add to `backend/.env`: `OPENAI_API_KEY=your_key_here`
 
 **Demo Mode:**
+
 - System works without OpenAI API key
 - Uses pre-curated content from RAG system
 - Perfect for development and testing
@@ -283,7 +286,8 @@ open http://localhost:5001/docs
 - [ ] Can send/receive messages
 
 **Development Tools:**
-- [ ] Expo Dev Tools accessible at http://localhost:19002
+
+- [ ] Expo Dev Tools accessible at `http://localhost:19002`
 - [ ] Hot reload working on code changes
 - [ ] Debug menu accessible in app
 

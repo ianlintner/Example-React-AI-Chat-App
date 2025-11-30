@@ -4,32 +4,32 @@ This project now uses a **single consolidated GitHub Actions workflow** (`.githu
 
 ## Workflow Overview
 
-| Stage | Purpose | Key Tools |
-|-------|---------|-----------|
-| changes | Path-based change detection to short‑circuit jobs | dorny/paths-filter |
-| quality | Formatting, linting, type checking, doc lint/spell/Mermaid | Node 20, markdownlint, cspell |
-| backend | Backend tests (Redis service), build, OpenAPI smoke test, coverage upload | Jest, Codecov |
-| frontend | Frontend tests, build, coverage upload | Jest, Expo web build |
-| docs | Strict MkDocs build + link check (no publish) | MkDocs, linkchecker |
-| security | Vulnerability + dependency audit (non‑blocking severity thresholds) | Trivy, npm audit |
-| integration | Docker Compose spin‑up + integration/smoke tests | Docker Compose |
-| docker | Build & push combined image to Docker Hub (+ optional Azure ACR) | docker/build-push-action |
-| ci-success | Aggregates required job results for branch protection | Bash guard script |
+| Stage       | Purpose                                                        | Key Tools                            |
+| ----------- | -------------------------------------------------------------- | ------------------------------------ |
+| changes     | Path-based change detection to short-circuit jobs              | dorny/paths-filter                   |
+| quality     | Formatting, linting, type checking, doc lint/spell/Mermaid     | Node 20, markdownlint, cspell        |
+| backend     | Backend tests (Redis service), build, OpenAPI smoke test, coverage upload | Jest, Codecov               |
+| frontend    | Frontend tests, build, coverage upload                         | Jest, Expo web build                 |
+| docs        | Strict MkDocs build + link check (no publish)                  | MkDocs, linkchecker                  |
+| security    | Vulnerability + dependency audit (non-blocking severity thresholds) | Trivy, npm audit               |
+| integration | Docker Compose spin-up + integration/smoke tests               | Docker Compose                       |
+| docker      | Build and push combined image to Docker Hub (+ optional Azure ACR) | docker/build-push-action        |
+| ci-success  | Aggregates required job results for branch protection          | Bash guard script                    |
 
 ## Removed Workflows
 
 The following workflows have been deleted and their functionality consolidated into `ci.yml`:
 
-| Removed Workflow | Reason |
-|------------------|--------|
-| `docs-deploy.yml` | GCS documentation publishing removed |
+| Removed Workflow             | Reason                                                 |
+| ---------------------------- | ------------------------------------------------------ |
+| `docs-deploy.yml`            | GCS documentation publishing removed                   |
 | `deploy-frontend.yaml.disabled` | Static frontend GCS hosting deprecated (container image used) |
-| `gcp-auth.yaml` | GCP OIDC auth test no longer required |
-| `azure-docker-push.yml` | Folded into unified pipeline (`docker` job) |
-| `docs-quality.yml` | Steps merged into `quality` / `docs` jobs |
-| `quality-checks.yml` | Steps merged into `quality` / `docs` jobs |
-| `ci-optimized.yml` | Superseded by consolidated `ci.yml` |
-| `ci.yml.disabled` | Legacy simplified CI no longer needed |
+| `gcp-auth.yaml`              | GCP OIDC auth test no longer required                  |
+| `azure-docker-push.yml`      | Folded into unified pipeline (`docker` job)            |
+| `docs-quality.yml`           | Steps merged into `quality` / `docs` jobs              |
+| `quality-checks.yml`         | Steps merged into `quality` / `docs` jobs              |
+| `ci-optimized.yml`           | Superseded by consolidated `ci.yml`                    |
+| `ci.yml.disabled`            | Legacy simplified CI no longer needed                  |
 
 ## Branch Protection
 

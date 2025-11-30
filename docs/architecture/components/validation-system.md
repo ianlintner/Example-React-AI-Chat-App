@@ -294,7 +294,7 @@ const validationResult = responseValidator.validateResponse(
 
 ### Validation Statistics
 
-```
+```http
 GET /api/validation/stats
 ```
 
@@ -307,7 +307,7 @@ Returns overall validation statistics including:
 
 ### Validation Logs
 
-```
+```http
 GET /api/validation/logs?limit=50&offset=0
 ```
 
@@ -320,7 +320,7 @@ Returns paginated validation logs with:
 
 ### Agent-Specific Logs
 
-```
+```http
 GET /api/validation/logs/:agentType
 ```
 
@@ -328,7 +328,7 @@ Returns validation logs filtered by agent type.
 
 ### Failed Validations
 
-```
+```http
 GET /api/validation/failed
 ```
 
@@ -336,7 +336,7 @@ Returns only failed validations for issue investigation.
 
 ### Validation Summary
 
-```
+```http
 GET /api/validation/summary
 ```
 
@@ -348,7 +348,7 @@ Returns validation summary grouped by agent type with:
 
 ### Clear Logs (Debug)
 
-```
+```http
 POST /api/validation/clear
 ```
 
@@ -419,11 +419,11 @@ graph TB
 - Non-technical agents: Should redirect technical queries
 - Entertainment agents: Should maintain appropriate tone
 
-## Monitoring & Alerting
+## Monitoring and Alerting
 
 ### Console Logging
 
-```
+```text
 🔍 Validation Result [dad_joke] Score: 0.85, Valid: true
 ⚠️ Validation issues for technical response: [medium: Response too short]
 ❌ High severity validation issues detected for general response

@@ -11,7 +11,8 @@ The documentation standardization plan has been successfully implemented with en
 ## ✅ Completed Implementation
 
 ### Foundation (Phase 1)
-- [x] **Added live docs link** to README.md: http://example-docs.hugecat.net/
+
+- [x] **Added live docs link** to README.md: `http://example-docs.hugecat.net/`
 - [x] **Disabled Prettier formatting** for docs markdown files (`docs/**/*.md`)
 - [x] **Enhanced MkDocs configuration** with Material theme, advanced extensions
 - [x] **Configured Mermaid rendering** without syntax highlighting interference
@@ -29,7 +30,8 @@ The documentation standardization plan has been successfully implemented with en
   - PR preview comments
 
 ### Quality Configuration Files Created
-```
+
+```text
 .markdownlint.yml         # Markdown linting rules
 cspell.json              # Spell checking configuration
 docs/_templates/         # Professional document templates
@@ -68,7 +70,8 @@ docs/_templates/         # Professional document templates
 ## 📚 Documentation Structure
 
 Current standardized structure:
-```
+
+```text
 docs/
 ├── _templates/                 # Document templates
 │   ├── adr-template.md        # Architecture decisions
@@ -147,7 +150,7 @@ Each template includes:
 ## 🚀 Live Documentation
 
 The enhanced documentation is now available at:
-**http://example-docs.hugecat.net/**
+**[http://example-docs.hugecat.net/](http://example-docs.hugecat.net/)**
 
 Features:
 - Enhanced Material Design theme

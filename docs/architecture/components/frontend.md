@@ -109,20 +109,19 @@ graph TB
 
 ## Project Structure
 
-```
+```text
 frontend/
 ├── app/                    # Expo Router app directory
 │   ├── (tabs)/            # Tab navigation group
 │   │   ├── _layout.tsx    # Tab layout
-│   │   ├── index.tsx      # Chat tab
-│   │   └── explore.tsx    # Dashboard tab
+│   │   └── index.tsx      # Home tab (main entry point with chat and input)
 │   ├── _layout.tsx        # Root layout
 │   └── +not-found.tsx     # 404 page
 ├── components/            # React Native components
 │   ├── AgentStatusBar.tsx # Agent status display
+│   ├── AuthProvider.tsx   # Authentication provider
 │   ├── ChatScreen.tsx     # Main chat interface
 │   ├── MessageInput.tsx   # Message input component
-│   ├── ValidationDashboard.tsx # AI validation metrics
 │   └── ui/               # UI components
 │       ├── IconSymbol.tsx
 │       └── TabBarBackground.tsx
@@ -131,7 +130,7 @@ frontend/
 ├── types/                 # TypeScript type definitions
 │   └── index.ts          # Shared types
 ├── constants/             # App constants
-│   └── Colors.ts         # Color scheme
+│   └── Colors.ts         # Color scheme (includes DiscordColors)
 ├── hooks/                 # Custom hooks
 │   ├── useColorScheme.ts # Theme detection
 │   └── useThemeColor.ts  # Color theming
@@ -157,53 +156,36 @@ graph TB
             RootLayout --> ExpoRouter[Expo Router<br/>File-based routing]
             ExpoRouter --> TabLayout[tabs/_layout.tsx<br/>Tab Navigation]
             
-            TabLayout --> ChatTab[index.tsx<br/>Chat Tab Screen]
-            TabLayout --> DashboardTab[explore.tsx<br/>Dashboard Tab Screen]
+            TabLayout --> HomeTab[index.tsx<br/>Home Tab Screen]
         end
         
-        subgraph "Chat Screen Components"
-            ChatTab --> ChatScreen[ChatScreen.tsx<br/>Main chat interface]
+        subgraph "Home Screen Components"
+            HomeTab --> HomeScreen[HomeScreen.tsx<br/>Main app entry point]
             
-            ChatScreen --> AgentStatus[AgentStatusBar.tsx<br/>🤖 Agent indicator]
+            HomeScreen --> ChatScreen[ChatScreen.tsx<br/>Chat interface]
+            HomeScreen --> InputContainer[Message Input Container<br/>KeyboardAvoidingView]
+            
             ChatScreen --> MessageContainer[Message Container<br/>ScrollView wrapper]
-            ChatScreen --> InputContainer[Message Input Container<br/>KeyboardAvoidingView]
-            
             MessageContainer --> MessageList[Message List<br/>FlatList optimization]
-            MessageList --> MessageBubble[MessageBubble.tsx<br/>Individual message UI]
+            MessageList --> MessageBubble[MessageBubble<br/>Individual message UI]
             
             InputContainer --> MessageInput[MessageInput.tsx<br/>Text input + send button]
             MessageInput --> SendButton[Send Button<br/>IconButton with haptics]
         end
         
-        subgraph "Dashboard Screen Components"
-            DashboardTab --> ValidationDash[ValidationDashboard.tsx<br/>Metrics interface]
-            
-            ValidationDash --> MetricsGrid[Metrics Grid<br/>Card-based layout]
-            ValidationDash --> ChartContainer[Chart Container<br/>Visualization wrapper]
-            ValidationDash --> ResponseLog[Response Log<br/>Validation history]
-            
-            MetricsGrid --> QualityCard[Quality Score Card<br/>Progress indicators]
-            MetricsGrid --> AgentCard[Agent Stats Card<br/>Performance metrics]
-            MetricsGrid --> ResponseCard[Response Time Card<br/>Latency tracking]
-            
-            ChartContainer --> QualityChart[Quality Trend Chart<br/>Line chart component]
-            ChartContainer --> AgentPieChart[Agent Usage Chart<br/>Pie chart distribution]
-        end
-        
         subgraph "Shared UI Components"
             MessageBubble --> ThemedText[ThemedText.tsx<br/>Theme-aware text]
-            QualityCard --> ThemedView[ThemedView.tsx<br/>Theme-aware container]
+            HomeScreen --> ThemedView[ThemedView.tsx<br/>Theme-aware container]
             
             ThemedText --> ColorScheme[useColorScheme<br/>Dark/Light detection]
             ThemedView --> ThemeColor[useThemeColor<br/>Dynamic color resolution]
         end
         
         subgraph "Service Integration"
-            ChatScreen --> SocketService[socketService.ts<br/>WebSocket client]
-            ValidationDash --> APIService[apiService.ts<br/>HTTP client]
+            HomeScreen --> SocketService[socketService.ts<br/>WebSocket client]
             
             SocketService --> RealTimeEvents[Real-time Events<br/>Message streaming]
-            APIService --> DataFetching[Data Fetching<br/>REST API calls]
+            SocketService --> ProactiveMessages[Proactive Messages<br/>Goal-seeking actions]
         end
     end
 
@@ -213,11 +195,11 @@ graph TB
     classDef component fill:#f3e5f5,stroke:#7b1fa2,color:#000
     classDef ui fill:#e8eaf6,stroke:#3f51b5,color:#000
     
-    class App,RootLayout,ExpoRouter,TabLayout,SocketService,APIService,RealTimeEvents,DataFetching service
-    class ChatScreen,ValidationDash,MessageContainer,MessageList,MetricsGrid,ChartContainer data
-    class ChatTab,DashboardTab,ColorScheme,ThemeColor external
-    class AgentStatus,MessageBubble,MessageInput,QualityCard,AgentCard,ResponseCard,QualityChart,AgentPieChart component
-    class ThemedText,ThemedView,SendButton ui
+    class App,RootLayout,ExpoRouter,TabLayout,SocketService,RealTimeEvents,ProactiveMessages service
+    class ChatScreen,MessageContainer,MessageList data
+    class HomeTab,ColorScheme,ThemeColor external
+    class MessageBubble,MessageInput,SendButton component
+    class ThemedText,ThemedView,HomeScreen ui
 ```
 
 ### Component Hierarchy Tree
@@ -228,27 +210,20 @@ graph LR
         App[📱 App] --> Root[🏠 RootLayout]
         Root --> Tabs[📑 TabLayout]
         
-        Tabs --> Chat[💬 ChatTab]
-        Tabs --> Dash[📊 DashboardTab]
+        Tabs --> Home[🏠 HomeTab]
         
-        Chat --> ChatScreen[🖥️ ChatScreen]
-        Dash --> ValDash[📈 ValidationDashboard]
+        Home --> HomeScreen[🖥️ HomeScreen]
         
-        ChatScreen --> Agent[🤖 AgentStatusBar]
+        HomeScreen --> ChatScreen[💬 ChatScreen]
+        HomeScreen --> Input[⌨️ MessageInput]
+        
         ChatScreen --> Messages[📜 MessageList]
-        ChatScreen --> Input[⌨️ MessageInput]
-        
         Messages --> Bubble[💭 MessageBubble]
         Input --> Send[📤 SendButton]
         
-        ValDash --> Cards[🗃️ MetricsCards]
-        ValDash --> Chart[📊 QualityChart]
-        ValDash --> Log[📋 ResponseList]
-        
         subgraph "Shared Components"
             Bubble --> Text[📝 ThemedText]
-            Cards --> View[🎨 ThemedView]
-            Agent --> Status[🔄 ConnectionStatus]
+            HomeScreen --> View[🎨 ThemedView]
         end
     end
 
@@ -258,114 +233,108 @@ graph LR
     classDef shared fill:#e8eaf6,stroke:#3f51b5,color:#000
     
     class App,Root,Tabs root
-    class Chat,Dash,ChatScreen,ValDash screen
-    class Agent,Messages,Input,Cards,Chart,Log,Bubble,Send component
-    class Text,View,Status shared
+    class Home,HomeScreen,ChatScreen screen
+    class Messages,Input,Bubble,Send component
+    class Text,View shared
 ```
 
 ### Core Components
 
-#### 1. ChatScreen.tsx
+#### 1. HomeScreen (index.tsx)
 
-Main chat interface component with full mobile functionality.
+The main entry point and coordinator for the chat experience. Located at `app/(tabs)/index.tsx`. This component manages:
+- Socket connection lifecycle
+- Conversation state management
+- Message event handlers (new messages, streaming, proactive messages)
+- UI coordination between ChatScreen and MessageInput
 
 ```typescript
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Surface } from 'react-native-paper';
-import { socketService } from '../services/socketService';
-import MessageInput from './MessageInput';
-import AgentStatusBar from './AgentStatusBar';
+import { View, AppState, ActivityIndicator, Text } from 'react-native';
+import { DiscordColors } from '../../constants/Colors';
+import { socketService } from '../../services/socketService';
+import ChatScreen from '../../components/ChatScreen';
+import MessageInput from '../../components/MessageInput';
+import type { Conversation, Message } from '../../types';
 
-export default function ChatScreen() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function HomeScreen() {
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeAgent, setActiveAgent] = useState<string>('general');
 
+  // Initialize socket connection on app start
   useEffect(() => {
-    socketService.connect();
+    const initializeApp = async () => {
+      await socketService.connect();
+      setIsConnected(true);
+      setIsLoading(false);
+      
+      // Auto-send initial support request for demo
+      setTimeout(() => {
+        socketService.sendStreamingMessage({
+          message: "Hello, I need technical support...",
+          conversationId: undefined,
+        });
+      }, 1000);
+    };
+    initializeApp();
 
-    socketService.on('connect', () => setIsConnected(true));
-    socketService.on('disconnect', () => setIsConnected(false));
-    socketService.on('message', handleNewMessage);
-    socketService.on('agent_selection', handleAgentSelection);
+    return () => socketService.disconnect();
+  }, []);
+
+  // Handles socket events: new messages, streaming, proactive messages
+  useEffect(() => {
+    socketService.onNewMessage(handleNewMessage);
+    socketService.onStreamStart(handleStreamStart);
+    socketService.onStreamChunk(handleStreamChunk);
+    socketService.onStreamComplete(handleStreamComplete);
+    socketService.onProactiveMessage(handleProactiveMessage);
 
     return () => {
-      socketService.disconnect();
+      socketService.removeListener('new_message');
+      // ... cleanup other listeners
     };
   }, []);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <AgentStatusBar
-        activeAgent={activeAgent}
-        isConnected={isConnected}
-      />
-      <ScrollView style={{ flex: 1 }}>
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-      </ScrollView>
+    <View style={styles.container}>
+      <ChatScreen conversation={conversation} />
       <MessageInput
-        onSendMessage={handleSendMessage}
+        conversationId={conversation?.id}
+        onMessageSent={handleMessageSent}
         disabled={!isConnected}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 ```
 
-#### 2. ValidationDashboard.tsx
+#### 2. ChatScreen.tsx
 
-Real-time AI response validation and metrics display.
+Main chat interface component that displays the conversation messages.
 
 ```typescript
-import React, { useState, useEffect } from 'react';
-import { ScrollView, RefreshControl } from 'react-native';
-import { Card, Title, Paragraph, ProgressBar } from 'react-native-paper';
-import { socketService } from '../services/socketService';
+import React from 'react';
+import { View, FlatList, StyleSheet } from 'react-native';
+import { DiscordColors } from '../constants/Colors';
+import type { Conversation, Message } from '../types';
 
-export default function ValidationDashboard() {
-  const [metrics, setMetrics] = useState<ValidationMetrics | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+interface ChatScreenProps {
+  conversation: Conversation | null;
+}
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchMetrics();
-    setRefreshing(false);
-  }, []);
-
+export default function ChatScreen({ conversation }: ChatScreenProps) {
   return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <Card style={{ margin: 16 }}>
-        <Card.Content>
-          <Title>Response Quality</Title>
-          <Paragraph>Average quality score</Paragraph>
-          <ProgressBar
-            progress={metrics?.averageQuality || 0}
-            style={{ marginTop: 8 }}
-          />
-        </Card.Content>
-      </Card>
-
-      <Card style={{ margin: 16 }}>
-        <Card.Content>
-          <Title>Agent Performance</Title>
-          {metrics?.agentStats.map((agent) => (
-            <View key={agent.type}>
-              <Paragraph>{agent.type}: {agent.responseCount}</Paragraph>
-            </View>
-          ))}
-        </Card.Content>
-      </Card>
-    </ScrollView>
+    <View style={styles.container}>
+      <FlatList
+        data={conversation?.messages || []}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <MessageBubble message={item} />
+        )}
+        // Supports streaming message status: pending, streaming, complete
+      />
+    </View>
   );
 }
 ```
@@ -457,30 +426,24 @@ export default function RootLayout() {
 ```typescript
 // app/(tabs)/_layout.tsx - Tab navigation
 import { Tabs } from 'expo-router';
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Chat',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'chatbubble' : 'chatbubble-outline'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'analytics' : 'analytics-outline'} color={color} />
+          title: 'Home',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="house.fill" color={color} />
           ),
         }}
       />
@@ -536,10 +499,31 @@ export function useSocket() {
 
 ## Styling and Theming
 
-### React Native Paper Theming
+### Discord-Inspired Color Scheme
+
+The app uses a Discord-inspired dark theme for the chat interface:
 
 ```typescript
 // constants/Colors.ts
+export const DiscordColors = {
+  // Background colors
+  backgroundPrimary: '#36393f',
+  backgroundSecondary: '#2f3136',
+  backgroundTertiary: '#202225',
+  
+  // Text colors
+  textNormal: '#dcddde',
+  textMuted: '#72767d',
+  textLink: '#00aff4',
+  
+  // Status colors
+  green: '#3ba55c',
+  red: '#ed4245',
+  
+  // Interactive elements
+  interactive: '#8e9297',
+};
+
 export const Colors = {
   light: {
     text: '#11181C',
@@ -556,29 +540,6 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: '#fff',
-  },
-};
-
-// Theme provider setup
-import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
-
-export const lightTheme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: Colors.light.tint,
-    background: Colors.light.background,
-    surface: '#f8f9fa',
-  },
-};
-
-export const darkTheme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary: Colors.dark.tint,
-    background: Colors.dark.background,
-    surface: '#1e1e1e',
   },
 };
 ```

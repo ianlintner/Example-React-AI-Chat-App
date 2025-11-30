@@ -93,13 +93,13 @@ metrics.validationIssues.inc({ agent_type, severity, issue_type });
 
 ### Access Dashboards
 
-- **Grafana UI**: http://localhost:3000
+- **Grafana UI**: `http://localhost:3000`
 - **Login**: admin/admin
 - **Dashboards**: Navigate to "AI Validation Overview" or "AI Validation Quality"
 
 ### View Metrics Directly
 
-- **Prometheus UI**: http://localhost:9090
+- **Prometheus UI**: `http://localhost:9090`
 - **Query Examples**:
 
   ```promql

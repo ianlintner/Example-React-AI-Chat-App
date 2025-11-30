@@ -28,10 +28,11 @@ docker-compose ps
 ```
 
 **Services Started:**
-- 🚀 Backend API server: http://localhost:5001
-- 📊 Prometheus metrics: http://localhost:9090
-- 📈 Grafana dashboards: http://localhost:3000
-- 🔍 Jaeger tracing: http://localhost:16686
+
+- 🚀 Backend API server: `http://localhost:5001`
+- 📊 Prometheus metrics: `http://localhost:9090`
+- 📈 Grafana dashboards: `http://localhost:3000`
+- 🔍 Jaeger tracing: `http://localhost:16686`
 
 ### Option 2: Local Development
 
@@ -74,32 +75,36 @@ open http://localhost:5001/docs  # Interactive Swagger UI
 ### 2. Frontend Verification
 
 **Mobile App (Expo):**
+
 - Open Expo Go app on your mobile device
 - Scan QR code from terminal/browser
 - App should load with chat interface
 
 **Web Browser (for testing):**
-- Expo Dev Tools: http://localhost:19002
+
+- Expo Dev Tools: `http://localhost:19002`
 - Web version: Press `w` in terminal
 
 ### 3. Real-time Features Test
 
 **Chat Functionality:**
+
 1. Send a message in the mobile app
 2. Observe real-time streaming response
 3. Check agent classification (General, Joke, Trivia, etc.)
-4. View response validation in dashboard tab
+4. View proactive messages from the goal-seeking system
 
 **Monitoring & Observability:**
-1. **Grafana Dashboards:** http://localhost:3000
+
+1. **Grafana Dashboards:** `http://localhost:3000`
    - Username: `admin`, Password: `admin`
    - View AI validation metrics and system health
 
-2. **Prometheus Metrics:** http://localhost:9090
+2. **Prometheus Metrics:** `http://localhost:9090`
    - Query validation metrics: `validation_pass_total`
    - Monitor response times: `http_request_duration_seconds`
 
-3. **Jaeger Tracing:** http://localhost:16686
+3. **Jaeger Tracing:** `http://localhost:16686`
    - View distributed traces for chat requests
    - Analyze agent processing performance
 

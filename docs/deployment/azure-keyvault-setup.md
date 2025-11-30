@@ -15,7 +15,7 @@ Azure Key Vault integration provides:
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────┐
 │   Azure Key Vault   │
 │ ai-chat-kv-17638... │

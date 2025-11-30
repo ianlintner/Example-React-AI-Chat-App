@@ -7,10 +7,10 @@ This guide walks you through deploying the AI Chat Application to Azure Kubernet
 Before you begin, ensure you have:
 
 1. **Azure Account**: An active Azure subscription ([Get one free](https://azure.microsoft.com/free/))
-2. **Azure CLI**: Install from [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-3. **kubectl**: Install from [here](https://kubernetes.io/docs/tasks/tools/)
-4. **Docker**: Install from [here](https://docs.docker.com/get-docker/)
-5. **Helm** (optional, for NGINX Ingress): Install from [here](https://helm.sh/docs/intro/install/)
+2. **Azure CLI**: [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+3. **kubectl**: [Install kubectl](https://kubernetes.io/docs/tasks/tools/)
+4. **Docker**: [Install Docker](https://docs.docker.com/get-docker/)
+5. **Helm** (optional, for NGINX Ingress): [Install Helm](https://helm.sh/docs/intro/install/)
 
 ## Architecture Overview
 
@@ -195,14 +195,14 @@ echo "Application URL: http://${INGRESS_IP}"
 
 The deployment script accepts these environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AZURE_RESOURCE_GROUP` | `nekoc` | Azure resource group name |
-| `AZURE_CLUSTER_NAME` | `bigboy` | AKS cluster name |
-| `AZURE_LOCATION` | `eastus` | Azure region |
-| `AZURE_ACR_NAME` | `gabby` | Container registry name (must be globally unique) |
-| `AZURE_NODE_COUNT` | `2` | Number of nodes in the cluster |
-| `AZURE_NODE_SIZE` | `Standard_D2s_v3` | VM size for nodes |
+| Variable               | Default          | Description                                         |
+| ---------------------- | ---------------- | --------------------------------------------------- |
+| `AZURE_RESOURCE_GROUP` | `nekoc`          | Azure resource group name                           |
+| `AZURE_CLUSTER_NAME`   | `bigboy`         | AKS cluster name                                    |
+| `AZURE_LOCATION`       | `eastus`         | Azure region                                        |
+| `AZURE_ACR_NAME`       | `gabby`          | Container registry name (must be globally unique)   |
+| `AZURE_NODE_COUNT`     | `2`              | Number of nodes in the cluster                      |
+| `AZURE_NODE_SIZE`      | `Standard_D2s_v3`| VM size for nodes                                   |
 
 ### Updating the Application
 
@@ -240,7 +240,7 @@ kubectl get ingress chat-backend-ingress
 
 Create an A record in your DNS provider pointing to this IP:
 
-```
+```text
 chat.yourdomain.com -> <INGRESS_IP>
 ```
 

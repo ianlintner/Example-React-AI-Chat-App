@@ -980,6 +980,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+  userIndicatorContainer: {
+    marginBottom: 6,
+    flexDirection: 'column',
+    gap: 2,
+  },
+  userName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: ForestColors.textNormal,
+    lineHeight: 18,
+  },
+  userEmail: {
+    fontSize: 11,
+    color: ForestColors.textMuted,
+    lineHeight: 16,
+  },
   agentChip: {
     height: 24,
     backgroundColor: ForestColors.backgroundAccent,

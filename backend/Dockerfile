@@ -1,17 +1,24 @@
 # Multi-stage build for Node.js backend
+# Note: This Dockerfile should be built from the project root with:
+#   docker build -f backend/Dockerfile -t backend:latest .
 FROM node:24-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy shared types (required by backend imports)
+COPY shared/ /shared/
+# Duplicate shared types into backend workspace to satisfy TS relative imports
+COPY shared/ /app/shared/
+
+# Copy backend source code
+COPY backend/ .
 
 # Build TypeScript
 RUN npm run build

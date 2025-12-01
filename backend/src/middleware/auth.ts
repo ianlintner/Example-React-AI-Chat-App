@@ -45,7 +45,7 @@ const fetchGitHubUserProfile = async (
       return null;
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { avatar_url?: string };
     return { avatar_url: data.avatar_url };
   } catch (error) {
     logger.error({ error, username }, 'Error fetching GitHub profile');

@@ -290,4 +290,175 @@ describe('ChatScreen', () => {
       expect(screen.getByText(/italic text/)).toBeTruthy();
     });
   });
+
+  describe('User Avatar Display', () => {
+    it('should display user avatar image when available', () => {
+      const conversationWithAvatar: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'Hello with avatar',
+            timestamp: new Date(),
+            user: {
+              name: 'Test User',
+              avatar: 'https://github.com/avatar.png',
+            },
+          } as Message,
+        ],
+      };
+
+      const { UNSAFE_getByProps } = render(
+        <ChatScreen conversation={conversationWithAvatar} />,
+      );
+
+      // Check that Avatar.Image is rendered with correct source
+      const avatarImage = UNSAFE_getByProps({
+        source: { uri: 'https://github.com/avatar.png' },
+      });
+      expect(avatarImage).toBeTruthy();
+    });
+
+    it('should display text initials when avatar not available', () => {
+      const conversationWithoutAvatar: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'Hello without avatar',
+            timestamp: new Date(),
+            user: {
+              name: 'Test User',
+            },
+          } as Message,
+        ],
+      };
+
+      render(<ChatScreen conversation={conversationWithoutAvatar} />);
+
+      // Check for text avatar with initials "TE"
+      expect(screen.getByText('TE')).toBeTruthy();
+    });
+
+    it('should display text initials when user has no avatar', () => {
+      const conversationWithUser: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'Test message',
+            timestamp: new Date(),
+            user: {
+              name: 'John Doe',
+            },
+          } as Message,
+        ],
+      };
+
+      render(<ChatScreen conversation={conversationWithUser} />);
+
+      // Should show first 2 letters uppercase
+      expect(screen.getByText('JO')).toBeTruthy();
+    });
+
+    it('should handle missing user data gracefully', () => {
+      const conversationNoUser: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'Message without user data',
+            timestamp: new Date(),
+          } as Message,
+        ],
+      };
+
+      render(<ChatScreen conversation={conversationNoUser} />);
+
+      // Should show default "U" for user
+      expect(screen.getByText('U')).toBeTruthy();
+    });
+
+    it('should only show avatars for user messages, not assistant', () => {
+      const mixedConversation: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'User message',
+            timestamp: new Date(),
+            user: {
+              name: 'Test User',
+              avatar: 'https://github.com/avatar.png',
+            },
+          } as Message,
+          {
+            id: '2',
+            role: 'assistant',
+            content: 'Assistant message',
+            timestamp: new Date(),
+            agentUsed: 'general',
+          } as Message,
+        ],
+      };
+
+      const { UNSAFE_getAllByProps } = render(
+        <ChatScreen conversation={mixedConversation} />,
+      );
+
+      // Should have user avatar image
+      const userAvatar = UNSAFE_getAllByProps({
+        source: { uri: 'https://github.com/avatar.png' },
+      });
+      expect(userAvatar.length).toBeGreaterThan(0);
+
+      // Assistant should have icon-based avatar (robot icon)
+      expect(screen.getByText('AI Assistant')).toBeTruthy();
+    });
+
+    it('should render multiple user messages with different avatars', () => {
+      const multiUserConversation: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'First user message',
+            timestamp: new Date(),
+            user: {
+              name: 'Alice',
+              avatar: 'https://github.com/alice.png',
+            },
+          } as Message,
+          {
+            id: '2',
+            role: 'user',
+            content: 'Second user message',
+            timestamp: new Date(),
+            user: {
+              name: 'Bob',
+            },
+          } as Message,
+        ],
+      };
+
+      const { UNSAFE_getByProps } = render(
+        <ChatScreen conversation={multiUserConversation} />,
+      );
+
+      // First user has avatar
+      const aliceAvatar = UNSAFE_getByProps({
+        source: { uri: 'https://github.com/alice.png' },
+      });
+      expect(aliceAvatar).toBeTruthy();
+
+      // Second user has text initials
+      expect(screen.getByText('BO')).toBeTruthy();
+    });
+  });
 });

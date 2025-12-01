@@ -446,6 +446,20 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
                 );
               })()}
 
+            {/* User info indicator for user messages */}
+            {isUser && message.user && (
+              <View style={styles.userIndicatorContainer}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {message.user.name}
+                </Text>
+                {message.user.email && (
+                  <Text style={styles.userEmail} numberOfLines={1}>
+                    {message.user.email}
+                  </Text>
+                )}
+              </View>
+            )}
+
             {isUser ? (
               <Text style={[styles.messageText, styles.userMessageText]}>
                 {message.content}

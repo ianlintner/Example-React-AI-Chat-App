@@ -6,6 +6,7 @@ export interface Message {
   conversationId: string;
   user?: {
     name: string;
+    email?: string;
     avatar?: string;
   };
 }

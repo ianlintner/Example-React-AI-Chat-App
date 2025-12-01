@@ -64,7 +64,9 @@ describe('Auth Middleware', () => {
       it('should fetch GitHub avatar for new users', async () => {
         const mockGitHubResponse = {
           ok: true,
-          json: jest.fn().mockResolvedValue({ avatar_url: 'https://github.com/avatar.png' }),
+          json: jest
+            .fn()
+            .mockResolvedValue({ avatar_url: 'https://github.com/avatar.png' }),
         };
 
         (global.fetch as jest.Mock).mockResolvedValue(mockGitHubResponse);
@@ -124,7 +126,9 @@ describe('Auth Middleware', () => {
 
         const mockGitHubResponse = {
           ok: true,
-          json: jest.fn().mockResolvedValue({ avatar_url: 'https://new-avatar.png' }),
+          json: jest
+            .fn()
+            .mockResolvedValue({ avatar_url: 'https://new-avatar.png' }),
         };
 
         (global.fetch as jest.Mock).mockResolvedValue(mockGitHubResponse);

@@ -15,29 +15,34 @@ data:
   # Note: OAuth is handled at cluster level via oauth2-proxy
 
 ---
-# Custom override for oauth2-proxy sidecar configuration.
-# Removes any session_cookie_minimal setting so that access & ID tokens
-# are available for Authorization / X-Auth-Request-* headers.
+# Dedicated oauth2-proxy config for chat app (unique name ensures override of cluster-wide default)
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: oauth2-proxy-sidecar-config
+  name: chat-oauth2-proxy-config
 data:
   oauth2_proxy.cfg: |-
     http_address = "0.0.0.0:4180"
     provider = "github"
-    email_domains = [ "*" ]
-    upstreams = [ "http://127.0.0.1:5001" ]
+    email_domains = ["*"]
+    upstreams = ["http://127.0.0.1:5001"]
     cookie_secure = true
-    cookie_domains = [ ".cat-herding.net" ]
-    cookie_samesite = "Lax"
-    # IMPORTANT: session_cookie_minimal must remain disabled to allow token headers
+    cookie_domains = [".cat-herding.net"]
+    # cookie_samesite must be one of ['', 'lax', 'strict', 'none'] (lowercase per oauth2-proxy validation)
+    cookie_samesite = "lax"
+    # Explicitly disable minimal session to allow access/id tokens
+    session_cookie_minimal = false
     set_authorization_header = true
     set_xauthrequest = true
     pass_access_token = true
     pass_authorization_header = true
-    # Exempt internal endpoints from auth
-    skip_auth_routes = [ "^/health$", "^/healthz$", "^/metrics$" ]
+    # Optionally expose user identity headers
+    pass_user_headers = true
+    # Skip auth for health and metrics endpoints
+    skip_auth_routes = ["^/health$", "^/healthz$", "^/metrics$"]
+    # Recommended GitHub scopes for user/email + token usage
+    scope = "read:user,user:email"
+    # Logging controls
     request_logging = true
     standard_logging = true
     silence_ping_logging = true

@@ -214,7 +214,7 @@ spec:
         # OAuth2 Proxy shared configuration & templates
         - name: oauth2-proxy-config
           configMap:
-            name: oauth2-proxy-sidecar-config
+            name: chat-oauth2-proxy-config
         - name: oauth2-proxy-templates
           configMap:
             name: oauth2-proxy-templates

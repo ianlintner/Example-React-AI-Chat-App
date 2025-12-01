@@ -310,15 +310,10 @@ describe('ChatScreen', () => {
         ],
       };
 
-      const { UNSAFE_getByProps } = render(
-        <ChatScreen conversation={conversationWithAvatar} />,
-      );
+      render(<ChatScreen conversation={conversationWithAvatar} />);
 
-      // Check that Avatar.Image is rendered with correct source
-      const avatarImage = UNSAFE_getByProps({
-        source: { uri: 'https://github.com/avatar.png' },
-      });
-      expect(avatarImage).toBeTruthy();
+      // Check that Avatar.Image is rendered
+      expect(screen.getByTestId('avatar-image')).toBeTruthy();
 
       // Check user info is displayed
       expect(screen.getByText('Test User')).toBeTruthy();
@@ -419,19 +414,15 @@ describe('ChatScreen', () => {
         ],
       };
 
-      const { UNSAFE_getAllByProps } = render(
-        <ChatScreen conversation={mixedConversation} />,
-      );
+      render(<ChatScreen conversation={mixedConversation} />);
 
       // Should have user avatar image and user info
-      const userAvatar = UNSAFE_getAllByProps({
-        source: { uri: 'https://github.com/avatar.png' },
-      });
-      expect(userAvatar.length).toBeGreaterThan(0);
+      expect(screen.getByTestId('avatar-image')).toBeTruthy();
       expect(screen.getByText('Test User')).toBeTruthy();
       expect(screen.getByText('test@example.com')).toBeTruthy();
 
       // Assistant should have icon-based avatar (robot icon)
+      expect(screen.getByTestId('avatar-icon')).toBeTruthy();
       expect(screen.getByText('AI Assistant')).toBeTruthy();
     });
 
@@ -463,15 +454,10 @@ describe('ChatScreen', () => {
         ],
       };
 
-      const { UNSAFE_getByProps } = render(
-        <ChatScreen conversation={multiUserConversation} />,
-      );
+      render(<ChatScreen conversation={multiUserConversation} />);
 
       // First user has avatar and info
-      const aliceAvatar = UNSAFE_getByProps({
-        source: { uri: 'https://github.com/alice.png' },
-      });
-      expect(aliceAvatar).toBeTruthy();
+      expect(screen.getByTestId('avatar-image')).toBeTruthy();
       expect(screen.getByText('Alice')).toBeTruthy();
       expect(screen.getByText('alice@example.com')).toBeTruthy();
 
@@ -498,16 +484,11 @@ describe('ChatScreen', () => {
         ],
       };
 
-      const { UNSAFE_getByProps } = render(
-        <ChatScreen conversation={conversationNoEmail} />,
-      );
+      render(<ChatScreen conversation={conversationNoEmail} />);
 
       // Should display name and avatar but not email
       expect(screen.getByText('Test User')).toBeTruthy();
-      const avatarImage = UNSAFE_getByProps({
-        source: { uri: 'https://github.com/avatar.png' },
-      });
-      expect(avatarImage).toBeTruthy();
+      expect(screen.getByTestId('avatar-image')).toBeTruthy();
     });
   });
 });

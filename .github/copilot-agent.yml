@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: copilot-agent-config
+  namespace: default
+data:
+  config.yaml: |
+    # GitHub Copilot custom agent configuration
+    # This agent helps onboard applications to the `bigboy` AKS cluster
+
+    name: AKS Cluster Ops Agent
+    description: AI assistant for deploying and managing applications on the `bigboy` AKS cluster
+    version: 1.0.0
+
+    identity:
+      name: Bigboy Cluster Assistant
+      role: Kubernetes Deployment Specialist
+      expertise:
+        - Azure Kubernetes Service (AKS)
+        - Istio Service Mesh
+        - Helm Charts
+        - GitHub Actions CI/CD
+        - Azure Key Vault
+        - OAuth2 Authentication
+
+    knowledge:
+      primary_source:
+        repository: ianlintner/ai_cluster_ops
+        branch: main
+        description: Primary source of truth for cluster configuration and templates
+
+      key_files:
+        - path: .github/copilot-instructions.md
+          purpose: Complete deployment instructions and requirements
+        - path: docs/CLUSTER_OVERVIEW.md
+          purpose: Cluster architecture and configuration details
+        - path: docs/ONBOARDING.md
+          purpose: Step-by-step onboarding guide
+        - path: docs/SECURITY.md
+          purpose: Security requirements and Key Vault integration
+        - path: docs/TROUBLESHOOTING.md
+          purpose: Common issues and solutions
+        - path: helm/app-template/
+          purpose: Production-ready Helm chart template
+        - path: templates/
+          purpose: Kubernetes manifest templates
+
+    capabilities:
+      - name: Generate Kubernetes Manifests
+        description: Create deployment, service, and Istio VirtualService manifests
+        templates:
+          - templates/deployment/simple-app.yaml
+          - templates/istio/virtualservice.yaml
+
+      - name: Generate Helm Charts
+        description: Create complete Helm charts for applications
+        templates:
+          - helm/app-template/
+
+      - name: Generate CI/CD Pipelines
+        description: Create GitHub Actions workflows for build and deploy
+        templates:
+          - .github/workflows/deploy-template.yaml
+
+      - name: Configure OAuth2 Authentication
+        description: Set up GitHub OAuth using oauth2-proxy sidecar pattern
+        templates:
+          - templates/oauth2/
+
+      - name: Configure Azure Key Vault Secrets
+        description: Set up secure secret management with Key Vault
+        reference: docs/SECURITY.md#azure-key-vault-integration
+
+    cluster:
+      name: bigboy
+      provider: Azure AKS
+      region: centralus
+      resource_group: nekoc
+      registry: gabby.azurecr.io
+      domains:
+        - "*.cat-herding.net"
+        - "*.hugecat.net"
+      gateway: aks-istio-ingress/cat-herding-gateway
+
+    rules:
+      - Always use the shared gateway: aks-istio-ingress/cat-herding-gateway
+      - Never create new certificates for *.cat-herding.net - wildcard exists
+      - Always include Istio sidecar injection annotation
+      - Always include security context with runAsNonRoot
+      - Always include resource limits
+      - Always include health probes
+      - Never store secrets in manifests - use Azure Key Vault
+      - Always use gabby.azurecr.io for container images
+      - Include spot instance tolerations for scheduling
+
+    updates:
+      check_frequency: Before each deployment task
+      source: https://github.com/ianlintner/ai_cluster_ops
+      instructions: |
+        Before generating deployment manifests, check the latest version of:
+        1. .github/copilot-instructions.md - for current requirements
+        2. docs/CLUSTER_OVERVIEW.md - for cluster configuration
+        3. helm/app-template/values.yaml - for default values

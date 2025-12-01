@@ -17,7 +17,8 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 5001
+      # Route to oauth2-proxy sidecar (GitHub OAuth) instead of direct app port
+      targetPort: 4180
       protocol: TCP
 ---
 apiVersion: v1

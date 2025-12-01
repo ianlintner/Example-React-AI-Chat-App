@@ -254,6 +254,38 @@ jest.mock('react-native-paper', () => {
   });
   MockAvatar.Icon.displayName = 'Avatar.Icon';
 
+  MockAvatar.Image = React.forwardRef(({ source, size, style, ...props }, ref) => {
+    return React.createElement(
+      'View',
+      {
+        ref,
+        testID: 'avatar-image',
+        source,
+        style: [{ width: size || 40, height: size || 40 }, style],
+        ...props,
+      },
+    );
+  });
+  MockAvatar.Image.displayName = 'Avatar.Image';
+
+  MockAvatar.Text = React.forwardRef(({ label, size, style, ...props }, ref) => {
+    return React.createElement(
+      'View',
+      {
+        ref,
+        testID: 'avatar-text',
+        style: [{ width: size || 40, height: size || 40 }, style],
+        ...props,
+      },
+      React.createElement(
+        'Text',
+        { testID: 'avatar-text-label' },
+        label,
+      ),
+    );
+  });
+  MockAvatar.Text.displayName = 'Avatar.Text';
+
   const MockChip = React.forwardRef(
     ({ children, mode, compact, textStyle, style, ...props }, ref) => {
       return React.createElement(

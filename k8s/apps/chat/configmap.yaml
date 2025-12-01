@@ -42,8 +42,8 @@ data:
     pass_user_headers = true
     # Skip auth for health and metrics endpoints
     skip_auth_routes = ["^/health$", "^/healthz$", "^/metrics$"]
-    # Recommended GitHub scopes for user/email + token usage
-    scope = "read:user,user:email"
+    # GitHub scopes: read:user for profile, user:email for email, read:org for org membership (required by oauth2-proxy)
+    scope = "read:user,user:email,read:org"
     # WebSocket upgrade support (required for Socket.io)
     proxy_websockets = true
     # Logging controls

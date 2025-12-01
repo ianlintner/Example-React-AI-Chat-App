@@ -48,18 +48,18 @@ spec:
             - name: OAUTH2_PROXY_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: client-id
+                  name: chat-secrets-from-keyvault
+                  key: OAUTH2_CLIENT_ID
             - name: OAUTH2_PROXY_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: client-secret
+                  name: chat-secrets-from-keyvault
+                  key: OAUTH2_CLIENT_SECRET
             - name: OAUTH2_PROXY_COOKIE_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: oauth2-proxy-secret
-                  key: cookie-secret
+                  name: chat-secrets-from-keyvault
+                  key: OAUTH2_COOKIE_SECRET
             - name: OAUTH2_PROXY_UPSTREAMS
               value: http://127.0.0.1:5001
             - name: OAUTH2_PROXY_SET_AUTHORIZATION_HEADER

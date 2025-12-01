@@ -44,7 +44,7 @@ spec:
             - name: OAUTH2_PROXY_EMAIL_DOMAINS
               value: "*"
             - name: OAUTH2_PROXY_REDIRECT_URL
-              value: https://auth.cat-herding.net/oauth2/callback
+              value: https://chat.cat-herding.net/oauth2/callback
             - name: OAUTH2_PROXY_CLIENT_ID
               valueFrom:
                 secretKeyRef:

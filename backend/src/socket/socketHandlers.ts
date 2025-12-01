@@ -831,6 +831,7 @@ export const setupSocketHandlers = (
               ...(user && {
                 user: {
                   name: user.name,
+                  email: user.email,
                   avatar: user.avatar,
                 },
               }),

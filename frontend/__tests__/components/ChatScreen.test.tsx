@@ -319,7 +319,7 @@ describe('ChatScreen', () => {
         source: { uri: 'https://github.com/avatar.png' },
       });
       expect(avatarImage).toBeTruthy();
-      
+
       // Check user info is displayed
       expect(screen.getByText('Test User')).toBeTruthy();
       expect(screen.getByText('test@example.com')).toBeTruthy();
@@ -405,6 +405,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'Test User',
+              email: 'test@example.com',
               avatar: 'https://github.com/avatar.png',
             },
           } as Message,
@@ -422,11 +423,13 @@ describe('ChatScreen', () => {
         <ChatScreen conversation={mixedConversation} />,
       );
 
-      // Should have user avatar image
+      // Should have user avatar image and user info
       const userAvatar = UNSAFE_getAllByProps({
         source: { uri: 'https://github.com/avatar.png' },
       });
       expect(userAvatar.length).toBeGreaterThan(0);
+      expect(screen.getByText('Test User')).toBeTruthy();
+      expect(screen.getByText('test@example.com')).toBeTruthy();
 
       // Assistant should have icon-based avatar (robot icon)
       expect(screen.getByText('AI Assistant')).toBeTruthy();
@@ -443,6 +446,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'Alice',
+              email: 'alice@example.com',
               avatar: 'https://github.com/alice.png',
             },
           } as Message,
@@ -453,6 +457,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'Bob',
+              email: 'bob@example.com',
             },
           } as Message,
         ],
@@ -462,14 +467,47 @@ describe('ChatScreen', () => {
         <ChatScreen conversation={multiUserConversation} />,
       );
 
-      // First user has avatar
+      // First user has avatar and info
       const aliceAvatar = UNSAFE_getByProps({
         source: { uri: 'https://github.com/alice.png' },
       });
       expect(aliceAvatar).toBeTruthy();
+      expect(screen.getByText('Alice')).toBeTruthy();
+      expect(screen.getByText('alice@example.com')).toBeTruthy();
 
-      // Second user has text initials
+      // Second user has text initials and info
       expect(screen.getByText('BO')).toBeTruthy();
+      expect(screen.getByText('Bob')).toBeTruthy();
+      expect(screen.getByText('bob@example.com')).toBeTruthy();
+    });
+
+    it('should work when email is not provided', () => {
+      const conversationNoEmail: Conversation = {
+        ...mockConversation,
+        messages: [
+          {
+            id: '1',
+            role: 'user',
+            content: 'Message without email',
+            timestamp: new Date(),
+            user: {
+              name: 'Test User',
+              avatar: 'https://github.com/avatar.png',
+            },
+          } as Message,
+        ],
+      };
+
+      const { UNSAFE_getByProps } = render(
+        <ChatScreen conversation={conversationNoEmail} />,
+      );
+
+      // Should display name and avatar but not email
+      expect(screen.getByText('Test User')).toBeTruthy();
+      const avatarImage = UNSAFE_getByProps({
+        source: { uri: 'https://github.com/avatar.png' },
+      });
+      expect(avatarImage).toBeTruthy();
     });
   });
 });

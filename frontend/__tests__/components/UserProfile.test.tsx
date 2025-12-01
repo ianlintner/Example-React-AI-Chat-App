@@ -1,5 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react-native';
 import { UserProfile } from '../../components/UserProfile';
 import { authService } from '../../services/authService';
 
@@ -91,7 +96,9 @@ describe('UserProfile', () => {
       const { UNSAFE_getByProps } = render(<UserProfile />);
 
       await waitFor(() => {
-        const avatarImage = UNSAFE_getByProps({ source: { uri: 'https://github.com/avatar.png' } });
+        const avatarImage = UNSAFE_getByProps({
+          source: { uri: 'https://github.com/avatar.png' },
+        });
         expect(avatarImage).toBeTruthy();
       });
     });
@@ -178,7 +185,9 @@ describe('UserProfile', () => {
       render(<UserProfile />);
 
       await waitFor(() => {
-        const emailText = screen.getByText('verylongemailaddress@example-domain.com');
+        const emailText = screen.getByText(
+          'verylongemailaddress@example-domain.com',
+        );
         expect(emailText.props.numberOfLines).toBe(1);
       });
     });
@@ -193,7 +202,9 @@ describe('UserProfile', () => {
       render(<UserProfile />);
 
       await waitFor(() => {
-        const nameText = screen.getByText('Very Long Username That Should Be Truncated');
+        const nameText = screen.getByText(
+          'Very Long Username That Should Be Truncated',
+        );
         expect(nameText.props.numberOfLines).toBe(1);
       });
     });

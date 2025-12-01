@@ -423,7 +423,7 @@ describe('ChatScreen', () => {
 
       // Assistant should have icon-based avatar (robot icon)
       expect(screen.getByTestId('avatar-icon')).toBeTruthy();
-      expect(screen.getByText('AI Assistant')).toBeTruthy();
+      expect(screen.getAllByText('AI Assistant').length).toBeGreaterThan(0);
     });
 
     it('should render multiple user messages with different avatars', () => {

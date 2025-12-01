@@ -42,6 +42,8 @@ data:
     skip_auth_routes = ["^/health$", "^/healthz$", "^/metrics$"]
     # Recommended GitHub scopes for user/email + token usage
     scope = "read:user,user:email"
+    # WebSocket upgrade support (required for Socket.io)
+    proxy_websockets = true
     # Logging controls
     request_logging = true
     standard_logging = true

@@ -13,3 +13,32 @@ data:
   API_URL: 'http://chat.cat-herding.net:5001'
   FRONTEND_URL: 'https://chat.hugecat.net'
   # Note: OAuth is handled at cluster level via oauth2-proxy
+
+---
+# Custom override for oauth2-proxy sidecar configuration.
+# Removes any session_cookie_minimal setting so that access & ID tokens
+# are available for Authorization / X-Auth-Request-* headers.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-sidecar-config
+data:
+  oauth2_proxy.cfg: |-
+    http_address = "0.0.0.0:4180"
+    provider = "github"
+    email_domains = [ "*" ]
+    upstreams = [ "http://127.0.0.1:5001" ]
+    cookie_secure = true
+    cookie_domains = [ ".cat-herding.net" ]
+    cookie_samesite = "Lax"
+    # IMPORTANT: session_cookie_minimal must remain disabled to allow token headers
+    set_authorization_header = true
+    set_xauthrequest = true
+    pass_access_token = true
+    pass_authorization_header = true
+    # Exempt internal endpoints from auth
+    skip_auth_routes = [ "^/health$", "^/healthz$", "^/metrics$" ]
+    request_logging = true
+    standard_logging = true
+    silence_ping_logging = true
+

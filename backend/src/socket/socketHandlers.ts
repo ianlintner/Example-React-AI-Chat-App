@@ -818,12 +818,22 @@ export const setupSocketHandlers = (
             }
 
             // Add user message
+            const user = socket.userId
+              ? await userStorage.getUser(socket.userId)
+              : null;
+
             const userMessage: Message = {
               id: uuidv4(),
               content: message,
               role: 'user',
               timestamp: new Date(),
               conversationId: conversation.id,
+              ...(user && {
+                user: {
+                  name: user.name,
+                  avatar: user.avatar,
+                },
+              }),
             };
             conversation.messages.push(userMessage);
 

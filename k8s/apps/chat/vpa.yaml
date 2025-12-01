@@ -8,8 +8,8 @@ spec:
     kind: Deployment
     name: chat-backend
   updatePolicy:
-    updateMode: "Auto" # Set to "Auto" to enable automatic updates
+    updateMode: 'Auto' # Set to "Auto" to enable automatic updates
   resourcePolicy:
     containerPolicies:
       - containerName: istio-proxy
-        mode: "Off"
+        mode: 'Off'

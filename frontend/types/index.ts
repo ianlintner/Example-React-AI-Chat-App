@@ -8,6 +8,10 @@ export interface Message {
   confidence?: number;
   isProactive?: boolean;
   status?: 'pending' | 'streaming' | 'complete';
+  user?: {
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface Conversation {
@@ -22,6 +26,8 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  avatar?: string;
+  provider?: 'github' | 'google';
   createdAt: Date;
 }
 

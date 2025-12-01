@@ -19,6 +19,40 @@ const getHeaderValue = (req: Request, header: string): string | undefined => {
   return value as string | undefined;
 };
 
+const fetchGitHubUserProfile = async (
+  username: string,
+  accessToken?: string,
+): Promise<{ avatar_url?: string } | null> => {
+  try {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'AI-Chat-App',
+    };
+
+    if (accessToken) {
+      headers['Authorization'] = `token ${accessToken}`;
+    }
+
+    const response = await fetch(`https://api.github.com/users/${username}`, {
+      headers,
+    });
+
+    if (!response.ok) {
+      logger.warn(
+        { username, status: response.status },
+        'Failed to fetch GitHub profile',
+      );
+      return null;
+    }
+
+    const data = await response.json();
+    return { avatar_url: data.avatar_url };
+  } catch (error) {
+    logger.error({ error, username }, 'Error fetching GitHub profile');
+    return null;
+  }
+};
+
 const authenticateViaProxyHeaders = async (
   req: Request,
 ): Promise<User | null> => {
@@ -41,7 +75,16 @@ const authenticateViaProxyHeaders = async (
     getHeaderValue(req, PROXY_HEADER_NAME) ||
     getHeaderValue(req, PROXY_HEADER_FULLNAME) ||
     providerId;
-  const avatar = getHeaderValue(req, PROXY_HEADER_AVATAR);
+  let avatar = getHeaderValue(req, PROXY_HEADER_AVATAR);
+
+  // For GitHub users, fetch the profile to get avatar_url
+  if (provider === 'github' && !avatar && providerId) {
+    const accessToken = getHeaderValue(req, 'x-auth-request-access-token');
+    const profile = await fetchGitHubUserProfile(providerId, accessToken);
+    if (profile?.avatar_url) {
+      avatar = profile.avatar_url;
+    }
+  }
 
   let user = await userStorage.getUserByProvider(provider, providerId);
   if (!user) {
@@ -53,6 +96,10 @@ const authenticateViaProxyHeaders = async (
       avatar,
     });
   } else {
+    // Update avatar if it changed
+    if (avatar && user.avatar !== avatar) {
+      user.avatar = avatar;
+    }
     user.lastLoginAt = new Date();
     await userStorage.updateUser(user);
   }
@@ -60,7 +107,7 @@ const authenticateViaProxyHeaders = async (
   req.user = user;
   req.userId = user.id;
   logger.debug(
-    { email, provider, providerId },
+    { email, provider, providerId, hasAvatar: !!avatar },
     'Authenticated via oauth2-proxy headers',
   );
   return user;

@@ -4,6 +4,10 @@ export interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   conversationId: string;
+  user?: {
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface Conversation {

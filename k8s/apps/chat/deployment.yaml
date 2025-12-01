@@ -16,10 +16,10 @@ spec:
         version: v1
       annotations:
         sidecar.istio.io/inject: 'true'
-        sidecar.istio.io/proxyCPU: "50m"
-        sidecar.istio.io/proxyMemory: "32Mi"
-        sidecar.istio.io/proxyCPULimit: "500m"
-        sidecar.istio.io/proxyMemoryLimit: "512Mi"
+        sidecar.istio.io/proxyCPU: '50m'
+        sidecar.istio.io/proxyMemory: '32Mi'
+        sidecar.istio.io/proxyCPULimit: '500m'
+        sidecar.istio.io/proxyMemoryLimit: '512Mi'
         # OAuth2 Proxy auth metadata (added)
         auth.cat-herding.net/provider: oauth2-proxy-sidecar
         auth.cat-herding.net/domain: chat.cat-herding.net
@@ -42,7 +42,7 @@ spec:
             - --whitelist-domain=.cat-herding.net
           env:
             - name: OAUTH2_PROXY_EMAIL_DOMAINS
-              value: "*"
+              value: '*'
             - name: OAUTH2_PROXY_REDIRECT_URL
               value: https://chat.cat-herding.net/oauth2/callback
             - name: OAUTH2_PROXY_CLIENT_ID
@@ -63,11 +63,11 @@ spec:
             - name: OAUTH2_PROXY_UPSTREAMS
               value: http://127.0.0.1:5001
             - name: OAUTH2_PROXY_SET_AUTHORIZATION_HEADER
-              value: "true"
+              value: 'true'
             - name: OAUTH2_PROXY_SET_XAUTHREQUEST
-              value: "true"
+              value: 'true'
             - name: OAUTH2_PROXY_PASS_ACCESS_TOKEN
-              value: "true"
+              value: 'true'
           ports:
             - containerPort: 4180
               name: proxy

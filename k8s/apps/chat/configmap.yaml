@@ -50,4 +50,3 @@ data:
     request_logging = true
     standard_logging = true
     silence_ping_logging = true
-

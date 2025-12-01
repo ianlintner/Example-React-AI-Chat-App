@@ -371,18 +371,35 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
             : styles.assistantMessageContainer,
         ]}
       >
-        <Avatar.Icon
-          size={40}
-          icon={isUser ? 'account' : agentInfo?.avatar || 'robot'}
-          style={[
-            styles.avatar,
-            {
-              backgroundColor: isUser
-                ? ForestColors.brandTertiary
-                : agentInfo?.color || ForestColors.brandPrimary,
-            },
-          ]}
-        />
+        {isUser ? (
+          message.user?.avatar ? (
+            <Avatar.Image
+              size={40}
+              source={{ uri: message.user.avatar }}
+              style={styles.avatar}
+            />
+          ) : (
+            <Avatar.Text
+              size={40}
+              label={(message.user?.name || 'U').substring(0, 2).toUpperCase()}
+              style={[
+                styles.avatar,
+                { backgroundColor: ForestColors.brandTertiary },
+              ]}
+            />
+          )
+        ) : (
+          <Avatar.Icon
+            size={40}
+            icon={agentInfo?.avatar || 'robot'}
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: agentInfo?.color || ForestColors.brandPrimary,
+              },
+            ]}
+          />
+        )}
 
         <View
           style={[

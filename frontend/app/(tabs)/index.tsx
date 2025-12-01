@@ -10,6 +10,7 @@ import { DiscordColors } from '../../constants/Colors';
 import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
 import MessageInput from '../../components/MessageInput';
+import { UserProfile } from '../../components/UserProfile';
 import type { Conversation, Message } from '../../types';
 
 export default function HomeScreen() {
@@ -367,6 +368,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <UserProfile />
       {/* Chat Area with Combined Menu/Status Bar */}
       <View style={styles.chatContainer}>
         <ChatScreen conversation={conversation} />

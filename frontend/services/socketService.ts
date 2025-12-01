@@ -122,7 +122,6 @@ class SocketService {
         this.socket.on('connect_error', this.connectErrorCallback);
       }
 
-
       this.socket.on('error', err => {
         logger.error('⚠️ Socket error event:', err);
       });

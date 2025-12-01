@@ -303,6 +303,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'Test User',
+              email: 'test@example.com',
               avatar: 'https://github.com/avatar.png',
             },
           } as Message,
@@ -318,6 +319,10 @@ describe('ChatScreen', () => {
         source: { uri: 'https://github.com/avatar.png' },
       });
       expect(avatarImage).toBeTruthy();
+      
+      // Check user info is displayed
+      expect(screen.getByText('Test User')).toBeTruthy();
+      expect(screen.getByText('test@example.com')).toBeTruthy();
     });
 
     it('should display text initials when avatar not available', () => {
@@ -331,6 +336,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'Test User',
+              email: 'test@example.com',
             },
           } as Message,
         ],
@@ -340,6 +346,8 @@ describe('ChatScreen', () => {
 
       // Check for text avatar with initials "TE"
       expect(screen.getByText('TE')).toBeTruthy();
+      expect(screen.getByText('Test User')).toBeTruthy();
+      expect(screen.getByText('test@example.com')).toBeTruthy();
     });
 
     it('should display text initials when user has no avatar', () => {
@@ -353,6 +361,7 @@ describe('ChatScreen', () => {
             timestamp: new Date(),
             user: {
               name: 'John Doe',
+              email: 'john@doe.com',
             },
           } as Message,
         ],
@@ -362,6 +371,8 @@ describe('ChatScreen', () => {
 
       // Should show first 2 letters uppercase
       expect(screen.getByText('JO')).toBeTruthy();
+      expect(screen.getByText('John Doe')).toBeTruthy();
+      expect(screen.getByText('john@doe.com')).toBeTruthy();
     });
 
     it('should handle missing user data gracefully', () => {

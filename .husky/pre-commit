@@ -7,4 +7,8 @@ npx lint-staged
 echo "🔍 Checking TypeScript types..."
 npm run type-check
 
+# Run build to ensure artifacts compile before commit
+echo "🏗️ Running build gate..."
+npm run build
+
 echo "✅ Pre-commit checks passed!"

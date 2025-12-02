@@ -77,13 +77,18 @@ describe('UserProfile', () => {
   });
 
   describe('Rendering', () => {
-    it('should not render when no user is available', async () => {
+    it('should show anonymous defaults when no user is available', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       (authService.getUser as jest.Mock).mockResolvedValue(null);
-      const view = render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(view.toJSON()).toBeNull();
-      });
+      render(<UserProfile />);
+
+      expect(await screen.findByText('Anonymous')).toBeTruthy();
+      expect(await screen.findByText('Information not provided')).toBeTruthy();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('No user profile provided'),
+      );
+      warnSpy.mockRestore();
     });
 
     it('should render user profile with avatar', async () => {
@@ -242,11 +247,9 @@ describe('UserProfile', () => {
         new Error('Network error'),
       );
 
-      const view = render(<UserProfile />);
+      render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(view.toJSON()).toBeNull();
-      });
+      expect(await screen.findByText('Anonymous')).toBeTruthy();
     });
 
     it('should handle missing user data gracefully', async () => {
@@ -254,11 +257,32 @@ describe('UserProfile', () => {
         new Error('Storage error'),
       );
 
-      const view = render(<UserProfile />);
+      render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(view.toJSON()).toBeNull();
-      });
+      expect(await screen.findByText('Anonymous')).toBeTruthy();
+    });
+  });
+
+  describe('Fallback Behavior', () => {
+    it('should log missing fields and use defaults when profile data incomplete', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const partialUser = {
+        ...mockUser,
+        name: '',
+        email: undefined,
+        avatar: '',
+      };
+      (authService.getUser as jest.Mock).mockResolvedValue(partialUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(partialUser);
+
+      render(<UserProfile />);
+
+      expect(await screen.findByText('Anonymous')).toBeTruthy();
+      expect(await screen.findByText('Information not provided')).toBeTruthy();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Missing user properties'),
+      );
+      warnSpy.mockRestore();
     });
   });
 });

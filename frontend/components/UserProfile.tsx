@@ -30,6 +30,34 @@ export const UserProfile: React.FC = () => {
     void loadUser();
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      console.warn(
+        '[UserProfile] No user profile provided. Using anonymous defaults.',
+      );
+      return;
+    }
+
+    const missingFields: string[] = [];
+    if (!user.name?.trim()) {
+      missingFields.push('name');
+    }
+    if (!user.email?.trim()) {
+      missingFields.push('email');
+    }
+    if (!user.avatar?.trim()) {
+      missingFields.push('avatar');
+    }
+
+    if (missingFields.length > 0) {
+      console.warn(
+        `[UserProfile] Missing user properties: ${missingFields.join(
+          ', ',
+        )}. Using defaults where necessary.`,
+      );
+    }
+  }, [user]);
+
   const openMenu = () => setMenuVisible(true);
   const closeMenu = () => setMenuVisible(false);
 
@@ -42,9 +70,18 @@ export const UserProfile: React.FC = () => {
     }
   };
 
-  if (!user) {
-    return null;
-  }
+  const sanitizedName = user?.name?.trim();
+  const sanitizedEmail = user?.email?.trim();
+  const sanitizedAvatar = user?.avatar?.trim();
+
+  const displayName = sanitizedName && sanitizedName.length > 0
+    ? sanitizedName
+    : 'Anonymous';
+  const displayEmail = sanitizedEmail && sanitizedEmail.length > 0
+    ? sanitizedEmail
+    : 'Information not provided';
+  const hasAvatar = Boolean(sanitizedAvatar);
+  const avatarInitials = displayName.substring(0, 2).toUpperCase();
 
   return (
     <View style={styles.container}>
@@ -53,21 +90,21 @@ export const UserProfile: React.FC = () => {
         onDismiss={closeMenu}
         anchor={
           <TouchableOpacity onPress={openMenu} style={styles.profileButton}>
-            {user.avatar ? (
-              <Avatar.Image size={40} source={{ uri: user.avatar }} />
+            {hasAvatar ? (
+              <Avatar.Image size={40} source={{ uri: sanitizedAvatar }} />
             ) : (
               <Avatar.Text
                 size={40}
-                label={user.name.substring(0, 2).toUpperCase()}
+                label={avatarInitials}
                 style={styles.avatarText}
               />
             )}
             <View style={styles.userInfo}>
               <Text style={styles.userName} numberOfLines={1}>
-                {user.name}
+                {displayName}
               </Text>
               <Text style={styles.userEmail} numberOfLines={1}>
-                {user.email}
+                {displayEmail}
               </Text>
             </View>
           </TouchableOpacity>

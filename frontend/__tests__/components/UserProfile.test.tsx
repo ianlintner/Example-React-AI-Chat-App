@@ -15,9 +15,7 @@ jest.mock('react-native-paper', () => {
   const AvatarImage = ({ source, ...rest }) => (
     <Image source={source} testID='user-avatar-image' {...rest} />
   );
-  const AvatarText = ({ label, ...rest }) => (
-    <Text {...rest}>{label}</Text>
-  );
+  const AvatarText = ({ label, ...rest }) => <Text {...rest}>{label}</Text>;
 
   const MenuComponent = ({ anchor, children, visible, ...rest }) => (
     <View {...rest}>
@@ -104,7 +102,9 @@ describe('UserProfile', () => {
     it('should render text avatar when no image available', async () => {
       const userWithoutAvatar = { ...mockUser, avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userWithoutAvatar);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userWithoutAvatar);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        userWithoutAvatar,
+      );
 
       render(<UserProfile />);
 
@@ -145,7 +145,9 @@ describe('UserProfile', () => {
     it('should display initials when avatar not available', async () => {
       const userNoAvatar = { ...mockUser, avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userNoAvatar);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userNoAvatar);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        userNoAvatar,
+      );
 
       render(<UserProfile />);
 
@@ -155,7 +157,9 @@ describe('UserProfile', () => {
     it('should handle single name for initials', async () => {
       const userSingleName = { ...mockUser, name: 'John', avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userSingleName);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userSingleName);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        userSingleName,
+      );
 
       render(<UserProfile />);
 
@@ -212,7 +216,9 @@ describe('UserProfile', () => {
         email: 'verylongemailaddress@example-domain.com',
       };
       (authService.getUser as jest.Mock).mockResolvedValue(longEmailUser);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(longEmailUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        longEmailUser,
+      );
 
       render(<UserProfile />);
 
@@ -228,7 +234,9 @@ describe('UserProfile', () => {
         name: 'Very Long Username That Should Be Truncated',
       };
       (authService.getUser as jest.Mock).mockResolvedValue(longNameUser);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(longNameUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        longNameUser,
+      );
 
       render(<UserProfile />);
 
@@ -273,7 +281,9 @@ describe('UserProfile', () => {
         avatar: '',
       };
       (authService.getUser as jest.Mock).mockResolvedValue(partialUser);
-      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(partialUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(
+        partialUser,
+      );
 
       render(<UserProfile />);
 

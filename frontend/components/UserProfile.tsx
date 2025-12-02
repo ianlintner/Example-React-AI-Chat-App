@@ -74,12 +74,12 @@ export const UserProfile: React.FC = () => {
   const sanitizedEmail = user?.email?.trim();
   const sanitizedAvatar = user?.avatar?.trim();
 
-  const displayName = sanitizedName && sanitizedName.length > 0
-    ? sanitizedName
-    : 'Anonymous';
-  const displayEmail = sanitizedEmail && sanitizedEmail.length > 0
-    ? sanitizedEmail
-    : 'Information not provided';
+  const displayName =
+    sanitizedName && sanitizedName.length > 0 ? sanitizedName : 'Anonymous';
+  const displayEmail =
+    sanitizedEmail && sanitizedEmail.length > 0
+      ? sanitizedEmail
+      : 'Information not provided';
   const hasAvatar = Boolean(sanitizedAvatar);
   const avatarInitials = displayName.substring(0, 2).toUpperCase();
 

@@ -97,12 +97,16 @@ class AuthService {
   /**
    * Fetch current user from API
    */
-  async fetchCurrentUser(token: string): Promise<User | null> {
+  async fetchCurrentUser(token?: string | null): Promise<User | null> {
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
+        credentials: 'include',
       });
 
       if (!response.ok) {

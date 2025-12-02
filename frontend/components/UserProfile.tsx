@@ -11,25 +11,23 @@ export const UserProfile: React.FC = () => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await authService.getUser();
-        if (!currentUser) {
-          // Fetch from API if not cached
-          const token = await authService.getToken();
-          if (token) {
-            const fetchedUser = await authService.fetchCurrentUser(token);
-            if (fetchedUser) {
-              setUser(fetchedUser);
-            }
-          }
-        } else {
-          setUser(currentUser);
+        const cachedUser = await authService.getUser();
+        if (cachedUser) {
+          setUser(cachedUser);
+        }
+
+        const token = await authService.getToken();
+        const fetchedUser = await authService.fetchCurrentUser(token);
+        if (fetchedUser) {
+          setUser(fetchedUser);
+          await authService.setUser(fetchedUser);
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
       }
     };
 
-    loadUser();
+    void loadUser();
   }, []);
 
   const openMenu = () => setMenuVisible(true);
@@ -48,49 +46,54 @@ export const UserProfile: React.FC = () => {
     return null;
   }
 
-  return (
-    <View style={styles.container}>
-      <Menu
-        visible={menuVisible}
-        onDismiss={closeMenu}
-        anchor={
-          <TouchableOpacity onPress={openMenu} style={styles.profileButton}>
-            {user.avatar ? (
-              <Avatar.Image size={40} source={{ uri: user.avatar }} />
-            ) : (
-              <Avatar.Text
-                size={40}
-                label={user.name.substring(0, 2).toUpperCase()}
-                style={styles.avatarText}
-              />
-            )}
-            <View style={styles.userInfo}>
-              <Text style={styles.userName} numberOfLines={1}>
-                {user.name}
-              </Text>
-              <Text style={styles.userEmail} numberOfLines={1}>
-                {user.email}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        }
-      >
-        <Menu.Item
-          onPress={() => {
-            closeMenu();
-            // Navigate to profile settings if available
-          }}
-          title='Profile Settings'
-          leadingIcon='account-cog'
-        />
-        <Menu.Item
-          onPress={handleLogout}
-          title='Sign Out'
-          leadingIcon='logout'
-        />
-      </Menu>
-    </View>
-  );
+  try {
+    return (
+      <View style={styles.container}>
+        <Menu
+          visible={menuVisible}
+          onDismiss={closeMenu}
+          anchor={
+            <TouchableOpacity onPress={openMenu} style={styles.profileButton}>
+              {user.avatar ? (
+                <Avatar.Image size={40} source={{ uri: user.avatar }} />
+              ) : (
+                <Avatar.Text
+                  size={40}
+                  label={user.name.substring(0, 2).toUpperCase()}
+                  style={styles.avatarText}
+                />
+              )}
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1}>
+                  {user.name}
+                </Text>
+                <Text style={styles.userEmail} numberOfLines={1}>
+                  {user.email}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          }
+        >
+          <Menu.Item
+            onPress={() => {
+              closeMenu();
+              // Navigate to profile settings if available
+            }}
+            title='Profile Settings'
+            leadingIcon='account-cog'
+          />
+          <Menu.Item
+            onPress={handleLogout}
+            title='Sign Out'
+            leadingIcon='logout'
+          />
+        </Menu>
+      </View>
+    );
+  } catch (error) {
+    console.error('Error rendering user profile:', error);
+    return null;
+  }
 };
 
 const styles = StyleSheet.create({

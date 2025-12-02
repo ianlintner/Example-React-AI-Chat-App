@@ -14,6 +14,7 @@ jest.mock('../../services/authService', () => ({
     getUser: jest.fn(),
     getToken: jest.fn(),
     fetchCurrentUser: jest.fn(),
+    setUser: jest.fn(),
     logout: jest.fn(),
   },
 }));
@@ -37,42 +38,41 @@ describe('UserProfile', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (authService.getToken as jest.Mock).mockResolvedValue(null);
+    (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(null);
+    (authService.setUser as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('Rendering', () => {
     it('should not render when no user is available', async () => {
       (authService.getUser as jest.Mock).mockResolvedValue(null);
-      (authService.getToken as jest.Mock).mockResolvedValue(null);
-
-      const { container } = render(<UserProfile />);
+      const view = render(<UserProfile />);
 
       await waitFor(() => {
-        expect(container.children.length).toBe(0);
+        expect(view.toJSON()).toBeNull();
       });
     });
 
     it('should render user profile with avatar', async () => {
       (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(mockUser);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test User')).toBeTruthy();
-        expect(screen.getByText('test@example.com')).toBeTruthy();
-      });
+      expect(await screen.findByText('Test User')).toBeTruthy();
+      expect(await screen.findByText('test@example.com')).toBeTruthy();
     });
 
     it('should render text avatar when no image available', async () => {
       const userWithoutAvatar = { ...mockUser, avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userWithoutAvatar);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userWithoutAvatar);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test User')).toBeTruthy();
-        // Text avatar should show first two letters of name
-        expect(screen.getByText('TE')).toBeTruthy();
-      });
+      expect(await screen.findByText('Test User')).toBeTruthy();
+      // Text avatar should show first two letters of name
+      expect(await screen.findByText('TE')).toBeTruthy();
     });
 
     it('should fetch user from API if not cached', async () => {
@@ -84,14 +84,17 @@ describe('UserProfile', () => {
 
       await waitFor(() => {
         expect(authService.fetchCurrentUser).toHaveBeenCalledWith('token123');
-        expect(screen.getByText('Test User')).toBeTruthy();
+        expect(authService.setUser).toHaveBeenCalledWith(mockUser);
       });
+
+      expect(await screen.findByText('Test User')).toBeTruthy();
     });
   });
 
   describe('User Avatar Display', () => {
     it('should display GitHub avatar image when available', async () => {
       (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(mockUser);
 
       const { UNSAFE_getByProps } = render(<UserProfile />);
 
@@ -106,62 +109,54 @@ describe('UserProfile', () => {
     it('should display initials when avatar not available', async () => {
       const userNoAvatar = { ...mockUser, avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userNoAvatar);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userNoAvatar);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('TE')).toBeTruthy();
-      });
+      expect(await screen.findByText('TE')).toBeTruthy();
     });
 
     it('should handle single name for initials', async () => {
       const userSingleName = { ...mockUser, name: 'John', avatar: undefined };
       (authService.getUser as jest.Mock).mockResolvedValue(userSingleName);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(userSingleName);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('JO')).toBeTruthy();
-      });
+      expect(await screen.findByText('JO')).toBeTruthy();
     });
   });
 
   describe('Menu Interaction', () => {
     it('should open menu when profile is clicked', async () => {
       (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(mockUser);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test User')).toBeTruthy();
-      });
+      expect(await screen.findByText('Test User')).toBeTruthy();
 
       const profileButton = screen.getByText('Test User').parent?.parent;
       fireEvent.press(profileButton!);
 
-      await waitFor(() => {
-        expect(screen.getByText('Profile Settings')).toBeTruthy();
-        expect(screen.getByText('Sign Out')).toBeTruthy();
-      });
+      expect(await screen.findByText('Profile Settings')).toBeTruthy();
+      expect(await screen.findByText('Sign Out')).toBeTruthy();
     });
 
     it('should handle logout when Sign Out is clicked', async () => {
       (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.logout as jest.Mock).mockResolvedValue(undefined);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test User')).toBeTruthy();
-      });
+      expect(await screen.findByText('Test User')).toBeTruthy();
 
       // Open menu
       const profileButton = screen.getByText('Test User').parent?.parent;
       fireEvent.press(profileButton!);
 
-      await waitFor(() => {
-        expect(screen.getByText('Sign Out')).toBeTruthy();
-      });
+      expect(await screen.findByText('Sign Out')).toBeTruthy();
 
       // Click logout
       const logoutButton = screen.getByText('Sign Out');
@@ -181,15 +176,14 @@ describe('UserProfile', () => {
         email: 'verylongemailaddress@example-domain.com',
       };
       (authService.getUser as jest.Mock).mockResolvedValue(longEmailUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(longEmailUser);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        const emailText = screen.getByText(
-          'verylongemailaddress@example-domain.com',
-        );
-        expect(emailText.props.numberOfLines).toBe(1);
-      });
+      const emailText = await screen.findByText(
+        'verylongemailaddress@example-domain.com',
+      );
+      expect(emailText.props.numberOfLines).toBe(1);
     });
 
     it('should truncate long usernames', async () => {
@@ -198,15 +192,14 @@ describe('UserProfile', () => {
         name: 'Very Long Username That Should Be Truncated',
       };
       (authService.getUser as jest.Mock).mockResolvedValue(longNameUser);
+      (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(longNameUser);
 
       render(<UserProfile />);
 
-      await waitFor(() => {
-        const nameText = screen.getByText(
-          'Very Long Username That Should Be Truncated',
-        );
-        expect(nameText.props.numberOfLines).toBe(1);
-      });
+      const nameText = await screen.findByText(
+        'Very Long Username That Should Be Truncated',
+      );
+      expect(nameText.props.numberOfLines).toBe(1);
     });
   });
 
@@ -218,10 +211,10 @@ describe('UserProfile', () => {
         new Error('Network error'),
       );
 
-      const { container } = render(<UserProfile />);
+      const view = render(<UserProfile />);
 
       await waitFor(() => {
-        expect(container.children.length).toBe(0);
+        expect(view.toJSON()).toBeNull();
       });
     });
 
@@ -230,10 +223,10 @@ describe('UserProfile', () => {
         new Error('Storage error'),
       );
 
-      const { container } = render(<UserProfile />);
+      const view = render(<UserProfile />);
 
       await waitFor(() => {
-        expect(container.children.length).toBe(0);
+        expect(view.toJSON()).toBeNull();
       });
     });
   });

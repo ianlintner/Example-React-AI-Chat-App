@@ -5,6 +5,7 @@ import userStorage from '../storage/userStorage';
 import { User } from '../../../shared/types';
 
 const PROXY_HEADER_EMAIL = 'x-auth-request-email';
+const GAP_AUTH_HEADER = 'gap-auth';
 const PROXY_HEADER_USER = 'x-auth-request-user';
 const PROXY_HEADER_NAME = 'x-auth-request-preferred-username';
 const PROXY_HEADER_FULLNAME = 'x-auth-request-fullname';
@@ -56,7 +57,9 @@ const fetchGitHubUserProfile = async (
 const authenticateViaProxyHeaders = async (
   req: Request,
 ): Promise<User | null> => {
-  const email = getHeaderValue(req, PROXY_HEADER_EMAIL);
+  const email =
+    getHeaderValue(req, PROXY_HEADER_EMAIL) ||
+    getHeaderValue(req, GAP_AUTH_HEADER);
   if (!email) {
     return null;
   }

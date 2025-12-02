@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   render,
   screen,
@@ -177,7 +176,11 @@ describe('UserProfile', () => {
       expect(await screen.findByText('Test User')).toBeTruthy();
 
       const profileButton = screen.getByText('Test User').parent?.parent;
-      fireEvent.press(profileButton!);
+      expect(profileButton).toBeTruthy();
+      if (!profileButton) {
+        throw new Error('Profile button not found');
+      }
+      fireEvent.press(profileButton);
 
       expect(await screen.findByText('Profile Settings')).toBeTruthy();
       expect(await screen.findByText('Sign Out')).toBeTruthy();
@@ -194,7 +197,11 @@ describe('UserProfile', () => {
 
       // Open menu
       const profileButton = screen.getByText('Test User').parent?.parent;
-      fireEvent.press(profileButton!);
+      expect(profileButton).toBeTruthy();
+      if (!profileButton) {
+        throw new Error('Profile button not found');
+      }
+      fireEvent.press(profileButton);
 
       expect(await screen.findByText('Sign Out')).toBeTruthy();
 

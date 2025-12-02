@@ -8,6 +8,39 @@ import {
 import { UserProfile } from '../../components/UserProfile';
 import { authService } from '../../services/authService';
 
+jest.mock('react-native-paper', () => {
+  const React = require('react');
+  const { View, Text, TouchableOpacity, Image } = require('react-native');
+
+  const AvatarImage = ({ source, ...rest }) => (
+    <Image source={source} testID='user-avatar-image' {...rest} />
+  );
+  const AvatarText = ({ label, ...rest }) => (
+    <Text {...rest}>{label}</Text>
+  );
+
+  const MenuComponent = ({ anchor, children, visible, ...rest }) => (
+    <View {...rest}>
+      <View>{anchor}</View>
+      {visible ? <View>{children}</View> : null}
+    </View>
+  );
+
+  MenuComponent.Item = ({ onPress, title, ...rest }) => (
+    <TouchableOpacity onPress={onPress} {...rest}>
+      <Text>{title}</Text>
+    </TouchableOpacity>
+  );
+
+  return {
+    Avatar: {
+      Image: AvatarImage,
+      Text: AvatarText,
+    },
+    Menu: MenuComponent,
+  };
+});
+
 // Mock authService
 jest.mock('../../services/authService', () => ({
   authService: {
@@ -96,13 +129,11 @@ describe('UserProfile', () => {
       (authService.getUser as jest.Mock).mockResolvedValue(mockUser);
       (authService.fetchCurrentUser as jest.Mock).mockResolvedValue(mockUser);
 
-      const { UNSAFE_getByProps } = render(<UserProfile />);
+      render(<UserProfile />);
 
-      await waitFor(() => {
-        const avatarImage = UNSAFE_getByProps({
-          source: { uri: 'https://github.com/avatar.png' },
-        });
-        expect(avatarImage).toBeTruthy();
+      const avatarImage = await screen.findByTestId('user-avatar-image');
+      expect(avatarImage.props.source).toEqual({
+        uri: 'https://github.com/avatar.png',
       });
     });
 

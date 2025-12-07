@@ -1,0 +1,82 @@
+# CI-optimized .dockerignore for Dockerfile.ci
+# Only copies pre-built artifacts and production dependencies
+
+# Node modules - will be installed fresh in container
+**/node_modules
+
+# Source files - already built into dist/
+backend/src
+backend/__tests__
+backend/*.test.ts
+backend/*.test.js
+backend/jest*.js
+backend/tsconfig.json
+
+frontend/app
+frontend/components
+frontend/services
+frontend/hooks
+frontend/__tests__
+frontend/__mocks__
+frontend/*.test.ts
+frontend/*.test.tsx
+frontend/*.test.js
+frontend/jest*.js
+frontend/tsconfig.json
+
+# Build artifacts we don't need (only keep dist/)
+backend/coverage
+frontend/coverage
+**/.next
+**/.expo
+**/.expo-shared
+
+# Git and version control
+.git
+.gitignore
+.github
+
+# Documentation
+docs
+*.md
+!package.json
+!package-lock.json
+
+# CI/CD
+.github/workflows
+
+# Development files
+.env*
+!.env.example
+.DS_Store
+.vscode
+.idea
+
+# Tests and quality tools
+tests
+**/__tests__
+coverage
+*.test.*
+*.spec.*
+jest.config.*
+.eslintrc*
+.prettierrc*
+tsconfig.json
+
+# Kubernetes and deployment configs
+k8s
+grafana
+scripts
+
+# Docker files (don't need these inside the image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+*.log
+*.logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+external

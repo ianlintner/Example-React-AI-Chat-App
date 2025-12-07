@@ -275,4 +275,4 @@ Potential additional improvements:
 
 - [GitHub Actions Artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts)
 - [Docker Build Cache](https://docs.docker.com/build/cache/)
-- [CI Pipeline Overview](../README.md#cicd)
+- [Getting Started Guide](../getting-started/quickstart.md)

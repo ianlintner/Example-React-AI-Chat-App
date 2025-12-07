@@ -38,8 +38,12 @@ class SocketService {
     new_message?: NewMessageCallback;
     proactive_message?: ProactiveMessageCallback;
     stream_error?: StreamErrorCallback;
-    agent_status?: AgentStatusCallback;
+    agent_status_update?: AgentStatusCallback;
   } = {};
+
+  // Callbacks for connection events
+  public disconnectCallback?: (reason: string) => void;
+  public connectErrorCallback?: (err: Error) => void;
 
   // Register all stored callbacks on the current socket
   private registerStoredCallbacks(): void {

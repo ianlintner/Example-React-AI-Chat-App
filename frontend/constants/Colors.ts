@@ -58,8 +58,15 @@ export const ForestColors = {
   info: '#7fa3bc', // Sage blue - info states
 
   // Message colors
-  messageHover: 'rgba(42, 74, 42, 0.3)', // Forest green message hover
-  messageFocused: 'rgba(74, 124, 89, 0.15)', // Brand color focused message
+  messageUser: '#2a4a2a', // Pine green - user bubbles
+  messageAssistant: '#162b16', // Darker forest - assistant bubbles
+
+  // Aliases for component compatibility
+  surface: '#162b16', // backgroundSecondary
+  text: '#d4e6d4', // textNormal
+  textSecondary: '#9cb89c', // textMuted
+  primary: '#4a7c59', // brandPrimary
+};
 
   // Input colors
   inputBackground: '#233e23', // Dark forest input background

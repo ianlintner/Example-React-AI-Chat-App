@@ -298,6 +298,7 @@ describe('ChatScreen', () => {
         messages: [
           {
             id: '1',
+            conversationId: 'test-conversation-id',
             role: 'user',
             content: 'Hello with avatar',
             timestamp: new Date(),
@@ -326,6 +327,7 @@ describe('ChatScreen', () => {
         messages: [
           {
             id: '1',
+            conversationId: 'test-conversation-id',
             role: 'user',
             content: 'Hello without avatar',
             timestamp: new Date(),

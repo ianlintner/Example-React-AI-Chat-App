@@ -10,6 +10,7 @@ export interface Message {
   status?: 'pending' | 'streaming' | 'complete';
   user?: {
     name: string;
+    email?: string;
     avatar?: string;
   };
 }

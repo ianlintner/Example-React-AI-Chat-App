@@ -255,9 +255,12 @@ class UserStorage {
   }
 
   async close(): Promise<void> {
-    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
-    if (!this.useMemory && this.client && this.client.isOpen)
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    if (!this.useMemory && this.client && this.client.isOpen) {
       await this.client.quit();
+    }
   }
 }
 

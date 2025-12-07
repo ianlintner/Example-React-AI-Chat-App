@@ -26,3 +26,4 @@ k8s/apps/chat/overlays/azure/secrets-patch.yaml
 
 # Azure Key Vault configuration (contains sensitive IDs)
 **/.keyvault-config
+backend/jest-socket-results.json

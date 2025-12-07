@@ -1,0 +1,42 @@
+# Optimized Dockerfile for CI/CD - uses pre-built artifacts
+# This Dockerfile assumes frontend/dist and backend/dist already exist
+# Built by GitHub Actions before Docker build step
+
+FROM node:22-alpine3.20 AS production
+
+# Install dumb-init and curl for proper signal handling and health checks
+RUN apk add --no-cache dumb-init curl
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy package files for production dependencies
+COPY backend/package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy pre-built backend from CI artifacts
+COPY --chown=nodejs:nodejs backend/dist ./dist
+
+# Copy pre-built frontend into location expected by backend static server
+# Backend code serves from path: dist/backend/public
+RUN mkdir -p dist/backend/public
+COPY --chown=nodejs:nodejs frontend/dist ./dist/backend/public
+
+# Switch to nodejs user
+USER nodejs
+
+# Expose port
+EXPOSE 5001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5001/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"
+
+# Start application with dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/backend/src/index.js"]

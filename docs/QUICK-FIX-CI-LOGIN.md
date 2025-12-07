@@ -1,7 +1,7 @@
 # Quick Fix: Azure Login for GitHub Actions
 
 ## Problem
-GitHub Actions CI failing at "Azure Login" step with authentication errors.
+GitHub Actions CI failing at "Azure Login" step with authentication errors or "No subscriptions found" error.
 
 ## Solution
 Run the setup script to create new Azure credentials using OIDC (more secure):
@@ -14,8 +14,9 @@ Run the setup script to create new Azure credentials using OIDC (more secure):
 
 1. ✅ Creates Azure AD application with service principal
 2. ✅ Configures OIDC federated credentials (no secrets needed!)
-3. ✅ Assigns Contributor role for ACR access
-4. ✅ Sets GitHub repository secrets automatically
+3. ✅ Assigns Contributor and Reader roles at subscription level
+4. ✅ Assigns AcrPush role for container registry access
+5. ✅ Sets GitHub repository secrets automatically
 
 ## Manual Alternative
 
@@ -80,10 +81,16 @@ brew install azure-cli  # macOS
 - Check repository name matches in federated credentials
 - Re-run the setup script
 
+**"No subscriptions found" error**
+- Service principal needs Reader role at subscription level
+- Run: `az role assignment create --assignee $AZURE_CLIENT_ID --role Reader --scope "/subscriptions/$AZURE_SUBSCRIPTION_ID"`
+- Permissions may take 1-2 minutes to propagate
+
 **"Permission denied" to ACR**
-- Service principal needs time to propagate (wait 1-2 minutes)
+- Service principal needs AcrPush role for container registry
+- Run: `az role assignment create --assignee $AZURE_CLIENT_ID --role AcrPush --scope $(az acr show --name gabby --query id -o tsv)`
 - Verify ACR name matches in workflow (`gabby`)
-- Check role assignment: `az role assignment list --assignee $AZURE_CLIENT_ID`
+- Check role assignments: `az role assignment list --assignee $AZURE_CLIENT_ID --all`
 
 ## Full Documentation
 

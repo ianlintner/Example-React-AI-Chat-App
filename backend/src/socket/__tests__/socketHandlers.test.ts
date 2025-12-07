@@ -649,7 +649,7 @@ describe('Socket Handlers', () => {
       errorHandler(error);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Socket error from test-socket-id:',
+        expect.stringContaining('Socket error on test-socket-id:'),
         error,
       );
 

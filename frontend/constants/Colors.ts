@@ -66,7 +66,6 @@ export const ForestColors = {
   text: '#d4e6d4', // textNormal
   textSecondary: '#9cb89c', // textMuted
   primary: '#4a7c59', // brandPrimary
-};
 
   // Input colors
   inputBackground: '#233e23', // Dark forest input background

@@ -16,7 +16,15 @@ spec:
     # Allow health, metrics, and docs endpoints without authentication
     - to:
         - operation:
-            paths: ['/api/health', '/health', '/healthz', '/metrics', '/api/docs*', '/docs*']
+            paths:
+              [
+                '/api/health',
+                '/health',
+                '/healthz',
+                '/metrics',
+                '/api/docs*',
+                '/docs*',
+              ]
     # Allow WebSocket connections for Socket.io
     # Socket.io needs both the initial HTTP upgrade request and the WebSocket frames
     - to:

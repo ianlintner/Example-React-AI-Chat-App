@@ -159,7 +159,9 @@ class UserStorage {
       return user;
     }
     const entry = this.memoryUsers.get(userId);
-    if (!entry) return null;
+    if (!entry) {
+      return null;
+    }
     if (entry._expiresAt <= Date.now()) {
       this.memoryUsers.delete(userId);
       return null;
@@ -180,7 +182,9 @@ class UserStorage {
     } else {
       userId = this.providerIndex.get(providerKey) || null;
     }
-    if (!userId) return null;
+    if (!userId) {
+      return null;
+    }
     return this.getUser(userId);
   }
 
@@ -205,7 +209,9 @@ class UserStorage {
   async deleteUser(userId: string): Promise<void> {
     await this.connect();
     const existing = await this.getUser(userId);
-    if (!existing) return;
+    if (!existing) {
+      return;
+    }
     const providerKey = `provider:${existing.provider}:${existing.providerId}`;
     if (!this.useMemory && this.client) {
       await this.client.del(`user:${userId}`);

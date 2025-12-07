@@ -11,19 +11,19 @@ jest.mock('react-native-paper', () => {
   const React = require('react');
   const { View, Text, TouchableOpacity, Image } = require('react-native');
 
-  const AvatarImage = ({ source, ...rest }) => (
+  const AvatarImage = ({ source, ...rest }: any) => (
     <Image source={source} testID='user-avatar-image' {...rest} />
   );
-  const AvatarText = ({ label, ...rest }) => <Text {...rest}>{label}</Text>;
+  const AvatarText = ({ label, ...rest }: any) => <Text {...rest}>{label}</Text>;
 
-  const MenuComponent = ({ anchor, children, visible, ...rest }) => (
+  const MenuComponent = ({ anchor, children, visible, ...rest }: any) => (
     <View {...rest}>
       <View>{anchor}</View>
       {visible ? <View>{children}</View> : null}
     </View>
   );
 
-  MenuComponent.Item = ({ onPress, title, ...rest }) => (
+  MenuComponent.Item = ({ onPress, title, ...rest }: any) => (
     <TouchableOpacity onPress={onPress} {...rest}>
       <Text>{title}</Text>
     </TouchableOpacity>

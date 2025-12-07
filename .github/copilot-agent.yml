@@ -79,7 +79,6 @@ data:
       registry: gabby.azurecr.io
       domains:
         - "*.cat-herding.net"
-        - "*.hugecat.net"
       gateway: aks-istio-ingress/cat-herding-gateway
 
     rules:

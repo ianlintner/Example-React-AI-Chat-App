@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-DOMAIN="chat.hugecat.net"
+DOMAIN="chat.cat-herding.net"
 NAMESPACE="default"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════╗${NC}"

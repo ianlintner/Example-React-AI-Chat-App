@@ -10,8 +10,9 @@ data:
   ENABLE_METRICS: 'true'
   REDIS_HOST: 'redis-service'
   REDIS_PORT: '6379'
-  API_URL: 'http://chat.cat-herding.net:5001'
-  FRONTEND_URL: 'https://chat.hugecat.net'
+  API_URL: 'https://chat.cat-herding.net'
+  FRONTEND_URL: 'https://chat.cat-herding.net'
+  EXPO_PUBLIC_API_URL: 'https://chat.cat-herding.net'
   # Note: OAuth is handled at cluster level via oauth2-proxy
 
 ---

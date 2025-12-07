@@ -242,4 +242,4 @@ az role assignment list --assignee $APP_ID --all
 
 - [Azure Quick Setup Guide](../azure-quick-setup.md)
 - [Azure Deployment Guide](../azure-deployment.md)
-- [CI/CD Overview](../../README.md#cicd)
+- [Getting Started](../getting-started/quickstart.md)

@@ -72,10 +72,14 @@ class UserStorage {
       () => {
         const now = Date.now();
         for (const [id, u] of this.memoryUsers) {
-          if (u._expiresAt <= now) this.memoryUsers.delete(id);
+          if (u._expiresAt <= now) {
+            this.memoryUsers.delete(id);
+          }
         }
         for (const [key, userId] of this.providerIndex) {
-          if (!this.memoryUsers.get(userId)) this.providerIndex.delete(key);
+          if (!this.memoryUsers.get(userId)) {
+            this.providerIndex.delete(key);
+          }
         }
       },
       60 * 60 * 1000,
@@ -83,7 +87,9 @@ class UserStorage {
   }
 
   static getInstance(): UserStorage {
-    if (!this.instance) this.instance = new UserStorage();
+    if (!this.instance) {
+      this.instance = new UserStorage();
+    }
     return this.instance;
   }
 

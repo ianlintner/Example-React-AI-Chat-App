@@ -18,4 +18,4 @@ resources:
   - authz-policy.yaml
   - hpa.yaml
   - pdb.yaml
-  - vpa.yaml
+  

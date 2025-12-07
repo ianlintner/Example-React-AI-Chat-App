@@ -34,7 +34,9 @@ class UserStorage {
       }
       this.client.on('error', err => {
         logger.error({ err }, 'Redis error (UserStorage)');
-        if (!this.useMemory) this.activateFallback('runtime-error');
+        if (!this.useMemory) {
+          this.activateFallback('runtime-error');
+        }
       });
       this.client.on('connect', () => {
         logger.info('UserStorage Redis connected');
@@ -47,9 +49,13 @@ class UserStorage {
   }
 
   private async connect(): Promise<void> {
-    if (this.useMemory || !this.client) return;
+    if (this.useMemory || !this.client) {
+      return;
+    }
     try {
-      if (!this.client.isOpen) await this.client.connect();
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
     } catch (error) {
       logger.error({ error }, 'Redis connect failed (UserStorage)');
       this.activateFallback('connect-failure');
@@ -57,7 +63,9 @@ class UserStorage {
   }
 
   private activateFallback(reason: string): void {
-    if (this.useMemory) return;
+    if (this.useMemory) {
+      return;
+    }
     this.useMemory = true;
     logger.warn({ reason }, '⚠️ Falling back to in-memory UserStorage');
     this.cleanupInterval = setInterval(

@@ -232,8 +232,8 @@ jobs:
           echo "Frontend artifacts:"
           ls -la frontend/dist/ || exit 1
 
-      # Use optimized dockerignore for CI
-      - name: Setup optimized dockerignore
+      # Use optimized dockerignore for faster CI builds
+      - name: Use CI-optimized dockerignore
         run: cp .dockerignore.ci .dockerignore
 
       - name: Azure Login (OIDC)
@@ -271,6 +271,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
   ci-success:
     needs: [checks, backend, frontend, docs, security, docker-build-push]

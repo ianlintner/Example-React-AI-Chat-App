@@ -1,5 +1,5 @@
 # Multi-stage build for Expo React Native web
-FROM node:22-alpine AS builder
+FROM node:22-alpine3.20 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Production stage with nginx
-FROM nginx:alpine AS production
+FROM nginx:alpine3.20 AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init

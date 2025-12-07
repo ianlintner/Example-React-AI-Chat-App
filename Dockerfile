@@ -1,6 +1,6 @@
 # Multi-stage build for combined Frontend + Backend
 # Stage 1: Build Frontend (Expo Web)
-FROM node:22-alpine AS frontend-builder
+FROM node:22-alpine3.20 AS frontend-builder
 
 WORKDIR /frontend
 
@@ -20,7 +20,7 @@ ENV EXPO_PUBLIC_API_URL=https://chat.cat-herding.net
 RUN npm run build
 
 # Stage 2: Build Backend (TypeScript)
-FROM node:22-alpine AS backend-builder
+FROM node:22-alpine3.20 AS backend-builder
 
 WORKDIR /backend
 
@@ -45,7 +45,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Stage 3: Production - Combined Frontend + Backend
-FROM node:22-alpine AS production
+FROM node:22-alpine3.20 AS production
 
 # Install dumb-init and curl for proper signal handling and health checks
 RUN apk add --no-cache dumb-init curl

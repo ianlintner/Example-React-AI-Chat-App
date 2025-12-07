@@ -362,6 +362,9 @@ jest.mock('react-native-paper', () => {
   );
   MockActivityIndicator.displayName = 'ActivityIndicator';
 
+  const MockMenu = createMockComponent('Menu');
+  MockMenu.Item = createMockComponent('Menu.Item');
+
   return {
     Avatar: MockAvatar,
     Chip: MockChip,
@@ -371,9 +374,7 @@ jest.mock('react-native-paper', () => {
     Card: createMockComponent('Card'),
     Text: createMockComponent('Text'),
     Surface: createMockComponent('Surface'),
-    Menu: {
-      Item: createMockComponent('Menu.Item'),
-    },
+    Menu: MockMenu,
     Appbar: {
       Header: createMockComponent('AppbarHeader'),
       Content: createMockComponent('AppbarContent'),

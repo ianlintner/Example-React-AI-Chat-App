@@ -245,7 +245,9 @@ class UserStorage {
     const now = Date.now();
     const users: User[] = [];
     for (const entry of Array.from(this.memoryUsers.values()).slice(0, limit)) {
-      if (entry._expiresAt <= now) continue;
+      if (entry._expiresAt <= now) {
+        continue;
+      }
       const { _expiresAt, ...u } = entry;
       users.push(u);
     }

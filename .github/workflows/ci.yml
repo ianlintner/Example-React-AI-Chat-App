@@ -16,32 +16,6 @@ permissions:
   id-token: write # for optional Azure/OIDC flows
 
 jobs:
-    runs-on: ubuntu-latest
-    outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
-      docs: ${{ steps.filter.outputs.docs }}
-      workflows: ${{ steps.filter.outputs.workflows }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-              - 'shared/**'
-            frontend:
-              - 'frontend/**'
-              - 'shared/**'
-            docs:
-              - 'docs/**'
-              - '*.md'
-            workflows:
-              - '.github/workflows/**'
-
   checks:
     runs-on: ubuntu-latest
     steps:
@@ -168,7 +142,6 @@ jobs:
           name: frontend-dist
           path: frontend/dist/
           retention-days: 7
-
   docs:
     runs-on: ubuntu-latest
     steps:

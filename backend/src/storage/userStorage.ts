@@ -148,10 +148,14 @@ class UserStorage {
     await this.connect();
     if (!this.useMemory && this.client) {
       const data = await this.client.get(`user:${userId}`);
-      if (!data) return null;
+      if (!data) {
+        return null;
+      }
       const user = JSON.parse(data) as User;
       user.createdAt = new Date(user.createdAt);
-      if (user.lastLoginAt) user.lastLoginAt = new Date(user.lastLoginAt);
+      if (user.lastLoginAt) {
+        user.lastLoginAt = new Date(user.lastLoginAt);
+      }
       return user;
     }
     const entry = this.memoryUsers.get(userId);

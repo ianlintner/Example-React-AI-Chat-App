@@ -8,7 +8,15 @@ import { tracingContextManager } from '../../tracing/contextManager';
 
 // Mock dependencies
 jest.mock('../../storage/memoryStorage');
-jest.mock('../../storage/userStorage');
+jest.mock('../../storage/userStorage', () => ({
+  __esModule: true,
+  default: {
+    getUserByProvider: jest.fn(),
+    createUser: jest.fn(),
+    getUser: jest.fn(),
+    updateUser: jest.fn(),
+  },
+}));
 jest.mock('../../agents/agentService');
 jest.mock('../../metrics/prometheus');
 jest.mock('../../tracing/tracer');
@@ -262,10 +270,11 @@ describe('Socket Handlers', () => {
 
     it('should properly clean up on disconnect', () => {
       // Get disconnect handler
-      const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+      const disconnectCalls = (mockSocket.on as jest.Mock).mock.calls.filter(
         call => call[0] === 'disconnect',
       );
-      const disconnectHandler = disconnectCall[1];
+      // Get the last handler (the cleanup logic)
+      const disconnectHandler = disconnectCalls[disconnectCalls.length - 1][1];
 
       // Simulate disconnect
       disconnectHandler();
@@ -416,10 +425,11 @@ describe('Socket Handlers', () => {
       )[1];
       await connectionHandler(mockSocket);
 
-      const streamChatCall = (mockSocket.on as jest.Mock).mock.calls.find(
+      const streamChatCalls = (mockSocket.on as jest.Mock).mock.calls.filter(
         (call: any) => call[0] === 'stream_chat',
       );
-      streamChatHandler = streamChatCall[1];
+      // Get the last handler (the actual logic, not the logging one)
+      streamChatHandler = streamChatCalls[streamChatCalls.length - 1][1];
     });
 
     afterEach(() => {
@@ -603,10 +613,10 @@ describe('Socket Handlers', () => {
       )[1];
       connectionHandler(mockSocket);
 
-      const disconnectCall = (mockSocket.on as jest.Mock).mock.calls.find(
+      const disconnectCalls = (mockSocket.on as jest.Mock).mock.calls.filter(
         call => call[0] === 'disconnect',
       );
-      disconnectHandler = disconnectCall[1];
+      disconnectHandler = disconnectCalls[disconnectCalls.length - 1][1];
     });
 
     it('should handle socket disconnection', () => {

@@ -1,0 +1,13 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: chat-jwt-auth
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: chat-backend
+  jwtRules:
+  - issuer: "https://oauth2.cat-herding.net"
+    jwksUri: "https://oauth2.cat-herding.net/oauth2/jwks"
+    forwardOriginalToken: true

@@ -4,118 +4,6 @@ import { logger } from '../logger';
 import userStorage from '../storage/userStorage';
 import { User } from '../../../shared/types';
 
-const PROXY_HEADER_EMAIL = 'x-auth-request-email';
-const GAP_AUTH_HEADER = 'gap-auth';
-const PROXY_HEADER_USER = 'x-auth-request-user';
-const PROXY_HEADER_NAME = 'x-auth-request-preferred-username';
-const PROXY_HEADER_FULLNAME = 'x-auth-request-fullname';
-const PROXY_HEADER_AVATAR = 'x-auth-request-avatar-url';
-const PROXY_HEADER_PROVIDER = 'x-auth-request-provider';
-
-const getHeaderValue = (req: Request, header: string): string | undefined => {
-  const value = req.headers[header] ?? req.headers[header.toLowerCase()];
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-  return value as string | undefined;
-};
-
-const fetchGitHubUserProfile = async (
-  username: string,
-  accessToken?: string,
-): Promise<{ avatar_url?: string } | null> => {
-  try {
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github.v3+json',
-      'User-Agent': 'AI-Chat-App',
-    };
-
-    if (accessToken) {
-      headers['Authorization'] = `token ${accessToken}`;
-    }
-
-    const response = await fetch(`https://api.github.com/users/${username}`, {
-      headers,
-    });
-
-    if (!response.ok) {
-      logger.warn(
-        { username, status: response.status },
-        'Failed to fetch GitHub profile',
-      );
-      return null;
-    }
-
-    const data = (await response.json()) as { avatar_url?: string };
-    return { avatar_url: data.avatar_url };
-  } catch (error) {
-    logger.error({ error, username }, 'Error fetching GitHub profile');
-    return null;
-  }
-};
-
-const authenticateViaProxyHeaders = async (
-  req: Request,
-): Promise<User | null> => {
-  const email =
-    getHeaderValue(req, PROXY_HEADER_EMAIL) ||
-    getHeaderValue(req, GAP_AUTH_HEADER);
-  if (!email) {
-    return null;
-  }
-
-  const providerHeader = (getHeaderValue(req, PROXY_HEADER_PROVIDER) || '')
-    .toLowerCase()
-    .trim();
-  const provider: 'github' | 'google' =
-    providerHeader === 'google' ? 'google' : 'github';
-
-  const providerId =
-    getHeaderValue(req, PROXY_HEADER_USER) ||
-    getHeaderValue(req, PROXY_HEADER_NAME) ||
-    email;
-  const displayName =
-    getHeaderValue(req, PROXY_HEADER_NAME) ||
-    getHeaderValue(req, PROXY_HEADER_FULLNAME) ||
-    providerId;
-  let avatar = getHeaderValue(req, PROXY_HEADER_AVATAR);
-
-  // For GitHub users, fetch the profile to get avatar_url
-  if (provider === 'github' && !avatar && providerId) {
-    const accessToken = getHeaderValue(req, 'x-auth-request-access-token');
-    const profile = await fetchGitHubUserProfile(providerId, accessToken);
-    if (profile?.avatar_url) {
-      avatar = profile.avatar_url;
-    }
-  }
-
-  let user = await userStorage.getUserByProvider(provider, providerId);
-  if (!user) {
-    user = await userStorage.createUser({
-      email,
-      name: displayName,
-      provider,
-      providerId,
-      avatar,
-    });
-  } else {
-    // Update avatar if it changed
-    if (avatar && user.avatar !== avatar) {
-      user.avatar = avatar;
-    }
-    user.lastLoginAt = new Date();
-    await userStorage.updateUser(user);
-  }
-
-  req.user = user;
-  req.userId = user.id;
-  logger.debug(
-    { email, provider, providerId, hasAvatar: !!avatar },
-    'Authenticated via oauth2-proxy headers',
-  );
-  return user;
-};
-
 // Extend Express Request to include user
 declare module 'express-serve-static-core' {
   interface Request {
@@ -125,14 +13,18 @@ declare module 'express-serve-static-core' {
 }
 
 interface JwtPayload {
-  userId: string;
-  email: string;
-  iat: number;
-  exp: number;
+  sub: string; // Subject (User ID)
+  email?: string;
+  name?: string;
+  picture?: string;
+  preferred_username?: string;
+  iss?: string;
+  aud?: string | string[];
 }
 
 /**
  * Middleware to authenticate requests using JWT
+ * Trusts that Istio RequestAuthentication has already validated the signature.
  */
 export const authenticateToken = async (
   req: Request,
@@ -144,53 +36,83 @@ export const authenticateToken = async (
     const authHeader = req.headers['authorization'];
     const token = authHeader?.split(' ')[1]; // Bearer TOKEN
 
-    if (token) {
-      const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';
-      try {
-        // Verify token
-        const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-
-        // Get user from storage
-        const user = await userStorage.getUser(decoded.userId);
-
-        if (!user) {
-          res.status(401).json({ error: 'User not found' });
-          return;
-        }
-
-        // Attach user to request
-        req.user = user;
-        req.userId = user.id;
-
-        next();
-        return;
-      } catch (error) {
-        if (error instanceof jwt.JsonWebTokenError) {
-          logger.warn({ error: error.message }, 'Invalid JWT token');
-        } else if (error instanceof jwt.TokenExpiredError) {
-          logger.warn('JWT token expired');
-        } else {
-          logger.error({ error }, 'Authentication error');
-        }
-        // Fall through to proxy header authentication before failing request
-      }
-    }
-
-    const proxyUser = await authenticateViaProxyHeaders(req);
-    if (proxyUser) {
-      next();
+    if (!token) {
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    res.status(401).json({ error: 'Authentication required' });
+    // Decode token (Istio validates signature, so we can just decode)
+    const decoded = jwt.decode(token) as JwtPayload | null;
+
+    if (!decoded || !decoded.sub) {
+      logger.warn('Invalid JWT token structure');
+      res.status(401).json({ error: 'Invalid token' });
+      return;
+    }
+
+    // Check issuer if needed (optional, Istio does this too)
+    if (decoded.iss && decoded.iss !== 'https://oauth2.cat-herding.net') {
+       logger.warn({ issuer: decoded.iss }, 'Unexpected token issuer');
+       // We might want to allow it if we trust Istio config, but good to log
+    }
+
+    const providerId = decoded.sub;
+    const email = decoded.email || `${providerId}@example.com`; // Fallback
+    const name = decoded.name || decoded.preferred_username || 'User';
+    const avatar = decoded.picture;
+
+    // Find or create user
+    let user = await userStorage.getUserByProvider('oauth2', providerId);
+    
+    // Also check by email if not found by providerId (migration path)
+    if (!user && email) {
+        // This might be risky if emails aren't verified, but for this internal app it's likely fine
+        // user = await userStorage.getUserByEmail(email); 
+        // Let's stick to providerId for now to be safe
+    }
+
+    if (!user) {
+      user = await userStorage.createUser({
+        email,
+        name,
+        provider: 'oauth2',
+        providerId,
+        avatar,
+      });
+      logger.info({ userId: user.id }, 'Created new user from JWT');
+    } else {
+      // Update user info if changed
+      let changed = false;
+      if (avatar && user.avatar !== avatar) {
+        user.avatar = avatar;
+        changed = true;
+      }
+      if (name && user.name !== name) {
+        user.name = name;
+        changed = true;
+      }
+      
+      user.lastLoginAt = new Date();
+      changed = true; // Always update last login
+
+      if (changed) {
+        await userStorage.updateUser(user);
+      }
+    }
+
+    // Attach user to request
+    req.user = user;
+    req.userId = user.id;
+
+    next();
   } catch (error) {
+    logger.error({ error }, 'Authentication error');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 /**
- * Optional authentication middleware - doesn't fail if no token provided
- * Useful for endpoints that work with or without authentication
+ * Optional authentication middleware
  */
 export const optionalAuth = async (
   req: Request,
@@ -199,41 +121,19 @@ export const optionalAuth = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader?.split(' ')[1];
-
-    if (!token) {
-      const proxyUser = await authenticateViaProxyHeaders(req);
-      if (!proxyUser) {
-        next();
-        return;
-      }
+    if (!authHeader) {
       next();
       return;
     }
-
-    const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-    const user = await userStorage.getUser(decoded.userId);
-
-    if (user) {
-      req.user = user;
-      req.userId = user.id;
-    }
-
-    next();
+    await authenticateToken(req, res, next);
   } catch (error) {
-    const proxyUser = await authenticateViaProxyHeaders(req);
-    if (!proxyUser) {
-      // Silently fail for optional auth
-      next();
-      return;
-    }
+    // Ignore errors for optional auth
     next();
   }
 };
 
 /**
- * Generate JWT token for user
+ * Generate JWT token for user (Legacy/Local use)
  */
 export const generateToken = (user: User): string => {
   const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';

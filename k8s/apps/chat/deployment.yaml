@@ -20,9 +20,7 @@ spec:
         sidecar.istio.io/proxyMemory: '32Mi'
         sidecar.istio.io/proxyCPULimit: '500m'
         sidecar.istio.io/proxyMemoryLimit: '512Mi'
-        # OAuth2 Proxy auth metadata (added)
-        auth.cat-herding.net/provider: oauth2-proxy-sidecar
-        auth.cat-herding.net/domain: chat.cat-herding.net
+
     spec:
       securityContext:
         seccompProfile:
@@ -30,74 +28,7 @@ spec:
       serviceAccountName: chat
       automountServiceAccountToken: true
       containers:
-        # ==========================================
-        # OAuth2 Proxy Sidecar - provides GitHub OAuth authentication
-        # Traffic flow: Internet → Istio → oauth2-proxy (4180) → chat-backend (5001)
-        # ==========================================
-        - name: oauth2-proxy
-          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
-          imagePullPolicy: IfNotPresent
-          args:
-            - --config=/etc/oauth2-proxy/oauth2_proxy.cfg
-            - --whitelist-domain=.cat-herding.net
-          env:
-            - name: OAUTH2_PROXY_EMAIL_DOMAINS
-              value: '*'
-            - name: OAUTH2_PROXY_REDIRECT_URL
-              value: https://chat.cat-herding.net/oauth2/callback
-            - name: OAUTH2_PROXY_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets-from-keyvault
-                  key: OAUTH2_CLIENT_ID
-            - name: OAUTH2_PROXY_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets-from-keyvault
-                  key: OAUTH2_CLIENT_SECRET
-            - name: OAUTH2_PROXY_COOKIE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets-from-keyvault
-                  key: OAUTH2_COOKIE_SECRET
-            - name: OAUTH2_PROXY_UPSTREAMS
-              value: http://127.0.0.1:5001
-            - name: OAUTH2_PROXY_SET_AUTHORIZATION_HEADER
-              value: 'true'
-            - name: OAUTH2_PROXY_SET_XAUTHREQUEST
-              value: 'true'
-            - name: OAUTH2_PROXY_PASS_ACCESS_TOKEN
-              value: 'true'
-          ports:
-            - containerPort: 4180
-              name: proxy
-              protocol: TCP
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
-          livenessProbe:
-            httpGet:
-              path: /ping
-              port: 4180
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /ping
-              port: 4180
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
+
             runAsUser: 2000
           volumeMounts:
             - name: oauth2-proxy-config

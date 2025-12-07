@@ -8,6 +8,7 @@ import { tracingContextManager } from '../../tracing/contextManager';
 
 // Mock dependencies
 jest.mock('../../storage/memoryStorage');
+jest.mock('../../storage/userStorage');
 jest.mock('../../agents/agentService');
 jest.mock('../../metrics/prometheus');
 jest.mock('../../tracing/tracer');

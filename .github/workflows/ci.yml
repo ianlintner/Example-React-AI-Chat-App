@@ -213,8 +213,16 @@ jobs:
           IMAGE_TAG="ianlintner068/example-react-ai-chat-app:sha-${{ github.sha }}"
           IMAGE_LATEST="ianlintner068/example-react-ai-chat-app:latest"
 
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+          docker build \
+            --platform linux/amd64 \
+            --push \
+            -t $IMAGE_TAG \
+            -t $IMAGE_LATEST \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+
+          docker build \
+            --platform linux/arm64 \
             --push \
             -t $IMAGE_TAG \
             -t $IMAGE_LATEST \

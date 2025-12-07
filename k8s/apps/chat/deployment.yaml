@@ -106,26 +106,6 @@ spec:
             - name: secrets-store
               mountPath: '/mnt/secrets-store'
               readOnly: true
-        # Redirect sidecar for chat.hugecat.net -> chat.cat-herding.net
-        - name: redirect
-          image: busybox:latest
-          command:
-            - /bin/sh
-            - -c
-            - |
-              while true; do
-                { echo -e "HTTP/1.1 301 Moved Permanently\r\nLocation: https://chat.cat-herding.net\r\nConnection: close\r\nContent-Length: 0\r\n\r"; } | nc -l -p 8080
-              done
-          ports:
-            - containerPort: 8080
-              name: redirect
-          resources:
-            requests:
-              cpu: '5m'
-              memory: '8Mi'
-            limits:
-              cpu: '50m'
-              memory: '32Mi'
       volumes:
         - name: secrets-store
           csi:

@@ -19,19 +19,3 @@ spec:
       port: 80
       targetPort: 5001
       protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: chat-redirect
-  labels:
-    app: chat-backend
-spec:
-  type: ClusterIP
-  selector:
-    app: chat-backend
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8080
-      protocol: TCP

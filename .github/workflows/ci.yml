@@ -16,7 +16,6 @@ permissions:
   id-token: write # for optional Azure/OIDC flows
 
 jobs:
-  changes:
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
@@ -44,8 +43,6 @@ jobs:
               - '.github/workflows/**'
 
   checks:
-    needs: changes
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,8 +63,6 @@ jobs:
         run: npm run docs:mermaid:ci || echo "Mermaid validation non-blocking"
 
   backend:
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     services:
       redis:
@@ -137,8 +132,6 @@ jobs:
           retention-days: 7
 
   frontend:
-    needs: changes
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -177,8 +170,6 @@ jobs:
           retention-days: 7
 
   docs:
-    needs: changes
-    if: needs.changes.outputs.docs == 'true' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -210,8 +201,6 @@ jobs:
           retention-days: 7
 
   security:
-    needs: changes
-    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -227,17 +216,13 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
       - name: Dependency audit backend
-        if: needs.changes.outputs.backend == 'true'
         working-directory: backend
         run: npm audit --audit-level=moderate || true
       - name: Dependency audit frontend
-        if: needs.changes.outputs.frontend == 'true'
         working-directory: frontend
         run: npm audit --audit-level=moderate || true
 
   docker:
-    needs: [backend, frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.backend.result == 'success' || needs.frontend.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -277,13 +262,12 @@ jobs:
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/chat-backend:latest
 
   ci-success:
-    needs: [changes, checks, backend, frontend, docs, security]
+    needs: [checks, backend, frontend, docs, security]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Aggregate results
         run: |
-          echo "Changes: ${{ needs.changes.result }}"
           echo "Checks: ${{ needs.checks.result }}"
           echo "Backend: ${{ needs.backend.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"

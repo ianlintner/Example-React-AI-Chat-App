@@ -54,6 +54,10 @@ describe('Socket Handlers', () => {
   let mockIo: jest.Mocked<Server>;
   let mockSocket: any;
 
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();

@@ -14,7 +14,9 @@ jest.mock('react-native-paper', () => {
   const AvatarImage = ({ source, ...rest }: any) => (
     <Image source={source} testID='user-avatar-image' {...rest} />
   );
-  const AvatarText = ({ label, ...rest }: any) => <Text {...rest}>{label}</Text>;
+  const AvatarText = ({ label, ...rest }: any) => (
+    <Text {...rest}>{label}</Text>
+  );
 
   const MenuComponent = ({ anchor, children, visible, ...rest }: any) => (
     <View {...rest}>

@@ -245,7 +245,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-
   ci-success:
     needs: [checks, backend, frontend, docs, security]
     if: always()

@@ -308,7 +308,7 @@ export const setupSocketHandlers = (
               ? JSON.stringify(args[0]).slice(0, 200)
               : '';
           console.log(
-            `📥 Socket event received: ${event} ${preview ? '- ' + preview : ''}`,
+            `📥 Socket event received: ${event} ${preview ? `- ${preview}` : ''}`,
           );
         } catch {
           console.log(`📥 Socket event received: ${event}`);

@@ -234,7 +234,9 @@ class UserStorage {
         if (data) {
           const u = JSON.parse(data) as User;
           u.createdAt = new Date(u.createdAt);
-          if (u.lastLoginAt) u.lastLoginAt = new Date(u.lastLoginAt);
+          if (u.lastLoginAt) {
+            u.lastLoginAt = new Date(u.lastLoginAt);
+          }
           users.push(u);
         }
       }

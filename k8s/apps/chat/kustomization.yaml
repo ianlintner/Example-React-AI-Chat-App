@@ -15,7 +15,9 @@ resources:
   - clusterissuer.yaml
   - certificate.yaml
   - secret-provider-class.yaml
-  - authz-policy.yaml
+  - request-authentication.yaml
+  - authorization-policy.yaml
+  - envoy-filter-jwt-to-headers.yaml
   - hpa.yaml
   - pdb.yaml
   

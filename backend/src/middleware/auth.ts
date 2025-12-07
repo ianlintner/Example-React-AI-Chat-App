@@ -23,8 +23,8 @@ interface JwtPayload {
 }
 
 /**
- * Middleware to authenticate requests using JWT
- * Trusts that Istio RequestAuthentication has already validated the signature.
+ * Middleware to authenticate requests using headers injected by Istio/Envoy
+ * The EnvoyFilter extracts claims from the validated JWT and puts them in headers.
  */
 export const authenticateToken = async (
   req: Request,
@@ -32,54 +32,41 @@ export const authenticateToken = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    // Extract token from Authorization header
-    const authHeader = req.headers['authorization'];
-    const token = authHeader?.split(' ')[1]; // Bearer TOKEN
-
-    if (!token) {
+    // Check for headers injected by Istio EnvoyFilter
+    const subject = req.headers['x-auth-subject'] as string;
+    
+    if (!subject) {
+      // If headers are missing, check if we have a raw token to debug or fail
+      // But generally, if we are here, it means Istio didn't inject headers
+      // which implies no valid token was found/processed by the filter.
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    // Decode token (Istio validates signature, so we can just decode)
-    const decoded = jwt.decode(token) as JwtPayload | null;
+    const email = (req.headers['x-auth-email'] as string) || `${subject}@example.com`;
+    const name = (req.headers['x-auth-name'] as string) || 
+                 (req.headers['x-auth-username'] as string) || 
+                 'User';
+    const avatar = req.headers['x-auth-picture'] as string;
+    const issuer = req.headers['x-auth-issuer'] as string;
 
-    if (!decoded || !decoded.sub) {
-      logger.warn('Invalid JWT token structure');
-      res.status(401).json({ error: 'Invalid token' });
-      return;
+    // Optional: Verify issuer if not already handled by RequestAuthentication
+    if (issuer && issuer !== 'https://oauth2.cat-herding.net') {
+       logger.warn({ issuer }, 'Unexpected token issuer header');
     }
-
-    // Check issuer if needed (optional, Istio does this too)
-    if (decoded.iss && decoded.iss !== 'https://oauth2.cat-herding.net') {
-       logger.warn({ issuer: decoded.iss }, 'Unexpected token issuer');
-       // We might want to allow it if we trust Istio config, but good to log
-    }
-
-    const providerId = decoded.sub;
-    const email = decoded.email || `${providerId}@example.com`; // Fallback
-    const name = decoded.name || decoded.preferred_username || 'User';
-    const avatar = decoded.picture;
 
     // Find or create user
-    let user = await userStorage.getUserByProvider('oauth2', providerId);
+    let user = await userStorage.getUserByProvider('oauth2', subject);
     
-    // Also check by email if not found by providerId (migration path)
-    if (!user && email) {
-        // This might be risky if emails aren't verified, but for this internal app it's likely fine
-        // user = await userStorage.getUserByEmail(email); 
-        // Let's stick to providerId for now to be safe
-    }
-
     if (!user) {
       user = await userStorage.createUser({
         email,
         name,
         provider: 'oauth2',
-        providerId,
+        providerId: subject,
         avatar,
       });
-      logger.info({ userId: user.id }, 'Created new user from JWT');
+      logger.info({ userId: user.id }, 'Created new user from Istio headers');
     } else {
       // Update user info if changed
       let changed = false;
@@ -93,7 +80,7 @@ export const authenticateToken = async (
       }
       
       user.lastLoginAt = new Date();
-      changed = true; // Always update last login
+      changed = true;
 
       if (changed) {
         await userStorage.updateUser(user);
@@ -120,8 +107,9 @@ export const optionalAuth = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
+    // Check if we have the subject header
+    const subject = req.headers['x-auth-subject'] as string;
+    if (!subject) {
       next();
       return;
     }

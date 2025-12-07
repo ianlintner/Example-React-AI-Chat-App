@@ -82,7 +82,7 @@ class UserStorage {
   async createUser(userData: {
     email: string;
     name: string;
-    provider: 'github' | 'google';
+    provider: string;
     providerId: string;
     avatar?: string;
   }): Promise<User> {
@@ -151,7 +151,7 @@ class UserStorage {
   }
 
   async getUserByProvider(
-    provider: 'github' | 'google',
+    provider: string,
     providerId: string,
   ): Promise<User | null> {
     await this.connect();

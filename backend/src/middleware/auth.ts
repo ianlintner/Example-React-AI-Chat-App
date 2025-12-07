@@ -34,7 +34,7 @@ export const authenticateToken = async (
   try {
     // Check for headers injected by Istio EnvoyFilter
     const subject = req.headers['x-auth-subject'] as string;
-    
+
     if (!subject) {
       // If headers are missing, check if we have a raw token to debug or fail
       // But generally, if we are here, it means Istio didn't inject headers
@@ -43,21 +43,23 @@ export const authenticateToken = async (
       return;
     }
 
-    const email = (req.headers['x-auth-email'] as string) || `${subject}@example.com`;
-    const name = (req.headers['x-auth-name'] as string) || 
-                 (req.headers['x-auth-username'] as string) || 
-                 'User';
+    const email =
+      (req.headers['x-auth-email'] as string) || `${subject}@example.com`;
+    const name =
+      (req.headers['x-auth-name'] as string) ||
+      (req.headers['x-auth-username'] as string) ||
+      'User';
     const avatar = req.headers['x-auth-picture'] as string;
     const issuer = req.headers['x-auth-issuer'] as string;
 
     // Optional: Verify issuer if not already handled by RequestAuthentication
     if (issuer && issuer !== 'https://oauth2.cat-herding.net') {
-       logger.warn({ issuer }, 'Unexpected token issuer header');
+      logger.warn({ issuer }, 'Unexpected token issuer header');
     }
 
     // Find or create user
     let user = await userStorage.getUserByProvider('oauth2', subject);
-    
+
     if (!user) {
       user = await userStorage.createUser({
         email,
@@ -78,7 +80,7 @@ export const authenticateToken = async (
         user.name = name;
         changed = true;
       }
-      
+
       user.lastLoginAt = new Date();
       changed = true;
 

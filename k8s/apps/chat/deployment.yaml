@@ -28,15 +28,6 @@ spec:
       serviceAccountName: chat
       automountServiceAccountToken: true
       containers:
-
-            runAsUser: 2000
-          volumeMounts:
-            - name: oauth2-proxy-config
-              mountPath: /etc/oauth2-proxy
-              readOnly: true
-            - name: oauth2-proxy-templates
-              mountPath: /templates
-              readOnly: true
         # Main chat backend
         - name: chat-backend
           image: gabby.azurecr.io/chat-backend:latest

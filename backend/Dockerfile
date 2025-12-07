@@ -1,7 +1,7 @@
 # Multi-stage build for Node.js backend
 # Note: This Dockerfile should be built from the project root with:
 #   docker build -f backend/Dockerfile -t backend:latest .
-FROM node:alpine AS builder
+FROM node:22-alpine3.20 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -27,7 +27,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Production stage
-FROM node:alpine AS production
+FROM node:22-alpine3.20 AS production
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init curl

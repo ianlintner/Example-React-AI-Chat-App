@@ -371,6 +371,9 @@ jest.mock('react-native-paper', () => {
     Card: createMockComponent('Card'),
     Text: createMockComponent('Text'),
     Surface: createMockComponent('Surface'),
+    Menu: {
+      Item: createMockComponent('Menu.Item'),
+    },
     Appbar: {
       Header: createMockComponent('AppbarHeader'),
       Content: createMockComponent('AppbarContent'),

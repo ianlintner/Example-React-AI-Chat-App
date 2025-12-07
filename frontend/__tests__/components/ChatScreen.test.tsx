@@ -438,6 +438,7 @@ describe('ChatScreen', () => {
         messages: [
           {
             id: '1',
+            conversationId: 'test-conversation-id',
             role: 'user',
             content: 'First user message',
             timestamp: new Date(),
@@ -449,6 +450,7 @@ describe('ChatScreen', () => {
           } as Message,
           {
             id: '2',
+            conversationId: 'test-conversation-id',
             role: 'user',
             content: 'Second user message',
             timestamp: new Date(),

@@ -133,10 +133,3 @@ spec:
             readOnly: true
             volumeAttributes:
               secretProviderClass: 'azure-keyvault-chat-secrets'
-        # OAuth2 Proxy shared configuration & templates
-        - name: oauth2-proxy-config
-          configMap:
-            name: chat-oauth2-proxy-config
-        - name: oauth2-proxy-templates
-          configMap:
-            name: oauth2-proxy-templates

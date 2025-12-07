@@ -9,9 +9,9 @@ spec:
       app: chat-backend
   action: ALLOW
   rules:
-  - from:
-    - source:
-        requestPrincipals: ["https://oauth2.cat-herding.net/*"]
-  - to:
-    - operation:
-        paths: ["/api/health", "/metrics", "/api/docs*"]
+    - from:
+        - source:
+            requestPrincipals: ['https://oauth2.cat-herding.net/*']
+    - to:
+        - operation:
+            paths: ['/api/health', '/metrics', '/api/docs*']

@@ -8,6 +8,6 @@ spec:
     matchLabels:
       app: chat-backend
   jwtRules:
-  - issuer: "https://oauth2.cat-herding.net"
-    jwksUri: "https://oauth2.cat-herding.net/oauth2/jwks"
-    forwardOriginalToken: true
+    - issuer: 'https://oauth2.cat-herding.net'
+      jwksUri: 'https://oauth2.cat-herding.net/oauth2/jwks'
+      forwardOriginalToken: true

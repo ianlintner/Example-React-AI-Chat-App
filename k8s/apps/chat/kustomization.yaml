@@ -20,4 +20,3 @@ resources:
   - envoy-filter-jwt-to-headers.yaml
   - hpa.yaml
   - pdb.yaml
-  

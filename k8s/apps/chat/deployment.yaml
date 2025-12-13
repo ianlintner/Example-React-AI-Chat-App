@@ -16,7 +16,7 @@ spec:
         version: v1
       annotations:
         sidecar.istio.io/inject: 'true'
-        sidecar.istio.io/proxyCPU: '50m'
+        sidecar.istio.io/proxyCPU: '10m'
         sidecar.istio.io/proxyMemory: '32Mi'
         sidecar.istio.io/proxyCPULimit: '500m'
         sidecar.istio.io/proxyMemoryLimit: '512Mi'
@@ -95,21 +95,4 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 2
             failureThreshold: 3
-          resources:
-            requests:
-              cpu: '150m'
-              memory: '128Mi'
-            limits:
-              cpu: '2000m'
-              memory: '1024Mi'
-          volumeMounts:
-            - name: secrets-store
-              mountPath: '/mnt/secrets-store'
-              readOnly: true
-      volumes:
-        - name: secrets-store
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: 'azure-keyvault-chat-secrets'
+

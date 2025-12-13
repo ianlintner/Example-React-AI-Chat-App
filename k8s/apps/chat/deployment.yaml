@@ -39,17 +39,8 @@ spec:
             - name: AZURE_DEPLOYMENT
               value: 'true'
             - name: PORT
-              value: '5001'
-            - name: NODE_ENV
-              value: 'production'
-            - name: REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: chat-secrets-from-keyvault
-                  key: REDIS_HOST
-            - name: REDIS_PORT
-              valueFrom:
-                secretKeyRef:
+      # Note: Secrets are synced to Kubernetes Secret objects via SecretProviderClass
+      # and consumed directly through env/secretKeyRef. No CSI volume mounts are used.
                   name: chat-secrets-from-keyvault
                   key: REDIS_PORT
             - name: REDIS_PASSWORD

@@ -11,4 +11,8 @@ resources:
   - service.yaml
   - istio-virtualservice.yaml
   - secret-provider-class.yaml
-  - secret-provider-oauth2.yaml
+  - secret-provider-oauth2.yaml 
+  - requestauthentication-chat.yaml
+  - envoyfilter-chat-jwt-to-headers.yaml
+  - envoyfilter-chat-oauth2-exchange.yaml
+  

@@ -6,7 +6,7 @@ spec:
   hosts:
     - 'chat.cat-herding.net'
   gateways:
-    - chat-gateway
+    - aks-istio-ingress/cat-herding-gateway
   http:
     # Socket.io WebSocket endpoint - MUST be before /api route
     - match:

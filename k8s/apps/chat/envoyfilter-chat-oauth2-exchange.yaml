@@ -69,7 +69,7 @@ spec:
               default_expires_in: 900s
               csrf_token_expires_in: 600s
               credentials:
-                client_id: chat-backend
+                client_id: client_49e70f96-8fed-46b0-a57e-8a53e000f437
                 token_secret:
                   name: chat-oauth-token
                   sds_config:

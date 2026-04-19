@@ -12,8 +12,8 @@ spec:
     matchLabels:
       app: chat-backend
   jwtRules:
-    - issuer: 'https://oauth2.cat-herding.net'
-      jwksUri: 'http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks'
+    - issuer: 'https://roauth2.cat-herding.net'
+      jwksUri: 'http://oauth2-server.default.svc.cluster.local/.well-known/jwks.json'
       audiences:
         - 'chat-backend'
         - 'm2m-client'

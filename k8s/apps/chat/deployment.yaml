@@ -74,6 +74,11 @@ spec:
                 secretKeyRef:
                   name: chat-secrets-from-keyvault
                   key: AZURE_FOUNDRY_ENDPOINT
+            - name: YOUTUBE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secrets-youtube
+                  key: YOUTUBE_API_KEY
           envFrom:
             - configMapRef:
                 name: chat-backend-config

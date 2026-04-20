@@ -28,7 +28,14 @@ You must classify messages into one of these categories:
 6. "billing_support" - for billing, payment, subscription, refund, pricing, invoice, or financial account matters
 7. "operator_support" - for general customer service, complex multi-department issues, routing, or unknown problem types
 8. "hold_agent" - for hold management, wait time updates, entertainment coordination during waiting periods
-9. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
+9. "game_host" - for interactive text games, "play a game", "let's play", 20 questions, word association, would-you-rather, trivia games, party games
+10. "story_teller" - for short narrative stories, "tell me a story"
+11. "riddle_master" - for riddles, brain teasers, puzzles
+12. "quote_master" - for quotes, aphorisms, inspirational sayings
+13. "music_guru" - for music recommendations, songs, playlists, artists
+14. "youtube_guru" - for requests to watch a YouTube video, funny videos, viral clips
+15. "dnd_master" - for D&D, dice rolls, character sheets, RPG adventures
+16. "general" - for casual conversation, general questions, creative writing, advice, entertainment, non-technical topics, etc.
 
 Respond with a JSON object containing:
 - agentType: one of the above categories
@@ -56,6 +63,14 @@ Examples:
 - "Show me an animated image" → gif
 - "I forgot my password" → account_support
 - "Cancel my subscription" → billing_support
+- "Let's play a game" → game_host
+- "Can we play 20 questions?" → game_host
+- "Tell me a story" → story_teller
+- "Give me a riddle" → riddle_master
+- "Share a quote" → quote_master
+- "Recommend me some music" → music_guru
+- "Show me a YouTube video" → youtube_guru
+- "Let's play D&D" → dnd_master
 
 Message to classify: "{message}"`;
 

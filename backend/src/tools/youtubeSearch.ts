@@ -107,14 +107,14 @@ export const youtubeSearchTool: ToolDefinition = {
       query: { type: 'string', description: 'Search query for YouTube' },
       maxResults: {
         type: 'number',
-        description: 'Number of results to return (1-3)',
-        default: 1,
+        description: 'Number of results to return (1-3). Default 3.',
+        default: 3,
       },
     },
     required: ['query'],
   },
   async execute(input: unknown): Promise<ToolResult[]> {
-    const { query, maxResults = 1 } = input as YouTubeSearchInput;
+    const { query, maxResults = 3 } = input as YouTubeSearchInput;
     try {
       return await searchYouTube(query, Math.min(maxResults, 3));
     } catch (err) {

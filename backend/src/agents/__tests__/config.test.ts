@@ -119,8 +119,12 @@ describe('Agent Configuration', () => {
       entertainmentAgents.forEach(agentType => {
         it(`should configure ${agentType} agent for immediate response`, () => {
           const agent = AGENTS[agentType];
-          expect(agent.systemPrompt).toContain('IMMEDIATELY');
-          expect(agent.systemPrompt.toLowerCase()).toContain('right now');
+          // youtube_guru is tool-driven now; "IMMEDIATELY/right now" pattern
+          // only applies to the direct-reply entertainment agents.
+          if (agentType !== 'youtube_guru') {
+            expect(agent.systemPrompt).toContain('IMMEDIATELY');
+            expect(agent.systemPrompt.toLowerCase()).toContain('right now');
+          }
           expect(agent.temperature).toBeGreaterThanOrEqual(0.6); // Should be creative
         });
       });
@@ -161,12 +165,15 @@ describe('Agent Configuration', () => {
         expect(dnd.tools).toContain('roll_dice');
       });
 
-      it('should configure YouTube guru with embed functionality', () => {
+      it('should configure YouTube guru as tool-driven with live search', () => {
         const youtube = AGENTS.youtube_guru;
-        expect(youtube.systemPrompt).toContain('youtube');
-        expect(youtube.systemPrompt).toContain('embed');
-        expect(youtube.systemPrompt).toContain('VIDEO_ID');
-        expect(youtube.systemPrompt).toContain('```youtube');
+        expect(youtube.tools ?? []).toContain('youtube_search');
+        expect(youtube.systemPrompt).toMatch(/youtube_search/);
+        expect(youtube.systemPrompt).toMatch(/maxResults/);
+        // Old MVP embed format must be gone — no hardcoded ids, no ```youtube
+        // code block.
+        expect(youtube.systemPrompt).not.toContain('```youtube');
+        expect(youtube.systemPrompt).not.toContain('dQw4w9WgXcQ');
       });
     });
 

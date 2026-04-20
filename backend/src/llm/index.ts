@@ -16,8 +16,21 @@ class ProviderRegistry {
     if (process.env.OPENAI_API_KEY) {
       this.openai = new OpenAIProvider(process.env.OPENAI_API_KEY);
     }
+    // Anthropic direct API takes precedence; falls back to Foundry-hosted Claude
+    // when only Foundry is configured (Foundry exposes Anthropic-compatible /v1/messages).
     if (process.env.ANTHROPIC_API_KEY) {
       this.anthropic = new AnthropicProvider(process.env.ANTHROPIC_API_KEY);
+    } else if (
+      process.env.AZURE_FOUNDRY_API_KEY &&
+      process.env.AZURE_FOUNDRY_ENDPOINT
+    ) {
+      this.anthropic = new AnthropicProvider(
+        process.env.AZURE_FOUNDRY_API_KEY,
+        process.env.AZURE_FOUNDRY_ENDPOINT,
+      );
+      logger.info(
+        '[llm] anthropic provider routed through Azure Foundry endpoint',
+      );
     }
     if (process.env.AZURE_FOUNDRY_PROJECT_ENDPOINT) {
       this.foundry = new FoundryProvider(

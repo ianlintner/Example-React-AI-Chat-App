@@ -355,10 +355,17 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
     }
   };
 
-  const MessageBubble: React.FC<{
-    message: Message;
-    isStreamingMessage?: boolean;
-  }> = ({ message, isStreamingMessage = false }) => {
+  // Memoized so the function identity is stable across ChatScreen
+  // re-renders (status polling, stream chunks, etc.). Without this, React
+  // would see a fresh component type every render and unmount the entire
+  // message subtree — remounting any YouTube iframes and restarting
+  // playback. `pulseAnim` is a useRef value so it's stable, and the other
+  // closures (`getAgentInfo`, `formatTimestamp`, `parseMessageContent`,
+  // `styles`, `markdownStyles`, inner `YouTubeEmbed`) are all effectively
+  // constant for the lifetime of the component.
+  const MessageBubble = React.useMemo<
+    React.FC<{ message: Message; isStreamingMessage?: boolean }>
+  >(() => ({ message, isStreamingMessage = false }) => {
     const isUser = message.role === 'user';
     const agentInfo =
       !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
@@ -568,7 +575,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
         </View>
       </View>
     );
-  };
+  }, []);
 
   if (!conversation) {
     return (

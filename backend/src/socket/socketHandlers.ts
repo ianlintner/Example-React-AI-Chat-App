@@ -879,6 +879,10 @@ export const setupSocketHandlers = (
               '🤖 Processing message with conversation management and goal-seeking systems...',
             );
 
+            // Capture current agent BEFORE dispatch so we can report the
+            // from→to transition in the handoff_event socket emission.
+            const previousAgent = agentService.getCurrentAgent(socket.id);
+
             // Track chat message and agent response time
             const responseStart = Date.now();
             metrics.chatMessagesTotal.inc({
@@ -935,6 +939,20 @@ export const setupSocketHandlers = (
                   `🔄 Pre-dispatch handoff applied: → ${agentResponse.handoffInfo.target} (${agentResponse.handoffInfo.reason})`,
                 );
               }
+            }
+
+            // Notify clients of a pre-dispatch handoff so the UI can show a
+            // transient "Transferring you to <Agent>" chip before the stream
+            // starts. Emitted only when the router picked a new agent.
+            if (agentResponse.handoffInfo) {
+              io.to(conversation.id).emit('handoff_event', {
+                conversationId: conversation.id,
+                messageId: aiMessageId,
+                fromAgent: previousAgent,
+                toAgent: agentResponse.handoffInfo.target,
+                message: agentResponse.handoffInfo.message,
+                reason: agentResponse.handoffInfo.reason,
+              });
             }
 
             // Simulate streaming by sending the response in chunks

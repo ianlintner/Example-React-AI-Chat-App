@@ -6,6 +6,7 @@ import type {
   StreamChunk,
   ChatRequest,
   AgentStatus,
+  MediaAttachment,
 } from '../types';
 import { logger } from './logger';
 import authService from './authService';
@@ -25,6 +26,10 @@ type NewMessageCallback = (message: Message) => void;
 type ProactiveMessageCallback = (data: { message: Message }) => void;
 type StreamErrorCallback = (error: { code: string; message: string }) => void;
 type AgentStatusCallback = (status: AgentStatus) => void;
+type AttachmentCallback = (data: {
+  messageId: string;
+  attachment: MediaAttachment;
+}) => void;
 export type HandoffEvent = {
   conversationId: string;
   messageId: string;
@@ -48,6 +53,7 @@ class SocketService {
     proactive_message?: ProactiveMessageCallback;
     stream_error?: StreamErrorCallback;
     agent_status_update?: AgentStatusCallback;
+    attachment?: AttachmentCallback;
     handoff_event?: HandoffEventCallback;
   } = {};
 
@@ -436,6 +442,14 @@ class SocketService {
   markMessageAsRead(conversationId: string, messageId: string): void {
     if (this.socket) {
       this.socket.emit('message_read', { conversationId, messageId });
+    }
+  }
+
+  // Rich media attachment events
+  onAttachment(callback: AttachmentCallback): void {
+    this.storedCallbacks.attachment = callback;
+    if (this.socket) {
+      this.socket.on('attachment', callback);
     }
   }
 

@@ -7,11 +7,11 @@ data:
   V001__initial_oauth2_schema.sql: |
     -- This would be the initial schema (usually provided by spring-authorization-server)
     -- Placeholder for documentation
-  
+
   V003__register_chat_backend_client.sql: |
     -- Register chat-backend as an OAuth2 client for Envoy filter integration
     -- This client is used by the Envoy OAuth2 filter running in the chat service pods
-    
+
     INSERT INTO oauth2_registered_client (
         id, 
         client_id, 
@@ -41,7 +41,7 @@ data:
     ) ON CONFLICT (client_id) DO UPDATE SET
         client_secret = EXCLUDED.client_secret,
         redirect_uris = EXCLUDED.redirect_uris;
-    
+
     -- Verify insertion
     SELECT COUNT(*) as client_count FROM oauth2_registered_client WHERE client_id = 'chat-backend';
 ---
@@ -54,37 +54,37 @@ spec:
   template:
     spec:
       volumes:
-      # Mount Flyway migrations from ConfigMap
-      - name: flyway-migrations
-        configMap:
-          name: oauth2-flyway-migrations
-      initContainers:
-      - name: flyway-migrate
-        image: flyway/flyway:11-alpine
-        args:
-          - "-url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable"
-          - "-user=$(DATABASE_USERNAME)"
-          - "-password=$(DATABASE_PASSWORD)"
-          - "-baselineOnMigrate=true"
-          - "-locations=filesystem:/flyway/sql"
-          - "migrate"
-        env:
-          - name: DATABASE_NAME
-            valueFrom:
-              secretKeyRef:
-                name: oauth2-app-secrets
-                key: database-name
-          - name: DATABASE_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: oauth2-app-secrets
-                key: database-username
-          - name: DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: oauth2-app-secrets
-                key: database-password
-        volumeMounts:
+        # Mount Flyway migrations from ConfigMap
         - name: flyway-migrations
-          mountPath: /flyway/sql
-          readOnly: true
+          configMap:
+            name: oauth2-flyway-migrations
+      initContainers:
+        - name: flyway-migrate
+          image: flyway/flyway:11-alpine
+          args:
+            - '-url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable'
+            - '-user=$(DATABASE_USERNAME)'
+            - '-password=$(DATABASE_PASSWORD)'
+            - '-baselineOnMigrate=true'
+            - '-locations=filesystem:/flyway/sql'
+            - 'migrate'
+          env:
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-app-secrets
+                  key: database-name
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-app-secrets
+                  key: database-username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-app-secrets
+                  key: database-password
+          volumeMounts:
+            - name: flyway-migrations
+              mountPath: /flyway/sql
+              readOnly: true

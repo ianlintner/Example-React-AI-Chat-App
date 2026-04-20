@@ -59,6 +59,23 @@ describe('routeMessage', () => {
     expect(decision.source).toBe('keyword');
   });
 
+  it('routes "Could you play a game" to game_host from youtube_guru', async () => {
+    const decision = await routeMessage(
+      'Could you play a game',
+      'youtube_guru',
+    );
+    expect(decision.selectedAgent).toBe('game_host');
+    expect(decision.handoff).toBe(true);
+    expect(decision.source).toBe('keyword');
+  });
+
+  it('routes "let\'s play 20 questions" to game_host from general', async () => {
+    const decision = await routeMessage("let's play 20 questions", 'general');
+    expect(decision.selectedAgent).toBe('game_host');
+    expect(decision.handoff).toBe(true);
+    expect(decision.source).toBe('keyword');
+  });
+
   it('stays sticky on short acknowledgements with no keywords', async () => {
     const decision = await routeMessage("that's nice", 'joke');
     expect(decision.selectedAgent).toBe('joke');

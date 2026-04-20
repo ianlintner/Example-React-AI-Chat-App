@@ -284,6 +284,26 @@ export class AgentService {
             }
           }
 
+          // If the LLM emitted only tool calls (no text) and tools produced
+          // attachments, synthesize a short intro. Many models emit just a
+          // tool_call and rely on a second turn to write the final text; we
+          // don't round-trip here, so we supply a sensible default keyed off
+          // the first attachment type.
+          if (!accText && attachments.length > 0) {
+            const first = attachments[0];
+            const intros: Record<string, string> = {
+              youtube: "Here's a video for you:",
+              video: "Here's a video for you:",
+              audio: "Here's something to listen to:",
+              gif: "Here's a GIF for you:",
+              image: 'Here you go:',
+              image_gallery: 'Here are some images:',
+              dice: 'Here is your roll:',
+              card: 'Here you go:',
+            };
+            accText = intros[first.type] ?? 'Here you go:';
+          }
+
           responseContent =
             accText ||
             `I apologize, but I encountered an error while processing your request. Please try again.`;

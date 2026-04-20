@@ -82,6 +82,9 @@ const executeProactiveAction = async (
       agentUsed: proactiveResponse.agentUsed,
       confidence: proactiveResponse.confidence,
       isProactive: true, // Mark as proactive message
+      ...(proactiveResponse.attachments?.length && {
+        attachments: proactiveResponse.attachments,
+      }),
     };
 
     // Add the proactive message to the conversation

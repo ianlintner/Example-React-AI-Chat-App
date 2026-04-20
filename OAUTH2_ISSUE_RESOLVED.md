@@ -6,7 +6,7 @@
 **Root Cause**: `chat-backend` OAuth2 client not registered with the OAuth2 server  
 **Impact**: All OAuth2 authentication flows fail at the token exchange stage  
 **Severity**: Critical - Blocks all OAuth2 authentication  
-**Status**: ✅ Solution identified and ready to apply  
+**Status**: ✅ Solution identified and ready to apply
 
 ---
 
@@ -14,24 +14,24 @@
 
 ### ✅ What's Working Correctly
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| OAuth2 Server Pod | ✅ Running | `oauth2-server-585876b9d9-7sppt` (2/2 containers) |
-| Chat Backend Pod | ✅ Running | `chat-backend-8679f4c8f7-tfvdn` (2/2 containers) |
-| Istio Sidecar | ✅ Injected | Envoy proxy properly configured |
-| SDS Mounting | ✅ Correct | Files mounted at `/etc/istio/oauth2/` |
-| SDS File Format | ✅ Valid | Proper Envoy Secret Discovery Service format |
-| EnvoyFilter Config | ✅ Applied | OAuth2 filter correctly configured |
-| Token Secret | ✅ Valid | Client secret is `demo-chat-backend-client-secret` |
+| Component             | Status       | Details                                                                    |
+| --------------------- | ------------ | -------------------------------------------------------------------------- |
+| OAuth2 Server Pod     | ✅ Running   | `oauth2-server-585876b9d9-7sppt` (2/2 containers)                          |
+| Chat Backend Pod      | ✅ Running   | `chat-backend-8679f4c8f7-tfvdn` (2/2 containers)                           |
+| Istio Sidecar         | ✅ Injected  | Envoy proxy properly configured                                            |
+| SDS Mounting          | ✅ Correct   | Files mounted at `/etc/istio/oauth2/`                                      |
+| SDS File Format       | ✅ Valid     | Proper Envoy Secret Discovery Service format                               |
+| EnvoyFilter Config    | ✅ Applied   | OAuth2 filter correctly configured                                         |
+| Token Secret          | ✅ Valid     | Client secret is `demo-chat-backend-client-secret`                         |
 | OAuth2 Server Network | ✅ Reachable | Accessible from chat pod at `oauth2-server.default.svc.cluster.local:9000` |
 
 ### ❌ What's Broken
 
-| Component | Status | Issue |
-|-----------|--------|-------|
-| OAuth2 Client Registration | ❌ Missing | Client `chat-backend` not in OAuth2 database |
-| Token Endpoint | ❌ Returns 401 | `{"error":"unauthorized_client"}` |
-| Token Exchange | ❌ Fails | Envoy cannot exchange auth code for tokens |
+| Component                  | Status         | Issue                                        |
+| -------------------------- | -------------- | -------------------------------------------- |
+| OAuth2 Client Registration | ❌ Missing     | Client `chat-backend` not in OAuth2 database |
+| Token Endpoint             | ❌ Returns 401 | `{"error":"unauthorized_client"}`            |
+| Token Exchange             | ❌ Fails       | Envoy cannot exchange auth code for tokens   |
 
 ---
 
@@ -42,7 +42,7 @@
 When a user authenticates via OAuth2, this flow occurs:
 
 ```
-1. User clicks "Login" 
+1. User clicks "Login"
 2. Browser redirects to: https://oauth2.cat-herding.net/oauth2/authorize?client_id=chat-backend&...
 3. User authenticates and approves scopes
 4. OAuth2 server redirects: https://chat.cat-herding.net/_oauth2/callback?code=XXX&state=XXX
@@ -79,6 +79,7 @@ chmod +x scripts/quick-fix-oauth2-registration.sh
 ```
 
 **What it does**:
+
 1. Finds the PostgreSQL pod
 2. Inserts `chat-backend` client record into the database
 3. Verifies the token endpoint works
@@ -126,6 +127,7 @@ kubectl exec -it $OAUTH2_POD -c oauth2-server -- \
 ```
 
 **Expected success response**:
+
 ```json
 {
   "access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6...",
@@ -171,14 +173,14 @@ kubectl exec -it $OAUTH2_POD -c oauth2-server -- \
 
 ## Related Files
 
-| File | Purpose |
-|------|---------|
-| [docs/troubleshooting/oauth2-envoy-debugging.md](./oauth2-envoy-debugging.md) | Complete troubleshooting guide |
-| [scripts/quick-fix-oauth2-registration.sh](../scripts/quick-fix-oauth2-registration.sh) | Automated fix script |
-| [scripts/fix-oauth2-client-registration.sh](../scripts/fix-oauth2-client-registration.sh) | Alternative fix using Flyway migrations |
-| [k8s/oauth2-client-registration.yaml](../k8s/oauth2-client-registration.yaml) | Kubernetes ConfigMap for permanent fix |
-| [k8s/apps/chat/deployment.yaml](../k8s/apps/chat/deployment.yaml) | Chat deployment (unchanged) |
-| [k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml](../k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml) | EnvoyFilter configuration (unchanged) |
+| File                                                                                                          | Purpose                                 |
+| ------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| [docs/troubleshooting/oauth2-envoy-debugging.md](./oauth2-envoy-debugging.md)                                 | Complete troubleshooting guide          |
+| [scripts/quick-fix-oauth2-registration.sh](../scripts/quick-fix-oauth2-registration.sh)                       | Automated fix script                    |
+| [scripts/fix-oauth2-client-registration.sh](../scripts/fix-oauth2-client-registration.sh)                     | Alternative fix using Flyway migrations |
+| [k8s/oauth2-client-registration.yaml](../k8s/oauth2-client-registration.yaml)                                 | Kubernetes ConfigMap for permanent fix  |
+| [k8s/apps/chat/deployment.yaml](../k8s/apps/chat/deployment.yaml)                                             | Chat deployment (unchanged)             |
+| [k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml](../k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml) | EnvoyFilter configuration (unchanged)   |
 
 ---
 
@@ -209,7 +211,6 @@ This issue occurred because:
 - **Client Secret**: Currently using plaintext `demo-chat-backend-client-secret` with `{noop}` prefix (dev only)
   - For production: Use bcrypt-hashed secrets
   - For dev: Consider using `{noop}` prefix or Docker environment setup
-  
 - **Callback URLs**: Registered both production (`https://chat.cat-herding.net/_oauth2/callback`) and localhost for testing
 
 - **Scopes**: Using OpenID Connect scopes: `openid`, `profile`, `email`
@@ -226,4 +227,3 @@ For additional troubleshooting:
 2. Review EnvoyFilter configuration in [envoyfilter-chat-oauth2-exchange.yaml](../k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml)
 3. Examine OAuth2 server logs: `kubectl logs oauth2-server-xxx -c oauth2-server -n default --tail=100`
 4. Check PostgreSQL: `kubectl exec -it postgres-xxx -- psql -U oauth2user -d oauth2db -c "SELECT client_id FROM oauth2_registered_client;"`
-

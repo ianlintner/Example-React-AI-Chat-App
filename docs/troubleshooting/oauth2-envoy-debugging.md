@@ -301,7 +301,7 @@ Expected successful response:
 
 ### Fix 5: Permanent Solution - Add Flyway Migration
 
-Create [k8s/oauth2-client-registration.yaml](../../k8s/oauth2-client-registration.yaml) and apply:
+Create `k8s/oauth2-client-registration.yaml` and apply:
 
 ```bash
 kubectl apply -f k8s/oauth2-client-registration.yaml
@@ -358,10 +358,10 @@ kubectl logs "$CHAT_POD" -c istio-proxy --tail=20 -n $NAMESPACE 2>&1 | grep -i o
 
 ## Related Configuration Files
 
-- [EnvoyFilter OAuth2 Exchange](../../k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml)
-- [EnvoyFilter JWT to Headers](../../k8s/apps/chat/envoyfilter-chat-jwt-to-headers.yaml)
-- [Secret Provider OAuth2](../../k8s/apps/chat/secret-provider-oauth2.yaml)
-- [Deployment Configuration](../../k8s/apps/chat/deployment.yaml)
+- `k8s/apps/chat/envoyfilter-chat-oauth2-exchange.yaml` — EnvoyFilter OAuth2 Exchange
+- `k8s/apps/chat/envoyfilter-chat-jwt-to-headers.yaml` — EnvoyFilter JWT to Headers
+- `k8s/apps/chat/secret-provider-oauth2.yaml` — Secret Provider OAuth2
+- `k8s/apps/chat/deployment.yaml` — Deployment Configuration
 
 ## Support Resources
 

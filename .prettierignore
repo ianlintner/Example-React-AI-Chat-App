@@ -52,3 +52,7 @@ nyc_output/
 
 # External / vendored copies
 external/
+
+# Claude Code local state and agent worktrees
+.claude/
+.playwright-mcp/

@@ -548,7 +548,9 @@ jest.mock('expo-av', () => ({
     Sound: {
       createAsync: jest.fn().mockResolvedValue({
         sound: {
-          getStatusAsync: jest.fn().mockResolvedValue({ isLoaded: true, isPlaying: false }),
+          getStatusAsync: jest
+            .fn()
+            .mockResolvedValue({ isLoaded: true, isPlaying: false }),
           playAsync: jest.fn().mockResolvedValue(undefined),
           pauseAsync: jest.fn().mockResolvedValue(undefined),
           unloadAsync: jest.fn().mockResolvedValue(undefined),
@@ -562,7 +564,11 @@ jest.mock('expo-av', () => ({
 // Mock expo-video (used by VideoPlayer)
 jest.mock('expo-video', () => ({
   VideoView: 'VideoView',
-  useVideoPlayer: jest.fn(() => ({ loop: false, play: jest.fn(), pause: jest.fn() })),
+  useVideoPlayer: jest.fn(() => ({
+    loop: false,
+    play: jest.fn(),
+    pause: jest.fn(),
+  })),
 }));
 
 // Mock useColorScheme hook for React Native

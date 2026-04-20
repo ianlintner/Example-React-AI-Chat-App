@@ -1,0 +1,57 @@
+- generic [ref=e2]:
+    - generic [ref=e3]:
+        - img [ref=e5]
+        - heading "Welcome Back" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Sign in to your account to continue
+    - generic [ref=e9]:
+        - alert [ref=e10]:
+            - generic [ref=e11]:
+                - img [ref=e12]
+                - generic [ref=e14]: Please log in to continue.
+        - generic [ref=e15]:
+            - generic [ref=e16]:
+                - generic [ref=e17]: Username or Email
+                - textbox "Username or Email" [ref=e18]:
+                    - /placeholder: Enter your username
+            - generic [ref=e19]:
+                - generic [ref=e20]: Password
+                - textbox "Password" [ref=e21]:
+                    - /placeholder: Enter your password
+            - generic [ref=e22]:
+                - generic [ref=e23]:
+                    - checkbox "Remember me" [ref=e24]
+                    - generic [ref=e25]: Remember me
+                - link "Forgot password?" [ref=e26] [cursor=pointer]:
+                    - /url: /auth/forgot-password
+            - button "Sign In" [ref=e27] [cursor=pointer]
+        - generic [ref=e32]: Or continue with
+        - generic [ref=e33]:
+            - link "Continue with Google" [ref=e34] [cursor=pointer]:
+                - /url: /auth/login/google
+                - img [ref=e35]
+                - generic [ref=e40]: Continue with Google
+            - link "Continue with Microsoft" [ref=e41] [cursor=pointer]:
+                - /url: /auth/login/microsoft
+                - img [ref=e42]
+                - generic [ref=e47]: Continue with Microsoft
+            - link "Continue with GitHub" [ref=e48] [cursor=pointer]:
+                - /url: /auth/login/github
+                - img [ref=e49]
+                - generic [ref=e51]: Continue with GitHub
+            - link "Continue with Azure AD" [ref=e52] [cursor=pointer]:
+                - /url: /auth/login/azure
+                - img [ref=e53]
+                - generic [ref=e58]: Continue with Azure AD
+        - paragraph [ref=e60]:
+            - text: Don't have an account?
+            - link "Sign up" [ref=e61] [cursor=pointer]:
+                - /url: /auth/register
+    - generic [ref=e62]:
+        - paragraph [ref=e63]: © 2026 OAuth2 Server. All rights reserved.
+        - generic [ref=e64]:
+            - link "Privacy Policy" [ref=e65] [cursor=pointer]:
+                - /url: /privacy
+            - link "Terms of Service" [ref=e66] [cursor=pointer]:
+                - /url: /terms
+            - link "API Docs" [ref=e67] [cursor=pointer]:
+                - /url: /api-docs

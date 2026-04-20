@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { MediaAttachmentView } from './media/MediaAttachmentView';
 import {
   View,
   Text,
@@ -546,6 +547,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
               </View>
             )}
           </Animated.View>
+
+          {/* Rich media attachments */}
+          {!isUser && message.attachments && message.attachments.length > 0 && (
+            <View style={{ marginTop: 6 }}>
+              {message.attachments.map(att => (
+                <MediaAttachmentView key={att.id} attachment={att} />
+              ))}
+            </View>
+          )}
 
           <Text
             style={[

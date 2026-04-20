@@ -30,7 +30,7 @@ spec:
                       address:
                         socket_address:
                           address: oauth2-server.default.svc.cluster.local
-                          port_value: 9000
+                          port_value: 80
     - applyTo: HTTP_FILTER
       match:
         context: SIDECAR_INBOUND
@@ -48,10 +48,10 @@ spec:
             '@type': type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
             config:
               stat_prefix: chat_oauth
-              authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+              authorization_endpoint: https://roauth2.cat-herding.net/oauth/authorize
               token_endpoint:
                 cluster: oauth2_token_cluster_chat
-                uri: http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                uri: http://oauth2-server.default.svc.cluster.local/oauth/token
                 timeout: 5s
               # NOTE: This filter runs on SIDECAR_INBOUND. Depending on the ingress/gateway topology,
               # x-forwarded-proto may be absent or reflect the hop-to-pod scheme (often http).
@@ -69,7 +69,7 @@ spec:
               default_expires_in: 900s
               csrf_token_expires_in: 600s
               credentials:
-                client_id: chat-backend
+                client_id: client_49e70f96-8fed-46b0-a57e-8a53e000f437
                 token_secret:
                   name: chat-oauth-token
                   sds_config:

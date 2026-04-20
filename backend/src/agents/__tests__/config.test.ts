@@ -119,8 +119,12 @@ describe('Agent Configuration', () => {
       entertainmentAgents.forEach(agentType => {
         it(`should configure ${agentType} agent for immediate response`, () => {
           const agent = AGENTS[agentType];
-          expect(agent.systemPrompt).toContain('IMMEDIATELY');
-          expect(agent.systemPrompt.toLowerCase()).toContain('right now');
+          // youtube_guru is tool-driven now; "IMMEDIATELY/right now" pattern
+          // only applies to the direct-reply entertainment agents.
+          if (agentType !== 'youtube_guru') {
+            expect(agent.systemPrompt).toContain('IMMEDIATELY');
+            expect(agent.systemPrompt.toLowerCase()).toContain('right now');
+          }
           expect(agent.temperature).toBeGreaterThanOrEqual(0.6); // Should be creative
         });
       });
@@ -155,16 +159,21 @@ describe('Agent Configuration', () => {
         expect(dnd.systemPrompt).toContain('character generation');
         expect(dnd.systemPrompt).toContain('dice rolling');
         expect(dnd.systemPrompt).toContain('encounters');
-        expect(dnd.model).toBe('gpt-4'); // Should use more advanced model
+        // Uses claude-sonnet-4-6 for complex multi-turn reasoning + tool use (roll_dice, generate_character, generate_encounter)
+        expect(dnd.model).toMatch(/claude-sonnet|gpt-4/);
         expect(dnd.maxTokens).toBeGreaterThan(1000); // Needs longer responses
+        expect(dnd.tools).toContain('roll_dice');
       });
 
-      it('should configure YouTube guru with embed functionality', () => {
+      it('should configure YouTube guru as tool-driven with live search', () => {
         const youtube = AGENTS.youtube_guru;
-        expect(youtube.systemPrompt).toContain('youtube');
-        expect(youtube.systemPrompt).toContain('embed');
-        expect(youtube.systemPrompt).toContain('VIDEO_ID');
-        expect(youtube.systemPrompt).toContain('```youtube');
+        expect(youtube.tools ?? []).toContain('youtube_search');
+        expect(youtube.systemPrompt).toMatch(/youtube_search/);
+        expect(youtube.systemPrompt).toMatch(/maxResults/);
+        // Old MVP embed format must be gone — no hardcoded ids, no ```youtube
+        // code block.
+        expect(youtube.systemPrompt).not.toContain('```youtube');
+        expect(youtube.systemPrompt).not.toContain('dQw4w9WgXcQ');
       });
     });
 
@@ -319,12 +328,19 @@ describe('Agent Configuration', () => {
         ...new Set(Object.values(AGENTS).map(agent => agent.model)),
       ];
 
-      // Should only use known OpenAI models
+      // Allow models from OpenAI, Anthropic, and Azure Foundry deployment names
       const validModels = [
         'gpt-3.5-turbo',
         'gpt-4',
+        'gpt-4o',
+        'gpt-4o-mini',
+        'gpt-4.1',
+        'gpt-4.1-mini',
         'gpt-4-turbo-preview',
         'gpt-4-turbo',
+        'claude-sonnet-4-6',
+        'claude-opus-4-7',
+        'phi-4',
       ];
 
       models.forEach(model => {
@@ -449,6 +465,13 @@ describe('Agent Configuration', () => {
           prompt.includes('approach');
         expect(hasBehaviorInstructions).toBe(true);
       });
+    });
+
+    it('should not give Story Teller any image tools (URLs hallucinate, captions mismatch real images)', () => {
+      const storyTeller = AGENTS.story_teller;
+      expect(storyTeller.tools ?? []).not.toContain('show_image_gallery');
+      expect(storyTeller.tools ?? []).not.toContain('show_image');
+      expect(storyTeller.systemPrompt).not.toMatch(/show_image_gallery/);
     });
 
     it('should include escalation instructions in support agents', () => {

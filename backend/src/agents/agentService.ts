@@ -1,4 +1,7 @@
 import OpenAI from 'openai';
+import { providerRegistry } from '../llm';
+import { toolRegistry } from '../tools';
+import { MediaAttachment } from '../types';
 import { classifyMessage } from './classifier';
 import { getAgent } from './config';
 import { AgentResponse, AgentType } from './types';
@@ -12,16 +15,14 @@ import {
 } from './conversationManager';
 import { ragService } from './ragService';
 import { dndService } from './dndService';
+import { routeMessage, logRoutingDecision, RoutingDecision } from './router';
 import {
-  tracer,
   createAgentSpan,
-  createConversationSpan,
   createValidationSpan,
   addSpanEvent,
   setSpanStatus,
   endSpan,
 } from '../tracing/tracer';
-import { tracingContextManager } from '../tracing/contextManager';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -193,41 +194,123 @@ export class AgentService {
 
       // Generate response using the agent
       let responseContent: string;
+      const attachments: MediaAttachment[] = [];
 
       addSpanEvent(span, 'agent.response_generation_start');
 
       try {
-        if (!process.env.OPENAI_API_KEY) {
-          // Demo response when no API key is provided
+        if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+          // Demo response when no API keys are provided
           responseContent = this.generateDemoResponse(agent.name, message);
           addSpanEvent(span, 'agent.demo_response_generated');
         } else {
-          // Create OpenAI client at runtime to ensure env vars are loaded
-          const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
+          // Resolve provider (falls back to openai if preferred unavailable)
+          const agentConfig = agent as typeof agent & {
+            provider?: string;
+            fallbackProvider?: string;
+            tools?: string[];
+            cacheSystem?: boolean;
+          };
+          const { provider, model: fallbackModel } = providerRegistry.resolve(
+            agentConfig.provider as any,
+            agentConfig.fallbackProvider as any,
+          );
+          const resolvedModel = fallbackModel ?? agent.model;
+          const agentTools = agentConfig.tools?.length
+            ? toolRegistry.getForAgent(agentConfig.tools)
+            : [];
+
+          addSpanEvent(span, 'agent.provider_call_start', {
+            provider: provider.id,
+            model: resolvedModel,
           });
 
-          addSpanEvent(span, 'agent.openai_call_start', { model: agent.model });
+          // Collect streamed response + tool calls
+          const systemMsg = messages[0].content;
+          const chatMessages = messages.slice(1).map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }));
 
-          const completion = await openai.chat.completions.create({
-            model: agent.model,
-            messages: messages,
-            max_tokens: agent.maxTokens,
+          let accText = '';
+          const pendingToolCalls: Array<{
+            id: string;
+            name: string;
+            input: unknown;
+          }> = [];
+
+          for await (const evt of provider.stream({
+            model: resolvedModel,
+            system: systemMsg,
+            messages: chatMessages,
+            tools: agentTools,
             temperature: agent.temperature,
-          });
+            maxTokens: agent.maxTokens,
+            cacheSystem: agentConfig.cacheSystem,
+          })) {
+            if (evt.type === 'text_delta') {
+              accText += evt.text;
+            } else if (evt.type === 'tool_call') {
+              pendingToolCalls.push({
+                id: evt.id,
+                name: evt.name,
+                input: evt.input,
+              });
+            } else if (evt.type === 'done' && evt.usage) {
+              addSpanEvent(span, 'agent.provider_call_complete', {
+                tokensInput: evt.usage.input,
+                tokensOutput: evt.usage.output,
+              });
+            }
+          }
+
+          // Execute tool calls and collect attachments
+          for (const tc of pendingToolCalls) {
+            const tool = toolRegistry.get(tc.name);
+            if (!tool) {
+              continue;
+            }
+            try {
+              const result = await tool.execute(tc.input);
+              const results = Array.isArray(result) ? result : [result];
+              for (const r of results) {
+                attachments.push(r.attachment);
+                if (r.text) {
+                  accText += (accText ? '\n\n' : '') + r.text;
+                }
+              }
+            } catch (toolErr) {
+              console.error(`Tool execution failed: ${tc.name}`, toolErr);
+            }
+          }
+
+          // If the LLM emitted only tool calls (no text) and tools produced
+          // attachments, synthesize a short intro. Many models emit just a
+          // tool_call and rely on a second turn to write the final text; we
+          // don't round-trip here, so we supply a sensible default keyed off
+          // the first attachment type.
+          if (!accText && attachments.length > 0) {
+            const first = attachments[0];
+            const intros: Record<string, string> = {
+              youtube: "Here's a video for you:",
+              video: "Here's a video for you:",
+              audio: "Here's something to listen to:",
+              gif: "Here's a GIF for you:",
+              image: 'Here you go:',
+              image_gallery: 'Here are some images:',
+              dice: 'Here is your roll:',
+              card: 'Here you go:',
+            };
+            accText = intros[first.type] ?? 'Here you go:';
+          }
 
           responseContent =
-            completion.choices[0]?.message?.content ||
+            accText ||
             `I apologize, but I encountered an error while processing your request. Please try again.`;
-
-          addSpanEvent(span, 'agent.openai_call_complete', {
-            tokensUsed: completion.usage?.total_tokens,
-            responseLength: responseContent.length,
-          });
         }
       } catch (error) {
-        console.error(`Error calling OpenAI API with ${agent.name}:`, error);
-        addSpanEvent(span, 'agent.openai_call_error', {
+        console.error(`Error calling LLM provider for ${agent.name}:`, error);
+        addSpanEvent(span, 'agent.provider_call_error', {
           error: (error as Error).message,
         });
         responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
@@ -283,6 +366,7 @@ export class AgentService {
         content: responseContent,
         agentUsed: agentType,
         confidence: confidence,
+        ...(attachments.length > 0 && { attachments }),
       };
 
       span.setAttributes({
@@ -712,7 +796,14 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
 
   // ===== CONVERSATION MANAGEMENT METHODS =====
 
-  // Enhanced message processing with conversation continuity and intelligent handoffs
+  /**
+   * Enhanced message processing with pre-dispatch routing.
+   *
+   * Handoff decisions are made BEFORE the message is dispatched to an agent,
+   * so the user's request is always handled by the right agent on the same
+   * turn. Previously the handoff was detected after the current agent had
+   * already replied, producing a one-turn lag.
+   */
   async processMessageWithConversation(
     userId: string,
     message: string,
@@ -721,34 +812,33 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   ): Promise<
     AgentResponse & {
       handoffInfo?: { target: AgentType; reason: string; message: string };
+      routingDecision?: RoutingDecision;
     }
   > {
     // Get or initialize conversation context
     let context = this.conversationManager.getContext(userId);
     if (!context) {
-      // Start with general agent if no context exists
       context = this.conversationManager.initializeContext(userId, 'general');
     }
 
-    // Current agent from conversation context
-    let currentAgent = context.currentAgent;
+    const previousAgent = context.currentAgent;
 
-    // Check if we need to handoff before processing
-    const handoffInfo = this.conversationManager.getHandoffInfo(userId);
-    if (handoffInfo) {
-      console.log(
-        `🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`,
-      );
+    // === Pre-dispatch routing ===
+    let decision = await routeMessage(
+      message,
+      previousAgent,
+      conversationHistory,
+    );
 
-      // Complete the handoff
-      context = this.conversationManager.completeHandoff(
-        userId,
-        handoffInfo.target,
-      );
-      currentAgent = handoffInfo.target;
-
-      // For entertainment agents, process the message directly with the target agent instead of returning handoff message
-      const entertainmentAgents = [
+    // Preserve the long-standing "hold_agent auto-handoff to entertainment
+    // on the first message" behavior. This is intentionally handled here
+    // rather than in the router so the router stays pure and easily testable.
+    if (
+      previousAgent === 'hold_agent' &&
+      context.conversationDepth === 0 &&
+      decision.selectedAgent === 'hold_agent'
+    ) {
+      const entertainmentAgents: AgentType[] = [
         'joke',
         'trivia',
         'gif',
@@ -759,66 +849,71 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         'music_guru',
         'dnd_master',
       ];
-      if (entertainmentAgents.includes(handoffInfo.target)) {
-        console.log(
-          `🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`,
-        );
-
-        // Process message with the entertainment agent
-        const response = await this.processMessage(
-          message,
-          conversationHistory,
-          handoffInfo.target,
-          conversationId,
-          userId,
-        );
-
-        // Update conversation context with the interaction
-        this.conversationManager.updateContext(
-          userId,
-          message,
-          response.content,
-          handoffInfo.target,
-        );
-
-        return {
-          ...response,
-          agentUsed: handoffInfo.target, // Make sure the response shows it came from the entertainment agent
-        };
-      }
-
-      // For non-entertainment agents, return handoff message first
-      return {
-        content: handoffInfo.message,
-        agentUsed: 'general', // Handoff messages come from general agent
+      const randomAgent =
+        entertainmentAgents[
+          Math.floor(Math.random() * entertainmentAgents.length)
+        ];
+      console.log(
+        `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' while user is on hold`,
+      );
+      decision = {
+        selectedAgent: randomAgent,
+        handoff: true,
         confidence: 1.0,
-        handoffInfo,
+        reason: `No specialists available - auto-connecting you to ${randomAgent} while you wait`,
+        source: 'sticky',
       };
     }
 
-    // Process message with current agent
+    logRoutingDecision(decision, {
+      userId,
+      conversationId,
+      currentAgent: previousAgent,
+      messagePreview: message.substring(0, 80),
+    });
+
+    // If the router chose a new agent, complete the handoff now so that
+    // per-agent metrics (depth, performance) reset before dispatch.
+    if (decision.handoff) {
+      context = this.conversationManager.completeHandoff(
+        userId,
+        decision.selectedAgent,
+      );
+    }
+
+    // Dispatch with the forced agent from the routing decision. Passing
+    // `decision.selectedAgent` prevents `processMessage` from classifying
+    // the message again (avoiding double-classification).
     const response = await this.processMessage(
       message,
       conversationHistory,
-      currentAgent,
+      decision.selectedAgent,
       conversationId,
       userId,
     );
 
-    // Update conversation context with the interaction
+    // Update conversation context with the interaction using the agent
+    // that actually produced the response.
     this.conversationManager.updateContext(
       userId,
       message,
       response.content,
-      currentAgent,
+      decision.selectedAgent,
     );
 
-    // Check if handoff is now needed after this interaction
-    const newHandoffInfo = this.conversationManager.getHandoffInfo(userId);
+    const handoffInfo = decision.handoff
+      ? {
+          target: decision.selectedAgent,
+          reason: decision.reason,
+          message: `Connecting you to our ${getAgent(decision.selectedAgent).name}.`,
+        }
+      : undefined;
 
     return {
       ...response,
-      handoffInfo: newHandoffInfo || undefined,
+      agentUsed: decision.selectedAgent,
+      handoffInfo,
+      routingDecision: decision,
     };
   }
 
@@ -827,18 +922,28 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     return this.conversationManager.getContext(userId);
   }
 
-  // Force agent handoff (manual override)
+  /**
+   * Force a handoff to `targetAgent` immediately.
+   *
+   * With the pre-dispatch router, we no longer queue a handoff to fire on
+   * the next turn — we complete it right now so the next `processMessage`
+   * call for this user sees the new agent. The `reason` parameter is kept
+   * for API compatibility and logging.
+   */
   forceAgentHandoff(
     userId: string,
     targetAgent: AgentType,
     reason = 'Manual override',
   ): void {
     const context = this.conversationManager.getContext(userId);
-    if (context) {
-      context.shouldHandoff = true;
-      context.handoffTarget = targetAgent;
-      context.handoffReason = reason;
+    if (!context) {
+      this.conversationManager.initializeContext(userId, targetAgent);
+    } else {
+      this.conversationManager.completeHandoff(userId, targetAgent);
     }
+    console.log(
+      `🛠️ forceAgentHandoff: user=${userId} target=${targetAgent} reason="${reason}"`,
+    );
   }
 
   // Get current agent for a user based on conversation context

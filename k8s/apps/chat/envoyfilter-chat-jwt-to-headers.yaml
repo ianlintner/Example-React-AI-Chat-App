@@ -29,11 +29,11 @@ spec:
             '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
             providers:
               oauth2_jwt:
-                issuer: 'https://oauth2.cat-herding.net'
+                issuer: 'https://roauth2.cat-herding.net'
                 remote_jwks:
                   http_uri:
-                    uri: 'http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks'
-                    cluster: outbound|9000||oauth2-server.default.svc.cluster.local
+                    uri: 'http://oauth2-server.default.svc.cluster.local/.well-known/jwks.json'
+                    cluster: outbound|80||oauth2-server.default.svc.cluster.local
                     timeout: 5s
                   cache_duration: 300s
                 from_headers:

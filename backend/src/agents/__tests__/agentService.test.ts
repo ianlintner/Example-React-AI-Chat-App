@@ -1,18 +1,13 @@
-import { AgentService, agentService } from '../agentService';
+import { AgentService } from '../agentService';
 import { classifyMessage } from '../classifier';
 import { getAgent } from '../config';
 import { ConversationManager } from '../conversationManager';
 import { GoalSeekingSystem } from '../goalSeekingSystem';
-import { ragService } from '../ragService';
-import { dndService } from '../dndService';
-import { responseValidator } from '../../validation/responseValidator';
-import { jokeLearningSystem } from '../jokeLearningSystem';
-import { AgentResponse, AgentType } from '../types';
+import { routeMessage } from '../router';
+import { AgentType } from '../types';
 import { Message } from '../../types';
 import {
-  tracer,
   createAgentSpan,
-  createConversationSpan,
   createValidationSpan,
   addSpanEvent,
   setSpanStatus,
@@ -30,6 +25,20 @@ jest.mock('../../validation/responseValidator');
 jest.mock('../jokeLearningSystem');
 jest.mock('../../tracing/tracer');
 jest.mock('../../tracing/contextManager');
+jest.mock('../router');
+
+// Mock LLM provider registry and tool registry so tests are provider-agnostic
+jest.mock('../../llm', () => ({
+  providerRegistry: {
+    resolve: jest.fn(),
+  },
+}));
+jest.mock('../../tools', () => ({
+  toolRegistry: {
+    getForAgent: jest.fn().mockReturnValue([]),
+    get: jest.fn().mockReturnValue(null),
+  },
+}));
 
 // Mock OpenAI
 jest.mock('openai', () => ({
@@ -48,6 +57,9 @@ const mockClassifyMessage = classifyMessage as jest.MockedFunction<
   typeof classifyMessage
 >;
 const mockGetAgent = getAgent as jest.MockedFunction<typeof getAgent>;
+const mockRouteMessage = routeMessage as jest.MockedFunction<
+  typeof routeMessage
+>;
 const mockCreateAgentSpan = createAgentSpan as jest.MockedFunction<
   typeof createAgentSpan
 >;
@@ -68,10 +80,7 @@ const mockConversationManager = {
   initializeContext: jest.fn(),
   updateContext: jest.fn(),
   completeHandoff: jest.fn(),
-  getHandoffInfo: jest.fn(),
   cleanup: jest.fn(),
-  generateHandoffMessage: jest.fn(),
-  shouldHandoff: jest.fn(),
 } as any;
 
 const mockGoalSeekingSystem = {
@@ -146,9 +155,27 @@ Object.defineProperty(require('../jokeLearningSystem'), 'jokeLearningSystem', {
   writable: true,
 });
 
+// Helper to build a fresh ConversationContext in the NEW shape (no handoff
+// flags). Test authors can override any field they care about.
+function makeContext(overrides: Partial<any> = {}): any {
+  return {
+    userId: 'test-user',
+    currentAgent: 'general' as AgentType,
+    conversationTopic: 'general',
+    lastMessageTime: new Date(),
+    messageCount: 0,
+    conversationDepth: 0,
+    userSatisfaction: 0.7,
+    agentPerformance: 0.7,
+    ...overrides,
+  };
+}
+
 describe('AgentService', () => {
   let testAgentService: AgentService;
   let mockOpenAI: any;
+
+  let mockProvider: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -159,7 +186,7 @@ describe('AgentService', () => {
     // Create fresh instance for testing
     testAgentService = new AgentService();
 
-    // Setup OpenAI mock
+    // Setup OpenAI mock (kept for backward compat, but provider registry is mocked separately)
     mockOpenAI = {
       chat: {
         completions: {
@@ -170,6 +197,36 @@ describe('AgentService', () => {
 
     const OpenAIMock = require('openai').default;
     OpenAIMock.mockImplementation(() => mockOpenAI);
+
+    // Setup provider registry mock — bridges to the openai mock so existing test setups
+    // (mockOpenAI.chat.completions.create.mockResolvedValue) keep working.
+    // Reconstructs the legacy call shape: { messages: [system, ...history, user] }
+    mockProvider = {
+      id: 'openai',
+      stream: jest.fn(async function* (opts: any) {
+        const messages = [
+          { role: 'system', content: opts.system },
+          ...opts.messages,
+        ];
+        const result = await mockOpenAI.chat.completions.create({
+          ...opts,
+          messages,
+        });
+        const content = result?.choices?.[0]?.message?.content ?? '';
+        if (content) {
+          yield { type: 'text_delta', text: content };
+        }
+        yield {
+          type: 'done',
+          usage: {
+            input: result?.usage?.prompt_tokens ?? 10,
+            output: result?.usage?.completion_tokens ?? 5,
+          },
+        };
+      }),
+    };
+    const { providerRegistry } = require('../../llm');
+    providerRegistry.resolve.mockReturnValue({ provider: mockProvider });
 
     // Setup default mocks
     mockCreateAgentSpan.mockReturnValue(mockSpan);
@@ -211,15 +268,28 @@ describe('AgentService', () => {
     );
 
     mockConversationManager.getContext.mockReturnValue(null);
-    mockConversationManager.initializeContext.mockReturnValue({
-      userId: 'test-user',
-      currentAgent: 'general' as AgentType,
-      lastInteraction: new Date(),
-      messageCount: 0,
-      shouldHandoff: false,
-      handoffTarget: null,
-      handoffReason: null,
-    });
+    mockConversationManager.initializeContext.mockImplementation(
+      (_userId: string, agent: AgentType = 'general') =>
+        makeContext({ currentAgent: agent }),
+    );
+    mockConversationManager.completeHandoff.mockImplementation(
+      (_userId: string, agent: AgentType) =>
+        makeContext({ currentAgent: agent }),
+    );
+    mockConversationManager.updateContext.mockImplementation(
+      (_userId: string, _msg: string, _resp: string, agent: AgentType) =>
+        makeContext({ currentAgent: agent }),
+    );
+
+    // Default: router stays with the current agent (sticky). Individual
+    // tests override this to simulate a handoff decision.
+    mockRouteMessage.mockImplementation(async (_msg, currentAgent) => ({
+      selectedAgent: currentAgent,
+      handoff: false,
+      confidence: 0.5,
+      reason: 'sticky default',
+      source: 'sticky' as const,
+    }));
 
     mockGoalSeekingSystem.generateProactiveActions.mockResolvedValue([]);
     mockGoalSeekingSystem.getUserState.mockReturnValue({});
@@ -687,22 +757,15 @@ describe('AgentService', () => {
         userId,
         'general',
       );
+      expect(mockRouteMessage).toHaveBeenCalledWith('Hello', 'general', []);
       expect(mockConversationManager.updateContext).toHaveBeenCalled();
       expect(result.content).toBe('Conversation response');
     });
 
-    it('should handle existing conversation context', async () => {
-      const existingContext = {
-        userId,
-        currentAgent: 'joke' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 5,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      };
-
-      mockConversationManager.getContext.mockReturnValue(existingContext);
+    it('should reuse existing context without re-initializing', async () => {
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'joke', messageCount: 5 }),
+      );
 
       const result = await testAgentService.processMessageWithConversation(
         userId,
@@ -712,31 +775,25 @@ describe('AgentService', () => {
       );
 
       expect(mockConversationManager.initializeContext).not.toHaveBeenCalled();
+      expect(mockRouteMessage).toHaveBeenCalledWith(
+        'Tell me another joke',
+        'joke',
+        [],
+      );
       expect(result.agentUsed).toBe('joke');
     });
 
-    it('should handle handoff scenario', async () => {
-      const context = {
-        userId,
-        currentAgent: 'general' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 3,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      };
-
-      const handoffInfo = {
-        target: 'billing_support' as AgentType,
-        reason: 'User needs billing help',
-        message: 'Transferring you to billing support...',
-      };
-
-      mockConversationManager.getContext.mockReturnValue(context);
-      mockConversationManager.getHandoffInfo.mockReturnValue(handoffInfo);
-      mockConversationManager.completeHandoff.mockReturnValue({
-        ...context,
-        currentAgent: 'billing_support' as AgentType,
+    it('should hand off synchronously when router selects a new agent', async () => {
+      // Current agent is joke; router detects billing intent.
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'joke', messageCount: 3 }),
+      );
+      mockRouteMessage.mockResolvedValueOnce({
+        selectedAgent: 'billing_support',
+        handoff: true,
+        confidence: 0.95,
+        reason: 'keyword intent match: billing_support (1 keyword)',
+        source: 'keyword',
       });
 
       const result = await testAgentService.processMessageWithConversation(
@@ -746,40 +803,68 @@ describe('AgentService', () => {
         'conv-123',
       );
 
-      expect(result.handoffInfo).toEqual(handoffInfo);
+      expect(result.agentUsed).toBe('billing_support');
+      expect(result.handoffInfo).toBeDefined();
+      expect(result.handoffInfo?.target).toBe('billing_support');
+      expect(result.routingDecision?.source).toBe('keyword');
       expect(mockConversationManager.completeHandoff).toHaveBeenCalledWith(
         userId,
         'billing_support',
       );
     });
 
-    it('should handle entertainment agent handoff directly', async () => {
-      const handoffInfo = {
-        target: 'joke' as AgentType,
-        reason: 'User wants entertainment',
-        message: 'Let me get the joke master for you...',
-      };
-
-      mockConversationManager.getHandoffInfo.mockReturnValue(handoffInfo);
-      mockConversationManager.completeHandoff.mockReturnValue({
-        userId,
-        currentAgent: 'joke' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 1,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      });
+    it('should NOT hand off when router returns the sticky current agent', async () => {
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'joke' }),
+      );
+      // Router default is sticky, no handoff.
 
       const result = await testAgentService.processMessageWithConversation(
         userId,
-        'Tell me a joke',
+        'haha that was great',
         [],
         'conv-123',
       );
 
       expect(result.agentUsed).toBe('joke');
-      expect(result.content).toBe('Conversation response');
+      expect(result.handoffInfo).toBeUndefined();
+      expect(mockConversationManager.completeHandoff).not.toHaveBeenCalled();
+    });
+
+    it('should auto-handoff from hold_agent on first message', async () => {
+      // First message in a hold_agent session must auto-route to one of the
+      // entertainment agents even if the router stayed sticky.
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'hold_agent', conversationDepth: 0 }),
+      );
+      mockRouteMessage.mockResolvedValueOnce({
+        selectedAgent: 'hold_agent',
+        handoff: false,
+        confidence: 0.5,
+        reason: 'sticky default',
+        source: 'sticky',
+      });
+
+      const result = await testAgentService.processMessageWithConversation(
+        userId,
+        'hi',
+        [],
+        'conv-123',
+      );
+
+      const entertainmentAgents = [
+        'joke',
+        'trivia',
+        'gif',
+        'story_teller',
+        'riddle_master',
+        'quote_master',
+        'game_host',
+        'music_guru',
+        'dnd_master',
+      ];
+      expect(entertainmentAgents).toContain(result.agentUsed);
+      expect(result.handoffInfo).toBeDefined();
     });
   });
 
@@ -795,15 +880,9 @@ describe('AgentService', () => {
     });
 
     it('should combine conversation and goal-seeking systems', async () => {
-      mockConversationManager.getContext.mockReturnValue({
-        userId,
-        currentAgent: 'general' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 1,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      });
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'general' }),
+      );
 
       mockGoalSeekingSystem.generateProactiveActions.mockResolvedValue([]);
 
@@ -821,15 +900,7 @@ describe('AgentService', () => {
     });
 
     it('should prioritize goal-seeking when agent is forced', async () => {
-      const contextObject = {
-        userId,
-        currentAgent: 'trivia' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 1,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      };
+      const contextObject = makeContext({ currentAgent: 'trivia' });
 
       // Mock both updateContext and getContext to return a context object
       mockConversationManager.updateContext.mockReturnValue(contextObject);
@@ -892,17 +963,8 @@ describe('AgentService', () => {
       expect(mockConversationManager.getContext).toHaveBeenCalledWith(userId);
     });
 
-    it('should force agent handoff', () => {
-      const context = {
-        userId,
-        currentAgent: 'general' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 1,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      };
-
+    it('should force agent handoff synchronously by calling completeHandoff', () => {
+      const context = makeContext({ currentAgent: 'general' });
       mockConversationManager.getContext.mockReturnValue(context);
 
       testAgentService.forceAgentHandoff(
@@ -911,21 +973,32 @@ describe('AgentService', () => {
         'Manual override',
       );
 
-      expect(context.shouldHandoff).toBe(true);
-      expect(context.handoffTarget).toBe('billing_support');
-      expect(context.handoffReason).toBe('Manual override');
+      expect(mockConversationManager.completeHandoff).toHaveBeenCalledWith(
+        userId,
+        'billing_support',
+      );
+    });
+
+    it('should initialize context on force handoff when no context exists', () => {
+      mockConversationManager.getContext.mockReturnValue(null);
+
+      testAgentService.forceAgentHandoff(
+        userId,
+        'billing_support',
+        'Manual override',
+      );
+
+      expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(
+        userId,
+        'billing_support',
+      );
+      expect(mockConversationManager.completeHandoff).not.toHaveBeenCalled();
     });
 
     it('should get current agent', () => {
-      mockConversationManager.getContext.mockReturnValue({
-        userId,
-        currentAgent: 'joke' as AgentType,
-        lastInteraction: new Date(),
-        messageCount: 1,
-        shouldHandoff: false,
-        handoffTarget: null,
-        handoffReason: null,
-      });
+      mockConversationManager.getContext.mockReturnValue(
+        makeContext({ currentAgent: 'joke' }),
+      );
 
       const currentAgent = testAgentService.getCurrentAgent(userId);
       expect(currentAgent).toBe('joke');
@@ -939,7 +1012,7 @@ describe('AgentService', () => {
     });
 
     it('should initialize conversation', () => {
-      const context = testAgentService.initializeConversation(userId, 'trivia');
+      testAgentService.initializeConversation(userId, 'trivia');
 
       expect(mockConversationManager.initializeContext).toHaveBeenCalledWith(
         userId,

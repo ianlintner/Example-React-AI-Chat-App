@@ -1,0 +1,53 @@
+- generic [ref=e2]:
+    - generic [ref=e3]:
+        - img [ref=e5]
+        - heading "Welcome Back" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Sign in to your account to continue
+    - generic [ref=e9]:
+        - generic [ref=e10]:
+            - generic [ref=e11]:
+                - generic [ref=e12]: Username or Email
+                - textbox "Username or Email" [ref=e13]:
+                    - /placeholder: Enter your username
+            - generic [ref=e14]:
+                - generic [ref=e15]: Password
+                - textbox "Password" [ref=e16]:
+                    - /placeholder: Enter your password
+            - generic [ref=e17]:
+                - generic [ref=e18]:
+                    - checkbox "Remember me" [ref=e19]
+                    - generic [ref=e20]: Remember me
+                - link "Forgot password?" [ref=e21] [cursor=pointer]:
+                    - /url: /auth/forgot-password
+            - button "Sign In" [ref=e22] [cursor=pointer]
+        - generic [ref=e27]: Or continue with
+        - generic [ref=e28]:
+            - link "Continue with Google" [ref=e29] [cursor=pointer]:
+                - /url: /auth/login/google
+                - img [ref=e30]
+                - generic [ref=e35]: Continue with Google
+            - link "Continue with Microsoft" [ref=e36] [cursor=pointer]:
+                - /url: /auth/login/microsoft
+                - img [ref=e37]
+                - generic [ref=e42]: Continue with Microsoft
+            - link "Continue with GitHub" [ref=e43] [cursor=pointer]:
+                - /url: /auth/login/github
+                - img [ref=e44]
+                - generic [ref=e46]: Continue with GitHub
+            - link "Continue with Azure AD" [ref=e47] [cursor=pointer]:
+                - /url: /auth/login/azure
+                - img [ref=e48]
+                - generic [ref=e53]: Continue with Azure AD
+        - paragraph [ref=e55]:
+            - text: Don't have an account?
+            - link "Sign up" [ref=e56] [cursor=pointer]:
+                - /url: /auth/register
+    - generic [ref=e57]:
+        - paragraph [ref=e58]: © 2026 OAuth2 Server. All rights reserved.
+        - generic [ref=e59]:
+            - link "Privacy Policy" [ref=e60] [cursor=pointer]:
+                - /url: /privacy
+            - link "Terms of Service" [ref=e61] [cursor=pointer]:
+                - /url: /terms
+            - link "API Docs" [ref=e62] [cursor=pointer]:
+                - /url: /api-docs

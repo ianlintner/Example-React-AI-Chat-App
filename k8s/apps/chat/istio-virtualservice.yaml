@@ -6,7 +6,7 @@ spec:
   hosts:
     - 'chat.cat-herding.net'
   gateways:
-    - chat-gateway
+    - aks-istio-ingress/cat-herding-gateway
   http:
     # Socket.io WebSocket endpoint - MUST be before /api route
     - match:
@@ -77,6 +77,19 @@ spec:
         allowHeaders:
           - '*'
         allowCredentials: true
+    # OAuth2 proxy endpoints - must route to oauth2-proxy before catch-all
+    - match:
+        - uri:
+            prefix: /_oauth2/
+      route:
+        - destination:
+            host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+            port:
+              number: 4180
+      timeout: 10s
+      retries:
+        attempts: 3
+        perTryTimeout: 3s
     # Health check endpoints
     - match:
         - uri:

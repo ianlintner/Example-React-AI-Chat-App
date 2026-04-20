@@ -51,18 +51,17 @@ const executeProactiveAction = async (
     );
 
     // Validate the proactive response
-    const validationResult = await import(
-      '../validation/responseValidator'
-    ).then(module =>
-      module.responseValidator.validateResponse(
-        proactiveResponse.agentUsed,
-        action.message,
-        proactiveResponse.content,
-        conversation.id,
-        socket.id,
-        true, // This is a proactive message
-      ),
-    );
+    const validationResult =
+      await import('../validation/responseValidator').then(module =>
+        module.responseValidator.validateResponse(
+          proactiveResponse.agentUsed,
+          action.message,
+          proactiveResponse.content,
+          conversation.id,
+          socket.id,
+          true, // This is a proactive message
+        ),
+      );
 
     // Log validation for proactive messages
     if (validationResult.issues.length > 0) {

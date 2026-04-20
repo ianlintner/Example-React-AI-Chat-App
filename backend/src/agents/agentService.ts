@@ -15,16 +15,14 @@ import {
 } from './conversationManager';
 import { ragService } from './ragService';
 import { dndService } from './dndService';
+import { routeMessage, logRoutingDecision, RoutingDecision } from './router';
 import {
-  tracer,
   createAgentSpan,
-  createConversationSpan,
   createValidationSpan,
   addSpanEvent,
   setSpanStatus,
   endSpan,
 } from '../tracing/tracer';
-import { tracingContextManager } from '../tracing/contextManager';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -778,7 +776,14 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
 
   // ===== CONVERSATION MANAGEMENT METHODS =====
 
-  // Enhanced message processing with conversation continuity and intelligent handoffs
+  /**
+   * Enhanced message processing with pre-dispatch routing.
+   *
+   * Handoff decisions are made BEFORE the message is dispatched to an agent,
+   * so the user's request is always handled by the right agent on the same
+   * turn. Previously the handoff was detected after the current agent had
+   * already replied, producing a one-turn lag.
+   */
   async processMessageWithConversation(
     userId: string,
     message: string,
@@ -787,34 +792,33 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
   ): Promise<
     AgentResponse & {
       handoffInfo?: { target: AgentType; reason: string; message: string };
+      routingDecision?: RoutingDecision;
     }
   > {
     // Get or initialize conversation context
     let context = this.conversationManager.getContext(userId);
     if (!context) {
-      // Start with general agent if no context exists
       context = this.conversationManager.initializeContext(userId, 'general');
     }
 
-    // Current agent from conversation context
-    let currentAgent = context.currentAgent;
+    const previousAgent = context.currentAgent;
 
-    // Check if we need to handoff before processing
-    const handoffInfo = this.conversationManager.getHandoffInfo(userId);
-    if (handoffInfo) {
-      console.log(
-        `🔄 Agent handoff detected for user ${userId}: ${context.currentAgent} → ${handoffInfo.target} (${handoffInfo.reason})`,
-      );
+    // === Pre-dispatch routing ===
+    let decision = await routeMessage(
+      message,
+      previousAgent,
+      conversationHistory,
+    );
 
-      // Complete the handoff
-      context = this.conversationManager.completeHandoff(
-        userId,
-        handoffInfo.target,
-      );
-      currentAgent = handoffInfo.target;
-
-      // For entertainment agents, process the message directly with the target agent instead of returning handoff message
-      const entertainmentAgents = [
+    // Preserve the long-standing "hold_agent auto-handoff to entertainment
+    // on the first message" behavior. This is intentionally handled here
+    // rather than in the router so the router stays pure and easily testable.
+    if (
+      previousAgent === 'hold_agent' &&
+      context.conversationDepth === 0 &&
+      decision.selectedAgent === 'hold_agent'
+    ) {
+      const entertainmentAgents: AgentType[] = [
         'joke',
         'trivia',
         'gif',
@@ -825,66 +829,71 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         'music_guru',
         'dnd_master',
       ];
-      if (entertainmentAgents.includes(handoffInfo.target)) {
-        console.log(
-          `🎭 Processing message directly with entertainment agent: ${handoffInfo.target}`,
-        );
-
-        // Process message with the entertainment agent
-        const response = await this.processMessage(
-          message,
-          conversationHistory,
-          handoffInfo.target,
-          conversationId,
-          userId,
-        );
-
-        // Update conversation context with the interaction
-        this.conversationManager.updateContext(
-          userId,
-          message,
-          response.content,
-          handoffInfo.target,
-        );
-
-        return {
-          ...response,
-          agentUsed: handoffInfo.target, // Make sure the response shows it came from the entertainment agent
-        };
-      }
-
-      // For non-entertainment agents, return handoff message first
-      return {
-        content: handoffInfo.message,
-        agentUsed: 'general', // Handoff messages come from general agent
+      const randomAgent =
+        entertainmentAgents[
+          Math.floor(Math.random() * entertainmentAgents.length)
+        ];
+      console.log(
+        `🎲 AUTOMATIC ENTERTAINMENT HANDOFF: Selected random agent '${randomAgent}' while user is on hold`,
+      );
+      decision = {
+        selectedAgent: randomAgent,
+        handoff: true,
         confidence: 1.0,
-        handoffInfo,
+        reason: `No specialists available - auto-connecting you to ${randomAgent} while you wait`,
+        source: 'sticky',
       };
     }
 
-    // Process message with current agent
+    logRoutingDecision(decision, {
+      userId,
+      conversationId,
+      currentAgent: previousAgent,
+      messagePreview: message.substring(0, 80),
+    });
+
+    // If the router chose a new agent, complete the handoff now so that
+    // per-agent metrics (depth, performance) reset before dispatch.
+    if (decision.handoff) {
+      context = this.conversationManager.completeHandoff(
+        userId,
+        decision.selectedAgent,
+      );
+    }
+
+    // Dispatch with the forced agent from the routing decision. Passing
+    // `decision.selectedAgent` prevents `processMessage` from classifying
+    // the message again (avoiding double-classification).
     const response = await this.processMessage(
       message,
       conversationHistory,
-      currentAgent,
+      decision.selectedAgent,
       conversationId,
       userId,
     );
 
-    // Update conversation context with the interaction
+    // Update conversation context with the interaction using the agent
+    // that actually produced the response.
     this.conversationManager.updateContext(
       userId,
       message,
       response.content,
-      currentAgent,
+      decision.selectedAgent,
     );
 
-    // Check if handoff is now needed after this interaction
-    const newHandoffInfo = this.conversationManager.getHandoffInfo(userId);
+    const handoffInfo = decision.handoff
+      ? {
+          target: decision.selectedAgent,
+          reason: decision.reason,
+          message: `Connecting you to our ${getAgent(decision.selectedAgent).name}.`,
+        }
+      : undefined;
 
     return {
       ...response,
-      handoffInfo: newHandoffInfo || undefined,
+      agentUsed: decision.selectedAgent,
+      handoffInfo,
+      routingDecision: decision,
     };
   }
 
@@ -893,18 +902,28 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     return this.conversationManager.getContext(userId);
   }
 
-  // Force agent handoff (manual override)
+  /**
+   * Force a handoff to `targetAgent` immediately.
+   *
+   * With the pre-dispatch router, we no longer queue a handoff to fire on
+   * the next turn — we complete it right now so the next `processMessage`
+   * call for this user sees the new agent. The `reason` parameter is kept
+   * for API compatibility and logging.
+   */
   forceAgentHandoff(
     userId: string,
     targetAgent: AgentType,
     reason = 'Manual override',
   ): void {
     const context = this.conversationManager.getContext(userId);
-    if (context) {
-      context.shouldHandoff = true;
-      context.handoffTarget = targetAgent;
-      context.handoffReason = reason;
+    if (!context) {
+      this.conversationManager.initializeContext(userId, targetAgent);
+    } else {
+      this.conversationManager.completeHandoff(userId, targetAgent);
     }
+    console.log(
+      `🛠️ forceAgentHandoff: user=${userId} target=${targetAgent} reason="${reason}"`,
+    );
   }
 
   // Get current agent for a user based on conversation context

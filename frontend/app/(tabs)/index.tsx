@@ -11,6 +11,7 @@ import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
 import MessageInput from '../../components/MessageInput';
 import { UserProfile } from '../../components/UserProfile';
+import { HandoffChip } from '../../components/HandoffChip';
 import type { Conversation, Message, MediaAttachment } from '../../types';
 
 export default function HomeScreen() {
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [handoffMessage, setHandoffMessage] = useState<string | null>(null);
 
   // Initialize socket connection on app start
   useEffect(() => {
@@ -233,6 +235,8 @@ export default function HomeScreen() {
       agentUsed?: string;
       confidence?: number;
     }) => {
+      // Dismiss any active handoff chip once the new agent has responded.
+      setHandoffMessage(null);
       // Update message with final agent info and complete status
       setConversation(prev => {
         if (!prev) return data.conversation;
@@ -319,6 +323,17 @@ export default function HomeScreen() {
       });
     };
 
+    const handleHandoffEvent = (event: {
+      conversationId: string;
+      messageId: string;
+      fromAgent: string;
+      toAgent: string;
+      message: string;
+      reason: string;
+    }) => {
+      setHandoffMessage(event.message);
+    };
+
     // Set up socket listeners
     socketService.onNewMessage(handleNewMessage);
     socketService.onStreamStart(handleStreamStart);
@@ -326,6 +341,7 @@ export default function HomeScreen() {
     socketService.onStreamComplete(handleStreamComplete);
     socketService.onProactiveMessage(handleProactiveMessage);
     socketService.onAttachment(handleAttachment);
+    socketService.onHandoffEvent(handleHandoffEvent);
 
     return () => {
       socketService.removeListener('new_message');
@@ -334,6 +350,7 @@ export default function HomeScreen() {
       socketService.removeListener('stream_complete');
       socketService.removeListener('proactive_message');
       socketService.removeListener('attachment');
+      socketService.removeListener('handoff_event');
     };
   }, []);
 
@@ -391,6 +408,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <UserProfile />
+      {handoffMessage && <HandoffChip message={handoffMessage} />}
       {/* Chat Area with Combined Menu/Status Bar */}
       <View style={styles.chatContainer}>
         <ChatScreen conversation={conversation} />

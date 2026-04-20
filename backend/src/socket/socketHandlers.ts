@@ -371,21 +371,23 @@ export const setupSocketHandlers = (
           );
         }
 
-        // If user has been idle for more than 5 minutes with hold agent, suggest entertainment
+        // If user has been idle for more than 5 minutes with hold agent,
+        // force a handoff to a default entertainment agent. Router-based
+        // handoff is driven by the user's next message, but on long idle
+        // periods we want to be proactive so we force it directly.
         if (
           timeSinceLastMessage > 300000 &&
           conversationContext.currentAgent === 'hold_agent'
         ) {
           // 5 minutes
-          if (!conversationContext.shouldHandoff) {
-            conversationContext.shouldHandoff = true;
-            conversationContext.handoffTarget = 'joke'; // Default entertainment
-            conversationContext.handoffReason =
-              'Extended idle time - offering entertainment while waiting';
-            console.log(
-              `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`,
-            );
-          }
+          console.log(
+            `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`,
+          );
+          agentService.forceAgentHandoff(
+            socket.id,
+            'joke',
+            'Extended idle time - offering entertainment while waiting',
+          );
         }
       }
 
@@ -444,9 +446,6 @@ export const setupSocketHandlers = (
               conversationDepth: conversationContext.conversationDepth,
               userSatisfaction: conversationContext.userSatisfaction,
               agentPerformance: conversationContext.agentPerformance,
-              shouldHandoff: conversationContext.shouldHandoff,
-              handoffTarget: conversationContext.handoffTarget,
-              handoffReason: conversationContext.handoffReason,
               timeSinceLastMessage:
                 Date.now() - conversationContext.lastMessageTime.getTime(),
               idleTime: Math.floor(
@@ -880,6 +879,10 @@ export const setupSocketHandlers = (
               '🤖 Processing message with conversation management and goal-seeking systems...',
             );
 
+            // Capture current agent BEFORE dispatch so we can report the
+            // from→to transition in the handoff_event socket emission.
+            const previousAgent = agentService.getCurrentAgent(socket.id);
+
             // Track chat message and agent response time
             const responseStart = Date.now();
             metrics.chatMessagesTotal.inc({
@@ -931,11 +934,25 @@ export const setupSocketHandlers = (
                 `💬 Conversation context - Agent: ${ctx.currentAgent}, Topic: ${ctx.conversationTopic}, Depth: ${ctx.conversationDepth}, Satisfaction: ${ctx.userSatisfaction.toFixed(2)}, Performance: ${ctx.agentPerformance.toFixed(2)}`,
               );
 
-              if (ctx.shouldHandoff) {
+              if (agentResponse.handoffInfo) {
                 console.log(
-                  `🔄 Handoff needed: ${ctx.currentAgent} → ${ctx.handoffTarget} (${ctx.handoffReason})`,
+                  `🔄 Pre-dispatch handoff applied: → ${agentResponse.handoffInfo.target} (${agentResponse.handoffInfo.reason})`,
                 );
               }
+            }
+
+            // Notify clients of a pre-dispatch handoff so the UI can show a
+            // transient "Transferring you to <Agent>" chip before the stream
+            // starts. Emitted only when the router picked a new agent.
+            if (agentResponse.handoffInfo) {
+              io.to(conversation.id).emit('handoff_event', {
+                conversationId: conversation.id,
+                messageId: aiMessageId,
+                fromAgent: previousAgent,
+                toAgent: agentResponse.handoffInfo.target,
+                message: agentResponse.handoffInfo.message,
+                reason: agentResponse.handoffInfo.reason,
+              });
             }
 
             // Emit any rich-media attachments before streaming text

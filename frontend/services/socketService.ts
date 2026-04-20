@@ -30,6 +30,15 @@ type AttachmentCallback = (data: {
   messageId: string;
   attachment: MediaAttachment;
 }) => void;
+export type HandoffEvent = {
+  conversationId: string;
+  messageId: string;
+  fromAgent: string;
+  toAgent: string;
+  message: string;
+  reason: string;
+};
+type HandoffEventCallback = (event: HandoffEvent) => void;
 
 class SocketService {
   private socket: Socket | null = null;
@@ -45,6 +54,7 @@ class SocketService {
     stream_error?: StreamErrorCallback;
     agent_status_update?: AgentStatusCallback;
     attachment?: AttachmentCallback;
+    handoff_event?: HandoffEventCallback;
   } = {};
 
   // Callbacks for connection events
@@ -385,6 +395,13 @@ class SocketService {
   ): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);
+    }
+  }
+
+  onHandoffEvent(callback: HandoffEventCallback): void {
+    this.storedCallbacks.handoff_event = callback;
+    if (this.socket) {
+      this.socket.on('handoff_event', callback);
     }
   }
 

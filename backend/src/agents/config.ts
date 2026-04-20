@@ -196,10 +196,13 @@ Want another GIF? I've got tons more where that came from! 🎉"
 - Ensure GIFs match the emotional tone requested
 - Keep GIF descriptions accurate and fun
 
-Remember: You're the master of Giphy entertainment! Every GIF should feel like the perfect visual treat for the moment!`,
-    model: 'gpt-3.5-turbo',
+Remember: You're the master of Giphy entertainment! Call the gif_search tool with a descriptive query — do NOT embed raw GIF URLs in your text response.`,
+    model: 'gpt-4o-mini',
     temperature: 0.8,
     maxTokens: 600,
+    provider: 'openai' as const,
+    fallbackProvider: 'openai' as const,
+    tools: ['gif_search'],
   },
   account_support: {
     id: 'account_support',
@@ -592,10 +595,14 @@ PERSONALITY TRAITS:
 - Patient with interactive elements
 - Encouraging of imagination
 
-Your goal is to transport users into engaging mini-adventures that make their wait time fly by!`,
-    model: 'gpt-3.5-turbo',
+Your goal is to transport users into engaging mini-adventures that make their wait time fly by! Use show_image_gallery to display illustrations when they enhance the narrative.`,
+    model: 'claude-sonnet-4-6',
     temperature: 0.9,
     maxTokens: 1000,
+    provider: 'anthropic' as const,
+    fallbackProvider: 'openai' as const,
+    tools: ['show_image_gallery', 'show_image'],
+    cacheSystem: true,
   },
   riddle_master: {
     id: 'riddle_master',
@@ -860,9 +867,12 @@ PERSONALIZATION:
 - Create themed recommendations for specific situations
 - Suggest music for different parts of their day
 
-Remember: Music is deeply personal and emotional. Your recommendations should feel thoughtful and curated, not generic. Help users discover their next favorite song or artist!`,
-    model: 'gpt-3.5-turbo',
+Remember: Music is deeply personal and emotional. Your recommendations should feel thoughtful and curated, not generic. Help users discover their next favorite song or artist! Use music_search or play_audio tools to provide actual playable tracks.`,
+    model: 'gpt-4o-mini',
     temperature: 0.7,
+    provider: 'openai' as const,
+    fallbackProvider: 'openai' as const,
+    tools: ['music_search', 'play_audio'],
     maxTokens: 1100,
   },
   youtube_guru: {
@@ -947,10 +957,15 @@ Want another video? I've got tons more entertainment ready to go!"
 - Provide realistic duration estimates
 - The frontend will automatically convert these into proper YouTube embeds
 
-Remember: Your goal is to provide immediate entertainment relief through actual embedded YouTube videos! Make people forget they're waiting by giving them something genuinely funny to watch right in the chat!`,
-    model: 'gpt-3.5-turbo',
+Remember: Your goal is to provide immediate entertainment relief through actual embedded YouTube videos! Make people forget they're waiting by giving them something genuinely funny to watch right in the chat!
+
+When you want to show a video, call the youtube_search tool with a descriptive query. Do NOT use the old \`\`\`youtube code block format anymore — the tool will handle rendering.`,
+    model: 'gpt-4o',
     temperature: 0.8,
     maxTokens: 1200,
+    provider: 'openai' as const,
+    fallbackProvider: 'openai' as const,
+    tools: ['youtube_search'],
   },
   dnd_master: {
     id: 'dnd_master',
@@ -1055,10 +1070,16 @@ Always use the service functions for consistent, authentic D&D experience.
 
 Choose your adventure!"
 
-Remember: Keep everything fast-paced, fun, and accessible for both D&D veterans and newcomers. The goal is quick entertainment with that classic D&D flavor!`,
-    model: 'gpt-4',
+Remember: Keep everything fast-paced, fun, and accessible for both D&D veterans and newcomers. The goal is quick entertainment with that classic D&D flavor!
+
+Use the roll_dice, generate_character, and generate_encounter tools to produce structured results — do NOT manually format dice rolls or character sheets as text.`,
+    model: 'claude-sonnet-4-6',
     temperature: 0.8,
     maxTokens: 1500,
+    provider: 'anthropic' as const,
+    fallbackProvider: 'openai' as const,
+    tools: ['roll_dice', 'generate_character', 'generate_encounter'],
+    cacheSystem: true,
   },
 };
 

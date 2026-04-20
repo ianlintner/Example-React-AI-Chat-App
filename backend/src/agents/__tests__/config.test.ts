@@ -155,8 +155,10 @@ describe('Agent Configuration', () => {
         expect(dnd.systemPrompt).toContain('character generation');
         expect(dnd.systemPrompt).toContain('dice rolling');
         expect(dnd.systemPrompt).toContain('encounters');
-        expect(dnd.model).toBe('gpt-4'); // Should use more advanced model
+        // Uses claude-sonnet-4-6 for complex multi-turn reasoning + tool use (roll_dice, generate_character, generate_encounter)
+        expect(dnd.model).toMatch(/claude-sonnet|gpt-4/);
         expect(dnd.maxTokens).toBeGreaterThan(1000); // Needs longer responses
+        expect(dnd.tools).toContain('roll_dice');
       });
 
       it('should configure YouTube guru with embed functionality', () => {
@@ -319,12 +321,19 @@ describe('Agent Configuration', () => {
         ...new Set(Object.values(AGENTS).map(agent => agent.model)),
       ];
 
-      // Should only use known OpenAI models
+      // Allow models from OpenAI, Anthropic, and Azure Foundry deployment names
       const validModels = [
         'gpt-3.5-turbo',
         'gpt-4',
+        'gpt-4o',
+        'gpt-4o-mini',
+        'gpt-4.1',
+        'gpt-4.1-mini',
         'gpt-4-turbo-preview',
         'gpt-4-turbo',
+        'claude-sonnet-4-6',
+        'claude-opus-4-7',
+        'phi-4',
       ];
 
       models.forEach(model => {

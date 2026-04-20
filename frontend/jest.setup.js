@@ -522,10 +522,47 @@ jest.mock('expo-modules-core', () => ({
     getStateAsync: jest.fn().mockResolvedValue(null),
     setStateAsync: jest.fn().mockResolvedValue(undefined),
   })),
+  requireOptionalNativeModule: jest.fn(() => null),
   requireNativeViewManager: jest.fn(),
   EventEmitter: jest.fn(),
   Subscription: jest.fn(),
   UnavailabilityError: class UnavailabilityError extends Error {},
+}));
+
+// Mock expo-image (used by media components)
+jest.mock('expo-image', () => {
+  const ReactLib = require('react');
+  return {
+    Image: ({ source, accessibilityLabel }) =>
+      ReactLib.createElement('img', {
+        src: source?.uri ?? '',
+        alt: accessibilityLabel ?? '',
+      }),
+  };
+});
+
+// Mock expo-av (used by AudioPlayer)
+jest.mock('expo-av', () => ({
+  Audio: {
+    setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
+    Sound: {
+      createAsync: jest.fn().mockResolvedValue({
+        sound: {
+          getStatusAsync: jest.fn().mockResolvedValue({ isLoaded: true, isPlaying: false }),
+          playAsync: jest.fn().mockResolvedValue(undefined),
+          pauseAsync: jest.fn().mockResolvedValue(undefined),
+          unloadAsync: jest.fn().mockResolvedValue(undefined),
+          setOnPlaybackStatusUpdate: jest.fn(),
+        },
+      }),
+    },
+  },
+}));
+
+// Mock expo-video (used by VideoPlayer)
+jest.mock('expo-video', () => ({
+  VideoView: 'VideoView',
+  useVideoPlayer: jest.fn(() => ({ loop: false, play: jest.fn(), pause: jest.fn() })),
 }));
 
 // Mock useColorScheme hook for React Native

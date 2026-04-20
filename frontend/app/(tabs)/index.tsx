@@ -11,7 +11,7 @@ import { socketService } from '../../services/socketService';
 import ChatScreen from '../../components/ChatScreen';
 import MessageInput from '../../components/MessageInput';
 import { UserProfile } from '../../components/UserProfile';
-import type { Conversation, Message } from '../../types';
+import type { Conversation, Message, MediaAttachment } from '../../types';
 
 export default function HomeScreen() {
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -299,12 +299,33 @@ export default function HomeScreen() {
       });
     };
 
+    const handleAttachment = (data: {
+      messageId: string;
+      attachment: MediaAttachment;
+    }) => {
+      setConversation(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: prev.messages.map(m =>
+            m.id === data.messageId
+              ? {
+                  ...m,
+                  attachments: [...(m.attachments ?? []), data.attachment],
+                }
+              : m,
+          ),
+        };
+      });
+    };
+
     // Set up socket listeners
     socketService.onNewMessage(handleNewMessage);
     socketService.onStreamStart(handleStreamStart);
     socketService.onStreamChunk(handleStreamChunk);
     socketService.onStreamComplete(handleStreamComplete);
     socketService.onProactiveMessage(handleProactiveMessage);
+    socketService.onAttachment(handleAttachment);
 
     return () => {
       socketService.removeListener('new_message');
@@ -312,6 +333,7 @@ export default function HomeScreen() {
       socketService.removeListener('stream_chunk');
       socketService.removeListener('stream_complete');
       socketService.removeListener('proactive_message');
+      socketService.removeListener('attachment');
     };
   }, []);
 

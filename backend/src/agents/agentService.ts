@@ -1,4 +1,7 @@
 import OpenAI from 'openai';
+import { providerRegistry } from '../llm';
+import { toolRegistry } from '../tools';
+import { MediaAttachment } from '../types';
 import { classifyMessage } from './classifier';
 import { getAgent } from './config';
 import { AgentResponse, AgentType } from './types';
@@ -193,41 +196,103 @@ export class AgentService {
 
       // Generate response using the agent
       let responseContent: string;
+      const attachments: MediaAttachment[] = [];
 
       addSpanEvent(span, 'agent.response_generation_start');
 
       try {
-        if (!process.env.OPENAI_API_KEY) {
-          // Demo response when no API key is provided
+        if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+          // Demo response when no API keys are provided
           responseContent = this.generateDemoResponse(agent.name, message);
           addSpanEvent(span, 'agent.demo_response_generated');
         } else {
-          // Create OpenAI client at runtime to ensure env vars are loaded
-          const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
+          // Resolve provider (falls back to openai if preferred unavailable)
+          const agentConfig = agent as typeof agent & {
+            provider?: string;
+            fallbackProvider?: string;
+            tools?: string[];
+            cacheSystem?: boolean;
+          };
+          const { provider, model: fallbackModel } = providerRegistry.resolve(
+            agentConfig.provider as any,
+            agentConfig.fallbackProvider as any,
+          );
+          const resolvedModel = fallbackModel ?? agent.model;
+          const agentTools = agentConfig.tools?.length
+            ? toolRegistry.getForAgent(agentConfig.tools)
+            : [];
+
+          addSpanEvent(span, 'agent.provider_call_start', {
+            provider: provider.id,
+            model: resolvedModel,
           });
 
-          addSpanEvent(span, 'agent.openai_call_start', { model: agent.model });
+          // Collect streamed response + tool calls
+          const systemMsg = messages[0].content;
+          const chatMessages = messages.slice(1).map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }));
 
-          const completion = await openai.chat.completions.create({
-            model: agent.model,
-            messages: messages,
-            max_tokens: agent.maxTokens,
+          let accText = '';
+          const pendingToolCalls: Array<{
+            id: string;
+            name: string;
+            input: unknown;
+          }> = [];
+
+          for await (const evt of provider.stream({
+            model: resolvedModel,
+            system: systemMsg,
+            messages: chatMessages,
+            tools: agentTools,
             temperature: agent.temperature,
-          });
+            maxTokens: agent.maxTokens,
+            cacheSystem: agentConfig.cacheSystem,
+          })) {
+            if (evt.type === 'text_delta') {
+              accText += evt.text;
+            } else if (evt.type === 'tool_call') {
+              pendingToolCalls.push({
+                id: evt.id,
+                name: evt.name,
+                input: evt.input,
+              });
+            } else if (evt.type === 'done' && evt.usage) {
+              addSpanEvent(span, 'agent.provider_call_complete', {
+                tokensInput: evt.usage.input,
+                tokensOutput: evt.usage.output,
+              });
+            }
+          }
+
+          // Execute tool calls and collect attachments
+          for (const tc of pendingToolCalls) {
+            const tool = toolRegistry.get(tc.name);
+            if (!tool) {
+              continue;
+            }
+            try {
+              const result = await tool.execute(tc.input);
+              const results = Array.isArray(result) ? result : [result];
+              for (const r of results) {
+                attachments.push(r.attachment);
+                if (r.text) {
+                  accText += (accText ? '\n\n' : '') + r.text;
+                }
+              }
+            } catch (toolErr) {
+              console.error(`Tool execution failed: ${tc.name}`, toolErr);
+            }
+          }
 
           responseContent =
-            completion.choices[0]?.message?.content ||
+            accText ||
             `I apologize, but I encountered an error while processing your request. Please try again.`;
-
-          addSpanEvent(span, 'agent.openai_call_complete', {
-            tokensUsed: completion.usage?.total_tokens,
-            responseLength: responseContent.length,
-          });
         }
       } catch (error) {
-        console.error(`Error calling OpenAI API with ${agent.name}:`, error);
-        addSpanEvent(span, 'agent.openai_call_error', {
+        console.error(`Error calling LLM provider for ${agent.name}:`, error);
+        addSpanEvent(span, 'agent.provider_call_error', {
           error: (error as Error).message,
         });
         responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
@@ -283,6 +348,7 @@ export class AgentService {
         content: responseContent,
         agentUsed: agentType,
         confidence: confidence,
+        ...(attachments.length > 0 && { attachments }),
       };
 
       span.setAttributes({

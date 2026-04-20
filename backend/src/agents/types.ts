@@ -16,6 +16,8 @@ export type AgentType =
   | 'youtube_guru'
   | 'dnd_master';
 
+export type LLMProviderId = 'openai' | 'anthropic' | 'foundry';
+
 export interface Agent {
   id: string;
   name: string;
@@ -25,12 +27,17 @@ export interface Agent {
   model: string;
   temperature: number;
   maxTokens: number;
+  provider?: LLMProviderId;
+  fallbackProvider?: LLMProviderId;
+  tools?: string[];
+  cacheSystem?: boolean;
 }
 
 export interface AgentResponse {
   content: string;
   agentUsed: AgentType;
   confidence: number;
+  attachments?: import('../types').MediaAttachment[];
 }
 
 export interface MessageClassification {

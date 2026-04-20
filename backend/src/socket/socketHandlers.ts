@@ -51,17 +51,18 @@ const executeProactiveAction = async (
     );
 
     // Validate the proactive response
-    const validationResult =
-      await import('../validation/responseValidator').then(module =>
-        module.responseValidator.validateResponse(
-          proactiveResponse.agentUsed,
-          action.message,
-          proactiveResponse.content,
-          conversation.id,
-          socket.id,
-          true, // This is a proactive message
-        ),
-      );
+    const validationResult = await import(
+      '../validation/responseValidator'
+    ).then(module =>
+      module.responseValidator.validateResponse(
+        proactiveResponse.agentUsed,
+        action.message,
+        proactiveResponse.content,
+        conversation.id,
+        socket.id,
+        true, // This is a proactive message
+      ),
+    );
 
     // Log validation for proactive messages
     if (validationResult.issues.length > 0) {
@@ -937,7 +938,17 @@ export const setupSocketHandlers = (
               }
             }
 
-            // Simulate streaming by sending the response in chunks
+            // Emit any rich-media attachments before streaming text
+            if (agentResponse.attachments?.length) {
+              for (const attachment of agentResponse.attachments) {
+                io.to(conversation.id).emit('attachment', {
+                  messageId: aiMessageId,
+                  attachment,
+                });
+              }
+            }
+
+            // Stream the text response in chunks
             const words = agentResponse.content.split(' ');
             let currentContent = '';
 
@@ -962,17 +973,21 @@ export const setupSocketHandlers = (
             aiMessage.content = agentResponse.content;
             aiMessage.agentUsed = agentResponse.agentUsed;
             aiMessage.confidence = agentResponse.confidence;
+            if (agentResponse.attachments?.length) {
+              (aiMessage as any).attachments = agentResponse.attachments;
+            }
 
             // Update conversation timestamp
             conversation.updatedAt = new Date();
 
-            // Emit stream complete with agent info
+            // Emit stream complete with agent info and attachments
             io.to(conversation.id).emit('stream_complete', {
               messageId: aiMessageId,
               conversationId: conversation.id,
               conversation: conversation,
               agentUsed: agentResponse.agentUsed,
               confidence: agentResponse.confidence,
+              attachments: agentResponse.attachments ?? [],
             });
 
             // Send agent status update after message processing

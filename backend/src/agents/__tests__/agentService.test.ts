@@ -31,6 +31,19 @@ jest.mock('../jokeLearningSystem');
 jest.mock('../../tracing/tracer');
 jest.mock('../../tracing/contextManager');
 
+// Mock LLM provider registry and tool registry so tests are provider-agnostic
+jest.mock('../../llm', () => ({
+  providerRegistry: {
+    resolve: jest.fn(),
+  },
+}));
+jest.mock('../../tools', () => ({
+  toolRegistry: {
+    getForAgent: jest.fn().mockReturnValue([]),
+    get: jest.fn().mockReturnValue(null),
+  },
+}));
+
 // Mock OpenAI
 jest.mock('openai', () => ({
   __esModule: true,
@@ -150,6 +163,8 @@ describe('AgentService', () => {
   let testAgentService: AgentService;
   let mockOpenAI: any;
 
+  let mockProvider: any;
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -159,7 +174,7 @@ describe('AgentService', () => {
     // Create fresh instance for testing
     testAgentService = new AgentService();
 
-    // Setup OpenAI mock
+    // Setup OpenAI mock (kept for backward compat, but provider registry is mocked separately)
     mockOpenAI = {
       chat: {
         completions: {
@@ -170,6 +185,36 @@ describe('AgentService', () => {
 
     const OpenAIMock = require('openai').default;
     OpenAIMock.mockImplementation(() => mockOpenAI);
+
+    // Setup provider registry mock — bridges to the openai mock so existing test setups
+    // (mockOpenAI.chat.completions.create.mockResolvedValue) keep working.
+    // Reconstructs the legacy call shape: { messages: [system, ...history, user] }
+    mockProvider = {
+      id: 'openai',
+      stream: jest.fn(async function* (opts: any) {
+        const messages = [
+          { role: 'system', content: opts.system },
+          ...opts.messages,
+        ];
+        const result = await mockOpenAI.chat.completions.create({
+          ...opts,
+          messages,
+        });
+        const content = result?.choices?.[0]?.message?.content ?? '';
+        if (content) {
+          yield { type: 'text_delta', text: content };
+        }
+        yield {
+          type: 'done',
+          usage: {
+            input: result?.usage?.prompt_tokens ?? 10,
+            output: result?.usage?.completion_tokens ?? 5,
+          },
+        };
+      }),
+    };
+    const { providerRegistry } = require('../../llm');
+    providerRegistry.resolve.mockReturnValue({ provider: mockProvider });
 
     // Setup default mocks
     mockCreateAgentSpan.mockReturnValue(mockSpan);

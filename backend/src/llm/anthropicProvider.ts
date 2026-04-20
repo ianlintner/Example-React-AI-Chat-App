@@ -44,9 +44,11 @@ interface AnthropicStreamEvent {
 export class AnthropicProvider implements LLMProvider {
   readonly id = 'anthropic' as const;
   private apiKey: string;
+  private baseURL?: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, baseURL?: string) {
     this.apiKey = apiKey;
+    this.baseURL = baseURL;
   }
 
   private toAnthropicTools(tools: LLMTool[]): AnthropicTool[] {
@@ -60,7 +62,13 @@ export class AnthropicProvider implements LLMProvider {
   async *stream(opts: LLMStreamOptions): AsyncIterable<LLMStreamEvent> {
     // Lazy import to avoid crash when ANTHROPIC_API_KEY is absent at module load
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: this.apiKey });
+    // baseURL override allows pointing at Azure AI Foundry's Anthropic-compatible endpoint
+    // (e.g. https://{account}.services.ai.azure.com — Foundry exposes Claude via /v1/messages)
+    const client = new Anthropic(
+      this.baseURL
+        ? { apiKey: this.apiKey, baseURL: this.baseURL }
+        : { apiKey: this.apiKey },
+    );
 
     const systemContent = opts.cacheSystem
       ? [

@@ -60,6 +60,20 @@ spec:
                 secretKeyRef:
                   name: chat-secrets-from-keyvault
                   key: OPENAI_API_KEY
+            # Foundry-hosted Claude (no direct ANTHROPIC_API_KEY in cluster).
+            # When AZURE_FOUNDRY_API_KEY+AZURE_FOUNDRY_ENDPOINT are set and
+            # ANTHROPIC_API_KEY is unset, AnthropicProvider routes /v1/messages
+            # through the Foundry endpoint using @anthropic-ai/sdk's baseURL override.
+            - name: AZURE_FOUNDRY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secrets-from-keyvault
+                  key: AZURE_FOUNDRY_API_KEY
+            - name: AZURE_FOUNDRY_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: chat-secrets-from-keyvault
+                  key: AZURE_FOUNDRY_ENDPOINT
           envFrom:
             - configMapRef:
                 name: chat-backend-config

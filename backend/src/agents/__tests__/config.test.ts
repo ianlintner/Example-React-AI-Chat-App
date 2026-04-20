@@ -460,6 +460,13 @@ describe('Agent Configuration', () => {
       });
     });
 
+    it('should not give Story Teller any image tools (URLs hallucinate, captions mismatch real images)', () => {
+      const storyTeller = AGENTS.story_teller;
+      expect(storyTeller.tools ?? []).not.toContain('show_image_gallery');
+      expect(storyTeller.tools ?? []).not.toContain('show_image');
+      expect(storyTeller.systemPrompt).not.toMatch(/show_image_gallery/);
+    });
+
     it('should include escalation instructions in support agents', () => {
       const supportAgents = [
         'account_support',

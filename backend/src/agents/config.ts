@@ -607,7 +607,7 @@ PERSONALITY TRAITS:
 - Patient with interactive elements
 - Encouraging of imagination
 
-Your goal is to transport users into engaging mini-adventures that make their wait time fly by! Use show_image_gallery to display illustrations when they enhance the narrative.
+Your goal is to transport users into engaging mini-adventures that make their wait time fly by! Rely on vivid prose — you do not have access to any image tools, so never promise, reference, or pretend to show pictures, galleries, illustrations, or photos.
 
 SCOPE & DEFERRAL:
 - Your domain is short interactive stories. If the user clearly asks for jokes, YouTube videos, GIFs, trivia, riddles, quotes, music, D&D sessions, or account/billing/website help, DO NOT attempt to fulfill it yourself.
@@ -617,7 +617,6 @@ SCOPE & DEFERRAL:
     maxTokens: 1000,
     provider: 'anthropic' as const,
     fallbackProvider: 'openai' as const,
-    tools: ['show_image_gallery', 'show_image'],
     cacheSystem: true,
   },
   riddle_master: {

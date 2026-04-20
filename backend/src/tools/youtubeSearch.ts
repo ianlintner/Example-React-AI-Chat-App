@@ -155,10 +155,7 @@ async function fetchCuratedPool(): Promise<void> {
   }));
   curatedPoolFetchedAt = Date.now();
   curatedPoolCursor = 0;
-  logger.info(
-    { size: curatedPool.length },
-    '[youtube_curated] pool refreshed',
-  );
+  logger.info({ size: curatedPool.length }, '[youtube_curated] pool refreshed');
 }
 
 async function refreshCuratedPoolOnce(): Promise<void> {
@@ -177,8 +174,7 @@ async function refreshCuratedPoolOnce(): Promise<void> {
 
 function isCuratedPoolFresh(): boolean {
   return (
-    curatedPool.length > 0 &&
-    Date.now() - curatedPoolFetchedAt < CURATED_TTL_MS
+    curatedPool.length > 0 && Date.now() - curatedPoolFetchedAt < CURATED_TTL_MS
   );
 }
 

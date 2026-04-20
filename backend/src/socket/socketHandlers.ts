@@ -49,9 +49,8 @@ const executeProactiveAction = async (
     // memory pool instead; falls through to the LLM path only when the
     // pool is unavailable (e.g. YOUTUBE_API_KEY missing).
     if (action.agentType === 'youtube_guru') {
-      const { getNextCuratedYouTubeVideo } = await import(
-        '../tools/youtubeSearch'
-      );
+      const { getNextCuratedYouTubeVideo } =
+        await import('../tools/youtubeSearch');
       const curated = await getNextCuratedYouTubeVideo();
       if (curated) {
         const curatedMessage: Message = {
@@ -75,7 +74,9 @@ const executeProactiveAction = async (
         });
         const att = curated.attachment!;
         const vidId = att.type === 'youtube' ? att.videoId : 'unknown';
-        console.log(`🎞️ Served curated YouTube video to ${socket.id}: ${vidId}`);
+        console.log(
+          `🎞️ Served curated YouTube video to ${socket.id}: ${vidId}`,
+        );
         return;
       }
       console.warn(

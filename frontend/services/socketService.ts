@@ -25,6 +25,15 @@ type NewMessageCallback = (message: Message) => void;
 type ProactiveMessageCallback = (data: { message: Message }) => void;
 type StreamErrorCallback = (error: { code: string; message: string }) => void;
 type AgentStatusCallback = (status: AgentStatus) => void;
+export type HandoffEvent = {
+  conversationId: string;
+  messageId: string;
+  fromAgent: string;
+  toAgent: string;
+  message: string;
+  reason: string;
+};
+type HandoffEventCallback = (event: HandoffEvent) => void;
 
 class SocketService {
   private socket: Socket | null = null;
@@ -39,6 +48,7 @@ class SocketService {
     proactive_message?: ProactiveMessageCallback;
     stream_error?: StreamErrorCallback;
     agent_status_update?: AgentStatusCallback;
+    handoff_event?: HandoffEventCallback;
   } = {};
 
   // Callbacks for connection events
@@ -379,6 +389,13 @@ class SocketService {
   ): void {
     if (this.socket) {
       this.socket.on('proactive_error', callback);
+    }
+  }
+
+  onHandoffEvent(callback: HandoffEventCallback): void {
+    this.storedCallbacks.handoff_event = callback;
+    if (this.socket) {
+      this.socket.on('handoff_event', callback);
     }
   }
 

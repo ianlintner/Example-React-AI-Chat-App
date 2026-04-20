@@ -533,6 +533,44 @@ describe('Socket Handlers', () => {
       );
     });
 
+    it('should emit handoff_event when the router selects a new agent', async () => {
+      (agentService.getCurrentAgent as jest.Mock).mockReturnValueOnce('joke');
+      (
+        agentService.processMessageWithBothSystems as jest.Mock
+      ).mockResolvedValue({
+        content: 'Here is a video',
+        agentUsed: 'youtube_guru',
+        confidence: 0.95,
+        proactiveActions: [],
+        handoffInfo: {
+          target: 'youtube_guru',
+          reason: 'Detected youtube_guru keywords',
+          message: 'Connecting you to our YouTube Guru.',
+        },
+      });
+
+      await withTimeout(streamChatHandler({ message: 'show me a video' }));
+
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'handoff_event',
+        expect.objectContaining({
+          fromAgent: 'joke',
+          toAgent: 'youtube_guru',
+          message: 'Connecting you to our YouTube Guru.',
+          reason: 'Detected youtube_guru keywords',
+        }),
+      );
+    });
+
+    it('should NOT emit handoff_event when no handoff occurs', async () => {
+      await withTimeout(streamChatHandler({ message: 'test message' }));
+
+      const handoffCalls = (mockIo.emit as jest.Mock).mock.calls.filter(
+        call => call[0] === 'handoff_event',
+      );
+      expect(handoffCalls).toHaveLength(0);
+    });
+
     it('should handle agent service errors', async () => {
       const data = { message: 'test message' };
       (

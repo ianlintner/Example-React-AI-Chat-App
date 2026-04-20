@@ -51,17 +51,18 @@ const executeProactiveAction = async (
     );
 
     // Validate the proactive response
-    const validationResult =
-      await import('../validation/responseValidator').then(module =>
-        module.responseValidator.validateResponse(
-          proactiveResponse.agentUsed,
-          action.message,
-          proactiveResponse.content,
-          conversation.id,
-          socket.id,
-          true, // This is a proactive message
-        ),
-      );
+    const validationResult = await import(
+      '../validation/responseValidator'
+    ).then(module =>
+      module.responseValidator.validateResponse(
+        proactiveResponse.agentUsed,
+        action.message,
+        proactiveResponse.content,
+        conversation.id,
+        socket.id,
+        true, // This is a proactive message
+      ),
+    );
 
     // Log validation for proactive messages
     if (validationResult.issues.length > 0) {
@@ -370,21 +371,23 @@ export const setupSocketHandlers = (
           );
         }
 
-        // If user has been idle for more than 5 minutes with hold agent, suggest entertainment
+        // If user has been idle for more than 5 minutes with hold agent,
+        // force a handoff to a default entertainment agent. Router-based
+        // handoff is driven by the user's next message, but on long idle
+        // periods we want to be proactive so we force it directly.
         if (
           timeSinceLastMessage > 300000 &&
           conversationContext.currentAgent === 'hold_agent'
         ) {
           // 5 minutes
-          if (!conversationContext.shouldHandoff) {
-            conversationContext.shouldHandoff = true;
-            conversationContext.handoffTarget = 'joke'; // Default entertainment
-            conversationContext.handoffReason =
-              'Extended idle time - offering entertainment while waiting';
-            console.log(
-              `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`,
-            );
-          }
+          console.log(
+            `🕐 Auto-triggering entertainment handoff for idle user ${socket.id} after 5 minutes`,
+          );
+          agentService.forceAgentHandoff(
+            socket.id,
+            'joke',
+            'Extended idle time - offering entertainment while waiting',
+          );
         }
       }
 
@@ -443,9 +446,6 @@ export const setupSocketHandlers = (
               conversationDepth: conversationContext.conversationDepth,
               userSatisfaction: conversationContext.userSatisfaction,
               agentPerformance: conversationContext.agentPerformance,
-              shouldHandoff: conversationContext.shouldHandoff,
-              handoffTarget: conversationContext.handoffTarget,
-              handoffReason: conversationContext.handoffReason,
               timeSinceLastMessage:
                 Date.now() - conversationContext.lastMessageTime.getTime(),
               idleTime: Math.floor(
@@ -930,9 +930,9 @@ export const setupSocketHandlers = (
                 `💬 Conversation context - Agent: ${ctx.currentAgent}, Topic: ${ctx.conversationTopic}, Depth: ${ctx.conversationDepth}, Satisfaction: ${ctx.userSatisfaction.toFixed(2)}, Performance: ${ctx.agentPerformance.toFixed(2)}`,
               );
 
-              if (ctx.shouldHandoff) {
+              if (agentResponse.handoffInfo) {
                 console.log(
-                  `🔄 Handoff needed: ${ctx.currentAgent} → ${ctx.handoffTarget} (${ctx.handoffReason})`,
+                  `🔄 Pre-dispatch handoff applied: → ${agentResponse.handoffInfo.target} (${agentResponse.handoffInfo.reason})`,
                 );
               }
             }

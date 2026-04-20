@@ -256,6 +256,12 @@ function matchKeywords(lower: string): {
  * @param currentAgent  The agent currently owning the conversation.
  * @param _history      Conversation history (reserved for future scoring).
  */
+// Bare greetings / acknowledgements. For these we intentionally skip the
+// classifier — LLM classifiers tend to route neutral greetings to
+// operator_support, which yanks users out of an ongoing entertainment flow.
+const GREETING_RE =
+  /^(hi+|hello+|hey+|yo|sup|howdy|hiya|greetings|good\s*(morning|afternoon|evening|day)|thanks?|thank\s*you|ok(ay)?|cool|nice|sure|yeah|yep|yup)[\s!?.…]*$/i;
+
 export async function routeMessage(
   userMessage: string,
   currentAgent: AgentType,
@@ -263,6 +269,19 @@ export async function routeMessage(
 ): Promise<RoutingDecision> {
   const trimmed = (userMessage || '').trim();
   const lower = trimmed.toLowerCase();
+
+  // Step 0: bare greeting / acknowledgement → always sticky with current
+  // agent. Prevents generic "Hello" from being mis-classified to
+  // operator_support mid-entertainment.
+  if (trimmed.length > 0 && GREETING_RE.test(trimmed)) {
+    return {
+      selectedAgent: currentAgent,
+      handoff: false,
+      confidence: 0.9,
+      reason: 'bare greeting/acknowledgement; staying with current agent',
+      source: 'sticky',
+    };
+  }
 
   // Step A: explicit keyword intent
   const kw = matchKeywords(lower);

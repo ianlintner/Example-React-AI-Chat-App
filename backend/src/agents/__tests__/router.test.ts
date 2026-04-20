@@ -125,6 +125,34 @@ describe('routeMessage', () => {
     expect(decision.handoff).toBe(false);
     expect(decision.source).toBe('keyword');
   });
+
+  describe('bare greetings stay sticky (no classifier call)', () => {
+    it.each([
+      ['Hello', 'story_teller'],
+      ['hi', 'story_teller'],
+      ['hey!', 'joke'],
+      ['thanks', 'gif'],
+      ['ok', 'trivia'],
+      ['Good morning', 'music_guru'],
+    ])(
+      '"%s" with currentAgent=%s stays sticky',
+      async (msg, currentAgent) => {
+        // High-confidence mis-classification to operator_support — the
+        // greeting short-circuit must ignore it.
+        mockClassifyMessage.mockResolvedValue({
+          agentType: 'operator_support' as AgentType,
+          confidence: 0.9,
+          reasoning: 'mock mis-classification',
+        });
+
+        const decision = await routeMessage(msg, currentAgent as AgentType);
+        expect(decision.selectedAgent).toBe(currentAgent);
+        expect(decision.handoff).toBe(false);
+        expect(decision.source).toBe('sticky');
+        expect(mockClassifyMessage).not.toHaveBeenCalled();
+      },
+    );
+  });
 });
 
 describe('logRoutingDecision', () => {

@@ -1,0 +1,64 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: chat-authz-policy
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app: chat-backend
+  rules:
+    # Authenticated principals from the trusted issuer may do anything.
+    - from:
+        - source:
+            requestPrincipals:
+              - https://roauth2.cat-herding.net/*
+    # Probes and metrics are open to the in-cluster control plane.
+    - to:
+        - operation:
+            paths:
+              - /api/health
+              - /health
+              - /healthz
+              - /metrics
+              - /api/docs*
+              - /docs*
+    # Socket.IO handshake + polling; the widget connects here after
+    # sign-in with the Bearer token in the handshake, but anonymous
+    # connects are also accepted for embed-without-auth hosts.
+    - to:
+        - operation:
+            paths:
+              - /api/socket.io*
+              - /api/socket.io/*
+    # SPA shell and static assets.
+    - to:
+        - operation:
+            methods: [GET, HEAD, OPTIONS]
+            paths:
+              - /
+              - /index.html
+              - /assets/*
+              - /static/*
+              - /_expo/*
+    # Embed widget bundle + popup callback. These must be publicly
+    # fetchable from any host page — the drop-in <script src=...>
+    # that mounts the widget, and the popup callback that receives
+    # the OAuth2 authorization_code redirect from roauth2.
+    - to:
+        - operation:
+            methods: [GET, HEAD, OPTIONS]
+            paths:
+              - /embed/*
+    # PKCE token-exchange proxy the widget calls during sign-in.
+    # The caller has no principal yet — that is the whole point of
+    # this endpoint. Scoped narrowly to POST on the exact path.
+    - to:
+        - operation:
+            methods: [POST, OPTIONS]
+            paths:
+              - /api/auth/embed/token

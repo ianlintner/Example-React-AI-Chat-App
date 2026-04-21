@@ -126,3 +126,17 @@ spec:
                   prefix_match: '/assets/'
                 - name: ':path'
                   prefix_match: '/_expo'
+                # Embed widget bundle + popup callback must be publicly
+                # servable; they are the drop-in script a host page loads
+                # *before* a user has any chat-session cookie, and the
+                # callback receives the `?code=…&state=…` redirect from
+                # roauth2 in a popup with no session yet.
+                - name: ':path'
+                  prefix_match: '/embed/'
+                # PKCE token-exchange proxy the widget calls from the
+                # browser during sign-in. The user has no session yet —
+                # that is literally what this endpoint is for. Gating it
+                # behind the Envoy OAuth2 filter would redirect the POST
+                # to the auth server and break the flow.
+                - name: ':path'
+                  prefix_match: '/api/auth/embed/'

@@ -3,6 +3,7 @@ import { validate as uuidValidate } from 'uuid';
 import {
   resolveIdentity,
   requireAuthenticated,
+  extractAnonId,
   ANON_COOKIE,
 } from '../identity';
 import userStorage from '../../storage/userStorage';
@@ -159,6 +160,28 @@ describe('identity middleware', () => {
       requireAuthenticated(req as Request, res as Response, next);
       expect(res.status).toHaveBeenCalledWith(401);
       expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('extractAnonId', () => {
+    const uuid = '123e4567-e89b-42d3-a456-426614174000';
+
+    it('returns the UUID when _chat_anon is present and valid', () => {
+      expect(extractAnonId(`foo=bar; ${ANON_COOKIE.name}=${uuid}; x=y`)).toBe(
+        uuid,
+      );
+    });
+
+    it('returns null when header is undefined', () => {
+      expect(extractAnonId(undefined)).toBeNull();
+    });
+
+    it('returns null when _chat_anon is missing', () => {
+      expect(extractAnonId('foo=bar; x=y')).toBeNull();
+    });
+
+    it('returns null when _chat_anon is malformed', () => {
+      expect(extractAnonId(`${ANON_COOKIE.name}=not-a-uuid`)).toBeNull();
     });
   });
 });

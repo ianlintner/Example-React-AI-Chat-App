@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
+import { extractAnonId, Tier } from '../middleware/identity';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
@@ -21,6 +22,11 @@ import { tracingContextManager } from '../tracing/contextManager';
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   userEmail?: string;
+  // Tier drives rate limits, LLM model routing, and UI gating. Populated
+  // during the io.use auth middleware: 'authenticated' for oauth2-proxy
+  // header / JWT paths; 'anonymous' for cookie-only and fallback paths.
+  tier?: Tier;
+  isAnonymous?: boolean;
   // When set via handshake query `?mode=lean`, suppresses the demo
   // hold-flow bootstrap so embedded widgets don't auto-push unsolicited
   // proactive messages (joke/gif/youtube) to visitors.
@@ -261,6 +267,8 @@ export const setupSocketHandlers = (
         // Attach user info to socket
         socket.userId = user.id;
         socket.userEmail = user.email;
+        socket.tier = 'authenticated';
+        socket.isAnonymous = false;
 
         console.log(
           `Socket authenticated via oauth2-proxy for user ${user.email} (${user.id})`,
@@ -268,18 +276,25 @@ export const setupSocketHandlers = (
         return next();
       }
 
-      // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
-      // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
       const cookieHeader = socket.handshake.headers['cookie'] as
         | string
         | undefined;
+      const anonId = extractAnonId(cookieHeader);
+
+      // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
+      // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
       if (cookieHeader && /_oauth2_proxy=/.test(cookieHeader)) {
         console.log(
           'Socket allowing connection with oauth2-proxy session cookie present (no headers)',
         );
-        // Attach minimal identity (anonymous) - downstream features remain available for demo streaming
-        socket.userId = socket.id;
+        // Treat as anonymous — the proxy session doesn't give us a verified
+        // principal without the injected x-auth-request-* headers. Prefer
+        // the _chat_anon UUID when present so rate-limit keys are stable
+        // across reconnects; otherwise fall back to socket.id.
+        socket.userId = anonId ? `anon_${anonId}` : socket.id;
         socket.userEmail = 'Anonymous';
+        socket.tier = 'anonymous';
+        socket.isAnonymous = true;
         return next();
       }
 
@@ -288,9 +303,12 @@ export const setupSocketHandlers = (
         console.warn(
           `Socket connection missing auth from ${socket.handshake.address} - allowing anonymous for demo`,
         );
-        // Allow anonymous socket for demo fallback (no user storage record)
-        socket.userId = socket.id;
+        // Anonymous path — prefer the HTTP-issued _chat_anon UUID so the
+        // same visitor keeps the same id across socket reconnects.
+        socket.userId = anonId ? `anon_${anonId}` : socket.id;
         socket.userEmail = 'Anonymous';
+        socket.tier = 'anonymous';
+        socket.isAnonymous = true;
         return next();
       }
 
@@ -315,6 +333,8 @@ export const setupSocketHandlers = (
       // Attach user info to socket
       socket.userId = user.id;
       socket.userEmail = user.email;
+      socket.tier = 'authenticated';
+      socket.isAnonymous = false;
 
       console.log(`Socket authenticated for user ${user.email} (${user.id})`);
       next();

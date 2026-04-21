@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
+import * as cookie from 'cookie';
 import { logger } from '../logger';
 import userStorage from '../storage/userStorage';
 import { User } from '../../../shared/types';
@@ -153,3 +154,25 @@ export const ANON_COOKIE = {
   name: ANON_COOKIE_NAME,
   maxAgeMs: ANON_COOKIE_MAX_AGE_MS,
 } as const;
+
+/**
+ * Parse the `_chat_anon` UUID out of a raw `Cookie:` header. Returns the
+ * UUID string when present and well-formed, or null otherwise. Shared
+ * between the HTTP resolveIdentity middleware and the Socket.IO auth
+ * middleware so anon ids stay stable across transports.
+ */
+export function extractAnonId(cookieHeader: string | undefined): string | null {
+  if (!cookieHeader) {
+    return null;
+  }
+  try {
+    const parsed = cookie.parse(cookieHeader);
+    const value = parsed[ANON_COOKIE_NAME];
+    if (typeof value === 'string' && uuidValidate(value)) {
+      return value;
+    }
+  } catch {
+    // Malformed cookie header — fall through.
+  }
+  return null;
+}

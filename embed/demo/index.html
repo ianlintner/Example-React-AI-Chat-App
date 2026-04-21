@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cat-Herding Chat Embed — Example</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 720px;
+        margin: 60px auto;
+        padding: 0 20px;
+        color: #111827;
+        line-height: 1.6;
+      }
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 16px;
+        border-radius: 8px;
+        overflow: auto;
+      }
+      code {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Cat-Herding Chat Embed</h1>
+    <p>
+      Drop-in floating chat widget. Floating button bottom-right — click it to
+      open the chat panel. This page mounts against a local backend for dev.
+    </p>
+    <pre><code>&lt;script src="https://chat.cat-herding.net/embed/cat-herding-chat.js" defer&gt;&lt;/script&gt;
+&lt;script&gt;
+  window.addEventListener('load', () =&gt; {
+    window.CatHerdingChat.init({
+      apiUrl: 'https://chat.cat-herding.net',
+      title: 'Ask about my portfolio',
+      mode: 'lean'
+    });
+  });
+&lt;/script&gt;</code></pre>
+
+    <!-- Vite dev entry -->
+    <script type="module" src="/src/index.ts"></script>
+    <script>
+      window.addEventListener('load', () => {
+        window.CatHerdingChat.init({
+          apiUrl: 'http://localhost:5001',
+          title: 'Portfolio chat (dev)',
+          subtitle: 'Local backend',
+          mode: 'lean',
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -21,6 +21,10 @@ import { tracingContextManager } from '../tracing/contextManager';
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   userEmail?: string;
+  // When set via handshake query `?mode=lean`, suppresses the demo
+  // hold-flow bootstrap so embedded widgets don't auto-push unsolicited
+  // proactive messages (joke/gif/youtube) to visitors.
+  leanMode?: boolean;
 }
 
 // Helper function to generate conversation title
@@ -210,6 +214,13 @@ export const setupSocketHandlers = (
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.query.token;
+
+      // Embed-widget opt-out of the demo hold-flow auto-bootstrap.
+      const modeQuery = socket.handshake.query.mode;
+      const mode = Array.isArray(modeQuery) ? modeQuery[0] : modeQuery;
+      if (mode === 'lean') {
+        socket.leanMode = true;
+      }
 
       // Check for oauth2-proxy headers first (passed through from Istio/oauth2-proxy)
       const proxyEmail = socket.handshake.headers['x-auth-request-email'] as
@@ -548,8 +559,17 @@ export const setupSocketHandlers = (
     // Store intervals for cleanup
     const intervals = [statusInterval];
 
-    // Initialize user state for goal-seeking system and hold agent
+    // Initialize user state for goal-seeking system and hold agent.
+    // Lean-mode clients (embed widget) skip this bootstrap so visitors
+    // don't get unsolicited hold-flow proactive messages.
     const initStateTimeout = setTimeout(async () => {
+      if (socket.leanMode) {
+        console.log(
+          `🧭 Lean mode: skipping hold-flow bootstrap for ${socket.id}`,
+        );
+        agentService.initializeConversation(socket.id, 'general');
+        return;
+      }
       try {
         console.log(`🎯 Initializing user state for ${socket.id}`);
 

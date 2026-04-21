@@ -94,6 +94,7 @@ const allowedOrigins = process.env.FRONTEND_URL
       'http://localhost:5001', // Same origin when combined
       // Production domains
       'https://chat.cat-herding.net',
+      'https://portfolio.cat-herding.net',
     ];
 
 debugLog('Creating Socket.IO server...');

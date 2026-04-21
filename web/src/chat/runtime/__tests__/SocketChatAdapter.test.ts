@@ -18,7 +18,10 @@ function makeFakeClient() {
   const emitted: Array<{ event: string; args: unknown[] }> = [];
 
   const client: Partial<SocketClient> = {
-    on: ((event: keyof ServerToClientEvents, listener: ServerToClientEvents[typeof event]) => {
+    on: ((
+      event: keyof ServerToClientEvents,
+      listener: ServerToClientEvents[typeof event],
+    ) => {
       (handlers as Record<string, unknown>)[event as string] = listener;
       return () => {
         delete (handlers as Record<string, unknown>)[event as string];
@@ -31,7 +34,10 @@ function makeFakeClient() {
 
   return {
     client: client as SocketClient,
-    fire<K extends keyof Handlers>(event: K, payload: Parameters<NonNullable<Handlers[K]>>[0]) {
+    fire<K extends keyof Handlers>(
+      event: K,
+      payload: Parameters<NonNullable<Handlers[K]>>[0],
+    ) {
       const h = handlers[event] as ((p: unknown) => void) | undefined;
       h?.(payload);
     },
@@ -61,7 +67,10 @@ describe('SocketChatAdapter', () => {
       unstable_getMessage: () => baseMessage as never,
     });
 
-    fire('stream_start', { messageId: 'a1', conversationId } satisfies StreamStartEvent);
+    fire('stream_start', {
+      messageId: 'a1',
+      conversationId,
+    } satisfies StreamStartEvent);
     fire('stream_chunk', {
       id: 'a1',
       messageId: 'a1',
@@ -88,7 +97,10 @@ describe('SocketChatAdapter', () => {
     const result = await runP;
     expect(result.status).toEqual({ type: 'complete', reason: 'stop' });
     expect(result.content?.[0]).toEqual({ type: 'text', text: 'hi there' });
-    expect(result.metadata?.custom).toMatchObject({ agentUsed: 'general', confidence: 0.9 });
+    expect(result.metadata?.custom).toMatchObject({
+      agentUsed: 'general',
+      confidence: 0.9,
+    });
   });
 
   it('captures handoff metadata when a handoff_event arrives before complete', async () => {
@@ -113,7 +125,13 @@ describe('SocketChatAdapter', () => {
       reason: 'intent match',
     } satisfies HandoffEvent);
     fire('stream_start', { messageId: 'a1', conversationId });
-    fire('stream_chunk', { id: 'a1', messageId: 'a1', conversationId, content: 'x', isComplete: false });
+    fire('stream_chunk', {
+      id: 'a1',
+      messageId: 'a1',
+      conversationId,
+      content: 'x',
+      isComplete: false,
+    });
     fire('stream_complete', {
       messageId: 'a1',
       conversationId,
@@ -123,7 +141,9 @@ describe('SocketChatAdapter', () => {
     });
 
     const result = await runP;
-    expect((result.metadata?.custom as { handoff?: HandoffEvent }).handoff?.toAgent).toBe('youtube_guru');
+    expect(
+      (result.metadata?.custom as { handoff?: HandoffEvent }).handoff?.toAgent,
+    ).toBe('youtube_guru');
   });
 
   it('yields incomplete on stream_error', async () => {
@@ -138,7 +158,11 @@ describe('SocketChatAdapter', () => {
       context: {} as never,
       unstable_getMessage: () => baseMessage as never,
     });
-    fire('stream_error', { conversationId, message: 'upstream timeout', code: 'UPSTREAM_TIMEOUT' });
+    fire('stream_error', {
+      conversationId,
+      message: 'upstream timeout',
+      code: 'UPSTREAM_TIMEOUT',
+    });
     const r = await runP;
     expect(r.status).toMatchObject({ type: 'incomplete', reason: 'error' });
   });
@@ -158,7 +182,7 @@ describe('SocketChatAdapter', () => {
     ac.abort();
     const r = await runP;
     expect(r.status).toMatchObject({ type: 'incomplete', reason: 'cancelled' });
-    expect(emitted.find((e) => e.event === 'cancel_stream')).toBeDefined();
+    expect(emitted.find(e => e.event === 'cancel_stream')).toBeDefined();
   });
 
   it('ignores events for other conversations', async () => {
@@ -182,7 +206,13 @@ describe('SocketChatAdapter', () => {
       isComplete: false,
     });
     fire('stream_start', { messageId: 'a1', conversationId });
-    fire('stream_chunk', { id: 'a1', messageId: 'a1', conversationId, content: 'real', isComplete: false });
+    fire('stream_chunk', {
+      id: 'a1',
+      messageId: 'a1',
+      conversationId,
+      content: 'real',
+      isComplete: false,
+    });
     fire('stream_complete', {
       messageId: 'a1',
       conversationId,

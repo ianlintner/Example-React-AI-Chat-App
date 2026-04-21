@@ -7,11 +7,7 @@
   --color-accent-foreground: #0a140c;
   --color-border: #2a3a2e;
   --color-destructive: #c33a2e;
-  font-family:
-    'Inter',
-    ui-sans-serif,
-    system-ui,
-    sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 *,

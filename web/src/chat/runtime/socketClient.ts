@@ -1,5 +1,9 @@
 import { io, type Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ConnectionStatus, ServerToClientEvents } from './types';
+import type {
+  ClientToServerEvents,
+  ConnectionStatus,
+  ServerToClientEvents,
+} from './types';
 
 export interface SocketClientOptions {
   /** Absolute or relative origin. Defaults to current window origin. */
@@ -45,7 +49,9 @@ export class SocketClient {
   connect(): TypedSocket {
     if (this.socket) return this.socket;
 
-    const origin = this.opts.origin ?? (typeof window !== 'undefined' ? window.location.origin : '');
+    const origin =
+      this.opts.origin ??
+      (typeof window !== 'undefined' ? window.location.origin : '');
     const path = this.opts.path ?? '/api/socket.io';
     const auth: Record<string, string> = {};
     if (this.opts.token) auth.token = this.opts.token;
@@ -69,7 +75,7 @@ export class SocketClient {
     s.on('disconnect', () => this.setStatus('offline'));
     s.io.on('reconnect_attempt', () => this.setStatus('reconnecting'));
     s.io.on('reconnect', () => this.setStatus('connected'));
-    s.io.on('error', (err) => {
+    s.io.on('error', err => {
       console.warn('[socket] error', err);
     });
 
@@ -83,17 +89,35 @@ export class SocketClient {
     this.setStatus('idle');
   }
 
-  emit<E extends keyof ClientToServerEvents>(event: E, ...args: Parameters<ClientToServerEvents[E]>): void {
+  emit<E extends keyof ClientToServerEvents>(
+    event: E,
+    ...args: Parameters<ClientToServerEvents[E]>
+  ): void {
     if (!this.socket) throw new Error('SocketClient: emit() before connect()');
-    (this.socket.emit as (e: E, ...a: Parameters<ClientToServerEvents[E]>) => void)(event, ...args);
+    (
+      this.socket.emit as (
+        e: E,
+        ...a: Parameters<ClientToServerEvents[E]>
+      ) => void
+    )(event, ...args);
   }
 
-  on<E extends keyof ServerToClientEvents>(event: E, listener: ServerToClientEvents[E]): () => void {
+  on<E extends keyof ServerToClientEvents>(
+    event: E,
+    listener: ServerToClientEvents[E],
+  ): () => void {
     if (!this.socket) throw new Error('SocketClient: on() before connect()');
-    (this.socket.on as unknown as (e: E, l: ServerToClientEvents[E]) => unknown)(event, listener);
+    (
+      this.socket.on as unknown as (e: E, l: ServerToClientEvents[E]) => unknown
+    )(event, listener);
     return () => {
       if (!this.socket) return;
-      (this.socket.off as unknown as (e: E, l: ServerToClientEvents[E]) => unknown)(event, listener);
+      (
+        this.socket.off as unknown as (
+          e: E,
+          l: ServerToClientEvents[E],
+        ) => unknown
+      )(event, listener);
     };
   }
 

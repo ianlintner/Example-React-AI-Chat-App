@@ -10,7 +10,10 @@ interface ChatViewProps {
 
 export function ChatView({ conversationId }: ChatViewProps) {
   const client = useMemo(() => getSocketClient(), []);
-  const adapter = useMemo(() => new SocketChatAdapter({ conversationId, client }), [conversationId, client]);
+  const adapter = useMemo(
+    () => new SocketChatAdapter({ conversationId, client }),
+    [conversationId, client],
+  );
   const runtime = useLocalRuntime(adapter);
   const [status, setStatus] = useState<ConnectionStatus>(client.status);
 
@@ -26,12 +29,14 @@ export function ChatView({ conversationId }: ChatViewProps) {
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <div className="chat">
+      <div className='chat'>
         <ConnectionBanner status={status} />
-        <div className="chat__body">
-          <p className="muted">
-            Chat UI primitives (Thread, MessageList, Composer) land with Workstreams B &amp; C. Runtime is wired
-            — open devtools to see socket events flowing for conversation <code>{conversationId}</code>.
+        <div className='chat__body'>
+          <p className='muted'>
+            Chat UI primitives (Thread, MessageList, Composer) land with
+            Workstreams B &amp; C. Runtime is wired — open devtools to see
+            socket events flowing for conversation <code>{conversationId}</code>
+            .
           </p>
         </div>
       </div>
@@ -47,5 +52,5 @@ function ConnectionBanner({ status }: { status: ConnectionStatus }) {
       : status === 'reconnecting'
         ? 'Reconnecting…'
         : 'Offline — messages will send when you are back.';
-  return <div className="banner">{label}</div>;
+  return <div className='banner'>{label}</div>;
 }

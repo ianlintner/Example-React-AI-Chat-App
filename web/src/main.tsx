@@ -25,9 +25,9 @@ interface RouterContext {
 const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: function RootLayout() {
     return (
-      <div className="app-shell">
-        <header className="app-shell__header">Cat-Herding Chat</header>
-        <main className="app-shell__main">
+      <div className='app-shell'>
+        <header className='app-shell__header'>Cat-Herding Chat</header>
+        <main className='app-shell__main'>
           <Outlet />
         </main>
       </div>

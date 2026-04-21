@@ -90,16 +90,31 @@ export interface ServerToClientEvents {
   stream_error: (e: StreamErrorEvent) => void;
   new_message: (m: ChatMessage) => void;
   proactive_message: (e: ProactiveMessageEvent) => void;
-  proactive_error: (e: { message: string; actionType?: string; error?: string }) => void;
+  proactive_error: (e: {
+    message: string;
+    actionType?: string;
+    error?: string;
+  }) => void;
   handoff_event: (e: HandoffEvent) => void;
   agent_status_update: (e: AgentStatusUpdateEvent) => void;
   attachment: (e: AttachmentEvent) => void;
-  user_typing: (e: { conversationId: string; userId?: string; isTyping: boolean }) => void;
-  message_status: (e: { messageId: string; conversationId: string; status: string }) => void;
+  user_typing: (e: {
+    conversationId: string;
+    userId?: string;
+    isTyping: boolean;
+  }) => void;
+  message_status: (e: {
+    messageId: string;
+    conversationId: string;
+    status: string;
+  }) => void;
 }
 
 export interface ClientToServerEvents {
-  stream_chat: (req: ChatRequest, ack?: (res: { accepted: boolean; error?: string }) => void) => void;
+  stream_chat: (
+    req: ChatRequest,
+    ack?: (res: { accepted: boolean; error?: string }) => void,
+  ) => void;
   cancel_stream: (e: { conversationId: string; messageId: string }) => void;
   join_conversation: (conversationId: string) => void;
   leave_conversation: (conversationId: string) => void;
@@ -108,4 +123,9 @@ export interface ClientToServerEvents {
   message_read: (e: { conversationId: string; messageId: string }) => void;
 }
 
-export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'offline';
+export type ConnectionStatus =
+  | 'idle'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'offline';

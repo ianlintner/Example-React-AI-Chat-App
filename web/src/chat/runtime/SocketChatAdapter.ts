@@ -1,4 +1,8 @@
-import type { ChatModelAdapter, ChatModelRunOptions, ChatModelRunResult } from '@assistant-ui/react';
+import type {
+  ChatModelAdapter,
+  ChatModelRunOptions,
+  ChatModelRunResult,
+} from '@assistant-ui/react';
 import type { SocketClient } from './socketClient';
 import type { HandoffEvent, MediaAttachment } from './types';
 
@@ -6,7 +10,11 @@ export interface SocketChatAdapterOptions {
   conversationId: string;
   client: SocketClient;
   /** Called when the server echoes a proactive or user-authored message. */
-  onServerMessage?: (msg: { id: string; role: 'user' | 'assistant'; content: string }) => void;
+  onServerMessage?: (msg: {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+  }) => void;
 }
 
 type Resolve = (r: ChatModelRunResult) => void;
@@ -27,7 +35,10 @@ type Reject = (e: unknown) => void;
 export class SocketChatAdapter implements ChatModelAdapter {
   constructor(private readonly opts: SocketChatAdapterOptions) {}
 
-  async run({ messages, abortSignal }: ChatModelRunOptions): Promise<ChatModelRunResult> {
+  async run({
+    messages,
+    abortSignal,
+  }: ChatModelRunOptions): Promise<ChatModelRunResult> {
     const { client, conversationId } = this.opts;
     const last = messages[messages.length - 1];
     const userText = this.extractText(last);
@@ -52,35 +63,35 @@ export class SocketChatAdapter implements ChatModelAdapter {
       };
 
       unsubs.push(
-        client.on('stream_start', (e) => {
+        client.on('stream_start', e => {
           if (e.conversationId !== conversationId) return;
           currentText = '';
         }),
       );
 
       unsubs.push(
-        client.on('stream_chunk', (e) => {
+        client.on('stream_chunk', e => {
           if (e.conversationId !== conversationId) return;
           currentText = e.content;
         }),
       );
 
       unsubs.push(
-        client.on('attachment', (e) => {
+        client.on('attachment', e => {
           if (e.conversationId !== conversationId) return;
           attachments.push(e.attachment);
         }),
       );
 
       unsubs.push(
-        client.on('handoff_event', (e) => {
+        client.on('handoff_event', e => {
           if (e.conversationId !== conversationId) return;
           handoff = e;
         }),
       );
 
       unsubs.push(
-        client.on('stream_complete', (e) => {
+        client.on('stream_complete', e => {
           if (e.conversationId !== conversationId) return;
           finalize(
             {
@@ -101,7 +112,7 @@ export class SocketChatAdapter implements ChatModelAdapter {
       );
 
       unsubs.push(
-        client.on('stream_error', (e) => {
+        client.on('stream_error', e => {
           if (e.conversationId && e.conversationId !== conversationId) return;
           finalize(
             {
@@ -135,33 +146,44 @@ export class SocketChatAdapter implements ChatModelAdapter {
       else abortSignal.addEventListener('abort', onAbort, { once: true });
 
       try {
-        client.emit('stream_chat', { message: userText, conversationId }, (ack) => {
-          if (ack && ack.accepted === false) {
-            finalize(
-              {
-                content: [{ type: 'text', text: '' }],
-                status: {
-                  type: 'incomplete',
-                  reason: 'error',
-                  error: { message: ack.error ?? 'rejected', code: 'REJECTED' },
+        client.emit(
+          'stream_chat',
+          { message: userText, conversationId },
+          ack => {
+            if (ack && ack.accepted === false) {
+              finalize(
+                {
+                  content: [{ type: 'text', text: '' }],
+                  status: {
+                    type: 'incomplete',
+                    reason: 'error',
+                    error: {
+                      message: ack.error ?? 'rejected',
+                      code: 'REJECTED',
+                    },
+                  },
                 },
-              },
-              true,
-            );
-          }
-        });
+                true,
+              );
+            }
+          },
+        );
       } catch (err) {
         finalize({} as ChatModelRunResult, false, err);
       }
     });
   }
 
-  private extractText(msg: ChatModelRunOptions['messages'][number] | undefined): string {
+  private extractText(
+    msg: ChatModelRunOptions['messages'][number] | undefined,
+  ): string {
     if (!msg) return '';
-    const parts = (msg as unknown as { content?: Array<{ type: string; text?: string }> }).content ?? [];
+    const parts =
+      (msg as unknown as { content?: Array<{ type: string; text?: string }> })
+        .content ?? [];
     return parts
-      .filter((p) => p.type === 'text')
-      .map((p) => p.text ?? '')
+      .filter(p => p.type === 'text')
+      .map(p => p.text ?? '')
       .join('');
   }
 }

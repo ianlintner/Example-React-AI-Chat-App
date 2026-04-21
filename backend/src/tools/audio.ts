@@ -1,6 +1,7 @@
 import { ToolDefinition, ToolResult } from './index';
 import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
+import { instrumentedFetch } from '../metrics/fetch';
 
 interface PlayAudioInput {
   url: string;
@@ -73,7 +74,7 @@ export const musicSearchTool: ToolDefinition = {
     const { term, limit = 3 } = input as MusicSearchInput;
     try {
       const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&limit=${Math.min(limit, 5)}`;
-      const res = await fetch(url);
+      const res = await instrumentedFetch('itunes', url);
       if (!res.ok) {
         throw new Error(`iTunes search failed: ${res.status}`);
       }

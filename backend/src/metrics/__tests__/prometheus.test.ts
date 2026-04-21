@@ -47,6 +47,7 @@ describe('Prometheus Metrics', () => {
         method: 'GET',
         path: '/api/test',
         route: { path: '/api/test' },
+        baseUrl: '',
       };
       mockRes = {
         statusCode: 200,
@@ -66,7 +67,6 @@ describe('Prometheus Metrics', () => {
     });
 
     it('should record metrics when response finishes', done => {
-      // Spy on the metrics methods
       const observeSpy = jest.spyOn(metrics.httpRequestDuration, 'observe');
       const incSpy = jest.spyOn(metrics.httpRequestsTotal, 'inc');
 
@@ -75,18 +75,24 @@ describe('Prometheus Metrics', () => {
           setTimeout(() => {
             callback();
 
-            // Verify metrics were called
             expect(observeSpy).toHaveBeenCalledWith(
-              { method: 'GET', route: '/api/test', status_code: '200' },
+              expect.objectContaining({
+                http_method: 'GET',
+                http_route: '/api/test',
+                http_status_code: '200',
+                status_class: '2xx',
+              }),
               expect.any(Number),
             );
-            expect(incSpy).toHaveBeenCalledWith({
-              method: 'GET',
-              route: '/api/test',
-              status_code: '200',
-            });
+            expect(incSpy).toHaveBeenCalledWith(
+              expect.objectContaining({
+                http_method: 'GET',
+                http_route: '/api/test',
+                http_status_code: '200',
+                status_class: '2xx',
+              }),
+            );
 
-            // Clean up spies
             observeSpy.mockRestore();
             incSpy.mockRestore();
             done();
@@ -106,7 +112,11 @@ describe('Prometheus Metrics', () => {
           callback();
 
           expect(observeSpy).toHaveBeenCalledWith(
-            { method: 'GET', route: '/api/test', status_code: '200' },
+            expect.objectContaining({
+              http_method: 'GET',
+              http_route: '/api/test',
+              http_status_code: '200',
+            }),
             expect.any(Number),
           );
 
@@ -128,7 +138,11 @@ describe('Prometheus Metrics', () => {
           callback();
 
           expect(observeSpy).toHaveBeenCalledWith(
-            { method: 'GET', route: 'unknown', status_code: '200' },
+            expect.objectContaining({
+              http_method: 'GET',
+              http_route: 'unknown',
+              http_status_code: '200',
+            }),
             expect.any(Number),
           );
 
@@ -148,11 +162,14 @@ describe('Prometheus Metrics', () => {
         if (event === 'finish') {
           callback();
 
-          expect(incSpy).toHaveBeenCalledWith({
-            method: 'GET',
-            route: '/api/test',
-            status_code: '404',
-          });
+          expect(incSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              http_method: 'GET',
+              http_route: '/api/test',
+              http_status_code: '404',
+              status_class: '4xx',
+            }),
+          );
 
           incSpy.mockRestore();
           done();

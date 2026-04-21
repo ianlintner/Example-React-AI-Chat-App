@@ -2,6 +2,7 @@ import { ToolDefinition, ToolResult } from './index';
 import { ragService } from '../agents/ragService';
 import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
+import { instrumentedFetch } from '../metrics/fetch';
 
 interface GiphySearchInput {
   query: string;
@@ -20,7 +21,7 @@ async function searchGiphy(query: string): Promise<ToolResult> {
   }
 
   const url = `https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(query)}&limit=1&rating=g&api_key=${apiKey}`;
-  const res = await fetch(url);
+  const res = await instrumentedFetch('giphy', url);
   if (!res.ok) {
     throw new Error(`Giphy search failed: ${res.status}`);
   }

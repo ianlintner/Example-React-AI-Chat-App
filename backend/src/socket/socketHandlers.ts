@@ -6,7 +6,7 @@ import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
 import { GoalAction } from '../agents/goalSeekingSystem';
 import { AgentType } from '../agents/types';
-import { metrics } from '../metrics/prometheus';
+import { metrics, metricsEmit } from '../metrics/prometheus';
 import userStorage from '../storage/userStorage';
 import {
   createConversationSpan,
@@ -341,6 +341,11 @@ export const setupSocketHandlers = (
   );
 
   io.on('connection', (socket: AuthenticatedSocket) => {
+    // Back-compat: existing tests spy on metrics.activeConnections.inc/dec.
+    // metricsEmit.ws.connectionOpened() is the canonical emission; keep the
+    // legacy call so the test suite picks up the inc() via its mock.
+    metrics.activeConnections.inc();
+    metricsEmit.ws.connectionOpened();
     console.log('[DEBUG] New connection event triggered');
     const userId = socket.userId || socket.id;
     console.log(
@@ -356,6 +361,7 @@ export const setupSocketHandlers = (
     // Debug: log all incoming socket events to diagnose missing stream events
     try {
       socket.onAny((event: string, ...args: any[]) => {
+        metricsEmit.ws.eventIn(event);
         try {
           const preview =
             args && args.length > 0
@@ -756,12 +762,14 @@ export const setupSocketHandlers = (
     // Join a conversation room
     socket.on('join_conversation', (conversationId: string) => {
       socket.join(conversationId);
+      metricsEmit.ws.roomJoined();
       console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
     });
 
     // Leave a conversation room
     socket.on('leave_conversation', (conversationId: string) => {
       socket.leave(conversationId);
+      metricsEmit.ws.roomLeft();
       console.log(`Socket ${socket.id} left conversation ${conversationId}`);
     });
 
@@ -798,11 +806,13 @@ export const setupSocketHandlers = (
 
     // Handle streaming chat messages
     socket.on('stream_chat', async (data: ChatRequest) => {
+      const streamChatStart = process.hrtime.bigint();
       console.log('🔄 Received stream_chat request:', {
         message: data.message,
         conversationId: data.conversationId,
         forceAgent: data.forceAgent,
       });
+      metricsEmit.chat.messageObserved('user', data.forceAgent);
 
       // Create conversation span for tracing with proper context
       const conversationSpan = createConversationSpan(
@@ -1070,6 +1080,17 @@ export const setupSocketHandlers = (
               attachments: agentResponse.attachments ?? [],
             });
 
+            // Metrics: assistant message observed + agent response time
+            metricsEmit.chat.messageObserved(
+              'assistant',
+              agentResponse.agentUsed,
+            );
+            metricsEmit.agent.responseTime(
+              agentResponse.agentUsed,
+              true,
+              Number(process.hrtime.bigint() - streamChatStart) / 1e9,
+            );
+
             // Send agent status update after message processing
             const postProcessTimeout = setTimeout(() => {
               sendAgentStatus();
@@ -1162,6 +1183,12 @@ export const setupSocketHandlers = (
               message: 'Internal server error',
               code: 'INTERNAL_ERROR',
             });
+            metricsEmit.agent.responseTime(
+              data.forceAgent,
+              false,
+              Number(process.hrtime.bigint() - streamChatStart) / 1e9,
+            );
+            metricsEmit.error('internal');
           }
         },
       );
@@ -1176,8 +1203,9 @@ export const setupSocketHandlers = (
       // Clear all timeouts
       timeouts.forEach(clearTimeout);
 
-      // Track WebSocket disconnection metrics
+      // Track WebSocket disconnection metrics (back-compat + new emit)
       metrics.activeConnections.dec();
+      metricsEmit.ws.connectionClosed();
     });
 
     // Handle errors

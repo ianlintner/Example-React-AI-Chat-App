@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -23,7 +24,7 @@ import {
 } from './metrics/prometheus';
 import { createQueueService } from './messageQueue/queueService';
 import { getLogger, patchConsole } from './logger';
-import { authenticateToken } from './middleware/auth';
+import { resolveIdentity } from './middleware/identity';
 import { apiRateLimiter, chatRateLimiter } from './middleware/rateLimit';
 
 dotenv.config();
@@ -125,6 +126,7 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(cookieParser());
 
 // Prometheus metrics middleware + build info
 app.use(httpMetricsMiddleware);
@@ -141,13 +143,15 @@ app.use('/api/auth', authRoutes);
 // inside the router).
 app.use('/api/auth/embed', embedAuthRoutes);
 
-// Protected routes - require authentication
-app.use('/api/chat', authenticateToken, chatRateLimiter, chatRoutes);
-app.use('/api/conversations', authenticateToken, conversationRoutes);
-app.use('/api/reactions', authenticateToken, reactionRoutes);
-app.use('/api/validation', authenticateToken, validationRoutes);
-app.use('/api/test-bench', authenticateToken, agentTestBenchRoutes);
-app.use('/api/queue', authenticateToken, messageQueueRoutes);
+// Data routes — resolveIdentity accepts both authenticated (Istio headers)
+// and anonymous (_chat_anon cookie) callers. Tier-based gating happens
+// downstream (rate limits, LLM model selection, UI feature flags).
+app.use('/api/chat', resolveIdentity, chatRateLimiter, chatRoutes);
+app.use('/api/conversations', resolveIdentity, conversationRoutes);
+app.use('/api/reactions', resolveIdentity, reactionRoutes);
+app.use('/api/validation', resolveIdentity, validationRoutes);
+app.use('/api/test-bench', resolveIdentity, agentTestBenchRoutes);
+app.use('/api/queue', resolveIdentity, messageQueueRoutes);
 /**
  * Swagger UI and JSON
  * UI:   /docs

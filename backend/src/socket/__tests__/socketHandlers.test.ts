@@ -562,6 +562,7 @@ describe('Socket Handlers', () => {
         [],
         'mock-uuid',
         undefined,
+        undefined,
       );
 
       expect(mockIo.to).toHaveBeenCalledWith('mock-uuid');

@@ -1020,6 +1020,7 @@ export const setupSocketHandlers = (
                 conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
                 conversation.id, // Pass conversation ID for validation
                 forceAgent,
+                socket.tier,
               );
 
             // Track agent response time and success

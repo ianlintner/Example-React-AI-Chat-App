@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { providerRegistry } from '../llm';
+import { routeLLMForTier } from '../llm/tierRouter';
+import type { Tier } from '../middleware/identity';
 import { toolRegistry } from '../tools';
 import { MediaAttachment } from '../types';
 import { classifyMessage } from './classifier';
@@ -98,6 +100,7 @@ export class AgentService {
     forcedAgentType?: AgentType,
     conversationId?: string,
     userId?: string,
+    tier?: Tier,
   ): Promise<AgentResponse> {
     const span = createAgentSpan(
       'agent_service',
@@ -204,18 +207,36 @@ export class AgentService {
           responseContent = this.generateDemoResponse(agent.name, message);
           addSpanEvent(span, 'agent.demo_response_generated');
         } else {
-          // Resolve provider (falls back to openai if preferred unavailable)
+          // Resolve provider (falls back to openai if preferred unavailable).
+          // Tier routing: when LLM_TIERED is on and the caller is anonymous,
+          // route to the Foundry free-tier model before asking the registry
+          // to resolve. Authenticated callers keep the agent's default.
           const agentConfig = agent as typeof agent & {
             provider?: string;
             fallbackProvider?: string;
             tools?: string[];
             cacheSystem?: boolean;
           };
-          const { provider, model: fallbackModel } = providerRegistry.resolve(
-            agentConfig.provider as any,
-            agentConfig.fallbackProvider as any,
+          const tierRoute = routeLLMForTier(
+            {
+              provider: agentConfig.provider as any,
+              fallbackProvider: agentConfig.fallbackProvider as any,
+              model: agent.model,
+            },
+            tier,
           );
-          const resolvedModel = fallbackModel ?? agent.model;
+          if (tierRoute.overrideApplied) {
+            addSpanEvent(span, 'agent.tier_override_applied', {
+              tier,
+              provider: tierRoute.provider,
+              model: tierRoute.model,
+            });
+          }
+          const { provider, model: fallbackModel } = providerRegistry.resolve(
+            tierRoute.provider,
+            tierRoute.fallbackProvider,
+          );
+          const resolvedModel = fallbackModel ?? tierRoute.model;
           const agentTools = agentConfig.tools?.length
             ? toolRegistry.getForAgent(agentConfig.tools)
             : [];
@@ -614,6 +635,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
     conversationId?: string,
+    tier?: Tier,
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
     // Set current agent as active for this user
     const agentType =
@@ -633,6 +655,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       forcedAgentType,
       conversationId,
       userId,
+      tier,
     );
 
     // Update goal progress based on the response
@@ -809,6 +832,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     conversationId?: string,
+    tier?: Tier,
   ): Promise<
     AgentResponse & {
       handoffInfo?: { target: AgentType; reason: string; message: string };
@@ -890,6 +914,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       decision.selectedAgent,
       conversationId,
       userId,
+      tier,
     );
 
     // Update conversation context with the interaction using the agent
@@ -967,6 +992,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     conversationHistory: Message[] = [],
     conversationId?: string,
     forcedAgentType?: AgentType,
+    tier?: Tier,
   ): Promise<
     AgentResponse & {
       proactiveActions?: GoalAction[];
@@ -982,6 +1008,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         conversationHistory,
         forcedAgentType,
         conversationId,
+        tier,
       );
 
       // Still update conversation context
@@ -1004,6 +1031,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       message,
       conversationHistory,
       conversationId,
+      tier,
     );
 
     // If no handoff is happening, also process with goal-seeking for proactive actions

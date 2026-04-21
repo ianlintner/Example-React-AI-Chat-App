@@ -19,6 +19,17 @@ ENV EXPO_PUBLIC_API_URL=https://chat.cat-herding.net
 # Build frontend for web
 RUN npm run build
 
+# Stage 1b: Build embeddable chat widget (vanilla TS + Vite lib bundle)
+FROM node:22-alpine3.20 AS embed-builder
+
+WORKDIR /embed
+
+COPY embed/package*.json ./
+RUN npm install --no-audit --no-fund
+
+COPY embed/ ./
+RUN npm run build
+
 # Stage 2: Build Backend (TypeScript)
 FROM node:22-alpine3.20 AS backend-builder
 
@@ -63,8 +74,10 @@ COPY --from=backend-builder --chown=nodejs:nodejs /backend/package*.json ./
 
 # Copy frontend built application into location expected by backend static server
 # Backend code serves from path: dist/backend/public
-RUN mkdir -p dist/backend/public
+RUN mkdir -p dist/backend/public dist/backend/public/embed
 COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./dist/backend/public
+# Embeddable chat widget served at /embed/cat-herding-chat.js
+COPY --from=embed-builder --chown=nodejs:nodejs /embed/dist ./dist/backend/public/embed
 
 # Switch to nodejs user
 USER nodejs

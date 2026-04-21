@@ -272,6 +272,48 @@ describe('Socket Handlers', () => {
       expect(metrics.activeConnections.inc).toHaveBeenCalled();
     });
 
+    it('should skip hold-flow bootstrap in lean mode and init general agent', () => {
+      // Fresh connection with leanMode flag (as set by io.use middleware for
+      // embed widgets passing ?mode=lean in handshake query). Clear pending
+      // timers/mocks left by the outer beforeEach so we only see calls from
+      // this lean socket.
+      jest.clearAllTimers();
+      jest.clearAllMocks();
+
+      const leanSocket: any = {
+        ...mockSocket,
+        id: 'lean-socket-id',
+        leanMode: true,
+        on: jest.fn(),
+        join: jest.fn(),
+        emit: jest.fn(),
+        to: jest.fn().mockReturnThis(),
+      };
+
+      // Re-acquire connection handler (mockIo.on was cleared)
+      setupSocketHandlers(mockIo);
+      const handler = (mockIo.on as jest.Mock).mock.calls.find(
+        call => call[0] === 'connection',
+      )[1];
+      handler(leanSocket);
+
+      // Advance the 500ms initStateTimeout so the branch executes.
+      jest.advanceTimersByTime(600);
+
+      // Lean mode should initialize the conversation with 'general', not
+      // 'hold_agent', and should not emit a hold_greeting proactive message.
+      const initCalls = (agentService.initializeConversation as jest.Mock).mock
+        .calls;
+      expect(initCalls.some(c => c[0] === 'lean-socket-id' && c[1] === 'general'))
+        .toBe(true);
+      expect(initCalls.some(c => c[1] === 'hold_agent')).toBe(false);
+
+      const proactiveEmits = (leanSocket.emit as jest.Mock).mock.calls.filter(
+        c => c[0] === 'proactive_message',
+      );
+      expect(proactiveEmits).toHaveLength(0);
+    });
+
     it('should properly clean up on disconnect', () => {
       // Get disconnect handler
       const disconnectCalls = (mockSocket.on as jest.Mock).mock.calls.filter(

@@ -16,7 +16,11 @@ import messageQueueRoutes from './routes/messageQueue';
 import authRoutes from './routes/auth';
 import embedAuthRoutes from './routes/embedAuth';
 import { setupSocketHandlers } from './socket/socketHandlers';
-import { httpMetricsMiddleware, register } from './metrics/prometheus';
+import {
+  httpMetricsMiddleware,
+  register,
+  registerAppInfo,
+} from './metrics/prometheus';
 import { createQueueService } from './messageQueue/queueService';
 import { getLogger, patchConsole } from './logger';
 import { authenticateToken } from './middleware/auth';
@@ -122,8 +126,9 @@ app.use(
 );
 app.use(express.json());
 
-// Prometheus metrics middleware
+// Prometheus metrics middleware + build info
 app.use(httpMetricsMiddleware);
+registerAppInfo();
 
 // Global API rate limiter (applies to all routes)
 app.use(apiRateLimiter);

@@ -2,6 +2,7 @@ import { AgentType } from './types';
 import { Message } from '../types';
 import { classifyMessage } from './classifier';
 import { addSpanEvent } from '../tracing/tracer';
+import { metricsEmit } from '../metrics/prometheus';
 import type { Span } from '@opentelemetry/api';
 
 /**
@@ -377,6 +378,7 @@ export function logRoutingDecision(
     console.log(
       `🧭 ROUTER handoff ${ctx.currentAgent} → ${decision.selectedAgent} [${decision.source}] (conf=${decision.confidence.toFixed(2)}): ${decision.reason}`,
     );
+    metricsEmit.agent.handoff(ctx.currentAgent, decision.selectedAgent);
   } else {
     console.log(
       `🧭 ROUTER stick with ${decision.selectedAgent} [${decision.source}] (conf=${decision.confidence.toFixed(2)}): ${decision.reason}`,

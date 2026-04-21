@@ -2,6 +2,7 @@ import { ToolDefinition, ToolResult } from './index';
 import { ragService } from '../agents/ragService';
 import { logger } from '../logger';
 import { v4 as uuidv4 } from 'uuid';
+import { instrumentedFetch } from '../metrics/fetch';
 
 interface YouTubeSearchInput {
   query: string;
@@ -50,7 +51,7 @@ async function searchYouTube(
   }
 
   const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video&key=${apiKey}`;
-  const searchRes = await fetch(searchUrl);
+  const searchRes = await instrumentedFetch('youtube', searchUrl);
   if (!searchRes.ok) {
     throw new Error(`YouTube search failed: ${searchRes.status}`);
   }
@@ -58,7 +59,7 @@ async function searchYouTube(
 
   const videoIds = searchData.items.map(i => i.id.videoId).join(',');
   const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds}&key=${apiKey}`;
-  const videosRes = await fetch(videosUrl);
+  const videosRes = await instrumentedFetch('youtube', videosUrl);
   const videosData = videosRes.ok
     ? ((await videosRes.json()) as { items: YouTubeVideosItem[] })
     : { items: [] };
@@ -125,14 +126,15 @@ async function fetchCuratedPool(): Promise<void> {
     `&maxResults=${CURATED_POOL_SIZE}` +
     `&type=video&safeSearch=strict&videoEmbeddable=true` +
     `&key=${apiKey}`;
-  const res = await fetch(searchUrl);
+  const res = await instrumentedFetch('youtube', searchUrl);
   if (!res.ok) {
     throw new Error(`YouTube curated search failed: ${res.status}`);
   }
   const data = (await res.json()) as { items: YouTubeSearchItem[] };
 
   const videoIds = data.items.map(i => i.id.videoId).join(',');
-  const videosRes = await fetch(
+  const videosRes = await instrumentedFetch(
+    'youtube',
     `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds}&key=${apiKey}`,
   );
   const videosData = videosRes.ok

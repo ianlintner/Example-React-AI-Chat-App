@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { widgetCss } from './styles';
 import { chatIcon, closeIcon } from './icons';
+import { AuthManager, AuthOptions, AuthSession } from './auth';
 
 export type WidgetPosition =
   | 'bottom-right'
@@ -19,6 +20,17 @@ export interface ChatWidgetOptions {
   placeholder?: string;
   footerHtml?: string | null;
   welcomeMessage?: string | null;
+  /**
+   * Optional OAuth2 + PKCE sign-in config. When set, the widget renders a
+   * Sign-in gate instead of connecting anonymously and forwards the access
+   * token on the Socket.IO handshake.
+   */
+  auth?: AuthOptions;
+  /**
+   * Label on the Sign-in button when auth gating is active.
+   * Default: `Sign in to chat`.
+   */
+  signInLabel?: string;
 }
 
 interface Attachment {
@@ -56,8 +68,11 @@ const POSITION_CLASS: Record<WidgetPosition, string> = {
 };
 
 const DEFAULTS: Required<
-  Omit<ChatWidgetOptions, 'apiUrl' | 'footerHtml' | 'welcomeMessage'>
-> & { footerHtml: string | null; welcomeMessage: string | null } = {
+  Omit<ChatWidgetOptions, 'apiUrl' | 'footerHtml' | 'welcomeMessage' | 'auth'>
+> & {
+  footerHtml: string | null;
+  welcomeMessage: string | null;
+} = {
   title: 'Cat-Herding Chat',
   subtitle: 'AI portfolio demo',
   position: 'bottom-right',
@@ -65,6 +80,7 @@ const DEFAULTS: Required<
   mode: 'lean',
   openOnLoad: false,
   placeholder: 'Ask me anything…',
+  signInLabel: 'Sign in to chat',
   footerHtml:
     'Demo powered by <a href="https://github.com/ianlintner/Example-React-AI-Chat-App" target="_blank" rel="noopener">cat-herding</a>',
   welcomeMessage:
@@ -80,16 +96,33 @@ export class ChatWidget {
   private inputEl!: HTMLInputElement;
   private sendBtn!: HTMLButtonElement;
   private statusEl!: HTMLDivElement;
+  private signInEl: HTMLDivElement | null = null;
+  private inputRowEl: HTMLFormElement | null = null;
   private typingEl: HTMLDivElement | null = null;
   private socket: Socket | null = null;
   private conversationId: string | null = null;
   private streamingMessages = new Map<string, HTMLDivElement>();
+  private auth: AuthManager | null = null;
 
   constructor(opts: ChatWidgetOptions) {
     if (!opts || !opts.apiUrl) {
       throw new Error('CatHerdingChat: apiUrl is required');
     }
     this.opts = { ...DEFAULTS, ...opts };
+    if (this.opts.auth) {
+      this.auth = new AuthManager(this.opts.apiUrl, this.opts.auth);
+      this.auth.onChange(session => this.onAuthChange(session));
+    }
+  }
+
+  /** Whether a signed-in OAuth2 session is active. */
+  isAuthenticated(): boolean {
+    return !!this.auth?.isAuthenticated();
+  }
+
+  /** Clear the local session and reset the widget to the Sign-in state. */
+  signOut(): void {
+    this.auth?.signOut();
   }
 
   mount(target: HTMLElement = document.body): void {
@@ -123,8 +156,11 @@ export class ChatWidget {
 
   open(): void {
     this.root.classList.add('open');
-    this.ensureConnected();
-    setTimeout(() => this.inputEl?.focus(), 50);
+    this.syncAuthGate();
+    if (!this.auth || this.auth.isAuthenticated()) {
+      this.ensureConnected();
+      setTimeout(() => this.inputEl?.focus(), 50);
+    }
   }
 
   close(): void {
@@ -187,6 +223,24 @@ export class ChatWidget {
       });
     }
 
+    // Sign-in gate (only rendered when auth config is supplied). Replaces
+    // the input row until the user signs in.
+    if (this.auth) {
+      const gate = document.createElement('div');
+      gate.className = 'signin-gate';
+      gate.innerHTML = `
+        <button class="signin-btn" type="button"></button>
+        <div class="signin-hint"></div>
+      `;
+      const btn = gate.querySelector('.signin-btn') as HTMLButtonElement;
+      btn.textContent = this.opts.signInLabel;
+      btn.addEventListener('click', () => {
+        this.handleSignIn();
+      });
+      this.signInEl = gate;
+      panel.appendChild(gate);
+    }
+
     const inputRow = document.createElement('form');
     inputRow.className = 'input-row';
     inputRow.innerHTML = `
@@ -204,6 +258,7 @@ export class ChatWidget {
       e.preventDefault();
       this.handleSend();
     });
+    this.inputRowEl = inputRow;
     panel.appendChild(inputRow);
 
     if (this.opts.footerHtml) {
@@ -212,6 +267,8 @@ export class ChatWidget {
       footer.innerHTML = this.opts.footerHtml;
       panel.appendChild(footer);
     }
+
+    this.syncAuthGate();
   }
 
   private setStatus(
@@ -230,6 +287,10 @@ export class ChatWidget {
     const query: Record<string, string> = {};
     if (this.opts.mode === 'lean') query.mode = 'lean';
 
+    const session = this.auth?.getSession();
+    const authPayload: { token?: string } = {};
+    if (session?.accessToken) authPayload.token = session.accessToken;
+
     this.setStatus('connecting', 'Connecting…');
 
     this.socket = io(this.opts.apiUrl, {
@@ -237,6 +298,7 @@ export class ChatWidget {
       transports: ['websocket', 'polling'],
       withCredentials: true,
       query,
+      auth: authPayload,
       reconnectionAttempts: 5,
       timeout: 15000,
     });
@@ -323,6 +385,55 @@ export class ChatWidget {
         });
       },
     );
+  }
+
+  private async handleSignIn(): Promise<void> {
+    if (!this.auth || !this.signInEl) return;
+    const btn = this.signInEl.querySelector('.signin-btn') as HTMLButtonElement;
+    const hint = this.signInEl.querySelector('.signin-hint') as HTMLElement;
+    btn.disabled = true;
+    hint.textContent = 'Opening sign-in window…';
+    try {
+      await this.auth.signIn();
+      hint.textContent = '';
+    } catch (err) {
+      hint.textContent =
+        err instanceof Error
+          ? err.message
+          : 'Sign-in failed. Please try again.';
+      btn.disabled = false;
+    }
+  }
+
+  private onAuthChange(session: AuthSession | null): void {
+    this.syncAuthGate();
+    if (session) {
+      // Tear down any anon socket; reconnect with the token on handshake.
+      if (this.socket) {
+        this.socket.disconnect();
+        this.socket = null;
+      }
+      this.ensureConnected();
+      setTimeout(() => this.inputEl?.focus(), 50);
+    } else if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.setStatus('error', 'Signed out');
+    }
+  }
+
+  private syncAuthGate(): void {
+    if (!this.auth) return;
+    const authed = this.auth.isAuthenticated();
+    if (this.signInEl) this.signInEl.style.display = authed ? 'none' : 'flex';
+    if (this.inputRowEl)
+      this.inputRowEl.style.display = authed ? 'flex' : 'none';
+    if (this.signInEl && !authed) {
+      const btn = this.signInEl.querySelector(
+        '.signin-btn',
+      ) as HTMLButtonElement;
+      if (btn) btn.disabled = false;
+    }
   }
 
   private handleSend(): void {

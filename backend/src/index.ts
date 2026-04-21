@@ -14,6 +14,7 @@ import agentTestBenchRoutes from './routes/agentTestBench';
 import { createSwaggerSpec, registerSwaggerRoutes } from './routes/swaggerDocs';
 import messageQueueRoutes from './routes/messageQueue';
 import authRoutes from './routes/auth';
+import embedAuthRoutes from './routes/embedAuth';
 import { setupSocketHandlers } from './socket/socketHandlers';
 import { httpMetricsMiddleware, register } from './metrics/prometheus';
 import { createQueueService } from './messageQueue/queueService';
@@ -129,6 +130,11 @@ app.use(apiRateLimiter);
 
 // Routes - Authentication (public)
 app.use('/api/auth', authRoutes);
+
+// Embed widget OAuth2 token-exchange proxy (public by design — user is
+// mid sign-in so no authenticateToken is applied; endpoint is rate-limited
+// inside the router).
+app.use('/api/auth/embed', embedAuthRoutes);
 
 // Protected routes - require authentication
 app.use('/api/chat', authenticateToken, chatRateLimiter, chatRoutes);

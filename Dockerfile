@@ -74,10 +74,12 @@ COPY --from=backend-builder --chown=nodejs:nodejs /backend/package*.json ./
 
 # Copy frontend built application into location expected by backend static server
 # Backend code serves from path: dist/backend/public
-RUN mkdir -p dist/backend/public dist/backend/public/embed
+RUN mkdir -p dist/backend/public
 COPY --from=frontend-builder --chown=nodejs:nodejs /frontend/dist ./dist/backend/public
-# Embeddable chat widget served at /embed/cat-herding-chat.js
-COPY --from=embed-builder --chown=nodejs:nodejs /embed/dist ./dist/backend/public/embed
+# Embeddable chat widget + OAuth2 callback page served at /embed/* .
+# The embed build emits under `dist/embed/` so we copy the whole tree into
+# the backend's `public/` dir to preserve the /embed/ prefix.
+COPY --from=embed-builder --chown=nodejs:nodejs /embed/dist ./dist/backend/public
 
 # Switch to nodejs user
 USER nodejs

@@ -179,6 +179,40 @@ export const widgetCss = /* css */ `
   40% { transform: scale(1); opacity: 1; }
 }
 
+.signin-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  align-items: stretch;
+}
+.signin-gate .signin-btn {
+  border: none;
+  background: var(--ch-accent, #4f46e5);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+}
+.signin-gate .signin-btn:hover {
+  filter: brightness(1.05);
+}
+.signin-gate .signin-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.signin-gate .signin-hint {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+  min-height: 1em;
+}
+
 .input-row {
   display: flex;
   gap: 8px;

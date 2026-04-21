@@ -39,7 +39,12 @@
     window.CatHerdingChat.init({
       apiUrl: 'https://chat.cat-herding.net',
       title: 'Ask about my portfolio',
-      mode: 'lean'
+      mode: 'lean',
+      auth: {
+        type: 'oauth2',
+        issuer: 'https://roauth2.cat-herding.net',
+        clientId: '&lt;your-registered-client-id&gt;'
+      }
     });
   });
 &lt;/script&gt;</code></pre>
@@ -53,6 +58,12 @@
           title: 'Portfolio chat (dev)',
           subtitle: 'Local backend',
           mode: 'lean',
+          // Uncomment to exercise the OAuth2 sign-in gate locally.
+          // auth: {
+          //   type: 'oauth2',
+          //   issuer: 'https://roauth2.cat-herding.net',
+          //   clientId: 'client_a3419797-efbc-4c87-95f4-f88c74e0c4ef',
+          // },
         });
       });
     </script>

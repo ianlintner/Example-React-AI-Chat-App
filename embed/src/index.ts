@@ -29,3 +29,4 @@ if (typeof window !== 'undefined') {
 
 export { ChatWidget, api };
 export type { ChatWidgetOptions } from './widget';
+export type { AuthOptions, AuthSession, TokenStorageMode } from './auth';

@@ -12,7 +12,11 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'CatHerdingChat',
       formats: ['iife'],
-      fileName: () => 'cat-herding-chat.js',
+      // Emit under `embed/` so the prod deploy (`dist/**` copied to the
+      // backend's `public/` dir) serves both the JS bundle and
+      // `callback.html` from `/embed/...`. Matches the OAuth2 client's
+      // registered redirect URIs.
+      fileName: () => 'embed/cat-herding-chat.js',
     },
     rollupOptions: {
       output: {
@@ -21,7 +25,10 @@ export default defineConfig({
       },
     },
   },
-  publicDir: false,
+  // `assets/` holds static files (callback.html) that must ship alongside the
+  // JS bundle. `demo/` is dev-only and excluded from the build via its own
+  // path (Vite's publicDir copies everything under it verbatim).
+  publicDir: 'assets',
   server: {
     port: 5199,
     open: '/demo/index.html',

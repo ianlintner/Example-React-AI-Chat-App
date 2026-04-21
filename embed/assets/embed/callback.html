@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Signing you in…</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        color: #111827;
+      }
+      .card {
+        text-align: center;
+        max-width: 360px;
+        padding: 24px;
+      }
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid #e5e7eb;
+        border-top-color: #4f46e5;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 6px;
+      }
+      p {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+      }
+      .err {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="spinner" id="spin" aria-hidden="true"></div>
+      <h1 id="title">Signing you in…</h1>
+      <p id="msg">This window will close automatically.</p>
+    </div>
+    <script>
+      (function () {
+        var title = document.getElementById('title');
+        var msg = document.getElementById('msg');
+        var spin = document.getElementById('spin');
+
+        function render(text, errorText) {
+          title.textContent = text;
+          if (errorText) {
+            msg.textContent = errorText;
+            msg.className = 'err';
+            spin.style.display = 'none';
+          }
+        }
+
+        function parseParams(search) {
+          var out = {};
+          var qs = (search || '').replace(/^\?/, '');
+          if (!qs) return out;
+          qs.split('&').forEach(function (pair) {
+            if (!pair) return;
+            var idx = pair.indexOf('=');
+            var k = decodeURIComponent(
+              (idx >= 0 ? pair.slice(0, idx) : pair).replace(/\+/g, ' '),
+            );
+            var v = decodeURIComponent(
+              (idx >= 0 ? pair.slice(idx + 1) : '').replace(/\+/g, ' '),
+            );
+            out[k] = v;
+          });
+          return out;
+        }
+
+        var params = parseParams(window.location.search);
+        var payload = {
+          source: 'cat-herding-chat-oauth',
+          code: params.code || null,
+          state: params.state || null,
+          error: params.error || null,
+          error_description: params.error_description || null,
+        };
+
+        var targetOrigin = window.location.origin;
+
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(payload, targetOrigin);
+            render(
+              payload.error ? 'Sign-in failed' : 'Signed in',
+              payload.error,
+            );
+            setTimeout(
+              function () {
+                window.close();
+              },
+              payload.error ? 2000 : 150,
+            );
+          } else {
+            render('Cannot complete sign-in', 'Missing opener window.');
+          }
+        } catch (e) {
+          render('Sign-in error', String(e && e.message) || 'Unexpected error');
+        }
+      })();
+    </script>
+  </body>
+</html>

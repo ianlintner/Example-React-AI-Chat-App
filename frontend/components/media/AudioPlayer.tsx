@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,7 @@ function formatTime(secs: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({
+const AudioPlayerInner: React.FC<AudioPlayerProps> = ({
   url,
   title,
   artist,
@@ -122,6 +122,20 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   );
 };
 
+// Memo on the identity of the source url so parent re-renders (status
+// polling, streaming chunks) don't unmount the player and kill the
+// already-loaded sound. Without this, useEffect cleanup calls
+// `sound.unloadAsync()` on every unmount → audio stops after a couple
+// seconds.
+export const AudioPlayer = memo(
+  AudioPlayerInner,
+  (prev, next) =>
+    prev.url === next.url &&
+    prev.title === next.title &&
+    prev.artist === next.artist &&
+    prev.durationSec === next.durationSec,
+);
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: ForestColors.backgroundSecondary,
@@ -130,6 +144,9 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     borderWidth: 1,
     borderColor: ForestColors.brandPrimary,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'flex-start',
   },
   info: { marginBottom: 8 },
   title: { color: ForestColors.textNormal, fontSize: 13, fontWeight: '600' },

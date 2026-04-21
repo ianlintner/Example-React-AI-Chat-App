@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { ForestColors } from '../../constants/Colors';
@@ -10,7 +10,7 @@ interface GifViewProps {
   height?: number;
 }
 
-export const GifView: React.FC<GifViewProps> = ({
+const GifViewInner: React.FC<GifViewProps> = ({
   url,
   title,
   width,
@@ -36,6 +36,18 @@ export const GifView: React.FC<GifViewProps> = ({
   );
 };
 
+// Memo on src url so the <img>/Image isn't re-created on every parent
+// re-render. Re-creation forces the browser to re-fetch the GIF (tens of
+// times during a streaming turn with devtools "disable cache" on).
+export const GifView = memo(
+  GifViewInner,
+  (prev, next) =>
+    prev.url === next.url &&
+    prev.title === next.title &&
+    prev.width === next.width &&
+    prev.height === next.height,
+);
+
 const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
@@ -44,6 +56,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ForestColors.borderLight,
     backgroundColor: ForestColors.backgroundTertiary,
+    maxWidth: 400,
+    width: '100%',
+    alignSelf: 'flex-start',
   },
   gif: { width: '100%' },
   caption: {

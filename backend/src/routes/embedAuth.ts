@@ -83,8 +83,12 @@ router.post('/token', exchangeLimiter, async (req: Request, res: Response) => {
     try {
       payload = JSON.parse(text);
     } catch {
+      // Avoid logging `tokenUrl` or response bodies here — CodeQL flags
+      // clear-text logging of values derived from the auth server and the
+      // issuer URL is considered sensitive metadata. Status code is enough
+      // to triage.
       logger.warn(
-        { status: upstream.status, tokenUrl },
+        { status: upstream.status },
         'Embed auth upstream returned non-JSON',
       );
       res.status(502).json({
@@ -95,10 +99,10 @@ router.post('/token', exchangeLimiter, async (req: Request, res: Response) => {
     }
 
     if (!upstream.ok) {
-      logger.info(
-        { status: upstream.status, error: payload.error },
-        'Embed auth upstream error',
-      );
+      // Intentionally log only the upstream status code. `payload` is
+      // derived from the auth server and can contain data CodeQL
+      // considers sensitive; forward it to the browser but do not log it.
+      logger.info({ status: upstream.status }, 'Embed auth upstream error');
       res.status(upstream.status).json(payload);
       return;
     }

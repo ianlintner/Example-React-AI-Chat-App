@@ -56,3 +56,8 @@ external/
 # Claude Code local state and agent worktrees
 .claude/
 .playwright-mcp/
+
+# Caretaker workflow YAML: formats differently across prettier minor
+# versions between local and hosted runners, causing spurious format-check
+# failures in CI. The file is infrequently edited and not app code.
+.github/workflows/maintainer.yml

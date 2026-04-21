@@ -43,6 +43,47 @@ const executeProactiveAction = async (
       `🎯 Executing proactive action: ${action.type} with agent: ${action.agentType}`,
     );
 
+    // Hold-flow YouTube short-circuit: every new user triggers a proactive
+    // video during the hold greeting. Going to the LLM + YouTube API per
+    // user blows quota. Serve a pre-fetched curated video from the in-
+    // memory pool instead; falls through to the LLM path only when the
+    // pool is unavailable (e.g. YOUTUBE_API_KEY missing).
+    if (action.agentType === 'youtube_guru') {
+      const { getNextCuratedYouTubeVideo } =
+        await import('../tools/youtubeSearch');
+      const curated = await getNextCuratedYouTubeVideo();
+      if (curated) {
+        const curatedMessage: Message = {
+          id: uuidv4(),
+          content: "Here's a video for you:",
+          role: 'assistant',
+          timestamp: new Date(),
+          conversationId: conversation.id,
+          agentUsed: 'youtube_guru',
+          confidence: 1,
+          isProactive: true,
+          attachments: [curated.attachment!],
+        };
+        conversation.messages.push(curatedMessage);
+        conversation.updatedAt = new Date();
+        socket.emit('proactive_message', {
+          message: curatedMessage,
+          actionType: action.type,
+          agentUsed: 'youtube_guru',
+          confidence: 1,
+        });
+        const att = curated.attachment!;
+        const vidId = att.type === 'youtube' ? att.videoId : 'unknown';
+        console.log(
+          `🎞️ Served curated YouTube video to ${socket.id}: ${vidId}`,
+        );
+        return;
+      }
+      console.warn(
+        '🎞️ Curated YouTube pool unavailable; falling back to LLM path',
+      );
+    }
+
     // Execute the proactive action using the agent service with single-agent control
     const proactiveResponse = await agentService.executeProactiveAction(
       socket.id,

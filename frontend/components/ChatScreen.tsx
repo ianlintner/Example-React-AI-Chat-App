@@ -355,220 +355,248 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ conversation }) => {
     }
   };
 
-  const MessageBubble: React.FC<{
-    message: Message;
-    isStreamingMessage?: boolean;
-  }> = ({ message, isStreamingMessage = false }) => {
-    const isUser = message.role === 'user';
-    const agentInfo =
-      !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
+  // Memoized so the function identity is stable across ChatScreen
+  // re-renders (status polling, stream chunks, etc.). Without this, React
+  // would see a fresh component type every render and unmount the entire
+  // message subtree — remounting any YouTube iframes and restarting
+  // playback. `pulseAnim` is a useRef value so it's stable, and the other
+  // closures (`getAgentInfo`, `formatTimestamp`, `parseMessageContent`,
+  // `styles`, `markdownStyles`, inner `YouTubeEmbed`) are all effectively
+  // constant for the lifetime of the component.
+  const MessageBubble = React.useMemo<
+    React.FC<{ message: Message; isStreamingMessage?: boolean }>
+  >(
+    () =>
+      ({ message, isStreamingMessage = false }) => {
+        const isUser = message.role === 'user';
+        const agentInfo =
+          !isUser && message.agentUsed ? getAgentInfo(message.agentUsed) : null;
 
-    return (
-      <View
-        style={[
-          styles.messageBubbleContainer,
-          isUser
-            ? styles.userMessageContainer
-            : styles.assistantMessageContainer,
-        ]}
-      >
-        {isUser ? (
-          message.user?.avatar ? (
-            <Avatar.Image
-              size={40}
-              source={{ uri: message.user.avatar }}
-              style={styles.avatar}
-            />
-          ) : (
-            <Avatar.Text
-              size={40}
-              label={(message.user?.name || 'U').substring(0, 2).toUpperCase()}
-              style={[
-                styles.avatar,
-                { backgroundColor: ForestColors.brandTertiary },
-              ]}
-            />
-          )
-        ) : (
-          <Avatar.Icon
-            size={40}
-            icon={agentInfo?.avatar || 'robot'}
+        return (
+          <View
             style={[
-              styles.avatar,
-              {
-                backgroundColor: agentInfo?.color || ForestColors.brandPrimary,
-              },
-            ]}
-          />
-        )}
-
-        <View
-          style={[
-            styles.messageContentContainer,
-            isUser ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.messageBubble,
-              isUser ? styles.userBubble : styles.assistantBubble,
-              isStreamingMessage &&
-                !isUser && {
-                  transform: [{ scale: pulseAnim }],
-                  shadowOpacity: 0.3,
-                  elevation: 5,
-                },
+              styles.messageBubbleContainer,
+              isUser
+                ? styles.userMessageContainer
+                : styles.assistantMessageContainer,
             ]}
           >
-            {/* Agent indicator for assistant messages */}
-            {!isUser &&
-              message.agentUsed &&
-              (() => {
-                const agentInfo = getAgentInfo(message.agentUsed);
-                return (
-                  <View style={styles.agentIndicatorContainer}>
-                    <Text style={styles.agentName}>{agentInfo.name}</Text>
-                    {message.isProactive && (
-                      <Chip
-                        mode='flat'
-                        compact
-                        textStyle={styles.chipText}
-                        style={styles.proactiveChip}
-                      >
-                        🎯 Proactive
-                      </Chip>
-                    )}
-                    {message.confidence && (
-                      <Text style={styles.confidenceText}>
-                        {Math.round(message.confidence * 100)}% confidence
+            {isUser ? (
+              message.user?.avatar ? (
+                <Avatar.Image
+                  size={40}
+                  source={{ uri: message.user.avatar }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <Avatar.Text
+                  size={40}
+                  label={(message.user?.name || 'U')
+                    .substring(0, 2)
+                    .toUpperCase()}
+                  style={[
+                    styles.avatar,
+                    { backgroundColor: ForestColors.brandTertiary },
+                  ]}
+                />
+              )
+            ) : (
+              <Avatar.Icon
+                size={40}
+                icon={agentInfo?.avatar || 'robot'}
+                style={[
+                  styles.avatar,
+                  {
+                    backgroundColor:
+                      agentInfo?.color || ForestColors.brandPrimary,
+                  },
+                ]}
+              />
+            )}
+
+            <View
+              style={[
+                styles.messageContentContainer,
+                isUser
+                  ? { alignSelf: 'flex-end' }
+                  : { alignSelf: 'flex-start' },
+              ]}
+            >
+              <Animated.View
+                style={[
+                  styles.messageBubble,
+                  isUser ? styles.userBubble : styles.assistantBubble,
+                  isStreamingMessage &&
+                    !isUser && {
+                      transform: [{ scale: pulseAnim }],
+                      shadowOpacity: 0.3,
+                      elevation: 5,
+                    },
+                ]}
+              >
+                {/* Agent indicator for assistant messages */}
+                {!isUser &&
+                  message.agentUsed &&
+                  (() => {
+                    const agentInfo = getAgentInfo(message.agentUsed);
+                    return (
+                      <View style={styles.agentIndicatorContainer}>
+                        <Text style={styles.agentName}>{agentInfo.name}</Text>
+                        {message.isProactive && (
+                          <Chip
+                            mode='flat'
+                            compact
+                            textStyle={styles.chipText}
+                            style={styles.proactiveChip}
+                          >
+                            🎯 Proactive
+                          </Chip>
+                        )}
+                        {message.confidence && (
+                          <Text style={styles.confidenceText}>
+                            {Math.round(message.confidence * 100)}% confidence
+                          </Text>
+                        )}
+                      </View>
+                    );
+                  })()}
+
+                {/* User info indicator for user messages */}
+                {isUser && message.user && (
+                  <View style={styles.userIndicatorContainer}>
+                    <Text style={styles.userName} numberOfLines={1}>
+                      {message.user.name}
+                    </Text>
+                    {message.user.email && (
+                      <Text style={styles.userEmail} numberOfLines={1}>
+                        {message.user.email}
                       </Text>
                     )}
                   </View>
-                );
-              })()}
-
-            {/* User info indicator for user messages */}
-            {isUser && message.user && (
-              <View style={styles.userIndicatorContainer}>
-                <Text style={styles.userName} numberOfLines={1}>
-                  {message.user.name}
-                </Text>
-                {message.user.email && (
-                  <Text style={styles.userEmail} numberOfLines={1}>
-                    {message.user.email}
-                  </Text>
                 )}
-              </View>
-            )}
 
-            {isUser ? (
-              <Text style={[styles.messageText, styles.userMessageText]}>
-                {message.content}
-              </Text>
-            ) : isStreamingMessage ? (
-              <View style={styles.markdownContainer}>
-                {message.content ? (
-                  (() => {
-                    const parsedContent = parseMessageContent(message.content);
+                {isUser ? (
+                  <Text style={[styles.messageText, styles.userMessageText]}>
+                    {message.content}
+                  </Text>
+                ) : isStreamingMessage ? (
+                  <View style={styles.markdownContainer}>
+                    {message.content ? (
+                      (() => {
+                        const parsedContent = parseMessageContent(
+                          message.content,
+                        );
 
-                    return parsedContent.map((part, index) => {
-                      if (part.type === 'youtube' && part.videoData) {
-                        return (
-                          <YouTubeEmbed
-                            key={index}
-                            videoId={part.videoData.id}
-                            title={part.videoData.title}
-                            duration={part.videoData.duration}
-                          />
-                        );
-                      } else if (part.type === 'text' && part.content.trim()) {
-                        return (
-                          <Markdown key={index} style={markdownStyles}>
-                            {part.content}
-                          </Markdown>
-                        );
-                      }
-                      return null;
-                    });
-                  })()
-                ) : (
-                  <View style={styles.thinkingContainer}>
-                    <ActivityIndicator
-                      size='small'
-                      color={
-                        message.status === 'pending'
-                          ? ForestColors.loadingPrimary
-                          : ForestColors.loadingSecondary
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.thinkingText,
-                        {
-                          color:
+                        return parsedContent.map((part, index) => {
+                          if (part.type === 'youtube' && part.videoData) {
+                            return (
+                              <YouTubeEmbed
+                                key={index}
+                                videoId={part.videoData.id}
+                                title={part.videoData.title}
+                                duration={part.videoData.duration}
+                              />
+                            );
+                          } else if (
+                            part.type === 'text' &&
+                            part.content.trim()
+                          ) {
+                            return (
+                              <Markdown key={index} style={markdownStyles}>
+                                {part.content}
+                              </Markdown>
+                            );
+                          }
+                          return null;
+                        });
+                      })()
+                    ) : (
+                      <View style={styles.thinkingContainer}>
+                        <ActivityIndicator
+                          size='small'
+                          color={
                             message.status === 'pending'
-                              ? ForestColors.textMuted
-                              : ForestColors.textFaint,
-                        },
-                      ]}
-                    >
-                      {message.status === 'pending'
-                        ? 'Processing your request...'
-                        : 'Generating response...'}
-                    </Text>
+                              ? ForestColors.loadingPrimary
+                              : ForestColors.loadingSecondary
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.thinkingText,
+                            {
+                              color:
+                                message.status === 'pending'
+                                  ? ForestColors.textMuted
+                                  : ForestColors.textFaint,
+                            },
+                          ]}
+                        >
+                          {message.status === 'pending'
+                            ? 'Processing your request...'
+                            : 'Generating response...'}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ) : (
+                  <View style={styles.markdownContainer}>
+                    {(() => {
+                      const parsedContent = parseMessageContent(
+                        message.content,
+                      );
+
+                      return parsedContent.map((part, index) => {
+                        if (part.type === 'youtube' && part.videoData) {
+                          return (
+                            <YouTubeEmbed
+                              key={index}
+                              videoId={part.videoData.id}
+                              title={part.videoData.title}
+                              duration={part.videoData.duration}
+                            />
+                          );
+                        } else if (
+                          part.type === 'text' &&
+                          part.content.trim()
+                        ) {
+                          return (
+                            <Markdown key={index} style={markdownStyles}>
+                              {part.content}
+                            </Markdown>
+                          );
+                        }
+                        return null;
+                      });
+                    })()}
                   </View>
                 )}
-              </View>
-            ) : (
-              <View style={styles.markdownContainer}>
-                {(() => {
-                  const parsedContent = parseMessageContent(message.content);
+              </Animated.View>
 
-                  return parsedContent.map((part, index) => {
-                    if (part.type === 'youtube' && part.videoData) {
-                      return (
-                        <YouTubeEmbed
-                          key={index}
-                          videoId={part.videoData.id}
-                          title={part.videoData.title}
-                          duration={part.videoData.duration}
-                        />
-                      );
-                    } else if (part.type === 'text' && part.content.trim()) {
-                      return (
-                        <Markdown key={index} style={markdownStyles}>
-                          {part.content}
-                        </Markdown>
-                      );
-                    }
-                    return null;
-                  });
-                })()}
-              </View>
-            )}
-          </Animated.View>
+              {/* Rich media attachments */}
+              {!isUser &&
+                message.attachments &&
+                message.attachments.length > 0 && (
+                  <View style={{ marginTop: 6 }}>
+                    {message.attachments.map(att => (
+                      <MediaAttachmentView key={att.id} attachment={att} />
+                    ))}
+                  </View>
+                )}
 
-          {/* Rich media attachments */}
-          {!isUser && message.attachments && message.attachments.length > 0 && (
-            <View style={{ marginTop: 6 }}>
-              {message.attachments.map(att => (
-                <MediaAttachmentView key={att.id} attachment={att} />
-              ))}
+              <Text
+                style={[
+                  styles.timestamp,
+                  isUser ? styles.userTimestamp : styles.assistantTimestamp,
+                ]}
+              >
+                {formatTimestamp(message.timestamp)}
+              </Text>
             </View>
-          )}
-
-          <Text
-            style={[
-              styles.timestamp,
-              isUser ? styles.userTimestamp : styles.assistantTimestamp,
-            ]}
-          >
-            {formatTimestamp(message.timestamp)}
-          </Text>
-        </View>
-      </View>
-    );
-  };
+          </View>
+        );
+      },
+    [],
+  );
 
   if (!conversation) {
     return (

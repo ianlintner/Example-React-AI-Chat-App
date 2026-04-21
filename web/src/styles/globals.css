@@ -1,0 +1,117 @@
+:root {
+  --color-background: #101a14;
+  --color-foreground: #e8f0e8;
+  --color-muted: #1a2a20;
+  --color-muted-foreground: #9cb2a0;
+  --color-accent: #4a9a6a;
+  --color-accent-foreground: #0a140c;
+  --color-border: #2a3a2e;
+  --color-destructive: #c33a2e;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-shell__header {
+  border-bottom: 1px solid var(--color-border);
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.app-shell__main {
+  flex: 1;
+  overflow: hidden;
+}
+
+.page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.page h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  text-decoration: none;
+}
+
+.list a:hover {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.muted {
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+}
+
+.banner {
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat__body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+code {
+  background: var(--color-muted);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 13px;
+}

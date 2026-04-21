@@ -42,7 +42,13 @@
     "clean": "npm run clean:backend && npm run clean:frontend",
     "clean:backend": "cd backend && rm -rf dist node_modules",
     "clean:frontend": "cd frontend && rm -rf dist .expo node_modules",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "clean:web": "cd web && rm -rf dist node_modules",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../web && npm install",
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build",
+    "web:typecheck": "cd web && npm run typecheck",
+    "web:lint": "cd web && npm run lint",
+    "web:test": "cd web && npm run test",
     "docs:lint": "markdownlint 'docs/**/*.md' README.md frontend/README.md",
     "docs:links": "sh -c 'set -e; find docs -name \"*.md\" -not -path \"*/_sources/*\" -not -path \"*/_internal/*\" -print0 | xargs -0 -n1 -I{} npx markdown-link-check -q -c .markdown-link-check.json {}; npx markdown-link-check -q -c .markdown-link-check.json README.md; [ -f frontend/README.md ] && npx markdown-link-check -q -c .markdown-link-check.json frontend/README.md || true'",
     "docs:mermaid": "node scripts/validate-mermaid.js docs",
@@ -97,6 +103,10 @@
     "frontend/**/*.{ts,tsx,js,jsx}": [
       "cd frontend && npm run lint -- --fix",
       "cd frontend && npm run format"
+    ],
+    "web/**/*.{ts,tsx}": [
+      "cd web && npm run lint:fix",
+      "cd web && npm run format"
     ]
   }
 }

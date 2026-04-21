@@ -142,6 +142,36 @@ jobs:
           name: frontend-dist
           path: frontend/dist/
           retention-days: 7
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+      - name: Type check
+        working-directory: web
+        run: npm run typecheck
+      - name: Test
+        working-directory: web
+        run: npm run test
+      - name: Build
+        working-directory: web
+        run: npm run build
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist/
+          retention-days: 7
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -275,7 +305,7 @@ jobs:
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
   ci-success:
-    needs: [checks, backend, frontend, docs, security, docker-build-push]
+    needs: [checks, backend, frontend, web, docs, security, docker-build-push]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -284,11 +314,13 @@ jobs:
           echo "Checks: ${{ needs.checks.result }}"
           echo "Backend: ${{ needs.backend.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
+          echo "Web: ${{ needs.web.result }}"
           echo "Docs: ${{ needs.docs.result }}"
           echo "Security: ${{ needs.security.result }}"
           echo "Docker: ${{ needs.docker-build-push.result }}"
           [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
           [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
+          [ "${{ needs.web.result }}" != "failure" ] || { echo "❌ web failed"; exit 1; }
           [ "${{ needs.checks.result }}" != "failure" ] || { echo "❌ checks failed"; exit 1; }
           [ "${{ needs.security.result }}" != "failure" ] || { echo "❌ security failed"; exit 1; }
           [ "${{ needs.docker-build-push.result }}" != "failure" ] || { echo "❌ docker build failed"; exit 1; }

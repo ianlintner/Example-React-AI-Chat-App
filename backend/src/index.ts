@@ -25,7 +25,12 @@ import {
 import { createQueueService } from './messageQueue/queueService';
 import { getLogger, patchConsole } from './logger';
 import { resolveIdentity } from './middleware/identity';
-import { apiRateLimiter, chatRateLimiter } from './middleware/rateLimit';
+import {
+  apiRateLimiter,
+  chatRateLimiter,
+  chatDailyLimiter,
+  globalIpCeilingLimiter,
+} from './middleware/rateLimit';
 
 dotenv.config();
 patchConsole();
@@ -132,10 +137,12 @@ app.use(cookieParser());
 app.use(httpMetricsMiddleware);
 registerAppInfo();
 
-// Global API rate limiter (applies to all routes)
-app.use(apiRateLimiter);
+// Per-pod DoS ceiling (IP-keyed, blunt instrument sitting above the
+// tiered per-identity limits). Skips /health and /metrics internally.
+app.use(globalIpCeilingLimiter);
 
-// Routes - Authentication (public)
+// Routes - Authentication (public). Uses its own IP-based auth limiter
+// inside the router; no identity resolution required.
 app.use('/api/auth', authRoutes);
 
 // Embed widget OAuth2 token-exchange proxy (public by design — user is
@@ -143,15 +150,23 @@ app.use('/api/auth', authRoutes);
 // inside the router).
 app.use('/api/auth/embed', embedAuthRoutes);
 
-// Data routes — resolveIdentity accepts both authenticated (Istio headers)
-// and anonymous (_chat_anon cookie) callers. Tier-based gating happens
-// downstream (rate limits, LLM model selection, UI feature flags).
-app.use('/api/chat', resolveIdentity, chatRateLimiter, chatRoutes);
-app.use('/api/conversations', resolveIdentity, conversationRoutes);
-app.use('/api/reactions', resolveIdentity, reactionRoutes);
-app.use('/api/validation', resolveIdentity, validationRoutes);
-app.use('/api/test-bench', resolveIdentity, agentTestBenchRoutes);
-app.use('/api/queue', resolveIdentity, messageQueueRoutes);
+// Data routes — `resolveIdentity` accepts both authenticated (Istio
+// headers) and anonymous (`_chat_anon` cookie) callers. `apiRateLimiter`
+// runs after so it can tier-key on `req.tier`. Chat routes add
+// per-minute and per-day caps on top.
+const dataMiddleware = [resolveIdentity, apiRateLimiter];
+app.use(
+  '/api/chat',
+  ...dataMiddleware,
+  chatRateLimiter,
+  chatDailyLimiter,
+  chatRoutes,
+);
+app.use('/api/conversations', ...dataMiddleware, conversationRoutes);
+app.use('/api/reactions', ...dataMiddleware, reactionRoutes);
+app.use('/api/validation', ...dataMiddleware, validationRoutes);
+app.use('/api/test-bench', ...dataMiddleware, agentTestBenchRoutes);
+app.use('/api/queue', ...dataMiddleware, messageQueueRoutes);
 /**
  * Swagger UI and JSON
  * UI:   /docs

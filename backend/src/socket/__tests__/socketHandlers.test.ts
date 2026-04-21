@@ -304,8 +304,9 @@ describe('Socket Handlers', () => {
       // 'hold_agent', and should not emit a hold_greeting proactive message.
       const initCalls = (agentService.initializeConversation as jest.Mock).mock
         .calls;
-      expect(initCalls.some(c => c[0] === 'lean-socket-id' && c[1] === 'general'))
-        .toBe(true);
+      expect(
+        initCalls.some(c => c[0] === 'lean-socket-id' && c[1] === 'general'),
+      ).toBe(true);
       expect(initCalls.some(c => c[1] === 'hold_agent')).toBe(false);
 
       const proactiveEmits = (leanSocket.emit as jest.Mock).mock.calls.filter(

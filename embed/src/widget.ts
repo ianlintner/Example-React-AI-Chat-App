@@ -265,37 +265,44 @@ export class ChatWidget {
       }
     });
 
-    this.socket.on('stream_complete', (data: { messageId: string; conversationId: string; agentUsed?: string }) => {
-      if (data.conversationId) this.conversationId = data.conversationId;
-      const el = this.streamingMessages.get(data.messageId);
-      if (el && data.agentUsed) this.applyAgentBadge(el, data.agentUsed);
-      this.streamingMessages.delete(data.messageId);
-      this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
-    });
-
-    this.socket.on('stream_error', (err: { message: string; code?: string }) => {
-      this.removeTyping();
-      // Backend uses in-memory storage; on a restart a previously valid
-      // conversationId stops existing. Drop it so the next send creates a
-      // fresh conversation instead of dead-ending on the same error.
-      if (err.code === 'CONVERSATION_NOT_FOUND') {
-        this.conversationId = null;
-      }
-      this.appendAssistantFinal({
-        id: `err-${Date.now()}`,
-        role: 'assistant',
-        content: `Sorry, something went wrong: ${err.message}`,
-      });
-      this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
-    });
-
     this.socket.on(
-      'proactive_message',
-      (data: { message: ServerMessage }) => {
-        this.removeTyping();
-        this.appendAssistantFinal(data.message);
+      'stream_complete',
+      (data: {
+        messageId: string;
+        conversationId: string;
+        agentUsed?: string;
+      }) => {
+        if (data.conversationId) this.conversationId = data.conversationId;
+        const el = this.streamingMessages.get(data.messageId);
+        if (el && data.agentUsed) this.applyAgentBadge(el, data.agentUsed);
+        this.streamingMessages.delete(data.messageId);
+        this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
       },
     );
+
+    this.socket.on(
+      'stream_error',
+      (err: { message: string; code?: string }) => {
+        this.removeTyping();
+        // Backend uses in-memory storage; on a restart a previously valid
+        // conversationId stops existing. Drop it so the next send creates a
+        // fresh conversation instead of dead-ending on the same error.
+        if (err.code === 'CONVERSATION_NOT_FOUND') {
+          this.conversationId = null;
+        }
+        this.appendAssistantFinal({
+          id: `err-${Date.now()}`,
+          role: 'assistant',
+          content: `Sorry, something went wrong: ${err.message}`,
+        });
+        this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
+      },
+    );
+
+    this.socket.on('proactive_message', (data: { message: ServerMessage }) => {
+      this.removeTyping();
+      this.appendAssistantFinal(data.message);
+    });
 
     this.socket.on(
       'attachment',
@@ -382,7 +389,10 @@ export class ChatWidget {
     if (attachment.type === 'youtube' && attachment.videoId) {
       const iframe = document.createElement('iframe');
       iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(attachment.videoId)}`;
-      iframe.setAttribute('allow', 'accelerometer; encrypted-media; picture-in-picture');
+      iframe.setAttribute(
+        'allow',
+        'accelerometer; encrypted-media; picture-in-picture',
+      );
       iframe.setAttribute('allowfullscreen', '');
       iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
       wrap.appendChild(iframe);

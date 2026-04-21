@@ -1,8 +1,50 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
+import { resolveIdentity } from '../middleware/identity';
 import { logger } from '../logger';
 
 const router = Router();
+
+/**
+ * @swagger
+ * /api/auth/session:
+ *   get:
+ *     summary: Get current session (anonymous or authenticated)
+ *     description: >
+ *       Returns the caller's tier and, when authenticated, a minimal user
+ *       profile. Always succeeds (200) — anonymous callers get a
+ *       synthesized "Guest" user and tier='anonymous'. The frontend uses
+ *       this to decide whether to show the login banner and which model
+ *       tier badge to render.
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Session snapshot
+ */
+router.get(
+  '/session',
+  resolveIdentity,
+  (req: Request, res: Response): void => {
+    const user = req.user;
+    const tier = req.tier ?? 'anonymous';
+    const authenticated = tier === 'authenticated';
+
+    res.json({
+      tier,
+      authenticated,
+      user: user
+        ? {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            provider: user.provider,
+          }
+        : null,
+      loginUrl: authenticated ? null : process.env.LOGIN_URL || '/oauth2/start',
+    });
+  },
+);
 
 /**
  * @swagger

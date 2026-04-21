@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { extractAnonId, Tier } from '../middleware/identity';
+import { checkChatRateLimit } from '../rateLimit/checkChatLimit';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
@@ -832,6 +833,35 @@ export const setupSocketHandlers = (
         conversationId: data.conversationId,
         forceAgent: data.forceAgent,
       });
+
+      // Tiered rate-limit check. Mirrors the HTTP /api/chat limits so a
+      // caller can't bypass the quota by switching to the socket path.
+      // Keyed on the resolved identity (anon_<uuid> for anonymous
+      // sockets, userId for authenticated) so reconnects don't reset
+      // the bucket.
+      const rlTier: Tier = socket.tier ?? 'anonymous';
+      const rlIdentity = socket.userId || socket.id;
+      const rlResult = await checkChatRateLimit(rlIdentity, rlTier);
+      if (!rlResult.allowed) {
+        console.warn(
+          `🚦 Socket chat rate limit hit: identity=${rlIdentity} tier=${rlTier} bucket=${rlResult.bucket} limit=${rlResult.limit}`,
+        );
+        socket.emit('rate_limit_exceeded', {
+          scope: 'chat',
+          bucket: rlResult.bucket,
+          tier: rlTier,
+          limit: rlResult.limit,
+          retryAfterSec: rlResult.retryAfterSec,
+          message:
+            rlResult.bucket === 'minute'
+              ? 'You are sending messages too quickly. Please wait a moment.'
+              : rlTier === 'anonymous'
+                ? 'Daily guest quota reached. Sign in for a higher limit.'
+                : 'Daily chat quota reached. Try again tomorrow.',
+        });
+        return;
+      }
+
       metricsEmit.chat.messageObserved('user', data.forceAgent);
 
       // Create conversation span for tracing with proper context

@@ -3,6 +3,7 @@ import RedisStore from 'rate-limit-redis';
 import { Request } from 'express';
 import { logger } from '../logger';
 import { getRateLimitRedis } from '../rateLimit/redisClient';
+import { metricsEmit } from '../metrics/prometheus';
 
 /**
  * Tiered rate limits.
@@ -105,6 +106,7 @@ export const apiRateLimiter = rateLimit({
       { identifier: identityKey(req), tier: tierOf(req) },
       'API rate limit exceeded',
     );
+    metricsEmit.tier.rateLimitHit('http', tierOf(req), 'api');
     res.status(429).json({
       error: 'Too many requests',
       message: 'You have exceeded the per-minute API rate limit.',
@@ -135,6 +137,7 @@ export const chatRateLimiter = rateLimit({
       { identifier: identityKey(req), tier: tierOf(req) },
       'Chat per-minute rate limit exceeded',
     );
+    metricsEmit.tier.rateLimitHit('http', tierOf(req), 'minute');
     res.status(429).json({
       error: 'Chat rate limit exceeded',
       message: 'Please wait a moment before sending another message.',
@@ -162,6 +165,7 @@ export const chatDailyLimiter = rateLimit({
       { identifier: identityKey(req), tier: tierOf(req) },
       'Chat daily quota exceeded',
     );
+    metricsEmit.tier.rateLimitHit('http', tierOf(req), 'day');
     res.status(429).json({
       error: 'Daily chat quota exceeded',
       message:
@@ -190,6 +194,7 @@ export const globalIpCeilingLimiter = rateLimit({
   store: redisStore('rl:ip-sec:'),
   handler: (req, res) => {
     logger.warn({ ip: req.ip }, 'Global IP ceiling hit');
+    metricsEmit.tier.rateLimitHit('http', tierOf(req), 'global');
     res.status(429).json({
       error: 'Rate limit exceeded',
       message: 'Too many requests from this IP. Slow down.',
@@ -239,6 +244,7 @@ export const socketConnectionLimiter = rateLimit({
       { ip: req.ip, userId: req.userId },
       'Socket connection rate limit exceeded',
     );
+    metricsEmit.tier.rateLimitHit('socket-http', tierOf(req), 'connection');
     res.status(429).json({
       error: 'Too many connection attempts',
       message: 'Please wait before trying to connect again.',

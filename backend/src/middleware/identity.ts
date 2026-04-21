@@ -4,6 +4,7 @@ import * as cookie from 'cookie';
 import { logger } from '../logger';
 import userStorage from '../storage/userStorage';
 import { User } from '../../../shared/types';
+import { recordAnonSession } from '../metrics/anonSessionTracker';
 
 export type Tier = 'anonymous' | 'authenticated';
 
@@ -123,6 +124,7 @@ export const resolveIdentity = async (
     }
     // Always refresh the cookie — rolling 8h expiry.
     res.cookie(ANON_COOKIE_NAME, anonId, anonCookieOptions());
+    recordAnonSession(anonId);
 
     req.user = buildAnonUser(anonId);
     req.userId = req.user.id;

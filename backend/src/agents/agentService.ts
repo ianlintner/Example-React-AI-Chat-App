@@ -25,6 +25,7 @@ import {
   setSpanStatus,
   endSpan,
 } from '../tracing/tracer';
+import { metricsEmit } from '../metrics/prometheus';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -198,6 +199,10 @@ export class AgentService {
       // Generate response using the agent
       let responseContent: string;
       const attachments: MediaAttachment[] = [];
+      // Declared outside the try so the catch can attribute errors to the
+      // provider/model that was actually selected, not 'unknown'.
+      let emittedProviderId: string | undefined;
+      let emittedModel: string | undefined;
 
       addSpanEvent(span, 'agent.response_generation_start');
 
@@ -237,6 +242,8 @@ export class AgentService {
             tierRoute.fallbackProvider,
           );
           const resolvedModel = fallbackModel ?? tierRoute.model;
+          emittedProviderId = provider.id;
+          emittedModel = resolvedModel;
           const agentTools = agentConfig.tools?.length
             ? toolRegistry.getForAgent(agentConfig.tools)
             : [];
@@ -284,6 +291,12 @@ export class AgentService {
               });
             }
           }
+          metricsEmit.tier.llmRequest(
+            tier,
+            provider.id,
+            resolvedModel,
+            'success',
+          );
 
           // Execute tool calls and collect attachments
           for (const tc of pendingToolCalls) {
@@ -334,6 +347,12 @@ export class AgentService {
         addSpanEvent(span, 'agent.provider_call_error', {
           error: (error as Error).message,
         });
+        metricsEmit.tier.llmRequest(
+          tier,
+          emittedProviderId ?? 'unknown',
+          emittedModel ?? 'unknown',
+          'error',
+        );
         responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
       }
 

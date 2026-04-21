@@ -21,30 +21,26 @@ const router = Router();
  *       200:
  *         description: Session snapshot
  */
-router.get(
-  '/session',
-  resolveIdentity,
-  (req: Request, res: Response): void => {
-    const user = req.user;
-    const tier = req.tier ?? 'anonymous';
-    const authenticated = tier === 'authenticated';
+router.get('/session', resolveIdentity, (req: Request, res: Response): void => {
+  const user = req.user;
+  const tier = req.tier ?? 'anonymous';
+  const authenticated = tier === 'authenticated';
 
-    res.json({
-      tier,
-      authenticated,
-      user: user
-        ? {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            avatar: user.avatar,
-            provider: user.provider,
-          }
-        : null,
-      loginUrl: authenticated ? null : process.env.LOGIN_URL || '/oauth2/start',
-    });
-  },
-);
+  res.json({
+    tier,
+    authenticated,
+    user: user
+      ? {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar,
+          provider: user.provider,
+        }
+      : null,
+    loginUrl: authenticated ? null : process.env.LOGIN_URL || '/oauth2/start',
+  });
+});
 
 /**
  * @swagger

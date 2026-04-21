@@ -124,6 +124,17 @@ const ERROR_KINDS = new Set<string>([
   'ratelimit',
 ]);
 
+const TIERS = new Set<string>(['anonymous', 'authenticated']);
+const CHAT_ROLES = new Set<string>(['user', 'assistant', 'proactive']);
+const RATE_LIMIT_SCOPES = new Set<string>(['http', 'socket', 'socket-http']);
+const RATE_LIMIT_BUCKETS = new Set<string>([
+  'api',
+  'minute',
+  'day',
+  'global',
+  'connection',
+]);
+
 function whitelist(value: unknown, set: Set<string>): string {
   const v = typeof value === 'string' ? value.toLowerCase() : '';
   return set.has(v) ? v : OTHER;
@@ -453,6 +464,33 @@ const validationQualityMetrics = new promClient.Histogram({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Tier-aware metrics (anonymous vs authenticated)
+// ─────────────────────────────────────────────────────────────────────────────
+const chatMessagesByTierTotal = new promClient.Counter({
+  name: 'chat_messages_by_tier_total',
+  help: 'Chat messages observed, labelled by caller tier.',
+  labelNames: ['service', 'tier', 'role'],
+});
+
+const llmRequestsByTierTotal = new promClient.Counter({
+  name: 'llm_requests_by_tier_total',
+  help: 'LLM provider requests labelled by caller tier.',
+  labelNames: ['service', 'tier', 'provider', 'model', 'outcome'],
+});
+
+const rateLimitHitsTotal = new promClient.Counter({
+  name: 'rate_limit_hits_total',
+  help: 'Requests blocked by a rate limiter, labelled by scope/tier/bucket.',
+  labelNames: ['service', 'scope', 'tier', 'bucket'],
+});
+
+const anonSessionsActive = new promClient.Gauge({
+  name: 'anon_sessions_active',
+  help: 'Unique anonymous sessions seen in the recent window.',
+  labelNames: ['service'],
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Errors (generic)
 // ─────────────────────────────────────────────────────────────────────────────
 const errorsTotal = new promClient.Counter({
@@ -494,6 +532,10 @@ const allMetrics: Array<
   workerJobDuration,
   memoryStorageOperationsTotal,
   appInfo,
+  chatMessagesByTierTotal,
+  llmRequestsByTierTotal,
+  rateLimitHitsTotal,
+  anonSessionsActive,
   validationChecks,
   validationScores,
   validationIssues,
@@ -767,6 +809,45 @@ export const metricsEmit = {
           operation: whitelist(operation, MEMORY_OPS),
           outcome,
         }),
+      ),
+  },
+
+  tier: {
+    chatMessage: (tier: string | undefined, role: string) =>
+      safeEmit(() =>
+        chatMessagesByTierTotal.inc({
+          service: SERVICE_LABEL,
+          tier: whitelist(tier, TIERS),
+          role: whitelist(role, CHAT_ROLES),
+        }),
+      ),
+    llmRequest: (
+      tier: string | undefined,
+      provider: string,
+      model: string,
+      outcome: 'success' | 'error',
+    ) =>
+      safeEmit(() =>
+        llmRequestsByTierTotal.inc({
+          service: SERVICE_LABEL,
+          tier: whitelist(tier, TIERS),
+          provider: whitelist(provider, LLM_PROVIDERS),
+          model: (model ?? 'unknown').toString(),
+          outcome,
+        }),
+      ),
+    rateLimitHit: (scope: string, tier: string | undefined, bucket: string) =>
+      safeEmit(() =>
+        rateLimitHitsTotal.inc({
+          service: SERVICE_LABEL,
+          scope: whitelist(scope, RATE_LIMIT_SCOPES),
+          tier: whitelist(tier, TIERS),
+          bucket: whitelist(bucket, RATE_LIMIT_BUCKETS),
+        }),
+      ),
+    anonSessionsActive: (count: number) =>
+      safeEmit(() =>
+        anonSessionsActive.set({ service: SERVICE_LABEL }, Math.max(0, count)),
       ),
   },
 

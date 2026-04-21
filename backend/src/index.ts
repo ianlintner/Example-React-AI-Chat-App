@@ -136,6 +136,10 @@ app.use(cookieParser());
 // Prometheus metrics middleware + build info
 app.use(httpMetricsMiddleware);
 registerAppInfo();
+// Anonymous-session rolling-window tracker — sets anon_sessions_active gauge.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy load avoids early side effects in tests
+const { startAnonSessionTracker } = require('./metrics/anonSessionTracker');
+startAnonSessionTracker();
 
 // Per-pod DoS ceiling (IP-keyed, blunt instrument sitting above the
 // tiered per-identity limits). Skips /health and /metrics internally.

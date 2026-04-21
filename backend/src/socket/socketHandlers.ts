@@ -846,6 +846,7 @@ export const setupSocketHandlers = (
         console.warn(
           `🚦 Socket chat rate limit hit: identity=${rlIdentity} tier=${rlTier} bucket=${rlResult.bucket} limit=${rlResult.limit}`,
         );
+        metricsEmit.tier.rateLimitHit('socket', rlTier, rlResult.bucket);
         socket.emit('rate_limit_exceeded', {
           scope: 'chat',
           bucket: rlResult.bucket,
@@ -863,6 +864,7 @@ export const setupSocketHandlers = (
       }
 
       metricsEmit.chat.messageObserved('user', data.forceAgent);
+      metricsEmit.tier.chatMessage(socket.tier, 'user');
 
       // Create conversation span for tracing with proper context
       const conversationSpan = createConversationSpan(
@@ -1136,6 +1138,7 @@ export const setupSocketHandlers = (
               'assistant',
               agentResponse.agentUsed,
             );
+            metricsEmit.tier.chatMessage(socket.tier, 'assistant');
             metricsEmit.agent.responseTime(
               agentResponse.agentUsed,
               true,

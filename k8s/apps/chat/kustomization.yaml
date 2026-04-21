@@ -15,4 +15,10 @@ resources:
   - requestauthentication-chat.yaml
   - authorizationpolicy-chat.yaml
   - envoyfilter-chat-jwt-to-headers.yaml
-  - envoyfilter-chat-oauth2-exchange.yaml
+  # NOTE: envoyfilter-chat-oauth2-exchange.yaml was removed. The
+  # sidecar-inbound Envoy OAuth2 filter duplicated the ingress-level
+  # oauth2-proxy layer (ingress Lua in secure-subdomain-oauth2-exchange
+  # already terminates auth and sets _secure_session). The inner filter
+  # used a different client_id and JSON `state` format; its
+  # /_oauth2/callback routed back through the VirtualService to
+  # oauth2-proxy, which rejected the JSON state and returned 500.

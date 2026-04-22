@@ -95,7 +95,16 @@ class AuthService {
   }
 
   /**
-   * Fetch current user from API
+   * Fetch current user from API.
+   *
+   * `/api/auth/me` now always returns 200 and degrades gracefully: for
+   * anonymous callers the response carries `user: null` plus a tier
+   * snapshot (`tier`, `authenticated`, `loginUrl`). That's intentional —
+   * the cluster-level oauth2-proxy no longer redirects chat.cat-herding
+   * requests on 401, and the backend mints an _chat_anon cookie so the
+   * frontend can operate without a signed-in user.
+   *
+   * Non-ok responses (5xx, network) still return null quietly.
    */
   async fetchCurrentUser(token?: string | null): Promise<User | null> {
     try {
@@ -110,13 +119,16 @@ class AuthService {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user');
+        // 5xx / network noise — stay silent, anon fallback kicks in.
+        return null;
       }
 
       const data = await response.json();
-      return data.user;
+      return data.user ?? null;
     } catch (error) {
-      console.error('Error fetching current user:', error);
+      if (__DEV__) {
+        console.warn('fetchCurrentUser failed; treating as anonymous', error);
+      }
       return null;
     }
   }

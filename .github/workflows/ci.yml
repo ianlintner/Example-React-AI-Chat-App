@@ -289,6 +289,10 @@ jobs:
             type=ref,event=tag
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
+            # Timestamped tag so Flux ImagePolicy can order tags
+            # chronologically (alphabetical asc on a fixed-width
+            # YYYYMMDDHHmmss prefix selects the newest build).
+            type=raw,value={{date 'YYYYMMDDHHmmss'}}-{{sha}},enable={{is_default_branch}}
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5

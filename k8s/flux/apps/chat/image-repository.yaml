@@ -1,0 +1,21 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: chat-backend
+  namespace: flux-system
+spec:
+  image: gabby.azurecr.io/chat-backend
+  interval: 1m0s
+  # The registry needs credentials. Create the secret once with:
+  #
+  #   ACR_TOKEN=$(az acr login --name gabby --expose-token \
+  #     --output tsv --query accessToken)
+  #   kubectl -n flux-system create secret docker-registry acr-pull \
+  #     --docker-server=gabby.azurecr.io \
+  #     --docker-username=00000000-0000-0000-0000-000000000000 \
+  #     --docker-password="$ACR_TOKEN"
+  #
+  # The token expires; for production wire a service principal via OIDC
+  # or use workload-identity with the cluster's ACR pull-role binding.
+  secretRef:
+    name: acr-pull

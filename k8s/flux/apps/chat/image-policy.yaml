@@ -1,0 +1,19 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: chat-backend
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: chat-backend
+  # CI pushes a fixed-width timestamped tag of the form
+  # `YYYYMMDDHHmmss-<commit-sha>` on every merge to main. Filtering on
+  # that pattern gives us an orderable set; `alphabetical: asc` plus a
+  # same-width timestamp prefix means the lexicographically-last tag is
+  # the newest build.
+  filterTags:
+    pattern: '^(?P<ts>\d{14})-[0-9a-f]+$'
+    extract: '$ts'
+  policy:
+    alphabetical:
+      order: asc

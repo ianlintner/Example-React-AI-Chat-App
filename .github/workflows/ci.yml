@@ -308,6 +308,26 @@ jobs:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
+      # Roll the running Deployment so the new `:latest` image is
+      # pulled. Runs on default-branch pushes only — PRs do not touch
+      # the live cluster. Flux reconciles the manifests but the
+      # image-update-automation loop is disabled pending a git-write
+      # PAT (see k8s/flux/apps/chat/kustomization.yaml), so the manual
+      # rollout is how new builds reach prod for now.
+      - name: Roll chat-backend on bigboy
+        if: github.ref == 'refs/heads/main'
+        env:
+          AKS_RESOURCE_GROUP: nekoc
+          AKS_CLUSTER: bigboy
+        run: |
+          az aks get-credentials \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER" \
+            --overwrite-existing
+          kubectl -n default rollout restart deployment/chat-backend
+          kubectl -n default rollout status deployment/chat-backend \
+            --timeout=5m
+
   ci-success:
     needs: [checks, backend, frontend, web, docs, security, docker-build-push]
     if: always()

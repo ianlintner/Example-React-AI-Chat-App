@@ -6,4 +6,9 @@ namespace: flux-system
 resources:
   - image-repository.yaml
   - image-policy.yaml
-  - image-update-automation.yaml
+  # image-update-automation.yaml requires a git-writable PAT on the
+  # GitRepository source. Enabled out-of-band in a follow-up: add the
+  # PAT to the FluxConfiguration via
+  # `az k8s-configuration flux update ... --https-user <bot>
+  # --https-key <pat>` and uncomment the resource below.
+  # - image-update-automation.yaml

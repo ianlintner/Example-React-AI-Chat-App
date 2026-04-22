@@ -14,6 +14,15 @@ data:
   FRONTEND_URL: 'https://chat.cat-herding.net'
   EXPO_PUBLIC_API_URL: 'https://chat.cat-herding.net'
   # Note: OAuth is handled at cluster level via oauth2-proxy
+  # ── Anonymous / tiered-LLM rollout ──────────────────────────────────
+  # Anonymous callers get the Foundry free-tier model; authenticated
+  # callers keep per-agent defaults. Toggle with LLM_TIERED=false to
+  # disable without a code redeploy.
+  LLM_TIERED: 'true'
+  LLM_FREE_MODEL: 'gpt-4o-mini'
+  # Override the /oauth2/start default when the login CTA should point
+  # at a different surface (e.g. staging).
+  LOGIN_URL: '/oauth2/start'
 
 ---
 # Dedicated oauth2-proxy config for chat app (unique name ensures override of cluster-wide default)

@@ -1,0 +1,29 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: chat-backend
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: flux-bot
+        email: flux-bot@cat-herding.net
+      messageTemplate: |
+        chore(deploy): bump chat-backend to {{range .Updated.Images}}{{println .}}{{end}}
+
+        Automated image tag bump from Flux ImageUpdateAutomation. The
+        ImagePolicy `flux-system/chat-backend` selected a newer tag
+        produced by CI (`YYYYMMDDHHmmss-<sha>` pattern).
+    push:
+      branch: main
+  update:
+    path: ./k8s/apps/chat
+    strategy: Setters

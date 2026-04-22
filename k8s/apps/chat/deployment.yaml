@@ -29,7 +29,13 @@ spec:
       automountServiceAccountToken: true
       containers:
         - name: chat-backend
-          image: gabby.azurecr.io/chat-backend:latest
+          # Flux rewrites this ref in-place on every new build — the
+          # imagepolicy marker below tells image-update-automation
+          # which ImagePolicy resource selects the target tag. The
+          # `:latest` default is what runs before Flux is pointed at
+          # this repo; once wired, it becomes
+          # `gabby.azurecr.io/chat-backend:<YYYYMMDDHHmmss>-<sha>`.
+          image: gabby.azurecr.io/chat-backend:latest # {"$imagepolicy": "flux-system:chat-backend"}
           imagePullPolicy: Always
           ports:
             - containerPort: 5001

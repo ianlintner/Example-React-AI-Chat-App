@@ -1,0 +1,35 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: chat-app
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./k8s/apps/chat
+  prune: true
+  wait: true
+  timeout: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  targetNamespace: default
+  # Reconcile the image-automation resources on the same cadence so
+  # Flux re-evaluates the ImagePolicy and commits tag bumps back to
+  # git when CI pushes a newer timestamped image.
+  dependsOn:
+    - name: chat-image-automation
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: chat-image-automation
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  path: ./k8s/flux/apps/chat
+  prune: true
+  wait: true
+  timeout: 2m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

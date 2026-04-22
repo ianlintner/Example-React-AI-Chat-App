@@ -27,6 +27,11 @@ COPY --chown=nodejs:nodejs backend/dist ./dist
 RUN mkdir -p dist/backend/public
 COPY --chown=nodejs:nodejs frontend/dist ./dist/backend/public
 
+# Copy pre-built embed widget. Vite emits to embed/dist/embed/*, which
+# slots in under the public root so the Express static handler serves it
+# at /embed/cat-herding-chat.js + /embed/callback.html.
+COPY --chown=nodejs:nodejs embed/dist/embed ./dist/backend/public/embed
+
 # Switch to nodejs user
 USER nodejs
 

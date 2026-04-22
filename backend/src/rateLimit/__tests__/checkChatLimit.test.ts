@@ -7,7 +7,7 @@ import {
   checkChatRateLimit,
   __resetChatLimitMemStore,
 } from '../checkChatLimit';
-import { TIER_LIMITS } from '../../middleware/rateLimit';
+import { TIER_LIMITS } from '../tierLimits';
 import { getRateLimitRedis } from '../redisClient';
 
 describe('checkChatRateLimit', () => {

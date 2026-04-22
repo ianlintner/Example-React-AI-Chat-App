@@ -1,5 +1,5 @@
 import type { Tier } from '../middleware/identity';
-import { TIER_LIMITS } from '../middleware/rateLimit';
+import { TIER_LIMITS } from './tierLimits';
 import { logger } from '../logger';
 import { getRateLimitRedis } from './redisClient';
 

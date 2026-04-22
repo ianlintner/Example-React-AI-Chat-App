@@ -3,6 +3,7 @@ import RedisStore from 'rate-limit-redis';
 import { Request } from 'express';
 import { logger } from '../logger';
 import { getRateLimitRedis } from '../rateLimit/redisClient';
+import { TIER_LIMITS } from '../rateLimit/tierLimits';
 import { metricsEmit } from '../metrics/prometheus';
 
 /**
@@ -23,19 +24,6 @@ import { metricsEmit } from '../metrics/prometheus';
  * store and log the degradation — per-pod counts will diverge under
  * multi-replica deployments until Redis is back.
  */
-
-const TIER_LIMITS = {
-  anonymous: {
-    apiPerMinute: 60,
-    chatPerMinute: 5,
-    chatPerDay: 50,
-  },
-  authenticated: {
-    apiPerMinute: 300,
-    chatPerMinute: 30,
-    chatPerDay: 1000,
-  },
-} as const;
 
 // Absolute DoS ceiling across all callers on this pod, keyed by IP.
 const GLOBAL_IP_PER_SECOND = 50;
@@ -76,32 +64,35 @@ function redisStore(prefix: string): Options['store'] | undefined {
     return undefined;
   }
   try {
-    return new RedisStore({
+    const store = new RedisStore({
       prefix,
       sendCommand: async (...args: string[]) => {
-        try {
-          const client = await getRateLimitRedis();
-          if (!client) {
-            // Fail-open: log once, pretend the command returned a neutral
-            // value. We never reject here because express-rate-limit fires
-            // some commands (reset, cleanup) without awaiting — a rejection
-            // during process teardown becomes an unhandled rejection that
-            // kills the node process under jest.
-            return 0;
-          }
-          return (await client.sendCommand(args)) as
-            | string
-            | number
-            | (string | number)[];
-        } catch (err) {
-          logger.warn(
-            { err, cmd: args[0] },
-            'rate-limit redis command failed; allowing request',
-          );
-          return 0;
+        const client = await getRateLimitRedis();
+        if (!client) {
+          throw new Error('rate-limit redis unavailable');
         }
+        return (await client.sendCommand(args)) as
+          | string
+          | number
+          | (string | number)[];
       },
     });
+    // RedisStore's constructor eager-loads two LUA scripts and stashes
+    // the resulting promises on `incrementScriptSha` / `getScriptSha`.
+    // If the backing connection is unreachable (dev without Redis, a
+    // test that mocks the client to null), those promises reject and —
+    // since no one has awaited them yet — surface as unhandled
+    // rejections that kill the node process under jest. Attach a no-op
+    // catch so the rejection is "handled"; the real rate-limit flow
+    // then sees the same error through its own awaits and respects
+    // `passOnStoreError: true`.
+    const storeWithScripts = store as unknown as {
+      incrementScriptSha?: Promise<unknown>;
+      getScriptSha?: Promise<unknown>;
+    };
+    storeWithScripts.incrementScriptSha?.catch?.(() => {});
+    storeWithScripts.getScriptSha?.catch?.(() => {});
+    return store;
   } catch (err) {
     logger.warn({ err }, 'Failed to construct RedisStore; using memory store');
     return undefined;
@@ -272,4 +263,5 @@ export const socketConnectionLimiter = rateLimit({
   skip: req => req.tier === 'authenticated',
 });
 
+// Re-export so existing callers that import from this module keep working.
 export { TIER_LIMITS };

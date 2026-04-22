@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatRequest, ChatResponse, Message, Conversation } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
+import { metricsEmit } from '../metrics/prometheus';
 import {
   tracer,
   createConversationSpan,
@@ -114,13 +115,19 @@ router.post('/', async (req, res) => {
     };
     conversation.messages.push(userMessage);
     addSpanEvent(span, 'user_message.added', { messageId: userMessage.id });
+    metricsEmit.tier.chatMessage(req.tier, 'user');
 
-    // Process message with agent service
+    // Process message with agent service. Pass through the caller's
+    // tier so anonymous users get routed to the Foundry free-tier model
+    // (when LLM_TIERED is on).
     addSpanEvent(span, 'agent.processing_start');
     const agentResponse = await agentService.processMessage(
       message,
       conversation.messages.slice(0, -1), // Exclude the user message we just added
       forceAgent,
+      conversation.id,
+      req.userId,
+      req.tier,
     );
     addSpanEvent(span, 'agent.processing_complete', {
       agentUsed: agentResponse.agentUsed,
@@ -139,6 +146,7 @@ router.post('/', async (req, res) => {
     };
     conversation.messages.push(aiMessage);
     conversation.updatedAt = new Date();
+    metricsEmit.tier.chatMessage(req.tier, 'assistant');
 
     const response: ChatResponse = {
       message: aiMessage,

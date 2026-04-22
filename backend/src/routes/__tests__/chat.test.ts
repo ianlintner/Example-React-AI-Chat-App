@@ -82,6 +82,9 @@ describe('Chat Routes', () => {
         'Tell me a joke',
         [],
         undefined,
+        expect.any(String),
+        undefined,
+        undefined,
       );
     });
 
@@ -117,6 +120,9 @@ describe('Chat Routes', () => {
         'Another message',
         existingMessages,
         undefined,
+        'conv-123',
+        undefined,
+        undefined,
       );
     });
 
@@ -134,6 +140,9 @@ describe('Chat Routes', () => {
         'Tell me a joke',
         [],
         'trivia',
+        expect.any(String),
+        undefined,
+        undefined,
       );
     });
 

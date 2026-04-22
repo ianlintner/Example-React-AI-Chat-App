@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { providerRegistry } from '../llm';
+import { routeLLMForTier } from '../llm/tierRouter';
+import type { Tier } from '../middleware/identity';
 import { toolRegistry } from '../tools';
 import { MediaAttachment } from '../types';
 import { classifyMessage } from './classifier';
@@ -23,6 +25,7 @@ import {
   setSpanStatus,
   endSpan,
 } from '../tracing/tracer';
+import { metricsEmit } from '../metrics/prometheus';
 
 export class AgentService {
   private goalSeekingSystem: GoalSeekingSystem;
@@ -98,6 +101,7 @@ export class AgentService {
     forcedAgentType?: AgentType,
     conversationId?: string,
     userId?: string,
+    tier?: Tier,
   ): Promise<AgentResponse> {
     const span = createAgentSpan(
       'agent_service',
@@ -195,6 +199,10 @@ export class AgentService {
       // Generate response using the agent
       let responseContent: string;
       const attachments: MediaAttachment[] = [];
+      // Declared outside the try so the catch can attribute errors to the
+      // provider/model that was actually selected, not 'unknown'.
+      let emittedProviderId: string | undefined;
+      let emittedModel: string | undefined;
 
       addSpanEvent(span, 'agent.response_generation_start');
 
@@ -204,18 +212,38 @@ export class AgentService {
           responseContent = this.generateDemoResponse(agent.name, message);
           addSpanEvent(span, 'agent.demo_response_generated');
         } else {
-          // Resolve provider (falls back to openai if preferred unavailable)
+          // Resolve provider (falls back to openai if preferred unavailable).
+          // Tier routing: when LLM_TIERED is on and the caller is anonymous,
+          // route to the Foundry free-tier model before asking the registry
+          // to resolve. Authenticated callers keep the agent's default.
           const agentConfig = agent as typeof agent & {
             provider?: string;
             fallbackProvider?: string;
             tools?: string[];
             cacheSystem?: boolean;
           };
-          const { provider, model: fallbackModel } = providerRegistry.resolve(
-            agentConfig.provider as any,
-            agentConfig.fallbackProvider as any,
+          const tierRoute = routeLLMForTier(
+            {
+              provider: agentConfig.provider as any,
+              fallbackProvider: agentConfig.fallbackProvider as any,
+              model: agent.model,
+            },
+            tier,
           );
-          const resolvedModel = fallbackModel ?? agent.model;
+          if (tierRoute.overrideApplied) {
+            addSpanEvent(span, 'agent.tier_override_applied', {
+              tier,
+              provider: tierRoute.provider,
+              model: tierRoute.model,
+            });
+          }
+          const { provider, model: fallbackModel } = providerRegistry.resolve(
+            tierRoute.provider,
+            tierRoute.fallbackProvider,
+          );
+          const resolvedModel = fallbackModel ?? tierRoute.model;
+          emittedProviderId = provider.id;
+          emittedModel = resolvedModel;
           const agentTools = agentConfig.tools?.length
             ? toolRegistry.getForAgent(agentConfig.tools)
             : [];
@@ -263,6 +291,12 @@ export class AgentService {
               });
             }
           }
+          metricsEmit.tier.llmRequest(
+            tier,
+            provider.id,
+            resolvedModel,
+            'success',
+          );
 
           // Execute tool calls and collect attachments
           for (const tc of pendingToolCalls) {
@@ -313,6 +347,12 @@ export class AgentService {
         addSpanEvent(span, 'agent.provider_call_error', {
           error: (error as Error).message,
         });
+        metricsEmit.tier.llmRequest(
+          tier,
+          emittedProviderId ?? 'unknown',
+          emittedModel ?? 'unknown',
+          'error',
+        );
         responseContent = `I apologize, but I encountered an error while processing your request. Please try again.`;
       }
 
@@ -614,6 +654,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     conversationHistory: Message[] = [],
     forcedAgentType?: AgentType,
     conversationId?: string,
+    tier?: Tier,
   ): Promise<AgentResponse & { proactiveActions?: GoalAction[] }> {
     // Set current agent as active for this user
     const agentType =
@@ -633,6 +674,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       forcedAgentType,
       conversationId,
       userId,
+      tier,
     );
 
     // Update goal progress based on the response
@@ -809,6 +851,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     message: string,
     conversationHistory: Message[] = [],
     conversationId?: string,
+    tier?: Tier,
   ): Promise<
     AgentResponse & {
       handoffInfo?: { target: AgentType; reason: string; message: string };
@@ -890,6 +933,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       decision.selectedAgent,
       conversationId,
       userId,
+      tier,
     );
 
     // Update conversation context with the interaction using the agent
@@ -967,6 +1011,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
     conversationHistory: Message[] = [],
     conversationId?: string,
     forcedAgentType?: AgentType,
+    tier?: Tier,
   ): Promise<
     AgentResponse & {
       proactiveActions?: GoalAction[];
@@ -982,6 +1027,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
         conversationHistory,
         forcedAgentType,
         conversationId,
+        tier,
       );
 
       // Still update conversation context
@@ -1004,6 +1050,7 @@ To get real AI responses, please set your OPENAI_API_KEY environment variable.`;
       message,
       conversationHistory,
       conversationId,
+      tier,
     );
 
     // If no handoff is happening, also process with goal-seeking for proactive actions

@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
+import { extractAnonId, Tier } from '../middleware/identity';
+import { checkChatRateLimit } from '../rateLimit/checkChatLimit';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
 import { storage } from '../storage/memoryStorage';
 import { agentService } from '../agents/agentService';
@@ -21,6 +23,11 @@ import { tracingContextManager } from '../tracing/contextManager';
 interface AuthenticatedSocket extends Socket {
   userId?: string;
   userEmail?: string;
+  // Tier drives rate limits, LLM model routing, and UI gating. Populated
+  // during the io.use auth middleware: 'authenticated' for oauth2-proxy
+  // header / JWT paths; 'anonymous' for cookie-only and fallback paths.
+  tier?: Tier;
+  isAnonymous?: boolean;
   // When set via handshake query `?mode=lean`, suppresses the demo
   // hold-flow bootstrap so embedded widgets don't auto-push unsolicited
   // proactive messages (joke/gif/youtube) to visitors.
@@ -261,6 +268,8 @@ export const setupSocketHandlers = (
         // Attach user info to socket
         socket.userId = user.id;
         socket.userEmail = user.email;
+        socket.tier = 'authenticated';
+        socket.isAnonymous = false;
 
         console.log(
           `Socket authenticated via oauth2-proxy for user ${user.email} (${user.id})`,
@@ -268,18 +277,25 @@ export const setupSocketHandlers = (
         return next();
       }
 
-      // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
-      // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
       const cookieHeader = socket.handshake.headers['cookie'] as
         | string
         | undefined;
+      const anonId = extractAnonId(cookieHeader);
+
+      // If OAuth headers are not present, but the oauth2-proxy cookie exists, allow connection
+      // This supports cases where websocket path is skip-auth in oauth2-proxy but browser still sends session cookie
       if (cookieHeader && /_oauth2_proxy=/.test(cookieHeader)) {
         console.log(
           'Socket allowing connection with oauth2-proxy session cookie present (no headers)',
         );
-        // Attach minimal identity (anonymous) - downstream features remain available for demo streaming
-        socket.userId = socket.id;
+        // Treat as anonymous — the proxy session doesn't give us a verified
+        // principal without the injected x-auth-request-* headers. Prefer
+        // the _chat_anon UUID when present so rate-limit keys are stable
+        // across reconnects; otherwise fall back to socket.id.
+        socket.userId = anonId ? `anon_${anonId}` : socket.id;
         socket.userEmail = 'Anonymous';
+        socket.tier = 'anonymous';
+        socket.isAnonymous = true;
         return next();
       }
 
@@ -288,9 +304,12 @@ export const setupSocketHandlers = (
         console.warn(
           `Socket connection missing auth from ${socket.handshake.address} - allowing anonymous for demo`,
         );
-        // Allow anonymous socket for demo fallback (no user storage record)
-        socket.userId = socket.id;
+        // Anonymous path — prefer the HTTP-issued _chat_anon UUID so the
+        // same visitor keeps the same id across socket reconnects.
+        socket.userId = anonId ? `anon_${anonId}` : socket.id;
         socket.userEmail = 'Anonymous';
+        socket.tier = 'anonymous';
+        socket.isAnonymous = true;
         return next();
       }
 
@@ -315,6 +334,8 @@ export const setupSocketHandlers = (
       // Attach user info to socket
       socket.userId = user.id;
       socket.userEmail = user.email;
+      socket.tier = 'authenticated';
+      socket.isAnonymous = false;
 
       console.log(`Socket authenticated for user ${user.email} (${user.id})`);
       next();
@@ -812,7 +833,38 @@ export const setupSocketHandlers = (
         conversationId: data.conversationId,
         forceAgent: data.forceAgent,
       });
+
+      // Tiered rate-limit check. Mirrors the HTTP /api/chat limits so a
+      // caller can't bypass the quota by switching to the socket path.
+      // Keyed on the resolved identity (anon_<uuid> for anonymous
+      // sockets, userId for authenticated) so reconnects don't reset
+      // the bucket.
+      const rlTier: Tier = socket.tier ?? 'anonymous';
+      const rlIdentity = socket.userId || socket.id;
+      const rlResult = await checkChatRateLimit(rlIdentity, rlTier);
+      if (!rlResult.allowed) {
+        console.warn(
+          `🚦 Socket chat rate limit hit: identity=${rlIdentity} tier=${rlTier} bucket=${rlResult.bucket} limit=${rlResult.limit}`,
+        );
+        metricsEmit.tier.rateLimitHit('socket', rlTier, rlResult.bucket);
+        socket.emit('rate_limit_exceeded', {
+          scope: 'chat',
+          bucket: rlResult.bucket,
+          tier: rlTier,
+          limit: rlResult.limit,
+          retryAfterSec: rlResult.retryAfterSec,
+          message:
+            rlResult.bucket === 'minute'
+              ? 'You are sending messages too quickly. Please wait a moment.'
+              : rlTier === 'anonymous'
+                ? 'Daily guest quota reached. Sign in for a higher limit.'
+                : 'Daily chat quota reached. Try again tomorrow.',
+        });
+        return;
+      }
+
       metricsEmit.chat.messageObserved('user', data.forceAgent);
+      metricsEmit.tier.chatMessage(socket.tier, 'user');
 
       // Create conversation span for tracing with proper context
       const conversationSpan = createConversationSpan(
@@ -970,6 +1022,7 @@ export const setupSocketHandlers = (
                 conversation.messages.slice(0, -2), // Exclude the user message and AI placeholder we just added
                 conversation.id, // Pass conversation ID for validation
                 forceAgent,
+                socket.tier,
               );
 
             // Track agent response time and success
@@ -1085,6 +1138,7 @@ export const setupSocketHandlers = (
               'assistant',
               agentResponse.agentUsed,
             );
+            metricsEmit.tier.chatMessage(socket.tier, 'assistant');
             metricsEmit.agent.responseTime(
               agentResponse.agentUsed,
               true,

@@ -21,6 +21,9 @@ jest.mock('../../agents/agentService');
 jest.mock('../../metrics/prometheus');
 jest.mock('../../tracing/tracer');
 jest.mock('../../tracing/contextManager');
+jest.mock('../../rateLimit/checkChatLimit', () => ({
+  checkChatRateLimit: jest.fn().mockResolvedValue({ allowed: true }),
+}));
 jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid'),
 }));
@@ -559,6 +562,7 @@ describe('Socket Handlers', () => {
         [],
         'mock-uuid',
         undefined,
+        undefined,
       );
 
       expect(mockIo.to).toHaveBeenCalledWith('mock-uuid');
@@ -666,6 +670,31 @@ describe('Socket Handlers', () => {
         proactiveActions[0],
         expect.any(Array),
       );
+    });
+
+    it('should emit rate_limit_exceeded and skip processing when the tiered limit blocks', async () => {
+      const { checkChatRateLimit } = jest.requireMock(
+        '../../rateLimit/checkChatLimit',
+      ) as { checkChatRateLimit: jest.Mock };
+      checkChatRateLimit.mockResolvedValueOnce({
+        allowed: false,
+        bucket: 'minute',
+        limit: 5,
+        retryAfterSec: 30,
+      });
+
+      await withTimeout(streamChatHandler({ message: 'test message' }));
+
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'rate_limit_exceeded',
+        expect.objectContaining({
+          scope: 'chat',
+          bucket: 'minute',
+          limit: 5,
+          retryAfterSec: 30,
+        }),
+      );
+      expect(agentService.processMessageWithBothSystems).not.toHaveBeenCalled();
     });
 
     it('should track metrics during message processing', async () => {

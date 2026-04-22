@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router';
 import { ConversationListPage } from '@/app/pages/ConversationListPage';
 import { ChatPage } from '@/app/pages/ChatPage';
+import { LoginBanner, ModelTierBadge } from '@/session/LoginBanner';
 import './styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -26,7 +27,11 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: function RootLayout() {
     return (
       <div className='app-shell'>
-        <header className='app-shell__header'>Cat-Herding Chat</header>
+        <header className='app-shell__header'>
+          <span className='app-shell__title'>Cat-Herding Chat</span>
+          <ModelTierBadge />
+        </header>
+        <LoginBanner />
         <main className='app-shell__main'>
           <Outlet />
         </main>

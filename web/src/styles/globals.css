@@ -39,6 +39,58 @@ body {
   padding: 12px 16px;
   font-weight: 500;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-shell__title {
+  flex: 1;
+}
+
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-border);
+}
+
+.tier-badge--anonymous {
+  background: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+.tier-badge--authenticated {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border-color: var(--color-accent);
+}
+
+.login-banner {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  border-bottom: 1px solid var(--color-border);
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.login-banner__cta {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.login-banner__cta:hover {
+  color: var(--color-accent-foreground);
+  background: var(--color-accent);
+  padding: 0 4px;
+  border-radius: 3px;
+  text-decoration: none;
 }
 
 .app-shell__main {

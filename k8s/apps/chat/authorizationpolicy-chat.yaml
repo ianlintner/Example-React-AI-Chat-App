@@ -62,3 +62,18 @@ spec:
             methods: [POST, OPTIONS]
             paths:
               - /api/auth/embed/token
+    # Anonymous users (no verified principal) are allowed on the public
+    # chat surface. Backend resolveIdentity middleware assigns them the
+    # `anonymous` tier, which caps them to free-tier LLMs and stricter
+    # rate limits. Admin/operator surfaces (/api/test-bench, /api/queue,
+    # /api/validation) remain authed-only via the first rule above.
+    - to:
+        - operation:
+            methods: [GET, POST, OPTIONS]
+            paths:
+              - /api/chat
+              - /api/chat/*
+              - /api/conversations
+              - /api/conversations/*
+              - /api/reactions
+              - /api/reactions/*

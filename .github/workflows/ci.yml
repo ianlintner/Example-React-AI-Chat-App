@@ -225,6 +225,61 @@ jobs:
         working-directory: frontend
         run: npm audit --audit-level=moderate || true
 
+  manifests:
+    name: K8s + Flux manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # yamllint catches tab indent, duplicate keys, trailing whitespace,
+      # and other issues that kustomize itself silently ignores but that
+      # confuse downstream tooling. Non-blocking for the first cut so we
+      # don't force a repo-wide whitespace cleanup in this PR; flip to
+      # failing once the existing warnings are burnt down.
+      - name: Install yamllint
+        run: pip install --quiet yamllint
+      - name: yamllint (k8s + flux, non-blocking)
+        run: |
+          yamllint \
+            -d '{extends: default, rules: {line-length: disable, document-start: disable, trailing-spaces: disable, empty-lines: disable, comments: disable, comments-indentation: disable, truthy: {check-keys: false}, indentation: {indent-sequences: consistent}}}' \
+            k8s/ .github/workflows/ \
+            || echo "yamllint findings above — non-blocking for now"
+
+      # kustomize build renders every overlay so typos in patch paths or
+      # missing resources fail fast rather than at Flux reconcile time.
+      - name: Install kustomize
+        run: |
+          curl -sL https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh \
+            | bash -s 5.4.3
+          sudo mv kustomize /usr/local/bin/
+      - name: kustomize build
+        run: |
+          set -e
+          for dir in k8s/apps/*/ k8s/flux/apps/*/; do
+            if [ -f "$dir/kustomization.yaml" ]; then
+              echo "=== $dir ==="
+              kustomize build "$dir" > /dev/null
+            fi
+          done
+
+      # kubeconform validates against upstream + Flux CRD schemas.
+      # Non-blocking for now so we don't churn existing manifests on the
+      # first integration; flip to failing once the baseline is clean.
+      - name: Install kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+            | tar -xz -C /tmp
+          sudo mv /tmp/kubeconform /usr/local/bin/
+      - name: kubeconform (non-blocking)
+        run: |
+          kubeconform \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            -summary \
+            k8s/ || echo "kubeconform findings above — non-blocking for now"
+
   docker-build-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
@@ -308,8 +363,38 @@ jobs:
           build-args: |
             BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
 
+      # Roll the running Deployment so the new `:latest` image is
+      # pulled. Runs on default-branch pushes only — PRs do not touch
+      # the live cluster. Flux reconciles the manifests but the
+      # image-update-automation loop is disabled pending a git-write
+      # PAT (see k8s/flux/apps/chat/kustomization.yaml), so the manual
+      # rollout is how new builds reach prod for now.
+      - name: Roll chat-backend on bigboy
+        if: github.ref == 'refs/heads/main'
+        env:
+          AKS_RESOURCE_GROUP: nekoc
+          AKS_CLUSTER: bigboy
+        run: |
+          az aks get-credentials \
+            --resource-group "$AKS_RESOURCE_GROUP" \
+            --name "$AKS_CLUSTER" \
+            --overwrite-existing
+          kubectl -n default rollout restart deployment/chat-backend
+          kubectl -n default rollout status deployment/chat-backend \
+            --timeout=5m
+
   ci-success:
-    needs: [checks, backend, frontend, web, docs, security, docker-build-push]
+    needs:
+      [
+        checks,
+        backend,
+        frontend,
+        web,
+        docs,
+        security,
+        manifests,
+        docker-build-push,
+      ]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -321,11 +406,13 @@ jobs:
           echo "Web: ${{ needs.web.result }}"
           echo "Docs: ${{ needs.docs.result }}"
           echo "Security: ${{ needs.security.result }}"
+          echo "Manifests: ${{ needs.manifests.result }}"
           echo "Docker: ${{ needs.docker-build-push.result }}"
           [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
           [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
           [ "${{ needs.web.result }}" != "failure" ] || { echo "❌ web failed"; exit 1; }
           [ "${{ needs.checks.result }}" != "failure" ] || { echo "❌ checks failed"; exit 1; }
           [ "${{ needs.security.result }}" != "failure" ] || { echo "❌ security failed"; exit 1; }
+          [ "${{ needs.manifests.result }}" != "failure" ] || { echo "❌ manifests failed"; exit 1; }
           [ "${{ needs.docker-build-push.result }}" != "failure" ] || { echo "❌ docker build failed"; exit 1; }
           echo "✅ Consolidated pipeline passed"

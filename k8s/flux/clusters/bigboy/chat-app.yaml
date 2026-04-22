@@ -11,7 +11,11 @@ spec:
   timeout: 5m0s
   sourceRef:
     kind: GitRepository
-    name: flux-system
+    # Azure-managed FluxConfiguration provisions the GitRepository
+    # with the same name as the FluxConfiguration resource, so the
+    # source we reconcile against is `chat-app`, not the upstream-Flux
+    # default `flux-system`.
+    name: chat-app
   targetNamespace: default
   # Reconcile the image-automation resources on the same cadence so
   # Flux re-evaluates the ImagePolicy and commits tag bumps back to
@@ -32,4 +36,8 @@ spec:
   timeout: 2m0s
   sourceRef:
     kind: GitRepository
-    name: flux-system
+    # Azure-managed FluxConfiguration provisions the GitRepository
+    # with the same name as the FluxConfiguration resource, so the
+    # source we reconcile against is `chat-app`, not the upstream-Flux
+    # default `flux-system`.
+    name: chat-app

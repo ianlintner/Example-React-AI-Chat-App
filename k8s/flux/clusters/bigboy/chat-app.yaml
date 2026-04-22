@@ -17,11 +17,13 @@ spec:
     # default `flux-system`.
     name: chat-app
   targetNamespace: default
-  # Reconcile the image-automation resources on the same cadence so
-  # Flux re-evaluates the ImagePolicy and commits tag bumps back to
-  # git when CI pushes a newer timestamped image.
-  dependsOn:
-    - name: chat-image-automation
+  # Decoupled from chat-image-automation — the ImageRepository's ACR
+  # pull secret (`acr-pull`) currently uses a short-lived
+  # `az acr login --expose-token` AAD token, which is CLI-scoped and
+  # not accepted by Docker's oauth2 token exchange. Until we swap in a
+  # service principal or wire workload-identity, image-automation
+  # health-checks time out; the app Kustomization must apply
+  # independently so ConfigMap + Deployment updates still land.
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -32,12 +34,15 @@ spec:
   interval: 1m0s
   path: ./k8s/flux/apps/chat
   prune: true
-  wait: true
+  # wait:false — the ImageRepository under this kustomization needs
+  # ACR credentials that we have not wired yet (see note on the
+  # `chat-app` Kustomization above). Without `wait: false` the
+  # kustomization blocks itself on its own health check and reports
+  # Ready=Unknown forever; with `wait: false` the resources get
+  # applied and ImageRepository surfaces the auth error via its own
+  # Ready condition, which is the correct escalation surface.
+  wait: false
   timeout: 2m0s
   sourceRef:
     kind: GitRepository
-    # Azure-managed FluxConfiguration provisions the GitRepository
-    # with the same name as the FluxConfiguration resource, so the
-    # source we reconcile against is `chat-app`, not the upstream-Flux
-    # default `flux-system`.
     name: chat-app

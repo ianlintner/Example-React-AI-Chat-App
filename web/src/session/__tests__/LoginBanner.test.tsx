@@ -48,7 +48,9 @@ describe('LoginBanner + ModelTierBadge', () => {
       </>,
     );
 
-    await waitFor(() => expect(screen.getByText(/Sign in/)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/Sign in/)).toBeInTheDocument(),
+    );
     expect(screen.getByText('Free')).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /sign in/i });
     expect(link).toHaveAttribute('href', '/oauth2/start');

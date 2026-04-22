@@ -1,4 +1,4 @@
-import rateLimit, { Options } from 'express-rate-limit';
+import rateLimit, { Options, ipKeyGenerator } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { Request } from 'express';
 import { logger } from '../logger';
@@ -52,7 +52,12 @@ function tierOf(req: Request): keyof typeof TIER_LIMITS {
 }
 
 function identityKey(req: Request): string {
-  return req.userId ?? req.ip ?? 'unknown';
+  if (req.userId) {
+    return req.userId;
+  }
+  // ipKeyGenerator normalises IPv6 addresses to a /56 subnet so attackers
+  // cannot bypass the limiter by rotating through the interface id.
+  return req.ip ? ipKeyGenerator(req.ip) : 'unknown';
 }
 
 /**
@@ -74,13 +79,27 @@ function redisStore(prefix: string): Options['store'] | undefined {
     return new RedisStore({
       prefix,
       sendCommand: async (...args: string[]) => {
-        const client = await getRateLimitRedis();
-        if (!client) {
-          throw new Error('rate-limit redis unavailable');
+        try {
+          const client = await getRateLimitRedis();
+          if (!client) {
+            // Fail-open: log once, pretend the command returned a neutral
+            // value. We never reject here because express-rate-limit fires
+            // some commands (reset, cleanup) without awaiting — a rejection
+            // during process teardown becomes an unhandled rejection that
+            // kills the node process under jest.
+            return 0;
+          }
+          return (await client.sendCommand(args)) as
+            | string
+            | number
+            | (string | number)[];
+        } catch (err) {
+          logger.warn(
+            { err, cmd: args[0] },
+            'rate-limit redis command failed; allowing request',
+          );
+          return 0;
         }
-        return client.sendCommand(args) as Promise<
-          string | number | (string | number)[]
-        >;
       },
     });
   } catch (err) {

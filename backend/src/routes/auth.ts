@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
 import { resolveIdentity } from '../middleware/identity';
 import { logger } from '../logger';
 
@@ -46,33 +45,37 @@ router.get('/session', resolveIdentity, (req: Request, res: Response): void => {
  * @swagger
  * /api/auth/me:
  *   get:
- *     summary: Get current user profile
- *     description: Returns user information from oauth2-proxy headers when authenticated at cluster level
+ *     summary: Get current user profile (degrades to anon)
+ *     description: >
+ *       Returns the caller's tier snapshot. Authenticated callers get a
+ *       user object populated from Istio headers; anonymous callers get
+ *       `user: null` plus tier/loginUrl so the frontend can render a
+ *       sign-in CTA without crashing on 401.
  *     tags: [Authentication]
  *     responses:
  *       200:
- *         description: User profile (from oauth2-proxy headers)
- *       401:
- *         description: Not authenticated
+ *         description: Session snapshot (user null when anonymous)
  */
-router.get('/me', authenticateToken, (req: Request, res: Response): void => {
-  const user = req.user;
-
-  if (!user) {
-    res.status(401).json({ error: 'Not authenticated' });
-    return;
-  }
+router.get('/me', resolveIdentity, (req: Request, res: Response): void => {
+  const tier = req.tier ?? 'anonymous';
+  const authenticated = tier === 'authenticated';
+  const user = authenticated ? req.user : null;
 
   res.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
-      provider: user.provider,
-      createdAt: user.createdAt,
-      lastLoginAt: user.lastLoginAt,
-    },
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar,
+          provider: user.provider,
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+        }
+      : null,
+    tier,
+    authenticated,
+    loginUrl: authenticated ? null : process.env.LOGIN_URL || '/oauth2/start',
   });
 });
 

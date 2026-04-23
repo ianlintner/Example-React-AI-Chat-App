@@ -106,6 +106,10 @@ const allowedOrigins = process.env.FRONTEND_URL
       // Production domains
       'https://chat.cat-herding.net',
       'https://portfolio.cat-herding.net',
+      // Portfolio embed origin — the widget is served from cat-herding.net
+      // but POSTs to chat.cat-herding.net for token exchange and API calls.
+      'https://cat-herding.net',
+      'https://www.cat-herding.net',
     ];
 
 debugLog('Creating Socket.IO server...');

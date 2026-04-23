@@ -21,13 +21,14 @@ export interface ChatWidgetOptions {
   footerHtml?: string | null;
   welcomeMessage?: string | null;
   /**
-   * Optional OAuth2 + PKCE sign-in config. When set, the widget renders a
-   * Sign-in gate instead of connecting anonymously and forwards the access
-   * token on the Socket.IO handshake.
+   * Optional OAuth2 + PKCE sign-in config. When set the widget renders a
+   * sign-in upgrade banner alongside the (now always-visible) input row so
+   * unauthenticated users can still chat anonymously and optionally sign in
+   * to unlock the full hold-flow experience.
    */
   auth?: AuthOptions;
   /**
-   * Label on the Sign-in button when auth gating is active.
+   * Label on the Sign-in button when auth config is supplied.
    * Default: `Sign in to chat`.
    */
   signInLabel?: string;
@@ -80,7 +81,7 @@ const DEFAULTS: Required<
   mode: 'lean',
   openOnLoad: false,
   placeholder: 'Ask me anything…',
-  signInLabel: 'Sign in to chat',
+  signInLabel: 'Sign in to unlock full demo',
   footerHtml:
     'Demo powered by <a href="https://github.com/ianlintner/Example-React-AI-Chat-App" target="_blank" rel="noopener">cat-herding</a>',
   welcomeMessage:
@@ -96,6 +97,7 @@ export class ChatWidget {
   private inputEl!: HTMLInputElement;
   private sendBtn!: HTMLButtonElement;
   private statusEl!: HTMLDivElement;
+  /** Optional sign-in upgrade banner shown to unauthed users. */
   private signInEl: HTMLDivElement | null = null;
   private inputRowEl: HTMLFormElement | null = null;
   private typingEl: HTMLDivElement | null = null;
@@ -120,7 +122,7 @@ export class ChatWidget {
     return !!this.auth?.isAuthenticated();
   }
 
-  /** Clear the local session and reset the widget to the Sign-in state. */
+  /** Clear the local session and reset the widget to the unauthenticated state. */
   signOut(): void {
     this.auth?.signOut();
   }
@@ -157,10 +159,10 @@ export class ChatWidget {
   open(): void {
     this.root.classList.add('open');
     this.syncAuthGate();
-    if (!this.auth || this.auth.isAuthenticated()) {
-      this.ensureConnected();
-      setTimeout(() => this.inputEl?.focus(), 50);
-    }
+    // Always connect — anonymous chat is allowed; a token is forwarded only
+    // when the user has signed in.
+    this.ensureConnected();
+    setTimeout(() => this.inputEl?.focus(), 50);
   }
 
   close(): void {
@@ -223,8 +225,9 @@ export class ChatWidget {
       });
     }
 
-    // Sign-in gate (only rendered when auth config is supplied). Replaces
-    // the input row until the user signs in.
+    // Optional sign-in upgrade banner — only rendered when auth config is
+    // supplied. Sits above the input row so users always see the chat input
+    // first. Collapses once the user signs in.
     if (this.auth) {
       const gate = document.createElement('div');
       gate.className = 'signin-gate';
@@ -241,6 +244,8 @@ export class ChatWidget {
       panel.appendChild(gate);
     }
 
+    // Input row is always rendered and always visible — chat is available
+    // without sign-in; auth only upgrades the experience.
     const inputRow = document.createElement('form');
     inputRow.className = 'input-row';
     inputRow.innerHTML = `
@@ -346,9 +351,6 @@ export class ChatWidget {
       'stream_error',
       (err: { message: string; code?: string }) => {
         this.removeTyping();
-        // Backend uses in-memory storage; on a restart a previously valid
-        // conversationId stops existing. Drop it so the next send creates a
-        // fresh conversation instead of dead-ending on the same error.
         if (err.code === 'CONVERSATION_NOT_FOUND') {
           this.conversationId = null;
         }
@@ -408,7 +410,7 @@ export class ChatWidget {
   private onAuthChange(session: AuthSession | null): void {
     this.syncAuthGate();
     if (session) {
-      // Tear down any anon socket; reconnect with the token on handshake.
+      // Reconnect with the new access token on the Socket.IO handshake.
       if (this.socket) {
         this.socket.disconnect();
         this.socket = null;
@@ -416,24 +418,18 @@ export class ChatWidget {
       this.ensureConnected();
       setTimeout(() => this.inputEl?.focus(), 50);
     } else if (this.socket) {
+      // Signed out — reconnect anonymously so chat remains available.
       this.socket.disconnect();
       this.socket = null;
-      this.setStatus('error', 'Signed out');
+      this.ensureConnected();
     }
   }
 
   private syncAuthGate(): void {
-    if (!this.auth) return;
+    if (!this.auth || !this.signInEl) return;
     const authed = this.auth.isAuthenticated();
-    if (this.signInEl) this.signInEl.style.display = authed ? 'none' : 'flex';
-    if (this.inputRowEl)
-      this.inputRowEl.style.display = authed ? 'flex' : 'none';
-    if (this.signInEl && !authed) {
-      const btn = this.signInEl.querySelector(
-        '.signin-btn',
-      ) as HTMLButtonElement;
-      if (btn) btn.disabled = false;
-    }
+    // Hide the sign-in banner once authenticated; always keep input row visible.
+    this.signInEl.style.display = authed ? 'none' : 'flex';
   }
 
   private handleSend(): void {

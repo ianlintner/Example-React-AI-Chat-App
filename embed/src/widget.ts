@@ -99,7 +99,6 @@ export class ChatWidget {
   private statusEl!: HTMLDivElement;
   /** Optional sign-in upgrade banner shown to unauthed users. */
   private signInEl: HTMLDivElement | null = null;
-  private inputRowEl: HTMLFormElement | null = null;
   private typingEl: HTMLDivElement | null = null;
   private socket: Socket | null = null;
   private conversationId: string | null = null;
@@ -263,7 +262,6 @@ export class ChatWidget {
       e.preventDefault();
       this.handleSend();
     });
-    this.inputRowEl = inputRow;
     panel.appendChild(inputRow);
 
     if (this.opts.footerHtml) {

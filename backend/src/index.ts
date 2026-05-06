@@ -98,8 +98,7 @@ debugLog('Express app and HTTP server created');
 //   3. Allows localhost ports in development for local dev convenience.
 //   4. Falls back to the FRONTEND_URL env var when set (useful in staging).
 // ---------------------------------------------------------------------------
-const CAT_HERDING_ORIGIN_RE =
-  /^https:\/\/([\w-]+\.)?cat-herding\.net(:\d+)?$/;
+const CAT_HERDING_ORIGIN_RE = /^https:\/\/([\w-]+\.)?cat-herding\.net(:\d+)?$/;
 
 const DEV_LOCALHOST_ORIGINS = new Set([
   'http://localhost:5173',
@@ -114,12 +113,21 @@ const DEV_LOCALHOST_ORIGINS = new Set([
 ]);
 
 function isAllowedOrigin(origin: string | undefined): boolean {
-  if (!origin) return true; // server-to-server / curl — no Origin header
-  if (CAT_HERDING_ORIGIN_RE.test(origin)) return true;
-  if (process.env.NODE_ENV !== 'production' && DEV_LOCALHOST_ORIGINS.has(origin))
+  if (!origin) {
+    return true; // server-to-server / curl — no Origin header
+  }
+  if (CAT_HERDING_ORIGIN_RE.test(origin)) {
     return true;
-  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL)
+  }
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    DEV_LOCALHOST_ORIGINS.has(origin)
+  ) {
     return true;
+  }
+  if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+    return true;
+  }
   return false;
 }
 

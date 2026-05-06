@@ -21,6 +21,30 @@
 - route "play a game" to game_host; make youtube_guru tool-driven (#173)
 - ops(k8s): wire YOUTUBE_API_KEY into chat-backend deployment (#174)
 
+## [2026-W18] — 2026-04-28
+
+- stable YouTube embeds + curated pool for hold flow (#179)
+- memo AudioPlayer + GifView; youtube-nocookie; max-widths (#187)
+- add embeddable chat widget for external sites (#188)
+- OAuth2 + PKCE sign-in for the chat widget (#191)
+- scaffold + assistant-ui + socket.io adapter (A1–A4) (#192)
+- allow anonymous /embed/* and /api/auth/embed/token (#193)
+- full RED/USE Prometheus instrumentation (#194)
+- remove redundant chat-oauth2-exchange EnvoyFilter (#196)
+- anonymous identity + tiered rate limits + free-tier LLM + login UI + metrics (#197)
+- enable fleet-registry heartbeat with OAuth2 (0.5.2 → 0.12.0) (#200)
+- Flux autodeploy + activate LLM_TIERED in bigboy configmap (#201)
+- correct sourceRef + add CI rollout for :latest (#202)
+- decouple chat-app from image-automation health check (#204)
+- anon-friendly /me + sign-in banner in Expo frontend (#206)
+- build + ship embed widget bundle in docker image (#208)
+- scope tsc to src/ (vite.config.ts needs @types/node) (#210)
+- unauthenticated chat, CORS for cat-herding.net, dark portfolio theme (#211)
+- add CARETAKER_FLEET_SECRET for signed heartbeats (#219)
+- adopt v0.20.0 fleet workflow (OAuth2 envs) (#222)
+- upgrade pin v0.19.4 → v0.25.0 + thin workflow template (#229)
+- drop pip cache from setup-python (#230)
+
 ## [2026-W17] — 2026-04-20
 
 - bump node-forge from 1.3.1 to 1.3.2 in the npm_and_yarn group across 1 directory (#115)

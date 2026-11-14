@@ -5,7 +5,6 @@ docs_dir: docs
 exclude_docs: |
   archive/
 use_directory_urls: true
-
 # SEO and metadata
 site_author: Engineering Team
 site_url: http://example-docs.hugecat.net/

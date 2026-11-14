@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../config/jwtSecret';
 import { extractAnonId, Tier } from '../middleware/identity';
 import { checkChatRateLimit } from '../rateLimit/checkChatLimit';
 import { ChatRequest, Message, Conversation, StreamChunk } from '../types';
@@ -313,7 +314,7 @@ export const setupSocketHandlers = (
         return next();
       }
 
-      const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';
+      const jwtSecret = getJwtSecret();
 
       // Verify JWT token
       const decoded = jwt.verify(token, jwtSecret) as {

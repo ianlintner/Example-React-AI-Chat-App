@@ -35,3 +35,14 @@ backend/jest-socket-results.json
 .playwright-mcp/
 **/jest-*-results.json
 **/test-results.json
+
+# New stack (apps/, packages/, e2e/) build and test output
+apps/*/dist/
+apps/*/.output/
+apps/*/.tanstack/
+apps/*/storybook-static/
+/test-results/
+/playwright-report/
+/blob-report/
+.env
+.env.local

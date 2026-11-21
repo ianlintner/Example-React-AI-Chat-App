@@ -16,6 +16,8 @@ A portfolio-ready demo that showcases current, high‑impact technologies and ar
 
 > This is not a product; it’s a demo portfolio project to illustrate patterns, tradeoffs, and implementation details that matter in AI and modern web engineering.
 
+> **Rewrite in progress.** A 2026 agentic stack is landing in `apps/` and `packages/`. See [ARCHITECTURE.md](ARCHITECTURE.md) and [PLAN.md](PLAN.md). Quick start: `npm ci && npm run dev`, which starts Postgres, Redis, Inngest, the agent on `:8787` and the web app on `:3000`. The legacy apps described below keep running until they are removed.
+
 ## What This Demonstrates
 
 - AI patterns: multi‑agent routing, goal‑seeking loops, RAG content, safety/validation

@@ -57,10 +57,7 @@ export interface RunStore {
   /** Append a chunk to the run's replay buffer (Redis) for resume. */
   appendChunk(runId: string, chunk: AgentUIMessageChunk): Promise<void>;
   /** Replay from a cursor; used by `GET /chat/:id/stream` after disconnect. */
-  replay(
-    runId: string,
-    fromIndex: number,
-  ): AsyncIterable<AgentUIMessageChunk>;
+  replay(runId: string, fromIndex: number): AsyncIterable<AgentUIMessageChunk>;
 }
 
 /** The agent loop entry point (card 4: AI SDK ToolLoopAgent behind this). */

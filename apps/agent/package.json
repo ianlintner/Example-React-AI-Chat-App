@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Hono agent server (Node 22, local only).",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "INNGEST_DEV=${INNGEST_DEV:-http://127.0.0.1:8288} tsx watch src/main.ts",
     "start": "tsx src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"

@@ -12,7 +12,9 @@ const routeName = z
   .regex(/^[a-z0-9][a-z0-9._-]{0,63}$/, 'route names are lowercase slugs');
 
 export const llmEnvSchema = z.object({
-  LLM_BASE_URL: z.url({ protocol: /^https?$/ }).default('http://localhost:4000/v1'),
+  LLM_BASE_URL: z
+    .url({ protocol: /^https?$/ })
+    .default('http://localhost:4000/v1'),
   /** Optional bearer for the gateway. No default: absent means "no auth". */
   LLM_API_KEY: z.string().min(1).optional(),
   ROUTE_FAST: routeName.default('local-fast'),
@@ -44,7 +46,11 @@ export function loadLlmConfig(
   return {
     baseURL: e.LLM_BASE_URL,
     apiKey: e.LLM_API_KEY,
-    routes: { fast: e.ROUTE_FAST, deep: e.ROUTE_DEEP, research: e.ROUTE_RESEARCH },
+    routes: {
+      fast: e.ROUTE_FAST,
+      deep: e.ROUTE_DEEP,
+      research: e.ROUTE_RESEARCH,
+    },
     provider: e.LLM_PROVIDER,
   };
 }

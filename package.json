@@ -16,7 +16,7 @@
     "dev:legacy": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "test:workspaces": "npm run test --workspaces --if-present",
     "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
-    "e2e": "playwright test",
+    "e2e": "npm run -w apps/web build && playwright test",
     "check:loc": "node scripts/check-loc.mjs",
     "storybook": "npm run -w apps/web storybook",
     "dev:backend": "cd backend && npm run dev",
@@ -100,7 +100,7 @@
     "markdownlint-cli": "^0.48.0",
     "metro": "^0.84.3",
     "nyc": "^17.1.0",
-    "prettier": "^3.8.3",
+    "prettier": "~3.8.3",
     "typescript": "^5.9.3"
   },
   "overrides": {

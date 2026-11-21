@@ -49,8 +49,9 @@ describe('data part schemas', () => {
   });
 
   it.each(dataPartNames)('%s rejects its invalid fixture', name => {
-    expect(dataPartSchemas[name].safeParse(invalidPartFixtures[name]).success)
-      .toBe(false);
+    expect(
+      dataPartSchemas[name].safeParse(invalidPartFixtures[name]).success,
+    ).toBe(false);
   });
 });
 

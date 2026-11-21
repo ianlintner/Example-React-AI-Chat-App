@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Decisions for the new agentic stack (`apps/`, `packages/`). [`ARCHITECTURE.md`](../../ARCHITECTURE.md) summarises how they fit together. Evidence and the alternatives considered are in PLAN.md §3–§4, `RESEARCH-AGENTIC.md` and `RESEARCH-UI.md`.
+Decisions for the new agentic stack (`apps/`, `packages/`). [`ARCHITECTURE.md`](https://github.com/ianlintner/Example-React-AI-Chat-App/blob/main/ARCHITECTURE.md) (repo root) summarises how they fit together. Evidence and the alternatives considered are in PLAN.md §3–§4, `RESEARCH-AGENTIC.md` and `RESEARCH-UI.md`.
 
 | ADR                                       | Decision                                                   | Status   |
 | ----------------------------------------- | ---------------------------------------------------------- | -------- |

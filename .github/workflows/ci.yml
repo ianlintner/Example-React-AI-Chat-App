@@ -273,8 +273,11 @@ jobs:
       # missing resources fail fast rather than at Flux reconcile time.
       - name: Install kustomize
         run: |
-          curl -sL https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh \
-            | bash -s 5.4.3
+          # Direct release asset: install_kustomize.sh calls the GitHub API
+          # unauthenticated and flakes on rate limits.
+          curl -fsSL --retry 3 \
+            https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz \
+            | tar -xz kustomize
           sudo mv kustomize /usr/local/bin/
       - name: kustomize build
         run: |

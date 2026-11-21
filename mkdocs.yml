@@ -1,8 +1,10 @@
 site_name: AI Chat Demo - Technical Documentation
 site_description: Enterprise-grade AI chat application documentation
 docs_dir: docs
+# Archived status notes keep their original root-relative links; not published.
+exclude_docs: |
+  archive/
 use_directory_urls: true
-
 # SEO and metadata
 site_author: Engineering Team
 site_url: http://example-docs.hugecat.net/

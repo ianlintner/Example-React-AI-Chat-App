@@ -28,3 +28,10 @@ k8s/apps/chat/overlays/azure/secrets-patch.yaml
 **/.keyvault-config
 backend/jest-socket-results.json
 .claude/
+
+# Local/agent artifacts
+.worktrees/
+.expo/
+.playwright-mcp/
+**/jest-*-results.json
+**/test-results.json

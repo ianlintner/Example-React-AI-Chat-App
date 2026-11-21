@@ -1,0 +1,49 @@
+{
+  "name": "@agent-chat/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent web app: TanStack Start + React 19 + Tailwind v4 + shadcn/ui (Base UI) + assistant-ui.",
+  "scripts": {
+    "dev": "vite dev --port 3000 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@agent-chat/contract": "1.0.0",
+    "@agent-chat/ui": "0.1.0",
+    "@assistant-ui/react": "^0.15.37",
+    "@base-ui/react": "^1.9.0",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-start": "^1.169.7",
+    "ai": "^7.0.179",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
+    "lucide-react": "^1.77.0",
+    "motion": "^14.14.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwind-merge": "^3.7.1"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.6.8",
+    "@storybook/react-vite": "^10.6.8",
+    "@tailwindcss/vite": "^4.3.5",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^27.0.0",
+    "storybook": "^10.6.8",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

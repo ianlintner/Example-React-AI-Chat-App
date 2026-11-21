@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+@import '@agent-chat/ui/fonts.css';
+@import '@agent-chat/ui/tokens.css';
+
+/* Scan shared packages for class names. */
+@source '../../../packages/ui/src';

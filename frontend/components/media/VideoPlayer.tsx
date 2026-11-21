@@ -17,8 +17,8 @@ const NativeVideoPlayer: React.FC<VideoPlayerProps> = ({ url, title }) => {
     allowsPictureInPicture?: boolean;
   }> | null = null;
   let useVideoPlayer:
-    ((u: string, init: (p: { loop: boolean }) => void) => unknown) | null =
-    null;
+    | ((u: string, init: (p: { loop: boolean }) => void) => unknown)
+    | null = null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('expo-video');

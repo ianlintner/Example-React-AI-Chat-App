@@ -61,3 +61,8 @@ external/
 # versions between local and hosted runners, causing spurious format-check
 # failures in CI. The file is infrequently edited and not app code.
 .github/workflows/maintainer.yml
+
+# Formatting tools disagree on this union-type layout: root `prettier --check .`
+# (default config) and the frontend eslint prettier/prettier rule (repo
+# settings) format it differently, and neither output satisfies the other.
+frontend/components/media/VideoPlayer.tsx

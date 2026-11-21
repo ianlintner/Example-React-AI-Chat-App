@@ -7,6 +7,10 @@ WORKDIR /frontend
 # Copy frontend package files
 COPY frontend/package*.json ./
 
+# patch-package runs on postinstall; metro 0.82 needs the image-size 2.x
+# adapter patch applied before the build. Copy patches before npm ci.
+COPY frontend/patches ./patches
+
 # Install frontend dependencies
 RUN npm ci
 

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../config/jwtSecret';
 import { logger } from '../logger';
 import userStorage from '../storage/userStorage';
 import { User } from '../../../shared/types';
@@ -126,7 +127,7 @@ export const optionalAuth = async (
  * Generate JWT token for user (Legacy/Local use)
  */
 export const generateToken = (user: User): string => {
-  const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret_here';
+  const jwtSecret = getJwtSecret();
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
 
   return jwt.sign(

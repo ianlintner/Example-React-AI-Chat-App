@@ -7,6 +7,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# postinstall runs patch-package; copy patches before npm ci so the
+# metro 0.82 / image-size 2.x adapter is applied in the image.
+COPY patches ./patches
+
 # Install dependencies
 RUN npm ci
 

@@ -1,17 +1,6 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-otlp-http';
-// Lazy-require Cloud Trace exporter to avoid TS module resolution during dev
-// where the dependency may not be installed locally yet.
-let CloudTraceExporterCtor: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  CloudTraceExporterCtor =
-    require('@google-cloud/opentelemetry-cloud-trace-exporter').CloudTraceExporter;
-} catch (_e) {
-  // Not installed in local dev or CI without network; will fall back to Zipkin
-}
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import {
   trace,
   context,
@@ -23,76 +12,19 @@ import {
 import {
   ConsoleSpanExporter,
   SimpleSpanProcessor,
-  ReadableSpan,
   ParentBasedSampler,
   TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { tracingContextManager } from './contextManager';
 
-// Configure the trace exporter based on environment
-const createTraceExporter = () => {
-  const exporterPref = (process.env.TRACING_EXPORTER || '').toLowerCase();
-  const isProd = (process.env.NODE_ENV || '').toLowerCase() === 'production';
-
-  console.log('🔍 TRACING DEBUG - Environment variables:');
-  console.log('  TRACING_EXPORTER:', exporterPref || '(not set)');
-  console.log('  ZIPKIN_ENDPOINT:', process.env.ZIPKIN_ENDPOINT);
-  console.log('  OTEL_SERVICE_NAME:', process.env.OTEL_SERVICE_NAME);
-  console.log('  NODE_ENV:', process.env.NODE_ENV);
-
-  // If explicit request for OTLP, prefer that first (AKS / Azure Monitor path)
-  if (exporterPref === 'otlp') {
-    const endpoint =
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-      'http://localhost:4318/v1/traces';
-    console.log('🔗 Using OTLP HTTP trace exporter:', endpoint);
-    return new OTLPTraceExporter({ url: endpoint });
-  }
-
-  // Default to Cloud Trace in production; Zipkin otherwise unless explicitly overridden
-  const useCloudTrace = exporterPref
-    ? exporterPref === 'cloudtrace' || exporterPref === 'gcp'
-    : isProd;
-
-  if (isProd && !exporterPref) {
-    process.env.TRACING_EXPORTER = 'cloudtrace';
-  }
-
-  if (useCloudTrace) {
-    if (CloudTraceExporterCtor) {
-      console.log('🔗 Using Google Cloud Trace exporter (ADC credentials)');
-      return new CloudTraceExporterCtor();
-    }
-    console.warn(
-      '⚠️ Cloud Trace exporter not available. Falling back to Zipkin.',
-    );
-  }
-
-  const zipkinEndpoint =
-    process.env.ZIPKIN_ENDPOINT || 'http://zipkin:9411/api/v2/spans';
-  console.log('🔗 Using Zipkin exporter:', zipkinEndpoint);
-
-  const zipkinExporter = new ZipkinExporter({ url: zipkinEndpoint });
-
-  // Optional: verbose logging for Zipkin in non-prod
-  const originalExport = zipkinExporter.export.bind(zipkinExporter);
-  zipkinExporter.export = (
-    spans: ReadableSpan[],
-    resultCallback: (result: any) => void,
-  ): void => {
-    console.log(
-      `🔍 ZIPKIN EXPORT: Attempting to send ${spans.length} spans to ${zipkinEndpoint}`,
-    );
-    spans.forEach((span: ReadableSpan, index: number) => {
-      console.log(`  📊 Span ${index + 1}: ${span.name}`);
-      console.log(`    - Trace ID: ${span.spanContext().traceId}`);
-      console.log(`    - Span ID: ${span.spanContext().spanId}`);
-      console.log(`    - Status: ${JSON.stringify(span.status)}`);
-    });
-    return originalExport(spans, resultCallback);
-  };
-
-  return zipkinExporter;
+// Single OTLP/HTTP trace exporter (Prometheus/Grafana-friendly collectors,
+// e.g. the OpenTelemetry Collector in docker-compose).
+const createTraceExporter = (): OTLPTraceExporter => {
+  const endpoint =
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+    'http://localhost:4318/v1/traces';
+  console.log('🔗 Using OTLP HTTP trace exporter:', endpoint);
+  return new OTLPTraceExporter({ url: endpoint });
 };
 
 // Add console exporter for debugging
@@ -180,10 +112,6 @@ export const initializeTracing = (): void => {
     console.log('🔍 Starting OpenTelemetry SDK initialization...');
     sdk.start();
     console.log('✅ OpenTelemetry tracing initialized successfully');
-    console.log(
-      '🔍 Active exporter preference:',
-      (process.env.TRACING_EXPORTER || '').toLowerCase() || '(default logic)',
-    );
     console.log(
       '🔍 Sampling ratio:',
       process.env.OTEL_TRACES_SAMPLER_RATIO ||

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { colorTokenNames, colorTokens, type Theme } from './tokens';
-import { THEME_INIT_SCRIPT } from './theme';
+import { THEME_INIT_SCRIPT, THEME_STORAGE_KEY } from './theme';
 
 const css = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
 
@@ -68,5 +68,6 @@ describe('Instrument Panel tokens', () => {
   it('theme init script is self-contained and defaults to dark', () => {
     expect(THEME_INIT_SCRIPT).toContain("'dark'");
     expect(THEME_INIT_SCRIPT).not.toMatch(/import|require/);
+    expect(THEME_INIT_SCRIPT).toContain(`var k='${THEME_STORAGE_KEY}'`);
   });
 });

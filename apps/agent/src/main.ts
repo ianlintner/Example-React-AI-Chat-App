@@ -5,7 +5,9 @@ import { loadServerConfig } from './config';
 
 const config = loadServerConfig();
 // Validate LLM env at boot so misconfiguration fails fast (fail closed).
-const llm = loadLlmConfig();
+// Log only a fixed label derived from it, never config values (which may
+// include LLM_API_KEY).
+const llmLabel = loadLlmConfig().provider === 'mock' ? 'mock' : 'gateway';
 
 const app = createApp(config);
 const server = serve(
@@ -13,7 +15,7 @@ const server = serve(
   info => {
     console.log(
       `[agent] listening on http://${info.address}:${info.port} ` +
-        `(llm=${llm.provider}, inngest=${config.inngest.enabled ? 'on' : 'off'})`,
+        `(llm=${llmLabel}, inngest=${config.inngest.enabled ? 'on' : 'off'})`,
     );
   },
 );

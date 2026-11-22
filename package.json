@@ -17,6 +17,8 @@
     "test:workspaces": "npm run test --workspaces --if-present",
     "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
     "e2e": "npm run -w apps/web build && playwright test",
+    "e2e:embed": "npm run -w apps/embed build && playwright test -c playwright.embed.config.ts",
+    "check:size:embed": "npm run -w apps/embed check:size",
     "check:loc": "node scripts/check-loc.mjs",
     "storybook": "npm run -w apps/web storybook",
     "dev:backend": "cd backend && npm run dev",

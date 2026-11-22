@@ -1,0 +1,29 @@
+{
+  "name": "@agent-chat/embed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "<agent-chat> Shadow DOM web component: Vite lib build on the frozen stream contract, sharing Instrument Panel tokens from @agent-chat/ui.",
+  "exports": {
+    ".": "./dist/agent-chat.js"
+  },
+  "scripts": {
+    "dev": "vite --port ${E2E_EMBED_PORT:-5199} --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port ${E2E_EMBED_PORT:-4182} --strictPort",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check:size": "node scripts/check-size.mjs"
+  },
+  "dependencies": {
+    "@agent-chat/contract": "1.0.0",
+    "@agent-chat/ui": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1",
+    "jsdom": "^27.0.0"
+  }
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>&lt;agent-chat&gt; demo — local development</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0b0d0f;
+        color: #e8eaed;
+        font: 15px/1.6 Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      main { max-width: 620px; margin: 0 auto; padding: 64px 24px; }
+      h1 { font-size: 24px; margin: 0 0 8px; }
+      code { color: #f5a524; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      p { color: #9aa3ad; }
+      .note {
+        border: 1px solid #2a2f35; border-radius: 10px; padding: 12px 14px;
+        margin-top: 28px; font-size: 13px; color: #9aa3ad;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>&lt;agent-chat&gt; web component</h1>
+      <p>
+        Local demo of the Shadow-DOM embed on the
+        <code>/chat</code> stream contract. Open the panel and send a message;
+        the agent service runs with the deterministic mock model.
+      </p>
+      <div class="note">
+        The widget is mounted programmatically below. Use
+        <code>?api=http://127.0.0.1:8787</code> to point at a different agent.
+      </div>
+    </main>
+    <script type="module">
+      import './src/index.ts';
+      const params = new URLSearchParams(location.search);
+      const el = document.createElement('agent-chat');
+      el.setAttribute('api-url', params.get('api') || location.origin);
+      el.setAttribute('title', 'Agent chat');
+      el.setAttribute('subtitle', 'Local development · mock model');
+      el.setAttribute('theme', 'dark');
+      el.setAttribute('welcome', 'Send a message to test the stream.');
+      document.body.appendChild(el);
+      window.__agentChat = el;
+    </script>
+  </body>
+</html>

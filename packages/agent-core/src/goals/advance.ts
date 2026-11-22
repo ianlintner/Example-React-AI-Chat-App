@@ -182,6 +182,12 @@ async function advanceLoop(
     }
     // Guidance injected mid-step must reach the next plan.
     record.steerInstructions = [...control.steerInstructions];
+    // checkControl re-read the record after a potentially slow step. Adopt its
+    // CAS token so the gate write below cannot spuriously conflict with the
+    // control read we just performed. Without this, a steer during propose
+    // made updatedAt stale, the gate persist hit StaleCheckpointError, and
+    // commit() merged the latest record's missing gate over the new one.
+    record.updatedAt = control.updatedAt;
 
     // A consequential effect needs a human gate before it may execute.
     if (result.effect && !commit) {

@@ -147,6 +147,9 @@ export async function commit(
         );
       }
       // Control decisions are authoritative; progress is local to the loop.
+      // Gate fields are only authoritative when the store actually holds a
+      // gate: copying undefined over a locally proposed approval/pendingEffect
+      // would silently drop the human interrupt after a harmless stale write.
       record.canceled = false;
       record.status =
         latest.status === 'awaiting-approval' || latest.status === 'running'
@@ -156,9 +159,9 @@ export async function commit(
               record.status === 'planning'
             ? record.status
             : latest.status;
-      record.approval = latest.approval;
+      if (latest.approval) record.approval = latest.approval;
       record.steerInstructions = [...latest.steerInstructions];
-      record.pendingEffect = latest.pendingEffect;
+      if (latest.pendingEffect) record.pendingEffect = latest.pendingEffect;
       if (latest.error) record.error = latest.error;
       expectedAt = latest.updatedAt;
     }

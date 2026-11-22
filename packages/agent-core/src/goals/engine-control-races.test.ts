@@ -8,6 +8,7 @@ import {
   type PlanGenerator,
 } from './index';
 import type { Plan } from '@agent-chat/contract';
+import type { StepResult } from './types';
 
 const OWNER = 'owner_1';
 let ids = 0;
@@ -166,5 +167,116 @@ describe('goal run control races', () => {
     expect(seen[1]).not.toContain('Do the report');
     const persisted = (await store.getRun('run_steer_replan'))!;
     expect(persisted.steerInstructions).toContain('Do the report');
+  });
+
+  it('steer during a propose step keeps the approval gate', async () => {
+    let engineRef: GoalRunEngine;
+    const base = new MemoryGoalRunStore(emptyStoreData());
+    const wrapped: GoalRunStore = {
+      createRun: r => base.createRun(r),
+      getRun: (id, owner) => base.getRun(id, owner),
+      claimEffect: (key, id) => base.claimEffect(key, id),
+      listRuns: owner => base.listRuns(owner),
+      saveRun: (record, expected) => base.saveRun(record, expected),
+    };
+    engineRef = new GoalRunEngine(wrapped, {
+      executor: {
+        async execute({ step, phase }): Promise<StepResult> {
+          if (step.stepId === 'step_0_0' && phase === 'propose') {
+            await engineRef.steer(
+              'run_steer_propose',
+              'Use the safe tool',
+              OWNER,
+            );
+          }
+          return {
+            predicatePassed: false,
+            effect: {
+              toolName: 'send_email',
+              risk: 'external',
+              summary: 'notify the team',
+              payload: { to: 'team@example.com' },
+              key: 'notify-team',
+            },
+          };
+        },
+      },
+      planner: fixedPlanner([plan(['send the email'])]),
+      newId,
+      now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, ids++)).toISOString(),
+    });
+    await engineRef.start({
+      runId: 'run_steer_propose',
+      threadId: 'thread_1',
+      ownerId: OWNER,
+      goal: 'g',
+    });
+    const result = await engineRef.advance('run_steer_propose', OWNER);
+    expect(result.outcome).toBe('approval-required');
+    expect(
+      result.outcome === 'approval-required' && result.approval !== undefined,
+    ).toBe(true);
+    const persisted = (await wrapped.getRun('run_steer_propose'))!;
+    expect(persisted.status).toBe('awaiting-approval');
+    expect(persisted.approval?.status).toBe('pending');
+    expect(persisted.pendingEffect).toBeDefined();
+    expect(persisted.steerInstructions).toContain('Use the safe tool');
+  });
+
+  it('a stale gate write keeps its approval across a non-control conflict', async () => {
+    const base = new MemoryGoalRunStore(emptyStoreData());
+    let conflictOnNextSave = false;
+    let conflicted = false;
+    const wrapped: GoalRunStore = {
+      createRun: r => base.createRun(r),
+      getRun: (id, owner) => base.getRun(id, owner),
+      claimEffect: (key, id) => base.claimEffect(key, id),
+      listRuns: owner => base.listRuns(owner),
+      async saveRun(record, expected) {
+        if (conflictOnNextSave && !conflicted) {
+          conflicted = true;
+          conflictOnNextSave = false;
+          // A benign progress write from another actor: no gate, no control
+          // decision. It must not erase the locally proposed approval gate.
+          const other = (await base.getRun(record.runId))!;
+          await base.saveRun({ ...other, costUnits: other.costUnits + 1 });
+        }
+        return base.saveRun(record, expected);
+      },
+    };
+    let engineRef: GoalRunEngine;
+    engineRef = new GoalRunEngine(wrapped, {
+      executor: {
+        async execute({ phase }): Promise<StepResult> {
+          if (phase === 'propose') conflictOnNextSave = true;
+          return {
+            predicatePassed: false,
+            effect: {
+              toolName: 'send_email',
+              risk: 'external',
+              summary: 'notify the team',
+              payload: {},
+              key: 'notify-team-2',
+            },
+          };
+        },
+      },
+      planner: fixedPlanner([plan(['send the email'])]),
+      newId,
+      now: () => new Date(Date.UTC(2026, 0, 1, 0, 0, ids++)).toISOString(),
+    });
+    await engineRef.start({
+      runId: 'run_stale_gate',
+      threadId: 'thread_1',
+      ownerId: OWNER,
+      goal: 'g',
+    });
+    const result = await engineRef.advance('run_stale_gate', OWNER);
+    expect(conflicted).toBe(true);
+    expect(result.outcome).toBe('approval-required');
+    const persisted = (await wrapped.getRun('run_stale_gate'))!;
+    expect(persisted.status).toBe('awaiting-approval');
+    expect(persisted.approval?.status).toBe('pending');
+    expect(persisted.pendingEffect?.key).toBe('notify-team-2');
   });
 });

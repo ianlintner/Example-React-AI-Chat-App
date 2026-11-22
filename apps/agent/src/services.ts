@@ -124,6 +124,7 @@ export async function createServices(
     inngestClient: client,
     skills,
     async close() {
+      await runs.store.close?.();
       await store.close();
     },
   };

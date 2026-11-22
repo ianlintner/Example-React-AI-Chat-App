@@ -16,6 +16,8 @@ export interface GoalRunStore {
   /** Atomic at-most-once claim; false means another writer owns the key. */
   claimEffect(key: string, runId: string): Promise<boolean>;
   listRuns(ownerId: string): Promise<GoalRunRecord[]>;
+  /** Release any underlying connection pool. Optional for in-memory stores. */
+  close?(): Promise<void>;
 }
 
 /** Thrown when a CAS write loses to a newer checkpoint. */

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite dev --port 3000 --strictPort",
     "build": "vite build",
-    "preview": "vite preview --port 4173 --strictPort",
+    "preview": "vite preview --port ${E2E_WEB_PORT:-4173} --strictPort",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "storybook": "storybook dev -p 6006 --no-open",
@@ -17,6 +17,7 @@
     "@agent-chat/contract": "1.0.0",
     "@agent-chat/ui": "0.1.0",
     "@assistant-ui/react": "^0.15.37",
+    "@assistant-ui/react-ai-sdk": "^1.4.24",
     "@base-ui/react": "^1.9.0",
     "@tanstack/react-router": "^1.170.46",
     "@tanstack/react-start": "^1.169.7",

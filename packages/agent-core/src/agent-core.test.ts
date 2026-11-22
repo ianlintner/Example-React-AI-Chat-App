@@ -1,6 +1,13 @@
 import { streamText } from 'ai';
+import { MockLanguageModelV4 } from 'ai/test';
 import { describe, expect, it } from 'vitest';
-import { createLlm, loadLlmConfig } from './index';
+import {
+  createAgentRuntime,
+  createLlm,
+  defaultDecision,
+  loadLlmConfig,
+  MemoryStore,
+} from './index';
 import { createMockModel } from './testing';
 
 describe('loadLlmConfig', () => {
@@ -66,5 +73,51 @@ describe('createLlm', () => {
       prompt: 'x',
     });
     expect(await result.text).toBe('a b c');
+  });
+});
+
+describe('createAgentRuntime', () => {
+  it('marks a run failed when the model stream throws', async () => {
+    const store = new MemoryStore();
+    const principal = {
+      userId: 'user_a',
+      kind: 'user' as const,
+      tier: 'free' as const,
+    };
+    await store.createThread('thr_fail', principal);
+    await store.createRun({
+      runId: 'run_fail',
+      threadId: 'thr_fail',
+      ownerId: principal.userId,
+      status: 'running',
+      tier: 'fast',
+    });
+    const failingModel = new MockLanguageModelV4({
+      provider: 'mock',
+      modelId: 'failing',
+      doStream: async () => {
+        throw new Error('model exploded');
+      },
+    });
+    const llm = createLlm(loadLlmConfig({ LLM_PROVIDER: 'mock' }));
+    llm.model = () => failingModel;
+    const runtime = createAgentRuntime({ llm, store });
+    const message = {
+      id: 'u1',
+      role: 'user' as const,
+      parts: [{ type: 'text' as const, text: 'hello' }],
+    };
+    const stream = runtime.stream({
+      threadId: 'thr_fail',
+      runId: 'run_fail',
+      principal,
+      messages: [message],
+      decision: defaultDecision([message]),
+    });
+    const reader = stream.getReader();
+    while (!(await reader.read()).done) {
+      // Drain the stream; the SDK converts model errors to error chunks.
+    }
+    expect((await store.getRun('run_fail', principal))?.status).toBe('failed');
   });
 });

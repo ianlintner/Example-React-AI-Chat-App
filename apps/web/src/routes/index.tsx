@@ -2,6 +2,7 @@ import { planFixture } from '@agent-chat/contract/fixtures';
 import { getTheme, type Theme } from '@agent-chat/ui';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { AgentChat } from '@/components/agent-chat';
 import { PlanPreview } from '@/components/plan-preview';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TokenSwatches } from '@/components/token-swatches';
@@ -30,7 +31,7 @@ function Home() {
             Agent Chat <span className='text-signal'>·</span> Instrument Panel
           </h1>
           <p className='text-sm text-fg-muted'>
-            Phase 1 scaffold. Agent UI lands in a later card.
+            Phase 1: local agent chat backed by the AI SDK stream contract.
           </p>
         </div>
         <ThemeToggle />
@@ -41,6 +42,7 @@ function Home() {
         </h2>
         <TokenSwatches theme={theme} />
       </section>
+      <AgentChat />
       <section aria-labelledby='plan-heading' className='space-y-2'>
         <h2 id='plan-heading' className='text-sm font-medium'>
           Contract fixture: plan

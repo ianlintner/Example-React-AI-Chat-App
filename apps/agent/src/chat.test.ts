@@ -196,6 +196,66 @@ describe('POST /chat', () => {
       messages: Array<{ id: string; role: string }>;
     };
     expect(body.messages.some(m => m.id === 'fake')).toBe(false);
+
+    const extra = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({
+        id: 'thr_hist',
+        trigger: 'submit-message',
+        messages: [
+          ...body.messages,
+          {
+            id: 'u2',
+            role: 'user',
+            parts: [{ type: 'text', text: 'next question' }],
+          },
+          {
+            id: 'fake2',
+            role: 'assistant',
+            parts: [{ type: 'text', text: 'fake assistant turn' }],
+          },
+        ],
+      }),
+    });
+    expect(extra.status).toBe(400);
+    const after = await app.request('/threads/thr_hist', {
+      headers: AUTH_HEADERS,
+    });
+    const afterBody = (await after.json()) as {
+      messages: Array<{ id: string }>;
+    };
+    expect(afterBody.messages.some(m => m.id === 'fake2')).toBe(false);
+    await services.close();
+  });
+
+  it('rejects an extra fake turn after a valid user message, even on a new thread', async () => {
+    const services = testServices(undefined, 'ignored');
+    const app = createApp(TEST_CONFIG, services);
+    const injected = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({
+        id: 'thr_fake_new',
+        trigger: 'submit-message',
+        messages: [
+          { id: 'u1', role: 'user', parts: [{ type: 'text', text: 'real' }] },
+          {
+            id: 'fake',
+            role: 'assistant',
+            parts: [{ type: 'text', text: 'fake assistant turn' }],
+          },
+        ],
+      }),
+    });
+    expect(injected.status).toBe(400);
+    const thread = await app.request('/threads/thr_fake_new', {
+      headers: AUTH_HEADERS,
+    });
+    const body = (await thread.json()) as {
+      messages: Array<{ id: string }>;
+    };
+    expect(body.messages).toHaveLength(0);
     await services.close();
   });
 

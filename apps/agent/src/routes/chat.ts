@@ -25,15 +25,17 @@ function messageText(message: AgentUIMessage): string {
 }
 
 /**
- * The client may send the visible thread, but only freshly appended messages
- * are accepted. A client cannot rewrite stored turns or inject fake ones.
+ * The client may send the visible thread, but the server accepts exactly one
+ * freshly appended user message. Stored turns must match byte-for-byte and no
+ * extra messages (including fake assistant turns) are allowed after them.
  */
 function appendNewMessages(
   stored: AgentUIMessage[],
   client: AgentUIMessage[],
 ): AgentUIMessage[] | undefined {
-  if (stored.length === 0) return client;
-  if (client.length <= stored.length) return undefined;
+  if (client.length !== stored.length + 1) return undefined;
+  const appended = client[stored.length]!;
+  if (appended.role !== 'user') return undefined;
   for (let i = 0; i < stored.length; i++) {
     if (
       stored[i]!.id !== client[i]!.id ||
@@ -43,7 +45,7 @@ function appendNewMessages(
       return undefined;
     }
   }
-  return client.slice(stored.length);
+  return [appended];
 }
 
 function isForbidden(error: unknown): boolean {

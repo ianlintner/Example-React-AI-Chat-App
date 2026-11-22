@@ -4,12 +4,7 @@ import { createApp } from './app';
 import { loadServerConfig } from './config';
 import { routerRegistry } from './router-obs';
 import { createServices } from './services';
-import {
-  AUTH_HEADERS,
-  chatBody,
-  sseEvents,
-  TEST_CONFIG,
-} from './test-helpers';
+import { AUTH_HEADERS, chatBody, sseEvents, TEST_CONFIG } from './test-helpers';
 
 const env = {
   SESSION_SECRET: 'test-secret-at-least-32-characters-long',

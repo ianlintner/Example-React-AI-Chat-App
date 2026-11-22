@@ -12,12 +12,18 @@ export interface RouteOutcome {
   needsPlan: boolean;
 }
 
-const RESEARCH = /\b(research|source[sd]?|citation[sd]?|compare|latest|current|news|accurate|verify|evidence|benchmark|weather|price[sd]?|who is|what happened|official docs?)\b/i;
-const PLAN = /\b(plan|steps?|roadmap|project|implement|build|migrate|organi[sz]e|schedule|checklist|multi[- ]step|goal|workflow|strategy)\b/i;
-const CODE = /\b(code|bug|debug|typescript|javascript|python|rust|function|api|compile|error|stack trace|refactor|test|sql|regex)\b/i;
-const CREATIVE = /\b(story|poem|joke|game|creative|imagine|funny|roleplay|playful|song|haiku)\b/i;
-const RESEARCH_TIER = /\b(deep research|sourced|citations?|comprehensive|in[- ]depth|investigate)\b/i;
-const DEEP = /\b(analy[sz]e|explain in detail|why|complex|architecture|trade[- ]?offs?|detailed|thorough)\b/i;
+const RESEARCH =
+  /\b(research|source[sd]?|citation[sd]?|compare|latest|current|news|accurate|verify|evidence|benchmark|weather|price[sd]?|who is|what happened|official docs?)\b/i;
+const PLAN =
+  /\b(plan|steps?|roadmap|project|implement|build|migrate|organi[sz]e|schedule|checklist|multi[- ]step|goal|workflow|strategy)\b/i;
+const CODE =
+  /\b(code|bug|debug|typescript|javascript|python|rust|function|api|compile|error|stack trace|refactor|test|sql|regex)\b/i;
+const CREATIVE =
+  /\b(story|poem|joke|game|creative|imagine|funny|roleplay|playful|song|haiku)\b/i;
+const RESEARCH_TIER =
+  /\b(deep research|sourced|citations?|comprehensive|in[- ]depth|investigate)\b/i;
+const DEEP =
+  /\b(analy[sz]e|explain in detail|why|complex|architecture|trade[- ]?offs?|detailed|thorough)\b/i;
 
 /** Classify user text without any network call or model. */
 export function classify(text: string): RouteOutcome {

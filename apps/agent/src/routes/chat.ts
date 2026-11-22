@@ -2,10 +2,7 @@
 import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 import { chatRequestSchema, validateAgentMessages } from '@agent-chat/contract';
 import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
-import {
-  ForbiddenError,
-  NotFoundError,
-} from '@agent-chat/agent-core';
+import { ForbiddenError, NotFoundError } from '@agent-chat/agent-core';
 import type { Hono } from 'hono';
 import { checkRateLimit, resolvePrincipal } from '../http';
 import type { AppEnv } from '../http';

@@ -20,11 +20,7 @@ export const routerEnvSchema = z.object({
   /** Model alias from GET /v1/models. A name, never a hard-coded secret. */
   JEV_MODEL: z.string().min(1).default('jev-latest'),
   /** Below this top-two probability gap, fall back to the LLM router. */
-  ROUTER_MARGIN_THRESHOLD: z.coerce
-    .number()
-    .min(0)
-    .max(1)
-    .default(0.15),
+  ROUTER_MARGIN_THRESHOLD: z.coerce.number().min(0).max(1).default(0.15),
 });
 
 export interface RouterConfig {

@@ -65,7 +65,9 @@ export interface JevClient {
 
 function marginOf(probabilities: Record<string, number>): number {
   const sorted = Object.values(probabilities).sort((a, b) => b - a);
-  return sorted.length < 2 ? 1 : Math.max(0, Math.min(1, sorted[0]! - sorted[1]!));
+  return sorted.length < 2
+    ? 1
+    : Math.max(0, Math.min(1, sorted[0]! - sorted[1]!));
 }
 
 function choiceOf(answer: z.infer<typeof choiceAnswer>): JevChoice {

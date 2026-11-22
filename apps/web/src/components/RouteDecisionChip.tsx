@@ -11,9 +11,7 @@ export function RouteDecisionChip({
 }: DataMessagePartProps<RouteDecision>) {
   const mode = data.mode;
   const label =
-    mode === 'shadow'
-      ? `${data.skill} · shadow`
-      : `${data.skill} · live`;
+    mode === 'shadow' ? `${data.skill} · shadow` : `${data.skill} · live`;
   const tooltip = [
     `tier: ${data.tier}`,
     `research: ${data.needsResearch ? 'yes' : 'no'}`,

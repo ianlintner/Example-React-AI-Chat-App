@@ -68,9 +68,7 @@ export async function createServices(
         '../migrations/001_init.sql',
         '../migrations/002_route_decisions.sql',
       ]
-        .map(path =>
-          readFileSync(new URL(path, import.meta.url), 'utf8'),
-        )
+        .map(path => readFileSync(new URL(path, import.meta.url), 'utf8'))
         .join('\n');
       const postgres = new PostgresStore(config.databaseUrl, buffer);
       // Boot applies idempotent DDL; no migration CLI for local development.

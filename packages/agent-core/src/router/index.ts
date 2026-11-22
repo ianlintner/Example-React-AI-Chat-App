@@ -3,24 +3,13 @@
  * unavailable Jev falls back to structured LLM output. A deterministic default
  * covers `off`, tests and disasters. Shadow mode logs but never dispatches.
  */
-import type {
-  AgentUIMessage,
-  RouteDecision,
-  Tier,
-} from '@agent-chat/contract';
+import type { AgentUIMessage, RouteDecision, Tier } from '@agent-chat/contract';
 import { classify } from './classify';
 import type { RouterConfig } from './config';
 import type { FallbackDecision, LlmRouter } from './fallback';
 import type { JevClient, JevDecision } from './jev';
-import {
-  ROUTER_QUESTIONS,
-  ROUTER_SKILLS,
-} from './jev';
-import type {
-  RouteLogRow,
-  RouteMetrics,
-  RouteSink,
-} from './observability';
+import { ROUTER_QUESTIONS, ROUTER_SKILLS } from './jev';
+import type { RouteLogRow, RouteMetrics, RouteSink } from './observability';
 import { noopMetrics, noopSink } from './observability';
 import type { Principal, Router } from '../seams';
 
@@ -35,8 +24,7 @@ function lastUserText(messages: AgentUIMessage[]): string {
   return (
     last?.parts
       .filter(
-        (part): part is { type: 'text'; text: string } =>
-          part.type === 'text',
+        (part): part is { type: 'text'; text: string } => part.type === 'text',
       )
       .map(part => part.text)
       .join('') ?? ''
@@ -157,7 +145,10 @@ export function createRouter(deps: RouterDeps): Router {
     async decide({ principal, messages, context }) {
       const started = now();
       const text = lastUserText(messages);
-      const baseline = baselineDecision(messages, mode === 'live' ? 'live' : 'shadow');
+      const baseline = baselineDecision(
+        messages,
+        mode === 'live' ? 'live' : 'shadow',
+      );
 
       if (mode === 'off') {
         return { ...baseline, mode: 'shadow' };

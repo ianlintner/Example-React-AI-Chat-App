@@ -9,13 +9,7 @@ import type { LanguageModel } from 'ai';
 import { z } from 'zod';
 
 const fallbackSchema = z.object({
-  skill: z.enum([
-    'general',
-    'deep-research',
-    'planning',
-    'creative',
-    'code',
-  ]),
+  skill: z.enum(['general', 'deep-research', 'planning', 'creative', 'code']),
   tier: z.enum(['fast', 'deep', 'research']),
   needsResearch: z.boolean(),
   needsPlan: z.boolean(),

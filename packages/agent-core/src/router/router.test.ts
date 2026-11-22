@@ -5,19 +5,9 @@ import { loadRouterConfig } from './config';
 import { accuracyOf, GOLDEN_CASES, sameOutcome } from './golden';
 import type { JevClient, JevDecision } from './jev';
 import { ROUTER_SKILLS } from './jev';
-import {
-  createRouter,
-  type RouterDeps,
-} from './index';
-import type {
-  FallbackDecision,
-  LlmRouter,
-} from './fallback';
-import type {
-  RouteLogRow,
-  RouteMetrics,
-  RouteSink,
-} from './observability';
+import { createRouter, type RouterDeps } from './index';
+import type { FallbackDecision, LlmRouter } from './fallback';
+import type { RouteLogRow, RouteMetrics, RouteSink } from './observability';
 
 const principal = {
   userId: 'user_test',
@@ -33,14 +23,12 @@ const messages = (text: string): AgentUIMessage[] => [
   },
 ];
 
-function jevDecision(
-  overrides: Partial<JevDecision> = {},
-): JevDecision {
-  const choice = (
-    value: string,
-    confidence = 0.9,
-    margin = 0.8,
-  ) => ({ choice: value, confidence, margin });
+function jevDecision(overrides: Partial<JevDecision> = {}): JevDecision {
+  const choice = (value: string, confidence = 0.9, margin = 0.8) => ({
+    choice: value,
+    confidence,
+    margin,
+  });
   return {
     skill: choice('code'),
     tier: choice('deep'),
@@ -311,12 +299,7 @@ describe('golden routing cases', () => {
   });
 
   it('uses the shared outcome comparator', () => {
-    expect(
-      sameOutcome(
-        classify('hello'),
-        classify('hello'),
-      ),
-    ).toBe(true);
+    expect(sameOutcome(classify('hello'), classify('hello'))).toBe(true);
   });
 
   it('routes a research request to the research tier', () => {

@@ -16,8 +16,8 @@ export class PostgresRouteSink implements RouteSink {
       `insert into route_decisions (
          decision_id, thread_id, run_id, owner_id, mode, source, skill, tier,
          needs_research, needs_plan, confidence, margin, proposed, baseline,
-         agreement, latency_ms
-       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$16)`,
+         comparison, agreement, latency_ms
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15::jsonb,$16,$17)`,
       [
         row.decisionId,
         row.threadId,
@@ -33,6 +33,7 @@ export class PostgresRouteSink implements RouteSink {
         row.margin,
         JSON.stringify(row.proposed),
         JSON.stringify(row.baseline),
+        JSON.stringify(row.comparison),
         row.agreement,
         row.latencyMs,
       ],

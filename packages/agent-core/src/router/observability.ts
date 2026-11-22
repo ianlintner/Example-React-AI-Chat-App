@@ -20,7 +20,10 @@ export interface RouteLogRow {
   margin: number;
   /** The decision that would have been used for dispatch in shadow mode. */
   proposed: RouteDecision;
+  /** The decision actually dispatched (legacy when shadow, typed when live). */
   baseline: RouteDecision;
+  /** Keyword-rule comparison retained for telemetry only. */
+  comparison: RouteDecision;
   agreement: boolean;
   latencyMs: number;
 }

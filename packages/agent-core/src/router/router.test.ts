@@ -132,18 +132,23 @@ describe('createRouter modes', () => {
     expect(decision.mode).toBe('shadow');
   });
 
-  it('shadow: logs both decisions but dispatches the baseline', async () => {
+  it('shadow: dispatches legacy route, logs proposed + keyword comparison', async () => {
     const { router, rows, events } = recording();
     const decision = await router.decide({
       principal,
       messages: messages('fix this TypeScript bug'),
       context,
     });
-    expect(decision.skill).toBe('code');
+    // Shadow must not upgrade the model tier.
+    expect(decision.skill).toBe('general');
+    expect(decision.tier).toBe('fast');
     expect(decision.source).toBe('default');
     expect(rows).toHaveLength(1);
     expect(rows[0]!.proposed.source).toBe('typed-router');
-    expect(rows[0]!.baseline.source).toBe('default');
+    expect(rows[0]!.baseline.skill).toBe('general');
+    expect(rows[0]!.baseline.tier).toBe('fast');
+    expect(rows[0]!.comparison.skill).toBe('code');
+    expect(rows[0]!.comparison.tier).toBe('deep');
     expect(rows[0]!.mode).toBe('shadow');
     expect(rows[0]!.ownerId).toBe('user_test');
     expect(events.some(e => e.startsWith('decision:'))).toBe(true);
@@ -167,13 +172,14 @@ describe('createRouter modes', () => {
     expect(rows[0]!.mode).toBe('live');
   });
 
-  it('records agreement between proposed and baseline', async () => {
+  it('records agreement between proposed and the keyword comparison', async () => {
     const { router, rows, events } = recording();
     await router.decide({
       principal,
       messages: messages('fix this TypeScript bug'),
       context,
     });
+    // Fake Jev and the keyword rules both say code/deep.
     expect(rows[0]!.agreement).toBe(true);
     expect(events).toContain('agreement:true');
   });

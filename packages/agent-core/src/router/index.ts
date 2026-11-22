@@ -207,10 +207,13 @@ export function createRouter(deps: RouterDeps): Router {
         return legacyDecision(messages, dispatchMode);
       }
 
-      const baseline = baselineDecision(messages, dispatchMode);
+      // Shadow must preserve pre-router dispatch exactly (general/fast). The
+      // keyword baseline stays the logged comparison, never the dispatched
+      // route, so shadow mode cannot upgrade a user to a costlier tier.
+      const comparison = baselineDecision(messages, dispatchMode);
       const sampled =
         mode === 'live' ||
-        sampleBucket(baseline.decisionId) < config.shadowSample;
+        sampleBucket(comparison.decisionId) < config.shadowSample;
       const shared = budget(config.timeoutMs);
       let proposed: RouteDecision | undefined;
       let fallbackReason: string | undefined;
@@ -278,13 +281,17 @@ export function createRouter(deps: RouterDeps): Router {
       }
 
       proposed ??= {
-        ...baseline,
+        ...comparison,
         source: 'default',
         rationale: fallbackReason ?? 'fallback_unavailable',
       };
 
+      // The dispatched baseline must match the legacy route in off/shadow.
+      // In live mode the typed decision is already dispatched below and the
+      // keyword comparison is retained only for telemetry.
+      const baseline = legacyDecision(messages, dispatchMode);
       const latencyMs = Math.max(0, now() - started);
-      const agreed = agrees(proposed, baseline);
+      const agreed = agrees(proposed, comparison);
       metrics.decisions(
         {
           source: proposed.source,
@@ -313,6 +320,7 @@ export function createRouter(deps: RouterDeps): Router {
         margin: proposed.margin,
         proposed,
         baseline,
+        comparison,
         agreement: agreed,
         latencyMs,
       };

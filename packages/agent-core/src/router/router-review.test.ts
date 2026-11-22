@@ -184,10 +184,12 @@ describe('review fixes: bounded, private, cost-neutral routing', () => {
       messages: messages('fix this TypeScript bug'),
       context,
     });
-    expect(decision.skill).toBe('code');
+    expect(decision.skill).toBe('general');
+    expect(decision.tier).toBe('fast');
     expect(jev.classify).not.toHaveBeenCalled();
     expect(llmRouter.decide).not.toHaveBeenCalled();
     expect(rows[0]!.source).toBe('default');
+    expect(rows[0]!.comparison.skill).toBe('code');
     expect(events).toContain('fallback:sampled_out');
   });
 });

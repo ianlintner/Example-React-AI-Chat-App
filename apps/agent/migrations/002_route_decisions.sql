@@ -16,10 +16,16 @@ create table if not exists route_decisions (
   margin real not null check (margin between 0 and 1),
   proposed jsonb not null,
   baseline jsonb not null,
+  comparison jsonb not null,
   agreement boolean not null,
   latency_ms integer not null check (latency_ms >= 0),
   created_at timestamptz not null default now()
 );
+
+-- Local dev databases created by an earlier revision gain the new column.
+alter table route_decisions add column if not exists comparison jsonb;
+update route_decisions set comparison = baseline where comparison is null;
+alter table route_decisions alter column comparison set not null;
 
 create index if not exists route_decisions_created_idx
   on route_decisions (created_at desc);

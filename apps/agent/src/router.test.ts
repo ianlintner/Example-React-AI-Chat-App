@@ -62,7 +62,8 @@ describe('routing metrics and data part', () => {
           data: { skill: string; mode: string; source: string };
         }
       | undefined;
-    expect(routePart?.data.skill).toBe('code');
+    // Shadow emits the dispatched legacy route, never the upgraded keyword tier.
+    expect(routePart?.data.skill).toBe('general');
     expect(routePart?.data.mode).toBe('shadow');
     expect(logged).toHaveLength(1);
 

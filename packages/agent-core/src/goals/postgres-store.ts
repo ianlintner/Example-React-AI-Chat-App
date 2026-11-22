@@ -4,7 +4,7 @@
  * keys live in a separate immutable ledger with a primary-key constraint.
  */
 import pg from 'pg';
-import type { GoalRunStore } from './store';
+import { StaleCheckpointError, type GoalRunStore } from './store';
 import type { GoalRunRecord } from './types';
 
 const { Pool } = pg;
@@ -30,9 +30,16 @@ export class PostgresGoalRunStore implements GoalRunStore {
 
   async createRun(record: GoalRunRecord) {
     await this.pool.query(
-      `insert into goal_runs (run_id, owner_id, thread_id, record)
-       values ($1, $2, $3, $4) on conflict (run_id) do nothing`,
-      [record.runId, record.ownerId, record.threadId, JSON.stringify(record)],
+      `insert into goal_runs (run_id, owner_id, thread_id, record, updated_at)
+       values ($1, $2, $3, $4, ($5)::timestamptz)
+       on conflict (run_id) do nothing`,
+      [
+        record.runId,
+        record.ownerId,
+        record.threadId,
+        JSON.stringify(record),
+        record.updatedAt,
+      ],
     );
   }
 
@@ -50,21 +57,26 @@ export class PostgresGoalRunStore implements GoalRunStore {
     const client = await this.pool.connect();
     try {
       await client.query('begin');
-      if (expectedUpdatedAt) {
-        const { rows } = await client.query<{ updated_at: Date | string }>(
-          'select updated_at from goal_runs where run_id = $1 for update',
-          [record.runId],
-        );
-        if (!rows[0]) throw new Error('run_not_found');
-        const actual = new Date(rows[0].updated_at).toISOString();
-        if (actual !== expectedUpdatedAt) throw new Error('stale_checkpoint');
-      }
-      await client.query(
-        `update goal_runs set record = $1, updated_at = now() where run_id = $2`,
-        [JSON.stringify(record), record.runId],
+      const expected = expectedUpdatedAt ?? record.updatedAt;
+      const { rows } = await client.query<{ updated_at: Date | string }>(
+        'select updated_at from goal_runs where run_id = $1 for update',
+        [record.runId],
       );
-      // Insert effect keys idempotently; the ledger is the at-most-once guard.
-      for (const key of record.sideEffects) {
+      if (!rows[0]) throw new Error('run_not_found');
+      const actual = new Date(rows[0].updated_at).toISOString();
+      if (actual !== expected) throw new StaleCheckpointError();
+      // Write the record's own timestamp, not now(): the application clock
+      // is the CAS token. SELECT ... FOR UPDATE serialises concurrent writers.
+      await client.query(
+        `update goal_runs set record = $1, updated_at = ($3)::timestamptz
+         where run_id = $2`,
+        [JSON.stringify(record), record.runId, record.updatedAt],
+      );
+      // The caller's start key is not an effect key; keep it out of the
+      // global ledger so it cannot collide with another run's effect keys.
+      for (const key of record.sideEffects.filter(
+        k => k !== record.idempotencyKey,
+      )) {
         await client.query(
           `insert into goal_run_effects (effect_key, run_id) values ($1, $2)
            on conflict (effect_key) do nothing`,

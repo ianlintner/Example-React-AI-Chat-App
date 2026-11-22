@@ -4,6 +4,7 @@ import type { Inngest } from 'inngest';
 export type RunEvent =
   | {
       name: 'run/start';
+      id: string;
       data: {
         runId: string;
         ownerId: string;
@@ -14,6 +15,7 @@ export type RunEvent =
     }
   | {
       name: 'run/decision';
+      id: string;
       data: {
         runId: string;
         approvalId: string;

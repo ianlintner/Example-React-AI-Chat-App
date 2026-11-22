@@ -4,7 +4,21 @@ import {
   approvalWaitOptions,
   APPROVAL_TIMEOUT,
   readAdvanceResult,
+  resolveDecision,
 } from './inngest';
+
+describe('resolveDecision', () => {
+  it('uses the event decision when it arrived', () => {
+    expect(resolveDecision('deny', 'approved')).toBe('deny');
+    expect(resolveDecision('approve', 'denied')).toBe('approve');
+  });
+
+  it('falls back to the stored decision after a wait timeout', () => {
+    expect(resolveDecision(undefined, 'approved')).toBe('approve');
+    expect(resolveDecision(undefined, 'denied')).toBe('deny');
+    expect(resolveDecision(undefined, null)).toBe('deny');
+  });
+});
 
 describe('readAdvanceResult', () => {
   it('recognizes a JSON-round-tripped approval gate without instanceof', () => {

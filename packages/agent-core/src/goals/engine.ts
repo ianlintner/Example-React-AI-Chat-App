@@ -35,7 +35,19 @@ export class GoalRunEngine {
     private readonly options: EngineOptions,
   ) {
     this.budget = { ...DEFAULT_BUDGET, ...options.budget };
-    const now = options.now ?? (() => new Date().toISOString());
+    // The updatedAt value doubles as the CAS token, so it must strictly
+    // advance even when the injected clock is coarse or fixed in tests.
+    const baseNow = options.now ?? (() => new Date().toISOString());
+    let lastNow = '';
+    const now = () => {
+      const candidate = baseNow();
+      if (candidate > lastNow) lastNow = candidate;
+      else if (lastNow) {
+        const ms = Date.parse(lastNow);
+        lastNow = new Date(ms + 1).toISOString();
+      } else lastNow = candidate;
+      return lastNow;
+    };
     const newId =
       options.newId ?? ((p: string) => `${p}_${crypto.randomUUID()}`);
     this.context = {
@@ -99,8 +111,9 @@ export class GoalRunEngine {
     });
     record.plan = plan;
     record.status = 'running';
+    const createdAt = record.updatedAt;
     record.updatedAt = this.context.now();
-    await this.store.saveRun(record);
+    await this.store.saveRun(record, createdAt);
     return record;
   }
 

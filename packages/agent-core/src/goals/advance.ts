@@ -3,6 +3,7 @@ import type { Step } from '@agent-chat/contract';
 import type { GoalRunRecord, GoalRunEvent } from './types';
 import {
   EFFECT_COMMITTED,
+  RunSupersededError,
   activeStop,
   checkControl,
   checkpoint,
@@ -18,6 +19,26 @@ import {
 
 /** Drive the state machine until completion, a human gate or a stop. */
 export async function advanceRun(
+  ctx: AdvanceContext,
+  runId: string,
+  ownerId?: string,
+): Promise<AdvanceResult> {
+  try {
+    return await advanceLoop(ctx, runId, ownerId);
+  } catch (error) {
+    if (error instanceof RunSupersededError) {
+      const record = await loadRun(ctx, runId, ownerId);
+      return stopped(
+        record,
+        [],
+        error.status === 'canceled' ? 'canceled' : 'failed',
+      );
+    }
+    throw error;
+  }
+}
+
+async function advanceLoop(
   ctx: AdvanceContext,
   runId: string,
   ownerId?: string,

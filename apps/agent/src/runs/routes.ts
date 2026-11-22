@@ -20,13 +20,24 @@ export function mountRunRoutes(
   emit: RunEventEmitter,
   services?: Services,
 ) {
+  async function readBody(c: { req: { json(): Promise<unknown> } }) {
+    try {
+      return { body: await c.req.json() };
+    } catch {
+      return { error: 'invalid_json' as const };
+    }
+  }
+
   app.post('/runs', async c => {
+    const parsedBody = await readBody(c);
+    if ('error' in parsedBody) return c.json(parsedBody, 400);
+    const body = parsedBody.body;
     const principal = resolvePrincipal(c, config);
     if (services) {
       const limited = await checkRateLimit(c, services, principal);
       if (limited) return limited;
     }
-    const parsed = startRunRequestSchema.safeParse(await c.req.json());
+    const parsed = startRunRequestSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     const record = await runs.start({
       ownerId: principal.userId,
@@ -38,6 +49,7 @@ export function mountRunRoutes(
     // accepted start, keyed by run id so Inngest retries dedupe the run.
     await emit({
       name: 'run/start',
+      id: `run-start-${record.runId}`,
       data: {
         runId: record.runId,
         ownerId: principal.userId,
@@ -60,7 +72,9 @@ export function mountRunRoutes(
 
   app.post('/runs/:runId/approvals/:approvalId', async c => {
     const principal = resolvePrincipal(c, config);
-    const parsed = approvalDecisionSchema.safeParse(await c.req.json());
+    const parsedBody = await readBody(c);
+    if ('error' in parsedBody) return c.json(parsedBody, 400);
+    const parsed = approvalDecisionSchema.safeParse(parsedBody.body);
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     const { runId, approvalId } = c.req.param();
     try {
@@ -73,6 +87,7 @@ export function mountRunRoutes(
       // approvals time out and deny is replayed as already-decided.
       await emit({
         name: 'run/decision',
+        id: `run-decision-${approvalId}-${parsed.data.decision}`,
         data: {
           runId,
           approvalId,
@@ -88,7 +103,9 @@ export function mountRunRoutes(
 
   app.post('/runs/:runId/steer', async c => {
     const principal = resolvePrincipal(c, config);
-    const parsed = steerRequestSchema.safeParse(await c.req.json());
+    const parsedBody = await readBody(c);
+    if ('error' in parsedBody) return c.json(parsedBody, 400);
+    const parsed = steerRequestSchema.safeParse(parsedBody.body);
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     try {
       await runs.steer(c.req.param('runId'), parsed.data, principal.userId);

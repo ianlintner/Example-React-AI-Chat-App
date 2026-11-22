@@ -29,6 +29,18 @@ type DecisionData = {
   ownerId: string;
 };
 
+/**
+ * Derive the effective decision, including the timeout race where a decision
+ * was emitted between the pre-wait check and waitForEvent registration.
+ */
+export function resolveDecision(
+  eventDecision: 'approve' | 'deny' | undefined,
+  storedStatus: 'approved' | 'denied' | null,
+): 'approve' | 'deny' {
+  if (eventDecision) return eventDecision;
+  return storedStatus === 'approved' ? 'approve' : 'deny';
+}
+
 /** Narrow the serialized `step.run` result without relying on prototypes. */
 export function readAdvanceResult(value: unknown): AdvanceResult | undefined {
   if (!value || typeof value !== 'object') return undefined;
@@ -121,8 +133,25 @@ export function createGoalRunFunctions(client: Inngest, runs: GoalRunService) {
                   typeof step.waitForEvent
                 >[1],
               );
-        const denied =
-          !decision || (decision.data as DecisionData).decision === 'deny';
+        // A decision emitted in the gap between check-decision and
+        // waitForEvent registration is not buffered for the waiter. On
+        // timeout, re-read the durable status before treating null as deny.
+        const storedDecision = decision
+          ? null
+          : await step.run(
+              `timeout-status-${approval.approvalId}`,
+              async () => {
+                const current = await runs.get(runId, ownerId);
+                return current?.approval?.status ?? null;
+              },
+            );
+        const effectiveDecision = resolveDecision(
+          decision
+            ? ((decision.data as DecisionData).decision as 'approve' | 'deny')
+            : undefined,
+          storedDecision as 'approved' | 'denied' | null,
+        );
+        const denied = effectiveDecision === 'deny';
         // The HTTP route records the decision first. The function only
         // applies it if the route hasn't already (e.g. timeout path or a
         // decision injected without HTTP), so `approval_already_decided`

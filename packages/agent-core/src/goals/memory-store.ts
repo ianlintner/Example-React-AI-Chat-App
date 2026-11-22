@@ -1,5 +1,5 @@
 /** In-process GoalRunStore sharing MemoryStore's StoreData. */
-import type { GoalRunStore } from './store';
+import { StaleCheckpointError, type GoalRunStore } from './store';
 import type { GoalRunRecord } from './types';
 import type { StoreData } from '../store/types';
 
@@ -28,9 +28,8 @@ export class MemoryGoalRunStore implements GoalRunStore {
 
   async saveRun(record: GoalRunRecord, expectedUpdatedAt?: string) {
     const current = this.data.get(record.runId);
-    if (expectedUpdatedAt && current?.updatedAt !== expectedUpdatedAt) {
-      throw new Error('stale_checkpoint');
-    }
+    const expected = expectedUpdatedAt ?? record.updatedAt;
+    if (current?.updatedAt !== expected) throw new StaleCheckpointError();
     this.data.set(record.runId, structuredClone(record));
   }
 

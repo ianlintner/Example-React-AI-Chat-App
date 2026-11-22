@@ -1,6 +1,6 @@
 /** Shared context and helpers for goal-run advance/control transitions. */
 import type { ApprovalRequest, Plan, Step } from '@agent-chat/contract';
-import type { GoalRunStore } from './store';
+import { StaleCheckpointError, type GoalRunStore } from './store';
 import type {
   GoalBudget,
   GoalRunEvent,
@@ -100,6 +100,72 @@ export async function save(
   await ctx.store.saveRun(record, expectedUpdatedAt);
 }
 
+/** Thrown when a CAS write discovers that a human cancel won the race. */
+export class RunSupersededError extends Error {
+  constructor(readonly status: 'canceled' | 'completed' | 'failed') {
+    super(`run_superseded_${status}`);
+    this.name = 'RunSupersededError';
+  }
+}
+
+/** Compare-and-set write for progress updates. On a stale conflict the store
+ * wins for control fields (cancel/steer/approval) and the write is retried
+ * with the same progress fields, so a decision made during a long step can
+ * never be overwritten. Bounded retries avoid livelock under contention.
+ */
+export async function commit(
+  ctx: AdvanceContext,
+  record: GoalRunRecord,
+  baseUpdatedAt: string,
+  expected?: string,
+): Promise<GoalRunRecord> {
+  const ownerId = record.ownerId;
+  let expectedAt = expected ?? baseUpdatedAt;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const before = ctx.now();
+    try {
+      await ctx.store.saveRun({ ...record, updatedAt: before }, expectedAt);
+      record.updatedAt = before;
+      return record;
+    } catch (error) {
+      if (!(error instanceof StaleCheckpointError)) throw error;
+      const latest = await loadRun(ctx, record.runId, ownerId);
+      if (
+        latest.canceled ||
+        latest.status === 'canceled' ||
+        latest.status === 'completed' ||
+        latest.status === 'failed'
+      ) {
+        // A human decision or terminal transition won the race. Stop without
+        // writing progress over it; the caller returns the durable record.
+        throw new RunSupersededError(
+          latest.canceled || latest.status === 'canceled'
+            ? 'canceled'
+            : latest.status === 'completed'
+              ? 'completed'
+              : 'failed',
+        );
+      }
+      // Control decisions are authoritative; progress is local to the loop.
+      record.canceled = false;
+      record.status =
+        latest.status === 'awaiting-approval' || latest.status === 'running'
+          ? latest.status
+          : record.status === 'awaiting-approval' ||
+              record.status === 'running' ||
+              record.status === 'planning'
+            ? record.status
+            : latest.status;
+      record.approval = latest.approval;
+      record.steerInstructions = [...latest.steerInstructions];
+      record.pendingEffect = latest.pendingEffect;
+      if (latest.error) record.error = latest.error;
+      expectedAt = latest.updatedAt;
+    }
+  }
+  throw new Error('checkpoint_contention');
+}
+
 export async function persist(
   ctx: AdvanceContext,
   record: GoalRunRecord,
@@ -107,7 +173,7 @@ export async function persist(
   pending: Step[],
   expectedUpdatedAt?: string,
 ) {
-  await save(ctx, record, expectedUpdatedAt);
+  await commit(ctx, record, record.updatedAt, expectedUpdatedAt);
   for (const step of pending.splice(0)) {
     events.push({ type: 'step', step });
   }
@@ -122,12 +188,16 @@ export async function finish(
 ): Promise<AdvanceResult> {
   record.status = status;
   if (error) record.error = error;
-  record.updatedAt = ctx.now();
   events.push({ type: 'status', status, error });
-  await ctx.store.saveRun(record);
+  await commit(ctx, record, record.updatedAt);
   return status === 'completed'
     ? { outcome: 'completed', record, events }
-    : { outcome: 'stopped', reason: 'budget', record, events };
+    : {
+        outcome: 'stopped',
+        reason: error === 'replan_budget_exceeded' ? 'replan-budget' : 'budget',
+        record,
+        events,
+      };
 }
 
 export function stopped(
@@ -176,7 +246,7 @@ export async function refresh(
     record.pendingEffect = latest.pendingEffect;
   }
   for (const text of steerAdded) events.push({ type: 'steer', text });
-  await persist(ctx, record, events, pending);
+  await persist(ctx, record, events, pending, latest.updatedAt);
   return record;
 }
 
@@ -193,20 +263,19 @@ export async function replan(
   ctx: AdvanceContext,
   record: GoalRunRecord,
   events: GoalRunEvent[],
-): Promise<{ plan: Plan } | { stopped: 'replan-budget' }> {
+): Promise<{ plan: Plan } | { stopped: 'replan-budget' | 'canceled' }> {
   const revision = (record.plan?.revision ?? -1) + 1;
   if (revision > ctx.budget.maxReplans) {
     // Persist the terminal state: a rejected budget must not leave the run
     // stuck in `running` forever.
     record.status = 'failed';
     record.error = 'replan_budget_exceeded';
-    record.updatedAt = ctx.now();
-    await ctx.store.saveRun(record);
     events.push({
       type: 'status',
       status: 'failed',
       error: 'replan_budget_exceeded',
     });
+    await commit(ctx, record, record.updatedAt);
     return { stopped: 'replan-budget' };
   }
   const plan = await ctx.plan({
@@ -215,9 +284,17 @@ export async function replan(
     steerInstructions: record.steerInstructions,
     priorCheckpoints: record.checkpoints,
   });
+  // The planner can take seconds. A cancel/steer landing during that call is
+  // authoritative: re-read control state before committing the new plan.
+  const latest = await loadRun(ctx, record.runId, record.ownerId);
+  if (latest.canceled || latest.status === 'canceled') {
+    record.canceled = true;
+    record.status = 'canceled';
+    return { stopped: 'canceled' };
+  }
+  record.steerInstructions = [...latest.steerInstructions];
   record.status = 'running';
-  record.updatedAt = ctx.now();
-  await ctx.store.saveRun(record);
+  await commit(ctx, record, record.updatedAt, latest.updatedAt);
   events.push({ type: 'plan', plan });
   return { plan };
 }

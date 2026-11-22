@@ -45,6 +45,19 @@ describe('goal run routes', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects malformed JSON with 400', async () => {
+    const { app: http } = app();
+    const res = await http.request('/runs', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: '{not json',
+    });
+    expect(res.status).toBe(400);
+    expect((await res.json()) as { error: string }).toEqual({
+      error: 'invalid_json',
+    });
+  });
+
   it('does not expose another owner’s run', async () => {
     const { app: http } = app();
     const created = await http.request('/runs', {

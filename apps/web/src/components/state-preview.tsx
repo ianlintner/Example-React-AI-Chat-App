@@ -46,6 +46,7 @@ export function StatePreview({
   const [messages, setMessages] = useState(() => [
     ...previewStates[initial].messages,
   ]);
+  const [draft, setDraft] = useState<string | null>(null);
 
   const state = previewStates[stateName];
   const thread = useMemo(
@@ -56,6 +57,7 @@ export function StatePreview({
   const selectState = useCallback((name: AiState) => {
     setStateName(name);
     setMessages([...previewStates[name].messages]);
+    setDraft(null);
   }, []);
 
   const onSelectThread = useCallback(
@@ -77,37 +79,56 @@ export function StatePreview({
     [selectState],
   );
 
+  const onBranch = useCallback(
+    (messageId: string) => {
+      setThreads(current => {
+        const sameSource = current.filter(t => t.branchOf === messageId).length;
+        const suffix = sameSource > 0 ? `_${sameSource + 1}` : '';
+        const next = {
+          id: `thr_branch_${messageId}${suffix}`,
+          title: `Branch from ${messageId}${suffix}`,
+          updated: 'now',
+          status: 'idle' as const,
+          branchOf: activeId,
+        };
+        setActiveId(next.id);
+        return [next, ...current];
+      });
+    },
+    [activeId],
+  );
+
+  const onEdit = useCallback((messageId: string, text: string) => {
+    // Pre-fill the composer with the original text so a rerun can change it.
+    setDraft(text);
+    if (messageId !== 'new') return;
+    // Suggestion chips in the empty state start a fresh message.
+    setMessages([{ id: `msg_${Date.now().toString(36)}`, role: 'user', text }]);
+  }, []);
+
   return (
     <AppShell
       thread={thread}
       state={state}
       messages={messages}
       threads={threads}
+      draft={draft}
       onSend={text => {
         setMessages(current => [
           ...current,
-          { id: `msg_${current.length}`, role: 'user', text },
+          {
+            id: `msg_${current.length}_${Date.now().toString(36)}`,
+            role: 'user',
+            text,
+          },
         ]);
+        setDraft(null);
         setStateName('streaming');
       }}
       onStop={() => selectState('empty')}
       onSelectThread={onSelectThread}
-      onBranch={messageId => {
-        const next = {
-          id: `thr_branch_${messageId}`,
-          title: `Branch from ${messageId}`,
-          updated: 'now',
-          status: 'idle' as const,
-          branchOf: activeId,
-        };
-        setThreads(current => [next, ...current]);
-        setActiveId(next.id);
-      }}
-      onEdit={(messageId, text) => {
-        setMessages(current =>
-          current.map(m => (m.id === messageId ? { ...m, text } : m)),
-        );
-      }}
+      onBranch={onBranch}
+      onEdit={onEdit}
       commandExtras={AI_STATES.map(name => ({
         id: `state-${name}`,
         label: `Preview state: ${previewStates[name].label}`,
@@ -134,12 +155,26 @@ export function StatePreview({
           </button>
         ))}
       </div>
-      <MessageListForPreview messages={messages} />
+      {/* Kept swappable so the panels PR can inject agent annotations. */}
+      <MessageListForPreview
+        messages={messages}
+        onBranch={onBranch}
+        onEdit={onEdit}
+      />
     </AppShell>
   );
 }
 
-// Kept in a tiny wrapper so the shell's `children` stays swappable in PR (b).
-function MessageListForPreview({ messages }: { messages: PreviewMessage[] }) {
-  return <MessageList messages={messages} />;
+function MessageListForPreview({
+  messages,
+  onBranch,
+  onEdit,
+}: {
+  messages: PreviewMessage[];
+  onBranch: (messageId: string) => void;
+  onEdit: (messageId: string, text: string) => void;
+}) {
+  return (
+    <MessageList messages={messages} onBranch={onBranch} onEdit={onEdit} />
+  );
 }

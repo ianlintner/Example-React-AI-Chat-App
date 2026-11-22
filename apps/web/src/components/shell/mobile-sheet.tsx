@@ -1,4 +1,5 @@
-import { useEffect, useId, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useFocusTrap } from './use-focus-trap';
 
 /**
  * Mobile bottom sheet. Sheets replace modals for tools/plan on small screens
@@ -16,6 +17,9 @@ export function MobileSheet({
   children: ReactNode;
 }) {
   const titleId = useId();
+  const sheetRef = useRef<HTMLElement>(null);
+
+  useFocusTrap(open, sheetRef);
 
   useEffect(() => {
     if (!open) return;
@@ -31,6 +35,7 @@ export function MobileSheet({
   return (
     <div className='fixed inset-0 z-40 flex items-end bg-black/50 md:hidden'>
       <section
+        ref={sheetRef}
         role='dialog'
         aria-modal='true'
         aria-labelledby={titleId}

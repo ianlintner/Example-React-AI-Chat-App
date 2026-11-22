@@ -53,6 +53,20 @@ test('command palette and mobile sheet are keyboard accessible', async ({
   await expect(
     page.getByRole('dialog', { name: 'Command palette' }),
   ).toBeHidden();
+  // Focus returns to the previously focused element when the modal closes.
+  await page.getByRole('button', { name: 'Toggle sidebar' }).click();
+  await page.getByRole('button', { name: /Search or jump to/ }).click();
+  await expect(
+    page.getByRole('dialog', { name: 'Command palette' }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('dialog', { name: 'Command palette' }),
+  ).toBeHidden();
+  const restored = await page.evaluate(
+    () => document.activeElement?.textContent ?? '',
+  );
+  expect(restored).toContain('Search or jump to');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Open threads' }).click();
   await expect(page.getByRole('dialog', { name: 'Threads' })).toBeVisible();

@@ -1,4 +1,5 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { useFocusTrap } from './use-focus-trap';
 
 export interface PaletteCommand {
   id: string;
@@ -20,6 +21,10 @@ export function CommandPalette({
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const titleId = useId();
+  const inputId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) {
@@ -47,6 +52,7 @@ export function CommandPalette({
   return (
     <div className='fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[10vh]'>
       <div
+        ref={dialogRef}
         role='dialog'
         aria-modal='true'
         aria-labelledby={titleId}
@@ -55,11 +61,11 @@ export function CommandPalette({
         <h2 id={titleId} className='sr-only'>
           Command palette
         </h2>
-        <label htmlFor='palette-query' className='sr-only'>
+        <label htmlFor={inputId} className='sr-only'>
           Search commands
         </label>
         <input
-          id='palette-query'
+          id={inputId}
           autoFocus
           value={query}
           onChange={event => {

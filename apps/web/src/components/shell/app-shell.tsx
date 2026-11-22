@@ -27,6 +27,7 @@ export function AppShell({
   renderAnnotations,
   commandExtras = [],
   composer,
+  draft,
   children,
 }: {
   thread: ThreadSummary;
@@ -42,6 +43,8 @@ export function AppShell({
   commandExtras?: PaletteCommand[];
   /** Optional replacement for the demo composer (used by the live runtime). */
   composer?: ReactNode;
+  /** Text loaded into the demo composer when an Edit action is chosen. */
+  draft?: string | null;
   children?: ReactNode;
 }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -197,6 +200,7 @@ export function AppShell({
                   : undefined
               }
               editing={editing}
+              initialDraft={draft}
               onCancelEdit={() => setEditing(null)}
             />
           )}

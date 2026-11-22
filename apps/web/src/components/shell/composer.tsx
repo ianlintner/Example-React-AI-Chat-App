@@ -1,6 +1,6 @@
 import { SendIcon, SquareIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 /**
  * Composer stays live during a run: sending steers, Stop halts with partial
@@ -14,6 +14,7 @@ export function Composer({
   disabledReason,
   editing,
   onCancelEdit,
+  initialDraft,
 }: {
   running: boolean;
   onSend: (text: string) => void;
@@ -22,8 +23,14 @@ export function Composer({
   /** Set when a message's Edit action was chosen; rerun branches the thread. */
   editing?: string | null;
   onCancelEdit?: () => void;
+  /** Text to load into the input when an edit action is chosen. */
+  initialDraft?: string | null;
 }) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(initialDraft ?? '');
+
+  useEffect(() => {
+    if (initialDraft != null) setValue(initialDraft);
+  }, [initialDraft]);
 
   function submit(event: FormEvent) {
     event.preventDefault();

@@ -96,6 +96,23 @@ describe('shell panels', () => {
     expect(onEdit).toHaveBeenCalledWith('m1', 'hi');
   });
 
+  it('loads the edited text into the composer', () => {
+    render(
+      <Composer
+        running={false}
+        onSend={vi.fn()}
+        onStop={vi.fn()}
+        editing='m1'
+        initialDraft='original text'
+      />,
+    );
+    expect(
+      (screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement)
+        .value,
+    ).toBe('original text');
+    expect(screen.getByText(/Editing message/)).toBeTruthy();
+  });
+
   it('filters commands from the keyboard palette', () => {
     render(
       <CommandPalette

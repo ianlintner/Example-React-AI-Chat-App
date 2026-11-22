@@ -80,6 +80,8 @@ export interface GoalRunRecord {
   canceled: boolean;
   /** Idempotency keys of side effects already committed by this run. */
   sideEffects: string[];
+  /** Caller-supplied start key, retained so retries resolve to the same run. */
+  idempotencyKey?: string;
   createdAt: string;
   updatedAt: string;
   error?: string;

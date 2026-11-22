@@ -48,7 +48,7 @@ export function createApp(config: ServerConfig, services: Services) {
 
   mountThreadRoutes(app, config, services);
   mountChatRoutes(app, config, services);
-  mountRunRoutes(app, config, services.runs);
+  mountRunRoutes(app, config, services.runs, services.runEvents);
 
   app.notFound(c => c.json({ error: 'not_found' }, 404));
   app.onError((err, c) => {

@@ -4,16 +4,19 @@ import {
   steerRequestSchema,
   startRunRequestSchema,
 } from '@agent-chat/contract';
+import type { Context } from 'hono';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../http';
 import type { ServerConfig } from '../config';
-import type { GoalRunService } from './service';
+import type { RunEventEmitter } from './events';
+import { RunNotFoundError, type GoalRunService } from './service';
 import { resolvePrincipal } from '../http';
 
 export function mountRunRoutes(
   app: Hono<AppEnv>,
   config: ServerConfig,
   runs: GoalRunService,
+  emit: RunEventEmitter,
 ) {
   app.post('/runs', async c => {
     const principal = resolvePrincipal(c, config);
@@ -24,6 +27,20 @@ export function mountRunRoutes(
       threadId: parsed.data.threadId,
       goal: parsed.data.goal,
       idempotencyKey: parsed.data.idempotencyKey,
+    });
+    // The HTTP route is the durable executor's entry point: one event per
+    // accepted start, keyed by run id so Inngest retries dedupe the run.
+    await emit({
+      name: 'run/start',
+      data: {
+        runId: record.runId,
+        ownerId: principal.userId,
+        threadId: record.threadId,
+        goal: record.goal,
+        ...(record.idempotencyKey
+          ? { idempotencyKey: record.idempotencyKey }
+          : {}),
+      },
     });
     return c.json({ run: record }, 201);
   });
@@ -36,47 +53,63 @@ export function mountRunRoutes(
   });
 
   app.post('/runs/:runId/approvals/:approvalId', async c => {
+    const principal = resolvePrincipal(c, config);
     const parsed = approvalDecisionSchema.safeParse(await c.req.json());
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     const { runId, approvalId } = c.req.param();
     try {
       if (parsed.data.decision === 'approve') {
-        await runs.approve(runId, approvalId, parsed.data);
+        await runs.approve(runId, approvalId, parsed.data, principal.userId);
       } else {
-        await runs.deny(runId, approvalId, parsed.data);
+        await runs.deny(runId, approvalId, parsed.data, principal.userId);
       }
+      // A waiting step.waitForEvent must receive this decision; otherwise
+      // approvals time out and deny is replayed as already-decided.
+      await emit({
+        name: 'run/decision',
+        data: {
+          runId,
+          approvalId,
+          decision: parsed.data.decision,
+          ownerId: principal.userId,
+        },
+      });
       return c.json({ status: 'recorded' });
     } catch (error) {
-      return c.json(
-        { error: error instanceof Error ? error.message : 'internal_error' },
-        409,
-      );
+      return errorResponse(c, error);
     }
   });
 
   app.post('/runs/:runId/steer', async c => {
+    const principal = resolvePrincipal(c, config);
     const parsed = steerRequestSchema.safeParse(await c.req.json());
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     try {
-      await runs.steer(c.req.param('runId'), parsed.data);
+      await runs.steer(c.req.param('runId'), parsed.data, principal.userId);
       return c.json({ status: 'recorded' });
     } catch (error) {
-      return c.json(
-        { error: error instanceof Error ? error.message : 'internal_error' },
-        409,
-      );
+      return errorResponse(c, error);
     }
   });
 
   app.post('/runs/:runId/cancel', async c => {
+    const principal = resolvePrincipal(c, config);
     try {
-      await runs.cancel(c.req.param('runId'));
+      await runs.cancel(c.req.param('runId'), principal.userId);
       return c.json({ status: 'canceled' });
     } catch (error) {
-      return c.json(
-        { error: error instanceof Error ? error.message : 'internal_error' },
-        409,
-      );
+      return errorResponse(c, error);
     }
   });
+}
+
+/** Never leak internals; 404 for foreign/unknown runs, 409 for state errors. */
+function errorResponse(c: Context<AppEnv>, error: unknown) {
+  const message = error instanceof Error ? error.message : 'internal_error';
+  const notFound =
+    error instanceof RunNotFoundError || message === 'run_not_found';
+  return c.json(
+    { error: notFound ? 'not_found' : message },
+    notFound ? 404 : 409,
+  );
 }

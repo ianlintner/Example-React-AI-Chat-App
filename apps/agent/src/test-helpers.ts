@@ -10,6 +10,7 @@ import type { LlmConfig, StoreData } from '@agent-chat/agent-core';
 import { loadServerConfig } from './config';
 import type { Services } from './services';
 import { createGoalRunService } from './runs/service';
+import { noOpRunEvents } from './runs/events';
 
 export const TEST_ENV = {
   SESSION_SECRET: 'test-secret-at-least-32-characters-long',
@@ -68,6 +69,7 @@ export function testServices(
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
     runs,
+    runEvents: noOpRunEvents,
     inngestFunctions: [],
     async close() {
       await store.close();

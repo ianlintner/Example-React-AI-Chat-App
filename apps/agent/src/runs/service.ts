@@ -22,33 +22,57 @@ import { readFileSync } from 'node:fs';
 import type { Llm, StoreData } from '@agent-chat/agent-core';
 import type { ServerConfig } from '../config';
 
+export interface StartRunInput {
+  ownerId: string;
+  threadId: string;
+  goal: string;
+  runId?: string;
+  idempotencyKey?: string;
+}
+
 export interface GoalRunService {
   store: GoalRunStore;
   engine: GoalRunEngine;
-  start(input: {
-    ownerId: string;
-    threadId: string;
-    goal: string;
-    runId?: string;
-    idempotencyKey?: string;
-  }): Promise<GoalRunRecord>;
-  advance(runId: string): Promise<GoalRunEvent[]>;
-  get(runId: string, ownerId: string): Promise<GoalRunRecord | undefined>;
-  approve(runId: string, approvalId: string, body: unknown): Promise<void>;
-  deny(runId: string, approvalId: string, body: unknown): Promise<void>;
-  steer(runId: string, body: unknown): Promise<void>;
-  cancel(runId: string): Promise<void>;
-  events: GoalRunEvent[];
+  start(input: StartRunInput): Promise<GoalRunRecord>;
+  advance(runId: string, ownerId?: string): Promise<GoalRunEvent[]>;
+  get(runId: string, ownerId?: string): Promise<GoalRunRecord | undefined>;
+  approve(
+    runId: string,
+    approvalId: string,
+    body: unknown,
+    ownerId?: string,
+  ): Promise<void>;
+  deny(
+    runId: string,
+    approvalId: string,
+    body: unknown,
+    ownerId?: string,
+  ): Promise<void>;
+  steer(runId: string, body: unknown, ownerId?: string): Promise<void>;
+  cancel(runId: string, ownerId?: string): Promise<void>;
 }
 
-export function createGoalRunService(options: {
+export interface GoalRunServiceOptions {
   config: ServerConfig;
   llm: Llm;
   memoryStoreData?: StoreData;
   executor?: StepExecutor;
   planner?: import('@agent-chat/agent-core').PlanGenerator;
   newId?: (prefix: string) => string;
-}): GoalRunService {
+  /** Called after a run is started, for the Inngest `run/start` event. */
+  onStart?: (record: GoalRunRecord, input: StartRunInput) => Promise<void>;
+  /** Called after a human decision, for the Inngest `run/decision` event. */
+  onDecision?: (input: {
+    runId: string;
+    approvalId: string;
+    decision: 'approve' | 'deny';
+    ownerId: string;
+  }) => Promise<void>;
+}
+
+export function createGoalRunService(
+  options: GoalRunServiceOptions,
+): GoalRunService {
   const store: GoalRunStore = options.config.databaseUrl
     ? new PostgresGoalRunStore(options.config.databaseUrl)
     : new MemoryGoalRunStore(options.memoryStoreData!);
@@ -59,14 +83,24 @@ export function createGoalRunService(options: {
     ...(options.newId ? { newId: options.newId } : {}),
   });
 
-  const events: GoalRunEvent[] = [];
-  let counter = 0;
-  const nextId = options.newId ?? (() => `run_${++counter}`);
+  const newId = options.newId ?? (() => crypto.randomUUID());
+
+  /** Resolve a caller key to the same run after an agent-server restart. */
+  async function findByIdempotencyKey(ownerId: string, key: string) {
+    const runs = await store.listRuns(ownerId);
+    return runs.find(record => record.idempotencyKey === key);
+  }
+
+  /** 404 on a run the caller does not own (never a 409 leak). */
+  async function requireOwner(runId: string, ownerId?: string) {
+    const record = await store.getRun(runId, ownerId);
+    if (!record) throw new RunNotFoundError();
+    return record;
+  }
 
   return {
     store,
     engine,
-    events,
     async start(input) {
       const parsed = startRunRequestSchema.parse({
         threadId: input.threadId,
@@ -75,40 +109,71 @@ export function createGoalRunService(options: {
           ? { idempotencyKey: input.idempotencyKey }
           : {}),
       });
-      return engine.start({
-        runId: input.runId ?? nextId('run'),
+      let runId = input.runId;
+      if (!runId && parsed.idempotencyKey) {
+        runId = (
+          await findByIdempotencyKey(input.ownerId, parsed.idempotencyKey)
+        )?.runId;
+      }
+      const record = await engine.start({
+        runId: runId ?? newId('run'),
         threadId: parsed.threadId,
         ownerId: input.ownerId,
         goal: parsed.goal,
         idempotencyKey: parsed.idempotencyKey,
       });
+      if (options.onStart) await options.onStart(record, input);
+      return record;
     },
-    async advance(runId) {
-      const { events: emitted } = await engine.advance(runId);
-      events.push(...emitted);
-      return emitted;
+    async advance(runId, ownerId) {
+      const result = await engine.advance(runId, ownerId);
+      return result.events;
     },
     get(runId, ownerId) {
       return store.getRun(runId, ownerId);
     },
-    async approve(runId, approvalId, body) {
+    async approve(runId, approvalId, body, ownerId) {
       const parsed = approvalDecisionSchema.parse(body);
       if (parsed.decision !== 'approve') throw new Error('decision_mismatch');
-      await engine.approve(runId, approvalId);
+      const run = await requireOwner(runId, ownerId);
+      await engine.approve(runId, approvalId, ownerId);
+      await options.onDecision?.({
+        runId,
+        approvalId,
+        decision: 'approve',
+        ownerId: run.ownerId,
+      });
     },
-    async deny(runId, approvalId, body) {
+    async deny(runId, approvalId, body, ownerId) {
       const parsed = approvalDecisionSchema.parse(body);
       if (parsed.decision !== 'deny') throw new Error('decision_mismatch');
-      await engine.deny(runId, approvalId, parsed.reason);
+      const run = await requireOwner(runId, ownerId);
+      await engine.deny(runId, approvalId, parsed.reason, ownerId);
+      await options.onDecision?.({
+        runId,
+        approvalId,
+        decision: 'deny',
+        ownerId: run.ownerId,
+      });
     },
-    async steer(runId, body) {
+    async steer(runId, body, ownerId) {
       const parsed = steerRequestSchema.parse(body);
-      await engine.steer(runId, parsed.text);
+      await requireOwner(runId, ownerId);
+      await engine.steer(runId, parsed.text, ownerId);
     },
-    cancel(runId) {
-      return engine.cancel(runId);
+    async cancel(runId, ownerId) {
+      await requireOwner(runId, ownerId);
+      await engine.cancel(runId, ownerId);
     },
   };
+}
+
+/** Unknown/foreign run: routes translate this to 404. */
+export class RunNotFoundError extends Error {
+  constructor() {
+    super('run_not_found');
+    this.name = 'RunNotFoundError';
+  }
 }
 
 /** Load and apply the goal-run DDL on boot when Postgres is configured. */

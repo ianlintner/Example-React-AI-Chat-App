@@ -17,10 +17,12 @@ import type {
 } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
 import type { GoalRunService } from './runs/service';
+import type { RunEventEmitter } from './runs/events';
 import type { InngestFunction } from 'inngest';
 import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
 import { createInngest } from './inngest';
 import { createGoalRunFunctions } from './runs/inngest';
+import { inngestRunEvents, noOpRunEvents } from './runs/events';
 
 export interface Services {
   store: ThreadStore;
@@ -28,6 +30,7 @@ export interface Services {
   limiter: RateLimiter;
   llmConfig: LlmConfig;
   runs: GoalRunService;
+  runEvents: RunEventEmitter;
   inngestFunctions: InngestFunction.Any[];
   close(): Promise<void>;
 }
@@ -73,6 +76,9 @@ export async function createServices(
 
   const { client, functions } = createInngest({ dev: config.inngest.dev });
   functions.push(...createGoalRunFunctions(client, runs));
+  const runEvents = config.inngest.enabled
+    ? inngestRunEvents(client)
+    : noOpRunEvents;
 
   return {
     store,
@@ -80,6 +86,7 @@ export async function createServices(
     limiter: new TierRateLimiter(),
     llmConfig,
     runs,
+    runEvents,
     inngestFunctions: functions,
     async close() {
       await store.close();

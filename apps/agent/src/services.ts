@@ -16,12 +16,19 @@ import type {
   ThreadStore,
 } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
+import type { GoalRunService } from './runs/service';
+import type { InngestFunction } from 'inngest';
+import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
+import { createInngest } from './inngest';
+import { createGoalRunFunctions } from './runs/inngest';
 
 export interface Services {
   store: ThreadStore;
   runtime: AgentRuntime;
   limiter: RateLimiter;
   llmConfig: LlmConfig;
+  runs: GoalRunService;
+  inngestFunctions: InngestFunction.Any[];
   close(): Promise<void>;
 }
 
@@ -57,11 +64,23 @@ export async function createServices(
     }
   }
 
+  const runs = createGoalRunService({
+    config,
+    llm,
+    memoryStoreData: store instanceof MemoryStore ? store.data : undefined,
+  });
+  await bootstrapGoalRuns(runs.store);
+
+  const { client, functions } = createInngest({ dev: config.inngest.dev });
+  functions.push(...createGoalRunFunctions(client, runs));
+
   return {
     store,
     runtime: createAgentRuntime({ llm, store }),
     limiter: new TierRateLimiter(),
     llmConfig,
+    runs,
+    inngestFunctions: functions,
     async close() {
       await store.close();
     },

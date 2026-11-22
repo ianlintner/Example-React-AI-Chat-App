@@ -4,10 +4,12 @@ import {
   createMockModel,
   MemoryStore,
   TierRateLimiter,
+  emptyStoreData,
 } from '@agent-chat/agent-core';
 import type { LlmConfig, StoreData } from '@agent-chat/agent-core';
 import { loadServerConfig } from './config';
 import type { Services } from './services';
+import { createGoalRunService } from './runs/service';
 
 export const TEST_ENV = {
   SESSION_SECRET: 'test-secret-at-least-32-characters-long',
@@ -33,11 +35,40 @@ export function testServices(
   const store = new MemoryStore(data);
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
+  const runs = createGoalRunService({
+    config: testConfig(),
+    llm,
+    memoryStoreData: store.data,
+    planner: {
+      async plan({ revision }) {
+        return {
+          planId: `plan_test_${revision}`,
+          goal: 'test goal',
+          revision,
+          steps: [
+            {
+              stepId: `step_test_${revision}`,
+              title: 'Test step',
+              successPredicate: 'step completed',
+              status: 'pending',
+            },
+          ],
+        };
+      },
+    },
+    executor: {
+      async execute() {
+        return { predicatePassed: true, summary: 'done', costUnits: 1 };
+      },
+    },
+  });
   return {
     store,
     runtime: createAgentRuntime({ llm, store }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
+    runs,
+    inngestFunctions: [],
     async close() {
       await store.close();
     },

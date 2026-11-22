@@ -9,4 +9,5 @@ export * from './store/types';
 export * from './store/memory';
 export * from './store/redis';
 export * from './store/postgres';
+export * from './goals';
 export { createMockModel } from './testing/mock-model';

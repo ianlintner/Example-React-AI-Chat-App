@@ -16,6 +16,9 @@ for (const stateName of AI_STATES) {
       animations: 'disabled',
       caret: 'hide',
       fullPage: true,
+      // CI runners rasterize the self-hosted fonts slightly differently;
+      // tolerate sub-2% antialiasing drift while still catching real changes.
+      maxDiffPixelRatio: 0.02,
     });
     await expectAxeClean(page);
   });

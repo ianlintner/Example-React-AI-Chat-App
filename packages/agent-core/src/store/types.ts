@@ -74,4 +74,6 @@ export interface StoreData {
   finished: Set<string>;
   /** Goal-run checkpoints (card 7), persisted alongside chat state. */
   goalRuns?: Map<string, GoalRunRecord>;
+  /** Atomic at-most-once effect ledger (card 7). */
+  goalRunEffects?: Set<string>;
 }

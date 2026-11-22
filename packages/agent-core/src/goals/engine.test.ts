@@ -106,6 +106,7 @@ describe('GoalRunEngine', () => {
     const crashingStore: GoalRunStore = {
       createRun: record => base.createRun(record),
       getRun: (runId, ownerId) => base.getRun(runId, ownerId),
+      claimEffect: (key, runId) => base.claimEffect(key, runId),
       listRuns: ownerId => base.listRuns(ownerId),
       async saveRun(record, expected) {
         if (

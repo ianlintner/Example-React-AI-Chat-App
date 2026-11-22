@@ -91,14 +91,23 @@ export function checkpoint(
   });
 }
 
+export async function save(
+  ctx: AdvanceContext,
+  record: GoalRunRecord,
+  expectedUpdatedAt?: string,
+): Promise<void> {
+  record.updatedAt = ctx.now();
+  await ctx.store.saveRun(record, expectedUpdatedAt);
+}
+
 export async function persist(
   ctx: AdvanceContext,
   record: GoalRunRecord,
   events: GoalRunEvent[],
   pending: Step[],
+  expectedUpdatedAt?: string,
 ) {
-  record.updatedAt = ctx.now();
-  await ctx.store.saveRun(record);
+  await save(ctx, record, expectedUpdatedAt);
   for (const step of pending.splice(0)) {
     events.push({ type: 'step', step });
   }

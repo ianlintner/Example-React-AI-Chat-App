@@ -18,7 +18,7 @@ import type {
 import type { ServerConfig } from './config';
 import type { GoalRunService } from './runs/service';
 import type { RunEventEmitter } from './runs/events';
-import type { InngestFunction } from 'inngest';
+import type { Inngest, InngestFunction } from 'inngest';
 import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
 import { createInngest } from './inngest';
 import { createGoalRunFunctions } from './runs/inngest';
@@ -32,6 +32,8 @@ export interface Services {
   runs: GoalRunService;
   runEvents: RunEventEmitter;
   inngestFunctions: InngestFunction.Any[];
+  /** Single client shared by the serve endpoint and event emitter. */
+  inngestClient?: Inngest;
   close(): Promise<void>;
 }
 
@@ -88,6 +90,7 @@ export async function createServices(
     runs,
     runEvents,
     inngestFunctions: functions,
+    inngestClient: client,
     async close() {
       await store.close();
     },

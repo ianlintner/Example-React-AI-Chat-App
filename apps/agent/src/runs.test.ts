@@ -1,7 +1,12 @@
 /** Card 7: HTTP surface for durable goal runs. */
 import { describe, expect, it } from 'vitest';
 import { createApp } from './app';
-import { AUTH_HEADERS, TEST_CONFIG, testServices } from './test-helpers';
+import {
+  AUTH_HEADERS,
+  TEST_CONFIG,
+  TEST_PRINCIPAL,
+  testServices,
+} from './test-helpers';
 
 function app() {
   const services = testServices();
@@ -232,5 +237,20 @@ describe('goal run routes', () => {
     };
     expect(body.run.status).toBe('canceled');
     expect(body.run.steerInstructions).toContain('Prefer local sources.');
+  });
+
+  it('rate-limits POST /runs like the chat path', async () => {
+    const services = testServices();
+    const http = createApp(TEST_CONFIG, services);
+    // Free tier allows 60 requests per window; exhaust it before starting.
+    for (let i = 0; i < 60; i++) {
+      await services.limiter.consume(TEST_PRINCIPAL);
+    }
+    const res = await http.request('/runs', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({ threadId: 'thread_rl', goal: 'rate limited' }),
+    });
+    expect(res.status).toBe(429);
   });
 });

@@ -9,17 +9,23 @@ import type { Hono } from 'hono';
 import type { AppEnv } from '../http';
 import type { ServerConfig } from '../config';
 import type { RunEventEmitter } from './events';
+import type { Services } from '../services';
 import { RunNotFoundError, type GoalRunService } from './service';
-import { resolvePrincipal } from '../http';
+import { checkRateLimit, resolvePrincipal } from '../http';
 
 export function mountRunRoutes(
   app: Hono<AppEnv>,
   config: ServerConfig,
   runs: GoalRunService,
   emit: RunEventEmitter,
+  services?: Services,
 ) {
   app.post('/runs', async c => {
     const principal = resolvePrincipal(c, config);
+    if (services) {
+      const limited = await checkRateLimit(c, services, principal);
+      if (limited) return limited;
+    }
     const parsed = startRunRequestSchema.safeParse(await c.req.json());
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     const record = await runs.start({

@@ -47,6 +47,15 @@ export function readAdvanceResult(value: unknown): AdvanceResult | undefined {
   return undefined;
 }
 
+/** Inngest v4: `match` is a field path, not an expression. `if` is the expression. */
+export function approvalWaitOptions(runId: string, approvalId: string) {
+  return {
+    event: 'run/decision',
+    timeout: APPROVAL_TIMEOUT,
+    if: `async.data.runId == ${JSON.stringify(runId)} && async.data.approvalId == ${JSON.stringify(approvalId)}`,
+  };
+}
+
 export { APPROVAL_TIMEOUT };
 export type { StartData, DecisionData, ApprovalRequest };
 
@@ -56,6 +65,8 @@ export function createGoalRunFunctions(client: Inngest, runs: GoalRunService) {
       id: 'goal-run',
       name: 'Goal run',
       triggers: [{ event: 'run/start' }],
+      // One function instance per run: no two advances of the same checkpoint.
+      concurrency: [{ limit: 1, key: 'event.data.runId' }],
     },
     async ({ event, step }) => {
       const data = event.data as StartData;
@@ -87,29 +98,54 @@ export function createGoalRunFunctions(client: Inngest, runs: GoalRunService) {
         }
 
         const approval = result.approval as ApprovalRequest;
-        const decision = await step.waitForEvent(
-          `approval-${approval.approvalId}`,
-          {
-            event: 'run/decision',
-            timeout: APPROVAL_TIMEOUT,
-            match: `data.runId=${runId} && data.approvalId=${approval.approvalId}`,
+        // A decision can arrive before the function reaches waitForEvent
+        // (e.g. a fast HTTP approval). In that case the store already has
+        // the decision and waiting 24h would be wrong.
+        const alreadyDecided = await step.run(
+          `check-decision-${approval.approvalId}`,
+          async () => {
+            const current = await runs.get(runId, ownerId);
+            return current?.approval?.status ?? null;
           },
         );
+        const decision =
+          alreadyDecided === 'approved' || alreadyDecided === 'denied'
+            ? {
+                data: {
+                  decision: alreadyDecided === 'denied' ? 'deny' : 'approve',
+                },
+              }
+            : await step.waitForEvent(
+                `approval-${approval.approvalId}`,
+                approvalWaitOptions(runId, approval.approvalId) as Parameters<
+                  typeof step.waitForEvent
+                >[1],
+              );
         const denied =
           !decision || (decision.data as DecisionData).decision === 'deny';
+        // The HTTP route records the decision first. The function only
+        // applies it if the route hasn't already (e.g. timeout path or a
+        // decision injected without HTTP), so `approval_already_decided`
+        // cannot wedge the run. The `step.run` is memoized per approval.
         await step.run(`decision-${approval.approvalId}`, async () => {
+          const current = await runs.get(runId, ownerId);
+          if (current?.approval?.status !== 'pending') return;
           if (denied) {
             await runs.deny(
               runId,
               approval.approvalId,
-              { decision: 'deny' },
+              {
+                decision: 'deny',
+              },
               ownerId,
             );
           } else {
             await runs.approve(
               runId,
               approval.approvalId,
-              { decision: 'approve' },
+              {
+                decision: 'approve',
+              },
               ownerId,
             );
           }

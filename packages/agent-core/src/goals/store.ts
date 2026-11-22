@@ -10,5 +10,7 @@ export interface GoalRunStore {
   getRun(runId: string, ownerId?: string): Promise<GoalRunRecord | undefined>;
   /** Atomic compare-and-set on `updatedAt`; rejects stale writers. */
   saveRun(record: GoalRunRecord, expectedUpdatedAt?: string): Promise<void>;
+  /** Atomic at-most-once claim; false means another writer owns the key. */
+  claimEffect(key: string, runId: string): Promise<boolean>;
   listRuns(ownerId: string): Promise<GoalRunRecord[]>;
 }

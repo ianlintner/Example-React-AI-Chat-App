@@ -1,6 +1,10 @@
 /** Finding 6: Inngest step results must survive serialization. */
 import { describe, expect, it } from 'vitest';
-import { readAdvanceResult } from './inngest';
+import {
+  approvalWaitOptions,
+  APPROVAL_TIMEOUT,
+  readAdvanceResult,
+} from './inngest';
 
 describe('readAdvanceResult', () => {
   it('recognizes a JSON-round-tripped approval gate without instanceof', () => {
@@ -48,5 +52,17 @@ describe('readAdvanceResult', () => {
     expect(
       readAdvanceResult({ outcome: 'unknown', events: [] }),
     ).toBeUndefined();
+  });
+});
+
+describe('approvalWaitOptions', () => {
+  it('uses an if expression (not match) so the decision event can be satisfied', () => {
+    const opts = approvalWaitOptions('run_1', 'appr_2');
+    expect(opts.event).toBe('run/decision');
+    expect(opts.timeout).toBe(APPROVAL_TIMEOUT);
+    // `match` is a field path in Inngest v4; an expression must go in `if`.
+    expect('match' in opts).toBe(false);
+    expect(opts.if).toContain('async.data.runId == "run_1"');
+    expect(opts.if).toContain('async.data.approvalId == "appr_2"');
   });
 });

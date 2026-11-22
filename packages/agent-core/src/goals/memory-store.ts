@@ -5,10 +5,13 @@ import type { StoreData } from '../store/types';
 
 export class MemoryGoalRunStore implements GoalRunStore {
   private readonly data: Map<string, GoalRunRecord>;
+  private readonly effects: Set<string>;
 
   constructor(storeData: StoreData) {
     storeData.goalRuns ??= new Map();
     this.data = storeData.goalRuns;
+    storeData.goalRunEffects ??= new Set();
+    this.effects = storeData.goalRunEffects;
   }
 
   async createRun(record: GoalRunRecord) {
@@ -29,6 +32,12 @@ export class MemoryGoalRunStore implements GoalRunStore {
       throw new Error('stale_checkpoint');
     }
     this.data.set(record.runId, structuredClone(record));
+  }
+
+  async claimEffect(key: string, runId: string) {
+    if (this.effects.has(key)) return false;
+    this.effects.add(key);
+    return true;
   }
 
   async listRuns(ownerId: string) {

@@ -8,7 +8,6 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { ServerConfig } from './config';
 import type { Services } from './services';
-import { createInngest } from './inngest';
 import { serve } from 'inngest/hono';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
@@ -40,15 +39,17 @@ export function createApp(config: ServerConfig, services: Services) {
     } satisfies HealthResponse),
   );
 
-  if (config.inngest.enabled) {
-    const { client } = createInngest({ dev: config.inngest.dev });
-    const handler = serve({ client, functions: services.inngestFunctions });
+  if (config.inngest.enabled && services.inngestClient) {
+    const handler = serve({
+      client: services.inngestClient,
+      functions: services.inngestFunctions,
+    });
     app.on(['GET', 'POST', 'PUT'], '/api/inngest', handler);
   }
 
   mountThreadRoutes(app, config, services);
   mountChatRoutes(app, config, services);
-  mountRunRoutes(app, config, services.runs, services.runEvents);
+  mountRunRoutes(app, config, services.runs, services.runEvents, services);
 
   app.notFound(c => c.json({ error: 'not_found' }, 404));
   app.onError((err, c) => {

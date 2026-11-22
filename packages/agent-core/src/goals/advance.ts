@@ -93,8 +93,27 @@ export async function advanceRun(
       continue;
     }
 
-    // Register the effect key BEFORE the commit-phase executor call.
+    // Register the effect key BEFORE the commit-phase executor call. The
+    // ledger claim is atomic, so two concurrent advances cannot both execute
+    // the consequential tool for the same attempt.
     if (commit && effectKey) {
+      const claimed = await ctx.store.claimEffect(effectKey, runId);
+      if (!claimed) {
+        // Another advance already owns this key. Do not re-execute the tool.
+        record.approval = undefined;
+        record.pendingEffect = undefined;
+        record.status = 'running';
+        checkpoint(record, step, pendingStepEvents, {
+          stepId: step.stepId,
+          status: 'succeeded',
+          attempt,
+          predicatePassed: undefined,
+          summary: EFFECT_COMMITTED,
+          at: ctx.now(),
+        });
+        await persist(ctx, record, events, pendingStepEvents);
+        continue;
+      }
       record.sideEffects.push(effectKey);
       record.status = 'running';
       await persist(ctx, record, events, pendingStepEvents);

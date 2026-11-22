@@ -1,12 +1,54 @@
 /** POST /chat and resumable GET /chat/:runId/stream. */
 import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 import { chatRequestSchema, validateAgentMessages } from '@agent-chat/contract';
-import type { AgentUIMessageChunk } from '@agent-chat/contract';
+import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
+import {
+  defaultDecision,
+  ForbiddenError,
+  NotFoundError,
+} from '@agent-chat/agent-core';
 import type { Hono } from 'hono';
 import { checkRateLimit, resolvePrincipal } from '../http';
 import type { AppEnv } from '../http';
 import type { ServerConfig } from '../config';
 import type { Services } from '../services';
+
+const MAX_BODY_BYTES = 256 * 1024;
+
+function messageText(message: AgentUIMessage): string {
+  return message.parts
+    .filter(
+      (part): part is { type: 'text'; text: string } => part.type === 'text',
+    )
+    .map(part => part.text)
+    .join('');
+}
+
+/**
+ * The client may send the visible thread, but only freshly appended messages
+ * are accepted. A client cannot rewrite stored turns or inject fake ones.
+ */
+function appendNewMessages(
+  stored: AgentUIMessage[],
+  client: AgentUIMessage[],
+): AgentUIMessage[] | undefined {
+  if (stored.length === 0) return client;
+  if (client.length <= stored.length) return undefined;
+  for (let i = 0; i < stored.length; i++) {
+    if (
+      stored[i]!.id !== client[i]!.id ||
+      stored[i]!.role !== client[i]!.role ||
+      messageText(stored[i]!) !== messageText(client[i]!)
+    ) {
+      return undefined;
+    }
+  }
+  return client.slice(stored.length);
+}
+
+function isForbidden(error: unknown): boolean {
+  return error instanceof ForbiddenError || error instanceof NotFoundError;
+}
 
 export function mountChatRoutes(
   app: Hono<AppEnv>,
@@ -18,31 +60,55 @@ export function mountChatRoutes(
     const limited = await checkRateLimit(c, services, principal);
     if (limited) return limited;
 
-    const parsed = chatRequestSchema.safeParse(
-      await c.req.json().catch(() => undefined),
-    );
+    const declared = Number(c.req.header('content-length') ?? '0');
+    if (declared > MAX_BODY_BYTES) {
+      return c.json({ error: 'request_too_large' }, 413);
+    }
+    const raw = await c.req.text().catch(() => '');
+    if (Buffer.byteLength(raw) > MAX_BODY_BYTES) {
+      return c.json({ error: 'request_too_large' }, 413);
+    }
+    let parsedBody: unknown;
+    try {
+      parsedBody = JSON.parse(raw);
+    } catch {
+      return c.json({ error: 'invalid_request' }, 400);
+    }
+    const parsed = chatRequestSchema.safeParse(parsedBody);
     if (!parsed.success) return c.json({ error: 'invalid_request' }, 400);
     const messages = await validateAgentMessages(parsed.data.messages);
     if (!messages.success) return c.json({ error: 'invalid_messages' }, 400);
 
     const { id: threadId } = parsed.data;
-    if (!(await services.store.getThread(threadId, principal))) {
-      await services.store.createThread(threadId, principal);
+    let stored: AgentUIMessage[];
+    try {
+      if (!(await services.store.getThread(threadId, principal))) {
+        await services.store.createThread(threadId, principal);
+      }
+      stored = await services.store.loadThread(threadId, principal);
+    } catch (error) {
+      if (isForbidden(error)) return c.json({ error: 'thread_not_found' }, 404);
+      throw error;
     }
+    const appended = appendNewMessages(stored, messages.data);
+    if (!appended) return c.json({ error: 'invalid_history' }, 400);
+    const history = [...stored, ...appended];
+    const decision = defaultDecision(history);
     const runId = `run_${crypto.randomUUID()}`;
     await services.store.createRun({
       runId,
       threadId,
       ownerId: principal.userId,
       status: 'running',
-      tier: 'fast',
+      tier: decision.tier,
     });
 
     const stream = services.runtime.stream({
       threadId,
       runId,
       principal,
-      messages: messages.data,
+      messages: history,
+      decision,
     });
     // Keep generating after the client disconnects: one branch is drained
     // independently, the other is returned to the caller.
@@ -68,7 +134,13 @@ export function mountChatRoutes(
   app.get('/chat/:runId/stream', async c => {
     const principal = resolvePrincipal(c, config);
     const runId = c.req.param('runId');
-    const run = await services.store.getRun(runId, principal);
+    let run;
+    try {
+      run = await services.store.getRun(runId, principal);
+    } catch (error) {
+      if (isForbidden(error)) return c.json({ error: 'run_not_found' }, 404);
+      throw error;
+    }
     if (!run) return c.json({ error: 'run_not_found' }, 404);
     const from = Number(c.req.query('from') ?? '0');
     if (!Number.isSafeInteger(from) || from < 0) {

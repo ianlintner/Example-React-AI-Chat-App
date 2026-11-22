@@ -1,4 +1,5 @@
 /** Thread CRUD; all reads are scoped to the signed principal. */
+import { ForbiddenError, NotFoundError } from '@agent-chat/agent-core';
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import { checkRateLimit, resolvePrincipal } from '../http';
@@ -37,7 +38,15 @@ export function mountThreadRoutes(
   app.get('/threads/:threadId', async c => {
     const principal = resolvePrincipal(c, config);
     const threadId = c.req.param('threadId');
-    const thread = await services.store.getThread(threadId, principal);
+    let thread;
+    try {
+      thread = await services.store.getThread(threadId, principal);
+    } catch (error) {
+      if (error instanceof ForbiddenError || error instanceof NotFoundError) {
+        return c.json({ error: 'thread_not_found' }, 404);
+      }
+      throw error;
+    }
     if (!thread) return c.json({ error: 'thread_not_found' }, 404);
     return c.json({
       ...thread,

@@ -22,7 +22,7 @@ export interface RuntimeOptions {
   }): Promise<RouteDecision>;
 }
 
-function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
+export function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
   const last = [...messages].reverse().find(m => m.role === 'user');
   const text = last?.parts
     .filter(
@@ -45,11 +45,23 @@ function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
   };
 }
 
+function isErrorChunk(chunk: AgentUIMessageChunk): boolean {
+  return (chunk as { type?: string }).type === 'error';
+}
+
 export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
   return {
-    stream({ threadId, runId, principal, messages, abortSignal }) {
+    stream({
+      threadId,
+      runId,
+      principal,
+      messages,
+      decision: supplied,
+      abortSignal,
+    }) {
       const { llm, store } = options;
-      const decision = options.decide ? undefined : defaultDecision(messages);
+      const decision =
+        supplied ?? (options.decide ? undefined : defaultDecision(messages));
       const stream = createUIMessageStream<AgentUIMessage>({
         originalMessages: messages,
         onError: () => 'agent_error',
@@ -85,15 +97,25 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
       return new ReadableStream<AgentUIMessageChunk>({
         async start(controller) {
           try {
+            let failed = false;
             for await (const chunk of stream) {
               await store.appendChunk(runId, chunk);
+              if (isErrorChunk(chunk)) {
+                failed = true;
+                await store
+                  .setRunStatus?.(runId, 'failed')
+                  .catch(() => undefined);
+              }
               controller.enqueue(chunk);
             }
-            await Promise.resolve(
-              store.setRunStatus?.(runId, 'completed'),
-            ).catch(() => undefined);
+            if (!failed) {
+              await Promise.resolve(
+                store.setRunStatus?.(runId, 'completed'),
+              ).catch(() => undefined);
+            }
             controller.close();
           } catch (error) {
+            await store.setRunStatus?.(runId, 'failed').catch(() => undefined);
             await store
               .appendChunk(runId, {
                 type: 'data-step',

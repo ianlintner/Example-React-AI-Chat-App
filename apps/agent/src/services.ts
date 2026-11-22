@@ -35,10 +35,13 @@ export async function createServices(
 
   let store = injectedStore;
   if (!store) {
-    const buffer = config.redisUrl
-      ? createRedisBuffer(config.redisUrl)
-      : undefined;
-    if (config.databaseUrl && buffer) {
+    if (config.databaseUrl) {
+      if (!config.redisUrl) {
+        throw new Error(
+          'DATABASE_URL requires REDIS_URL for resumable streams',
+        );
+      }
+      const buffer = createRedisBuffer(config.redisUrl);
       const sql = readFileSync(
         new URL('../migrations/001_init.sql', import.meta.url),
         'utf8',
@@ -48,6 +51,8 @@ export async function createServices(
       await postgres.bootstrap(sql);
       store = postgres;
     } else {
+      // No Postgres: use the in-process store (Redis alone cannot back
+      // threads/messages, so no Redis client is created here).
       store = new MemoryStore();
     }
   }

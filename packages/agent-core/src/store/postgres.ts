@@ -7,6 +7,7 @@ import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
 import pg from 'pg';
 import type { Principal } from '../seams';
 import type { ChunkBuffer } from './redis';
+import { ForbiddenError } from './types';
 import type { RunInfo, RunStatus, ThreadInfo, ThreadStore } from './types';
 
 const { Pool } = pg;
@@ -22,7 +23,7 @@ export class PostgresStore implements ThreadStore {
   }
 
   private own(ownerId: string, principal: Principal) {
-    if (ownerId !== principal.userId) throw new Error('forbidden');
+    if (ownerId !== principal.userId) throw new ForbiddenError();
   }
 
   /** Applies idempotent DDL. Called once on boot in local development. */

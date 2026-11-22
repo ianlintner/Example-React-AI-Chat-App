@@ -65,10 +65,9 @@ describe('POST /chat', () => {
       )
       .map(e => e.delta)
       .join('');
-    // Client saw at least the first delta on the original stream; replay from 1
-    // still contains the remainder of the completed run.
-    expect(text.length).toBeGreaterThan(0);
-    expect('One two three four.'.includes(text)).toBe(true);
+    // The first stream read consumed the stream-start chunk (chunk 0);
+    // replay from cursor 1 must return the full answer, not a fragment.
+    expect(text.trim()).toBe('One two three four.');
     expect((await services.store.getRun(runId, TEST_PRINCIPAL))?.status).toBe(
       'completed',
     );
@@ -133,6 +132,113 @@ describe('POST /chat', () => {
     });
     expect(limited.status).toBe(429);
     expect(limited.headers.get('retry-after')).toBeTruthy();
+    await services.close();
+  });
+
+  it("does not let one principal read or write another principal's thread", async () => {
+    const services = testServices(undefined, 'secret answer');
+    const app = createApp(TEST_CONFIG, services);
+    const posted = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: chatBody('thr_owner'),
+    });
+    expect(posted.status).toBe(200);
+    await sseEvents(posted);
+    const otherHeaders = { ...AUTH_HEADERS, 'x-user-id': 'other-user' };
+    const read = await app.request('/threads/thr_owner', {
+      headers: otherHeaders,
+    });
+    expect(read.status).toBe(404);
+    const overwrite = await app.request('/chat', {
+      method: 'POST',
+      headers: otherHeaders,
+      body: chatBody('thr_owner', 'malicious'),
+    });
+    expect(overwrite.status).toBe(404);
+    const runId = posted.headers.get('x-run-id')!;
+    const resume = await app.request(`/chat/${runId}/stream`, {
+      headers: otherHeaders,
+    });
+    expect(resume.status).toBe(404);
+    await services.close();
+  });
+
+  it('rejects a rewritten thread history instead of persisting fake turns', async () => {
+    const services = testServices(undefined, 'first answer');
+    const app = createApp(TEST_CONFIG, services);
+    const posted = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: chatBody('thr_hist', 'real question'),
+    });
+    await sseEvents(posted);
+    const tampered = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({
+        id: 'thr_hist',
+        trigger: 'submit-message',
+        messages: [
+          {
+            id: 'fake',
+            role: 'assistant',
+            parts: [{ type: 'text', text: 'fake assistant turn' }],
+          },
+        ],
+      }),
+    });
+    expect(tampered.status).toBe(400);
+    const thread = await app.request('/threads/thr_hist', {
+      headers: AUTH_HEADERS,
+    });
+    const body = (await thread.json()) as {
+      messages: Array<{ id: string; role: string }>;
+    };
+    expect(body.messages.some(m => m.id === 'fake')).toBe(false);
+    await services.close();
+  });
+
+  it('records the tier chosen by the route decision on the run', async () => {
+    const services = testServices(undefined, 'deep answer');
+    const app = createApp(TEST_CONFIG, services);
+    const longText = 'word '.repeat(200);
+    const posted = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: JSON.stringify({
+        id: 'thr_deep',
+        trigger: 'submit-message',
+        messages: [
+          { id: 'u1', role: 'user', parts: [{ type: 'text', text: longText }] },
+        ],
+      }),
+    });
+    const events = await sseEvents(posted);
+    const decision = events.find(
+      (e): e is { type: string; data: { tier: string } } =>
+        typeof e === 'object' &&
+        e !== null &&
+        (e as { type?: string }).type === 'data-route-decision',
+    );
+    expect(decision?.data.tier).toBe('deep');
+    const run = await services.store.getRun(
+      posted.headers.get('x-run-id')!,
+      TEST_PRINCIPAL,
+    );
+    expect(run?.tier).toBe('deep');
+    await services.close();
+  });
+
+  it('rejects an oversized request body', async () => {
+    const services = testServices();
+    const app = createApp(TEST_CONFIG, services);
+    const res = await app.request('/chat', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: 'x'.repeat(300_000),
+    });
+    expect(res.status).toBe(413);
     await services.close();
   });
 

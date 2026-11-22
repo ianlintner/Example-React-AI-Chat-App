@@ -34,13 +34,33 @@ export class TierRateLimiter implements RateLimiter {
     { tokens: number; updatedAt: number }
   >();
 
-  constructor(private readonly now: () => number = Date.now) {}
+  constructor(
+    private readonly now: () => number = Date.now,
+    private readonly maxKeys = 10_000,
+  ) {}
+
+  /** Bound memory so anonymous clients cannot grow the maps without limit. */
+  private prune(time: number, windowMs: number) {
+    for (const [key, value] of this.windows) {
+      if (time - value.start >= windowMs) {
+        this.windows.delete(key);
+        this.bursts.delete(key);
+      }
+    }
+    while (this.windows.size > this.maxKeys) {
+      const oldest = this.windows.keys().next().value;
+      if (oldest === undefined) break;
+      this.windows.delete(oldest);
+      this.bursts.delete(oldest);
+    }
+  }
 
   async consume(principal: Principal): Promise<RateLimitResult> {
     const tier = principal.tier;
     const { requests, windowMs, burst } = TIER_LIMITS[tier];
     const key = `${principal.kind}:${principal.userId}`;
     const time = this.now();
+    this.prune(time, windowMs);
 
     const window = this.windows.get(key);
     if (!window || time - window.start >= windowMs) {

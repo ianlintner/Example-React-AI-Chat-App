@@ -5,6 +5,7 @@
  */
 import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
 import type { Principal } from '../seams';
+import { ForbiddenError, NotFoundError } from './types';
 import type {
   RunInfo,
   RunStatus,
@@ -29,7 +30,7 @@ export class MemoryStore implements ThreadStore {
   constructor(readonly data: StoreData = emptyStoreData()) {}
 
   private own(resourceOwnerId: string, principal: Principal) {
-    if (resourceOwnerId !== principal.userId) throw new Error('forbidden');
+    if (resourceOwnerId !== principal.userId) throw new ForbiddenError();
   }
 
   async createThread(
@@ -37,6 +38,11 @@ export class MemoryStore implements ThreadStore {
     principal: Principal,
     title = 'New thread',
   ) {
+    const existing = this.data.threads.get(threadId);
+    if (existing) {
+      this.own(existing.ownerId, principal);
+      return existing;
+    }
     const thread: ThreadInfo = {
       threadId,
       ownerId: principal.userId,
@@ -77,7 +83,7 @@ export class MemoryStore implements ThreadStore {
     messages: AgentUIMessage[],
   ) {
     const thread = await this.getThread(threadId, principal);
-    if (!thread) throw new Error('thread_not_found');
+    if (!thread) throw new NotFoundError();
     this.data.messages.set(threadId, structuredClone(messages));
     thread.updatedAt = now();
   }

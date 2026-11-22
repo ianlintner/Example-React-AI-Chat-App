@@ -24,7 +24,8 @@ export function resolvePrincipal(
   setCookie(c, ANON_COOKIE, renewedToken, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: false, // local development: loopback HTTP only
+    // Local development is HTTP on loopback; secure cookies would be dropped.
+    secure: c.req.url.startsWith('https://'),
     path: '/',
     maxAge: ANON_SESSION_MS / 1000,
   });

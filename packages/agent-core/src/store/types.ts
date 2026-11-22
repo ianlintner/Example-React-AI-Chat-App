@@ -16,6 +16,22 @@ export interface ThreadInfo {
 
 export type RunStatus = 'running' | 'completed' | 'failed' | 'aborted';
 
+/** Thrown by stores when a principal does not own the requested resource. */
+export class ForbiddenError extends Error {
+  constructor() {
+    super('forbidden');
+    this.name = 'ForbiddenError';
+  }
+}
+
+/** Thrown when a resource does not exist (or is hidden from the caller). */
+export class NotFoundError extends Error {
+  constructor() {
+    super('not_found');
+    this.name = 'NotFoundError';
+  }
+}
+
 export interface RunInfo {
   runId: string;
   threadId: string;

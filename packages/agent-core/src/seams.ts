@@ -69,6 +69,8 @@ export interface AgentRuntime {
     runId: string;
     principal: Principal;
     messages: AgentUIMessage[];
+    /** Pre-resolved route decision (card 5 router supplies this). */
+    decision?: RouteDecision;
     abortSignal?: AbortSignal;
   }): ReadableStream<AgentUIMessageChunk>;
 }

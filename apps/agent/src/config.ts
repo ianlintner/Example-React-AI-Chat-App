@@ -19,7 +19,11 @@ const serverEnvSchema = z.object({
   /** Postgres and Redis are optional locally; when absent, tests/offline use memory. */
   DATABASE_URL: z.string().min(1).optional(),
   REDIS_URL: z.string().min(1).optional(),
-  /** Opt-in trusted header for authenticated local users (e.g. `x-user-id`). */
+  /**
+   * Opt-in trusted header for authenticated local users (e.g. `x-user-id`).
+   * LOOPBACK-ONLY DEV SWITCH: any caller that can reach the server can choose
+   * any user id when this is set. Never enable on a non-loopback listener.
+   */
   TRUST_USER_HEADER: z.string().min(1).optional(),
 });
 

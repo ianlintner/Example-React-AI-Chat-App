@@ -1,0 +1,61 @@
+# Local development services for the new stack (apps/agent, apps/web).
+# Local only: every port binds to 127.0.0.1. Start with `npm run dev`
+# (or `npm run dev:services`). Works with podman (`docker` wrapper) or Docker.
+#
+# No secrets: Postgres uses `trust` auth on a loopback-only port, so there is
+# no default password to leak. Anything non-local must set real credentials.
+name: agent-chat-dev
+
+services:
+  postgres:
+    image: docker.io/pgvector/pgvector:0.8.1-pg17
+    environment:
+      POSTGRES_DB: agent_chat
+      POSTGRES_USER: agent_chat
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-55432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U agent_chat -d agent_chat']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: docker.io/library/redis:8-alpine
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-56379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Inngest dev server (durable runs). Host networking so it can reach the
+  # agent on 127.0.0.1:8787 without exposing the agent beyond loopback.
+  # UI: http://127.0.0.1:8288
+  inngest:
+    image: docker.io/inngest/inngest:v1.53.0
+    command:
+      - inngest
+      - dev
+      - --host
+      - 127.0.0.1
+      - --port
+      - '8288'
+      - --no-discovery
+      - -u
+      - http://127.0.0.1:${AGENT_PORT:-8787}/api/inngest
+    network_mode: host
+    healthcheck:
+      # The image ships no curl/wget; probe the TCP port with bash.
+      test: ['CMD', 'bash', '-c', 'exec 3<>/dev/tcp/127.0.0.1/8288']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

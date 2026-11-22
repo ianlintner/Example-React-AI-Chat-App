@@ -21,6 +21,10 @@ docker-compose*.yml
 # Generated files
 *.generated.js
 *.generated.ts
+*.gen.ts
+storybook-static/
+test-results/
+playwright-report/
 *.d.ts
 
 # Documentation

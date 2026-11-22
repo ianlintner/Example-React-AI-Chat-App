@@ -1,0 +1,23 @@
+{
+  "name": "@agent-chat/contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frozen typed stream/event contract between the agent server, web app and embed.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures": "./src/fixtures/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "ai": "^7.0.179",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  }
+}

@@ -1,0 +1,121 @@
+/*
+ * Instrument Panel tokens for Tailwind v4 + shadcn/ui.
+ * Import AFTER `@import "tailwindcss";`. Values mirror src/tokens.ts.
+ *
+ * Naming: raw CSS variables follow RESEARCH-UI §4 (`--accent` = amber
+ * signal). Tailwind utilities follow shadcn semantics so registry
+ * components work unmodified: `bg-primary`/`text-signal` are amber,
+ * `bg-accent` is the subtle hover surface.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  /* Instrument Panel names */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-signal: var(--accent);
+  --color-signal-contrast: var(--accent-contrast);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --color-agent-research: var(--agent-research);
+  --color-agent-writer: var(--agent-writer);
+  --color-agent-critic: var(--agent-critic);
+  --color-agent-router: var(--agent-router);
+
+  /* shadcn/ui semantic names mapped onto the palette */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--fg);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--fg);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-contrast);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--fg);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--fg-muted);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: var(--err);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+
+  --radius: 0.5rem;
+  --radius-card: 0.625rem;
+  --ease-out-quick: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --duration-hover: 120ms;
+  --duration-panel: 180ms;
+  --duration-canvas: 260ms;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f2f2ef;
+  --border: #e4e4df;
+  --fg: #17191c;
+  --fg-muted: #5c636b;
+  --accent: #9a5b00;
+  --accent-contrast: #ffffff;
+  --ok: #0e8a5f;
+  --warn: #8a5a00;
+  --err: #c62828;
+  --agent-research: #3a64c8;
+  --agent-writer: #8a4bc4;
+  --agent-critic: #137f73;
+  --agent-router: #5c636b;
+}
+
+.dark {
+  color-scheme: dark;
+  --bg: #0b0d0f;
+  --surface: #14171a;
+  --surface-2: #1c2024;
+  --border: #2a2f35;
+  --fg: #e8eaed;
+  --fg-muted: #9aa3ad;
+  --accent: #f5a524;
+  --accent-contrast: #0b0d0f;
+  --ok: #3dd68c;
+  --warn: #f5a524;
+  --err: #ff6b6b;
+  --agent-research: #6e9bff;
+  --agent-writer: #c084fc;
+  --agent-critic: #34d3c0;
+  --agent-router: #9aa3ad;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

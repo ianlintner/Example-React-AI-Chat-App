@@ -273,8 +273,11 @@ jobs:
       # missing resources fail fast rather than at Flux reconcile time.
       - name: Install kustomize
         run: |
-          curl -sL https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh \
-            | bash -s 5.4.3
+          # Direct release asset: install_kustomize.sh calls the GitHub API
+          # unauthenticated and flakes on rate limits.
+          curl -fsSL --retry 3 \
+            https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz \
+            | tar -xz kustomize
           sudo mv kustomize /usr/local/bin/
       - name: kustomize build
         run: |
@@ -417,9 +420,49 @@ jobs:
           kubectl -n default rollout status deployment/chat-backend \
             --timeout=5m
 
+  # New agentic stack (apps/*, packages/*; ARCHITECTURE.md §8). Mock model
+  # only: no network LLM calls, no services required.
+  new-stack:
+    runs-on: ubuntu-latest
+    env:
+      LLM_PROVIDER: mock
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install workspaces
+        run: npm ci
+      - name: File size ceiling (400 LOC)
+        run: npm run check:loc
+      - name: Typecheck workspaces
+        run: npm run typecheck --workspaces --if-present
+      - name: Unit tests (Vitest)
+        run: npm run test --workspaces --if-present
+      - name: Build web
+        run: npm run -w apps/web build
+      - name: Build Storybook
+        run: npm run -w apps/web build-storybook
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: E2E smoke (Playwright + axe)
+        run: npx playwright test
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
   ci-success:
     needs:
       [
+        new-stack,
         checks,
         backend,
         frontend,
@@ -435,6 +478,7 @@ jobs:
     steps:
       - name: Aggregate results
         run: |
+          echo "New stack: ${{ needs.new-stack.result }}"
           echo "Checks: ${{ needs.checks.result }}"
           echo "Backend: ${{ needs.backend.result }}"
           echo "Frontend: ${{ needs.frontend.result }}"
@@ -444,6 +488,7 @@ jobs:
           echo "Security: ${{ needs.security.result }}"
           echo "Manifests: ${{ needs.manifests.result }}"
           echo "Docker: ${{ needs.docker-build-push.result }}"
+          [ "${{ needs.new-stack.result }}" = "success" ] || { echo "❌ new-stack did not succeed"; exit 1; }
           [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
           [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
           [ "${{ needs.web.result }}" != "failure" ] || { echo "❌ web failed"; exit 1; }

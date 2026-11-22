@@ -1,9 +1,24 @@
 {
   "name": "react-ai-chat-app",
   "version": "1.0.0",
-  "description": "AI-powered chat application with React Native frontend and Node.js backend",
+  "description": "Agentic chat showcase (new stack in apps/ + packages/; legacy backend/frontend/web/embed until removal)",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "npm run dev:services && concurrently -k -n agent,web -c yellow,cyan \"npm run -w apps/agent dev\" \"npm run -w apps/web dev\"",
+    "dev:services": "docker compose -f compose.dev.yml up -d --wait",
+    "dev:services:down": "docker compose -f compose.dev.yml down",
+    "dev:legacy": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "test:workspaces": "npm run test --workspaces --if-present",
+    "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
+    "e2e": "npm run -w apps/web build && playwright test",
+    "check:loc": "node scripts/check-loc.mjs",
+    "storybook": "npm run -w apps/web storybook",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
     "build": "npm run build:backend && npm run build:frontend",
@@ -75,6 +90,8 @@
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
     "@types/react": "^19.2.14",
     "concurrently": "^9.2.1",
     "husky": "^9.0.11",
@@ -83,7 +100,7 @@
     "markdownlint-cli": "^0.48.0",
     "metro": "^0.84.3",
     "nyc": "^17.1.0",
-    "prettier": "^3.8.3",
+    "prettier": "~3.8.3",
     "typescript": "^5.9.3"
   },
   "overrides": {

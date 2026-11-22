@@ -1,0 +1,27 @@
+{
+  "name": "@agent-chat/agent-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent seams (router, tools, run store, skills) and the LLM provider bound to LLM_BASE_URL route names.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@agent-chat/contract": "1.0.0",
+    "@ai-sdk/openai-compatible": "^3.0.94",
+    "@ai-sdk/provider": "^4.0.39",
+    "ai": "^7.0.179",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  }
+}

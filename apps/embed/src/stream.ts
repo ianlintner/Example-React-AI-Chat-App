@@ -20,6 +20,11 @@ export interface StreamCallbacks {
   onError?(message: string): void;
 }
 
+/** Success/failure outcome so callers never mistake an error stream for success. */
+export type StreamResult =
+  | { ok: true; runId?: string }
+  | { ok: false; reason: string };
+
 /** Parse one SSE frame body (`data: <json>` lines) into contract chunks. */
 export function parseSseFrame(frame: string): AgentUIMessageChunk[] {
   const chunks: AgentUIMessageChunk[] = [];
@@ -75,7 +80,11 @@ export async function streamChat(
   history: ChatMessage[],
   signal: AbortSignal,
   callbacks: StreamCallbacks,
-): Promise<void> {
+): Promise<StreamResult> {
+  const fail = (reason: string): StreamResult => {
+    callbacks.onError?.(reason);
+    return { ok: false, reason };
+  };
   const response = await fetch(`${apiUrl.replace(/\/$/, '')}/chat`, {
     method: 'POST',
     headers: {
@@ -92,8 +101,7 @@ export async function streamChat(
     }),
   });
   if (!response.ok || !response.body) {
-    callbacks.onError?.(`Agent request failed (HTTP ${response.status}).`);
-    return;
+    return fail(`Agent request failed (HTTP ${response.status}).`);
   }
   try {
     let done = false;
@@ -109,18 +117,18 @@ export async function streamChat(
       ) {
         callbacks.onDelta((chunk as { delta: string }).delta);
       }
-      if (chunk.type === 'finish' || chunk.type === 'error') done = true;
+      if (chunk.type === 'error') {
+        const text = (chunk as { errorText?: string }).errorText;
+        return fail(text || 'The agent reported a stream error.');
+      }
+      if (chunk.type === 'finish') done = true;
     }
-    if (!done) {
-      callbacks.onError?.('Stream ended before the reply finished.');
-      return;
-    }
-    callbacks.onDone?.(response.headers.get('x-run-id') ?? undefined);
+    if (!done) return fail('Stream ended before the reply finished.');
+    const runId = response.headers.get('x-run-id') ?? undefined;
+    callbacks.onDone?.(runId);
+    return { ok: true, runId };
   } catch (err) {
-    if (!signal.aborted) {
-      callbacks.onError?.(
-        err instanceof Error ? err.message : 'Stream interrupted.',
-      );
-    }
+    if (signal.aborted) return fail('Request cancelled.');
+    return fail(err instanceof Error ? err.message : 'Stream interrupted.');
   }
 }

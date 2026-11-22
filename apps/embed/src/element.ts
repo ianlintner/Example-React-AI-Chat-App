@@ -56,9 +56,8 @@ export class AgentChatElement extends HTMLElement {
   private threadId = `thr_embed_${crypto.randomUUID()}`;
 
   connectedCallback(): void {
-    if (!this.apiUrl) {
-      throw new Error('<agent-chat> requires an api-url attribute.');
-    }
+    if (!this.apiUrl) return; // Declarative upgrade: wait for api-url.
+    this.teardown();
     const shadow = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
     shadow.innerHTML = '';
     const style = document.createElement('style');
@@ -114,13 +113,25 @@ export class AgentChatElement extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    this.teardown();
+  }
+
+  private teardown(): void {
     this.abort?.abort();
+    this.abort = null;
     this.auth?.dispose();
     this.auth = null;
   }
 
-  attributeChangedCallback(): void {
-    if (this.isConnected) this.connectedCallback();
+  attributeChangedCallback(name: string): void {
+    if (!this.isConnected) return;
+    if (name === 'api-url' && !this.apiUrl) {
+      this.teardown();
+      this.shadowRoot && (this.shadowRoot.innerHTML = '');
+      return;
+    }
+    if (!this.apiUrl) return; // Other attributes before api-url: just wait.
+    this.connectedCallback();
   }
 
   /** Programmatic entry point used by the demo and e2e. */
@@ -210,6 +221,22 @@ export class AgentChatElement extends HTMLElement {
     const text = this.inputEl.value.trim();
     if (!text || this.abort) return;
     this.abort = new AbortController();
+    const signal = this.abort.signal;
+    try {
+      await this.runTurn(text, signal);
+    } catch (error) {
+      this.setStatus(
+        error instanceof Error ? error.message : 'Request failed',
+        'error',
+      );
+    } finally {
+      this.abort = null;
+      this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
+    }
+  }
+
+  /** One user turn: only commits history/status when the stream succeeds. */
+  private async runTurn(text: string, signal: AbortSignal): Promise<void> {
     this.appendMessage('user', text);
     const reply = this.appendMessage('assistant', '');
     this.inputEl.value = '';
@@ -221,37 +248,35 @@ export class AgentChatElement extends HTMLElement {
       parts: [{ type: 'text', text }],
     });
     let assistantId = `msg_${crypto.randomUUID()}`;
-    try {
-      await streamChat(
-        this.apiUrl,
-        this.threadId,
-        this.history,
-        this.abort.signal,
-        {
-          onStart: id => (assistantId = id),
-          onDelta: delta => {
-            reply.textContent = (reply.textContent ?? '') + delta;
-            this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
-          },
-          onDecision: label => this.setStatus('Streaming…', 'ready', label),
-          onError: message => this.setStatus(message, 'error'),
+    const result = await streamChat(
+      this.apiUrl,
+      this.threadId,
+      this.history,
+      signal,
+      {
+        onStart: id => (assistantId = id),
+        onDelta: delta => {
+          reply.textContent = (reply.textContent ?? '') + delta;
+          this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
         },
-      );
-      this.history.push({
-        id: assistantId,
-        role: 'assistant',
-        parts: [{ type: 'text', text: reply.textContent ?? '' }],
-      });
-      this.setStatus('Ready', 'ready');
-    } catch (error) {
-      this.setStatus(
-        error instanceof Error ? error.message : 'Request failed',
-        'error',
-      );
-    } finally {
-      this.abort = null;
-      this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
+        onDecision: label => this.setStatus('Streaming…', 'ready', label),
+      },
+    );
+    if (!result.ok) {
+      // Roll back both local history and the empty assistant bubble so a
+      // failed turn is never replayed on the next request.
+      this.history.pop();
+      reply.remove();
+      this.inputEl.value = text;
+      this.setStatus(result.reason, 'error');
+      return;
     }
+    this.history.push({
+      id: assistantId,
+      role: 'assistant',
+      parts: [{ type: 'text', text: reply.textContent ?? '' }],
+    });
+    this.setStatus('Ready', 'ready');
   }
 
   private setupAuth(): void {

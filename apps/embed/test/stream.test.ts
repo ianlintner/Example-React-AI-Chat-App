@@ -122,14 +122,102 @@ describe('SSE stream parsing', () => {
     globalThis.fetch = (async () =>
       new Response('no', { status: 500 })) as typeof fetch;
     let error = '';
+    let done = false;
     try {
-      await streamChat('http://x', 'thr', [], new AbortController().signal, {
-        onDelta: () => {},
-        onError: m => (error = m),
-      });
+      const result = await streamChat(
+        'http://x',
+        'thr',
+        [],
+        new AbortController().signal,
+        {
+          onDelta: () => {},
+          onError: m => (error = m),
+          onDone: () => (done = true),
+        },
+      );
+      expect(result.ok).toBe(false);
     } finally {
       globalThis.fetch = original;
     }
     expect(error).toMatch(/500/);
+    expect(done).toBe(false);
+  });
+
+  it('treats an error chunk as failure with its errorText, never onDone', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(
+        sse([
+          { type: 'text-delta', id: 't1', delta: 'partial' },
+          { type: 'error', errorText: 'Model unavailable' },
+        ]),
+      )) as typeof fetch;
+    let error = '';
+    let done = false;
+    try {
+      const result = await streamChat(
+        'http://x',
+        'thr',
+        [],
+        new AbortController().signal,
+        {
+          onDelta: () => {},
+          onError: m => (error = m),
+          onDone: () => (done = true),
+        },
+      );
+      expect(result).toEqual({ ok: false, reason: 'Model unavailable' });
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(error).toBe('Model unavailable');
+    expect(done).toBe(false);
+  });
+
+  it('fails when a stream ends without a finish chunk', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(
+        sse([{ type: 'text-delta', id: 't1', delta: 'truncated' }]),
+      )) as typeof fetch;
+    let error = '';
+    try {
+      const result = await streamChat(
+        'http://x',
+        'thr',
+        [],
+        new AbortController().signal,
+        {
+          onDelta: () => {},
+          onError: m => (error = m),
+        },
+      );
+      expect(result.ok).toBe(false);
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(error).toMatch(/ended before/);
+  });
+
+  it('returns an ok result with the run id on success', async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(sse([{ type: 'finish', finishReason: 'stop' }]), {
+        headers: { 'x-run-id': 'run_ok' },
+      })) as typeof fetch;
+    try {
+      const result = await streamChat(
+        'http://x',
+        'thr',
+        [],
+        new AbortController().signal,
+        {
+          onDelta: () => {},
+        },
+      );
+      expect(result).toEqual({ ok: true, runId: 'run_ok' });
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });

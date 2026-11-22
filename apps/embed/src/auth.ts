@@ -72,7 +72,10 @@ export class AuthManager {
       redirectUri,
       createdAt: Date.now(),
     };
-    this.store().setItem(STORAGE_KEY_PENDING, JSON.stringify(pending));
+    // Pending PKCE state always lives in sessionStorage: the popup callback
+    // shares the host tab's session, and 'local' tokens must not widen the
+    // state's exposure. Memory mode has no durable pending store either.
+    sessionStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(pending));
 
     const url = new URL(discovery.authorization_endpoint);
     url.searchParams.set('response_type', 'code');
@@ -113,6 +116,8 @@ export class AuthManager {
           event.origin !== this.apiUrl
         )
           return;
+        // Only the window we opened may deliver the callback payload.
+        if (this.popup && event.source !== this.popup) return;
         const data = event.data as
           | { source?: string; code?: string; state?: string; error?: string }
           | undefined;
@@ -120,7 +125,7 @@ export class AuthManager {
         handlingResponse = true;
         clearInterval(watcher);
         const stored = this.readPending();
-        this.store().removeItem(STORAGE_KEY_PENDING);
+        sessionStorage.removeItem(STORAGE_KEY_PENDING);
         const verdict = validateCallback(data, stored ?? undefined);
         if (!verdict.ok) {
           cleanup();

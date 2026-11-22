@@ -2,6 +2,7 @@ import {
   createAgentRuntime,
   createLlm,
   createMockModel,
+  emptySkillRegistry,
   MemoryStore,
   TierRateLimiter,
 } from '@agent-chat/agent-core';
@@ -33,11 +34,13 @@ export function testServices(
   const store = new MemoryStore(data);
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
+  const skills = emptySkillRegistry();
   return {
     store,
-    runtime: createAgentRuntime({ llm, store }),
+    runtime: createAgentRuntime({ llm, store, skills }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
+    skills,
     async close() {
       await store.close();
     },

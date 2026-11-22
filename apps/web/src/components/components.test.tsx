@@ -3,6 +3,7 @@ import { colorTokenNames, colorTokens } from '@agent-chat/ui';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { PlanPreview } from './plan-preview';
+import { RouteDecisionChip } from './RouteDecisionChip';
 import { ThemeToggle } from './theme-toggle';
 import { TokenSwatches } from './token-swatches';
 
@@ -29,6 +30,35 @@ describe('ThemeToggle', () => {
     fireEvent.click(screen.getByRole('button', { name: /light theme/i }));
     expect(document.documentElement.classList.contains('dark')).toBe(false);
     expect(localStorage.getItem('agent-chat.theme')).toBe('light');
+  });
+});
+
+describe('RouteDecisionChip', () => {
+  it('labels shadow decisions and exposes the rationale in a tooltip', () => {
+    render(
+      <RouteDecisionChip
+        type='data'
+        name='route-decision'
+        status={{ type: 'complete' }}
+        data={{
+          decisionId: 'rd_test',
+          skill: 'deep-research',
+          tier: 'research',
+          needsResearch: true,
+          needsPlan: true,
+          confidence: 0.86,
+          margin: 0.41,
+          source: 'typed-router',
+          mode: 'shadow',
+          rationale: 'Composite question',
+        }}
+      />,
+    );
+    const chip = screen.getByTestId('route-decision');
+    expect(chip.textContent).toContain('deep-research');
+    expect(chip.textContent).toContain('shadow');
+    expect(chip.getAttribute('title')).toContain('Composite question');
+    expect(chip.getAttribute('data-mode')).toBe('shadow');
   });
 });
 

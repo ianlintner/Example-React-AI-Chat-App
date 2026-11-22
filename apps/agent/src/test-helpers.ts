@@ -2,6 +2,8 @@ import {
   createAgentRuntime,
   createLlm,
   createMockModel,
+  createRouter,
+  loadRouterConfig,
   MemoryStore,
   TierRateLimiter,
 } from '@agent-chat/agent-core';
@@ -17,6 +19,7 @@ export const TEST_ENV = {
 export const LLM_CONFIG: LlmConfig = {
   baseURL: 'http://localhost:4000/v1',
   routes: { fast: 'local-fast', deep: 'smart', research: 'smart-frontier' },
+  routerRoute: 'local-fast',
   provider: 'mock',
   apiKey: 'not-used-in-mock-tests',
 };
@@ -33,9 +36,11 @@ export function testServices(
   const store = new MemoryStore(data);
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
+  const router = createRouter({ config: loadRouterConfig(TEST_ENV) });
   return {
     store,
-    runtime: createAgentRuntime({ llm, store }),
+    router,
+    runtime: createAgentRuntime({ llm, store, decide: router.decide }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
     async close() {

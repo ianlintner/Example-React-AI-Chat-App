@@ -7,6 +7,7 @@ import {
 import { useChatRuntime } from '@assistant-ui/react-ai-sdk';
 import { DefaultChatTransport } from 'ai';
 import { useMemo, useState } from 'react';
+import { RouteDecisionChip } from './RouteDecisionChip';
 
 const AGENT_URL = import.meta.env.VITE_AGENT_URL ?? 'http://127.0.0.1:8787';
 
@@ -84,7 +85,11 @@ function UserMessage() {
 function AssistantMessage() {
   return (
     <MessagePrimitive.Root className='rounded border border-border p-2 text-sm'>
-      <MessagePrimitive.Content />
+      <MessagePrimitive.Parts
+        components={{
+          data: { by_name: { 'route-decision': RouteDecisionChip } },
+        }}
+      />
     </MessagePrimitive.Root>
   );
 }

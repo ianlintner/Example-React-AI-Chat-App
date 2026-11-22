@@ -12,6 +12,8 @@ export interface Llm {
   /** Resolved gateway route for a tier (for logs/metrics; not a model id). */
   routeFor(tier: Tier): string;
   model(tier: Tier): LanguageModel;
+  /** Resolves an arbitrary env-mapped route (used by the LLM router). */
+  modelForRoute(route: string): LanguageModel;
 }
 
 export function createLlm(config: LlmConfig): Llm {
@@ -19,6 +21,7 @@ export function createLlm(config: LlmConfig): Llm {
     return {
       routeFor: tier => config.routes[tier],
       model: () => createMockModel(),
+      modelForRoute: () => createMockModel(),
     };
   }
   const gateway = createOpenAICompatible({
@@ -30,5 +33,6 @@ export function createLlm(config: LlmConfig): Llm {
   return {
     routeFor: tier => config.routes[tier],
     model: tier => gateway.chatModel(config.routes[tier]),
+    modelForRoute: route => gateway.chatModel(route),
   };
 }

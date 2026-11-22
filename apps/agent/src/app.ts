@@ -12,6 +12,7 @@ import { createInngest } from './inngest';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
 import { mountThreadRoutes } from './routes/threads';
+import { routerRegistry } from './router-obs';
 
 export function createApp(config: ServerConfig, services: Services) {
   const app = new Hono<AppEnv>();
@@ -37,6 +38,12 @@ export function createApp(config: ServerConfig, services: Services) {
       contractVersion: CONTRACT_VERSION,
     } satisfies HealthResponse),
   );
+
+  /** Prometheus scrape endpoint for routing telemetry (no auth on loopback). */
+  app.get('/metrics', async c => {
+    const body = await routerRegistry.metrics();
+    return c.body(body, 200, { 'content-type': routerRegistry.contentType });
+  });
 
   if (config.inngest.enabled) {
     const { handler } = createInngest({ dev: config.inngest.dev });

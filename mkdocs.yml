@@ -63,6 +63,7 @@ nav:
       - Integration Examples: examples/external-app.md
   - Operations:
       - Observability: operations/observability.md
+      - Dependency Security: operations/dependency-security.md
       - Runbooks: operations/runbooks.md
       - CI/CD: operations/ci-cd.md
       - Monitoring: operations/prometheus-grafana.md

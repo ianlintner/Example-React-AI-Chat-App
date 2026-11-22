@@ -14,11 +14,14 @@ const { Pool } = pg;
 export class PostgresStore implements ThreadStore {
   private readonly pool: pg.Pool;
 
-  constructor(connectionString: string, private readonly buffer: ChunkBuffer) {
+  constructor(
+    connectionString: string,
+    private readonly buffer: ChunkBuffer,
+  ) {
     this.pool = new Pool({ connectionString, max: 5 });
   }
 
-  private  own(ownerId: string, principal: Principal) {
+  private own(ownerId: string, principal: Principal) {
     if (ownerId !== principal.userId) throw new Error('forbidden');
   }
 
@@ -27,7 +30,11 @@ export class PostgresStore implements ThreadStore {
     await this.pool.query(sql);
   }
 
-  async createThread(threadId: string, principal: Principal, title = 'New thread') {
+  async createThread(
+    threadId: string,
+    principal: Principal,
+    title = 'New thread',
+  ) {
     const now = new Date().toISOString();
     await this.pool.query(
       `insert into threads (thread_id, owner_id, title, created_at, updated_at)
@@ -65,7 +72,9 @@ export class PostgresStore implements ThreadStore {
       title: string;
       created_at: string;
       updated_at: string;
-    }>('select * from threads where owner_id = $1 order by updated_at desc', [principal.userId]);
+    }>('select * from threads where owner_id = $1 order by updated_at desc', [
+      principal.userId,
+    ]);
     return rows.map(row => ({
       threadId: row.thread_id,
       ownerId: row.owner_id,
@@ -75,7 +84,10 @@ export class PostgresStore implements ThreadStore {
     }));
   }
 
-  async loadThread(threadId: string, principal: Principal): Promise<AgentUIMessage[]> {
+  async loadThread(
+    threadId: string,
+    principal: Principal,
+  ): Promise<AgentUIMessage[]> {
     await this.getThread(threadId, principal);
     const { rows } = await this.pool.query<{ messages: unknown }>(
       'select messages from thread_messages where thread_id = $1',
@@ -84,7 +96,11 @@ export class PostgresStore implements ThreadStore {
     return (rows[0]?.messages ?? []) as AgentUIMessage[];
   }
 
-  async saveMessages(threadId: string, principal: Principal, messages: AgentUIMessage[]) {
+  async saveMessages(
+    threadId: string,
+    principal: Principal,
+    messages: AgentUIMessage[],
+  ) {
     await this.getThread(threadId, principal);
     const now = new Date().toISOString();
     await this.pool.query(
@@ -92,7 +108,10 @@ export class PostgresStore implements ThreadStore {
        on conflict (thread_id) do update set messages = excluded.messages, updated_at = excluded.updated_at`,
       [threadId, JSON.stringify(messages), now],
     );
-    await this.pool.query('update threads set updated_at = $1 where thread_id = $2', [now, threadId]);
+    await this.pool.query(
+      'update threads set updated_at = $1 where thread_id = $2',
+      [now, threadId],
+    );
   }
 
   async createRun(run: Omit<RunInfo, 'createdAt' | 'updatedAt'>) {
@@ -128,10 +147,10 @@ export class PostgresStore implements ThreadStore {
   }
 
   async setRunStatus(runId: string, status: RunStatus) {
-    await this.pool.query('update runs set status = $1, updated_at = now() where run_id = $2', [
-      status,
-      runId,
-    ]);
+    await this.pool.query(
+      'update runs set status = $1, updated_at = now() where run_id = $2',
+      [status, runId],
+    );
   }
 
   async appendChunk(runId: string, chunk: AgentUIMessageChunk) {

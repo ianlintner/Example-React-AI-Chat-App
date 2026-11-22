@@ -31,8 +31,15 @@ export interface RunInfo {
  * adds the thread/run metadata the /threads endpoints and resume need.
  */
 export interface ThreadStore extends RunStore {
-  createThread(threadId: string, principal: Principal, title?: string): Promise<ThreadInfo>;
-  getThread(threadId: string, principal: Principal): Promise<ThreadInfo | undefined>;
+  createThread(
+    threadId: string,
+    principal: Principal,
+    title?: string,
+  ): Promise<ThreadInfo>;
+  getThread(
+    threadId: string,
+    principal: Principal,
+  ): Promise<ThreadInfo | undefined>;
   listThreads(principal: Principal): Promise<ThreadInfo[]>;
   createRun(run: Omit<RunInfo, 'createdAt' | 'updatedAt'>): Promise<RunInfo>;
   getRun(runId: string, principal: Principal): Promise<RunInfo | undefined>;

@@ -50,7 +50,8 @@ export function verifySession(
   if (!Number.isSafeInteger(expiry) || expiry <= now) return undefined;
   const expected = Buffer.from(sign(`${id}.${exp}`, secret));
   const actual = Buffer.from(signature);
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return undefined;
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual))
+    return undefined;
   return id;
 }
 

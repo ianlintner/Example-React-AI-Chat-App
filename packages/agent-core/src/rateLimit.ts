@@ -7,7 +7,10 @@ export const TIER_LIMITS = {
   anonymous: { requests: 10, windowMs: 60_000, burst: 3 },
   free: { requests: 60, windowMs: 60_000, burst: 10 },
   pro: { requests: 300, windowMs: 60_000, burst: 40 },
-} as const satisfies Record<AccessTier, { requests: number; windowMs: number; burst: number }>;
+} as const satisfies Record<
+  AccessTier,
+  { requests: number; windowMs: number; burst: number }
+>;
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -22,8 +25,14 @@ export interface RateLimiter {
 
 /** Fixed-window limiter with a small burst bucket; deterministic in tests. */
 export class TierRateLimiter implements RateLimiter {
-  private readonly windows = new Map<string, { start: number; count: number }>();
-  private readonly bursts = new Map<string, { tokens: number; updatedAt: number }>();
+  private readonly windows = new Map<
+    string,
+    { start: number; count: number }
+  >();
+  private readonly bursts = new Map<
+    string,
+    { tokens: number; updatedAt: number }
+  >();
 
   constructor(private readonly now: () => number = Date.now) {}
 
@@ -58,7 +67,9 @@ export class TierRateLimiter implements RateLimiter {
       allowed,
       limit: requests,
       remaining: Math.max(0, requests - currentWindow.count),
-      retryAfterMs: allowed ? 0 : Math.max(1, currentWindow.start + windowMs - time),
+      retryAfterMs: allowed
+        ? 0
+        : Math.max(1, currentWindow.start + windowMs - time),
     };
   }
 }

@@ -1,8 +1,5 @@
 /** POST /chat and resumable GET /chat/:runId/stream. */
-import {
-  createUIMessageStreamResponse,
-  type UIMessageChunk,
-} from 'ai';
+import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 import { chatRequestSchema, validateAgentMessages } from '@agent-chat/contract';
 import type { AgentUIMessageChunk } from '@agent-chat/contract';
 import type { Hono } from 'hono';

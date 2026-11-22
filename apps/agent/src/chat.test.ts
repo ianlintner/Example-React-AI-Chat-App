@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createApp } from './app';
 import type { StoreData } from '@agent-chat/agent-core';
-import { AUTH_HEADERS, chatBody, sseEvents, TEST_CONFIG, TEST_PRINCIPAL, testServices } from './test-helpers';
+import {
+  AUTH_HEADERS,
+  chatBody,
+  sseEvents,
+  TEST_CONFIG,
+  TEST_PRINCIPAL,
+  testServices,
+} from './test-helpers';
 
 describe('POST /chat', () => {
   it('streams token-by-token text deltas from the mock model', async () => {
@@ -17,11 +24,15 @@ describe('POST /chat', () => {
     const events = await sseEvents(res);
     const deltas = events.filter(
       (e): e is { type: string; delta: string } =>
-        typeof e === 'object' && e !== null && (e as { type?: string }).type === 'text-delta',
+        typeof e === 'object' &&
+        e !== null &&
+        (e as { type?: string }).type === 'text-delta',
     );
     expect(deltas).toHaveLength(3);
     expect(deltas.map(d => d.delta).join('')).toBe('Alpha beta gamma.');
-    expect(events.some(e => (e as { type?: string }).type === 'data-route-decision')).toBe(true);
+    expect(
+      events.some(e => (e as { type?: string }).type === 'data-route-decision'),
+    ).toBe(true);
     await services.close();
   });
 
@@ -46,15 +57,21 @@ describe('POST /chat', () => {
     expect(replay.status).toBe(200);
     const events = await sseEvents(replay);
     const text = events
-      .filter((e): e is { type: string; delta: string } =>
-        typeof e === 'object' && e !== null && (e as { type?: string }).type === 'text-delta')
+      .filter(
+        (e): e is { type: string; delta: string } =>
+          typeof e === 'object' &&
+          e !== null &&
+          (e as { type?: string }).type === 'text-delta',
+      )
       .map(e => e.delta)
       .join('');
     // Client saw at least the first delta on the original stream; replay from 1
     // still contains the remainder of the completed run.
     expect(text.length).toBeGreaterThan(0);
     expect('One two three four.'.includes(text)).toBe(true);
-    expect((await services.store.getRun(runId, TEST_PRINCIPAL))?.status).toBe('completed');
+    expect((await services.store.getRun(runId, TEST_PRINCIPAL))?.status).toBe(
+      'completed',
+    );
     await services.close();
   });
 
@@ -83,21 +100,31 @@ describe('POST /chat', () => {
       headers: { 'x-user-id': 'test-user' },
     });
     expect(thread.status).toBe(200);
-    const body = await thread.json() as { messages: Array<{ parts: Array<{ type: string; text?: string }> }> };
-    expect(body.messages.map(m => m.parts.find(p => p.type === 'text')?.text)).toContain('remember me');
-    expect(body.messages.map(m => m.parts.find(p => p.type === 'text')?.text)).toContain('Persisted answer.');
-    expect((await second.store.getRun(posted.headers.get('x-run-id')!, principal))?.status).toBe('completed');
+    const body = (await thread.json()) as {
+      messages: Array<{ parts: Array<{ type: string; text?: string }> }>;
+    };
+    expect(
+      body.messages.map(m => m.parts.find(p => p.type === 'text')?.text),
+    ).toContain('remember me');
+    expect(
+      body.messages.map(m => m.parts.find(p => p.type === 'text')?.text),
+    ).toContain('Persisted answer.');
+    expect(
+      (await second.store.getRun(posted.headers.get('x-run-id')!, principal))
+        ?.status,
+    ).toBe('completed');
     await second.close();
   });
 
   it('returns 429 when the signed session exceeds its rate limit', async () => {
     const services = testServices(undefined, 'ok');
     const app = createApp(TEST_CONFIG, services);
-    const request = () => app.request('/chat', {
-      method: 'POST',
-      headers: AUTH_HEADERS,
-      body: chatBody(`thr_limit_${Math.random().toString(36).slice(2)}`),
-    });
+    const request = () =>
+      app.request('/chat', {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: chatBody(`thr_limit_${Math.random().toString(36).slice(2)}`),
+      });
     for (let i = 0; i < 11; i++) await request();
     const limited = await app.request('/chat', {
       method: 'POST',
@@ -118,7 +145,13 @@ describe('POST /chat', () => {
       body: JSON.stringify({
         id: 'thr_bad',
         trigger: 'submit-message',
-        messages: [{ id: 'u1', role: 'user', parts: [{ type: 'data-admin', data: { ok: true } }] }],
+        messages: [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [{ type: 'data-admin', data: { ok: true } }],
+          },
+        ],
       }),
     });
     expect(res.status).toBe(400);

@@ -14,7 +14,11 @@ test.describe('agent chat', () => {
     await input.fill('Hello agent');
     // A disabled Send after fill means hydration lost the input event; retry
     // deterministically rather than racing the 30s test timeout.
-    for (let attempt = 0; attempt < 10 && (await send.isDisabled()); attempt++) {
+    for (
+      let attempt = 0;
+      attempt < 10 && (await send.isDisabled());
+      attempt++
+    ) {
       await input.fill('');
       await input.fill('Hello agent');
       await page.waitForTimeout(50);
@@ -23,6 +27,8 @@ test.describe('agent chat', () => {
     await send.click();
 
     await expect(page.getByText('Hello agent')).toBeVisible();
-    await expect(page.getByText('Mock reply from the agent.')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Mock reply from the agent.')).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });

@@ -23,7 +23,10 @@ export interface LLMProvider {
 }
 
 /** Wraps the AI SDK's stream in the legacy-shaped async-iterable seam. */
-export function createLlmProvider(llm: Llm, id: 'gateway' | 'mock'): LLMProvider {
+export function createLlmProvider(
+  llm: Llm,
+  id: 'gateway' | 'mock',
+): LLMProvider {
   return {
     id,
     async *stream({ tier, system, prompt, abortSignal }) {

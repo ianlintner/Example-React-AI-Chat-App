@@ -13,7 +13,9 @@ const serverEnvSchema = z.object({
   INNGEST_DEV: z.string().min(1).optional(),
   INNGEST_SIGNING_KEY: z.string().min(1).optional(),
   /** HMAC key for signed anonymous sessions. No default: fail closed. */
-  SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 chars'),
+  SESSION_SECRET: z
+    .string()
+    .min(32, 'SESSION_SECRET must be at least 32 chars'),
   /** Postgres and Redis are optional locally; when absent, tests/offline use memory. */
   DATABASE_URL: z.string().min(1).optional(),
   REDIS_URL: z.string().min(1).optional(),

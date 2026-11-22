@@ -48,5 +48,8 @@ export async function checkRateLimit(
   c.header('x-ratelimit-remaining', String(result.remaining));
   if (result.allowed) return undefined;
   c.header('retry-after', String(Math.ceil(result.retryAfterMs / 1000)));
-  return c.json({ error: 'rate_limited', retryAfterMs: result.retryAfterMs }, 429);
+  return c.json(
+    { error: 'rate_limited', retryAfterMs: result.retryAfterMs },
+    429,
+  );
 }

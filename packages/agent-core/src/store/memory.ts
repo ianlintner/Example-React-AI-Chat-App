@@ -5,7 +5,13 @@
  */
 import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
 import type { Principal } from '../seams';
-import type { RunInfo, RunStatus, StoreData, ThreadInfo, ThreadStore } from './types';
+import type {
+  RunInfo,
+  RunStatus,
+  StoreData,
+  ThreadInfo,
+  ThreadStore,
+} from './types';
 
 export function emptyStoreData(): StoreData {
   return {
@@ -26,7 +32,11 @@ export class MemoryStore implements ThreadStore {
     if (resourceOwnerId !== principal.userId) throw new Error('forbidden');
   }
 
-  async createThread(threadId: string, principal: Principal, title = 'New thread') {
+  async createThread(
+    threadId: string,
+    principal: Principal,
+    title = 'New thread',
+  ) {
     const thread: ThreadInfo = {
       threadId,
       ownerId: principal.userId,
@@ -52,13 +62,20 @@ export class MemoryStore implements ThreadStore {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
-  async loadThread(threadId: string, principal: Principal): Promise<AgentUIMessage[]> {
+  async loadThread(
+    threadId: string,
+    principal: Principal,
+  ): Promise<AgentUIMessage[]> {
     const thread = await this.getThread(threadId, principal);
     if (!thread) return [];
     return structuredClone(this.data.messages.get(threadId) ?? []);
   }
 
-  async saveMessages(threadId: string, principal: Principal, messages: AgentUIMessage[]) {
+  async saveMessages(
+    threadId: string,
+    principal: Principal,
+    messages: AgentUIMessage[],
+  ) {
     const thread = await this.getThread(threadId, principal);
     if (!thread) throw new Error('thread_not_found');
     this.data.messages.set(threadId, structuredClone(messages));
@@ -95,7 +112,10 @@ export class MemoryStore implements ThreadStore {
     this.data.finished.add(runId);
   }
 
-  async *replay(runId: string, fromIndex: number): AsyncIterable<AgentUIMessageChunk> {
+  async *replay(
+    runId: string,
+    fromIndex: number,
+  ): AsyncIterable<AgentUIMessageChunk> {
     const list = this.data.chunks.get(runId) ?? [];
     for (let i = Math.max(0, fromIndex); i < list.length; i++) {
       yield structuredClone(list[i]!);

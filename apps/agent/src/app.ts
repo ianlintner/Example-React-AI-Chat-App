@@ -22,7 +22,10 @@ export function createApp(config: ServerConfig, services: Services) {
     cors({
       origin: config.webOrigin,
       allowMethods: ['GET', 'POST', 'OPTIONS'],
-      allowHeaders: ['content-type', ...(config.trustUserHeader ? [config.trustUserHeader] : [])],
+      allowHeaders: [
+        'content-type',
+        ...(config.trustUserHeader ? [config.trustUserHeader] : []),
+      ],
       credentials: true,
     }),
   );

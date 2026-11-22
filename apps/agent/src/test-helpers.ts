@@ -1,4 +1,10 @@
-import { createAgentRuntime, createLlm, createMockModel, MemoryStore, TierRateLimiter } from '@agent-chat/agent-core';
+import {
+  createAgentRuntime,
+  createLlm,
+  createMockModel,
+  MemoryStore,
+  TierRateLimiter,
+} from '@agent-chat/agent-core';
 import type { LlmConfig, StoreData } from '@agent-chat/agent-core';
 import { loadServerConfig } from './config';
 import type { Services } from './services';
@@ -55,9 +61,7 @@ export function chatBody(threadId: string, text = 'hello') {
   return JSON.stringify({
     id: threadId,
     trigger: 'submit-message',
-    messages: [
-      { id: 'u1', role: 'user', parts: [{ type: 'text', text }] },
-    ],
+    messages: [{ id: 'u1', role: 'user', parts: [{ type: 'text', text }] }],
   });
 }
 

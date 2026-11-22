@@ -1,4 +1,9 @@
-import { AssistantRuntimeProvider, ComposerPrimitive, MessagePrimitive, ThreadPrimitive } from '@assistant-ui/react';
+import {
+  AssistantRuntimeProvider,
+  ComposerPrimitive,
+  MessagePrimitive,
+  ThreadPrimitive,
+} from '@assistant-ui/react';
 import { useChatRuntime } from '@assistant-ui/react-ai-sdk';
 import { DefaultChatTransport } from 'ai';
 import { useMemo, useState } from 'react';
@@ -7,7 +12,9 @@ const AGENT_URL = import.meta.env.VITE_AGENT_URL ?? 'http://127.0.0.1:8787';
 
 /** Minimal thread + composer. Full agent shell lands in card 9. */
 export function AgentChat() {
-  const [threadId, setThreadId] = useState(() => `thr_web_${crypto.randomUUID()}`);
+  const [threadId, setThreadId] = useState(
+    () => `thr_web_${crypto.randomUUID()}`,
+  );
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -36,7 +43,9 @@ export function AgentChat() {
         <ThreadPrimitive.Root className='flex h-72 flex-col rounded-lg border border-border p-3'>
           <ThreadPrimitive.Viewport className='flex-1 space-y-2 overflow-y-auto'>
             <ThreadPrimitive.Empty>
-              <p className='text-sm text-fg-muted'>Send a message to start the thread.</p>
+              <p className='text-sm text-fg-muted'>
+                Send a message to start the thread.
+              </p>
             </ThreadPrimitive.Empty>
             <ThreadPrimitive.Messages
               components={{

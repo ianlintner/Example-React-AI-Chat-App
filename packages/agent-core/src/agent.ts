@@ -25,7 +25,9 @@ export interface RuntimeOptions {
 function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
   const last = [...messages].reverse().find(m => m.role === 'user');
   const text = last?.parts
-    .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+    .filter(
+      (part): part is { type: 'text'; text: string } => part.type === 'text',
+    )
     .map(part => part.text)
     .join('');
   const tier = text && text.length > 800 ? 'deep' : 'fast';
@@ -47,14 +49,13 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
   return {
     stream({ threadId, runId, principal, messages, abortSignal }) {
       const { llm, store } = options;
-      const decision = options.decide
-        ? undefined
-        : defaultDecision(messages);
+      const decision = options.decide ? undefined : defaultDecision(messages);
       const stream = createUIMessageStream<AgentUIMessage>({
         originalMessages: messages,
         onError: () => 'agent_error',
         async execute({ writer }) {
-          const resolved = decision ?? (await options.decide!({ principal, messages }));
+          const resolved =
+            decision ?? (await options.decide!({ principal, messages }));
           writer.write({
             type: 'data-route-decision',
             id: resolved.decisionId,
@@ -93,16 +94,18 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
             ).catch(() => undefined);
             controller.close();
           } catch (error) {
-            await store.appendChunk(runId, {
-              type: 'data-step',
-              id: `step_error_${runId}`,
-              data: {
-                stepId: `step_error_${runId}`,
-                status: 'failed',
-                attempt: 1,
-                error: 'stream_failed',
-              },
-            }).catch(() => undefined);
+            await store
+              .appendChunk(runId, {
+                type: 'data-step',
+                id: `step_error_${runId}`,
+                data: {
+                  stepId: `step_error_${runId}`,
+                  status: 'failed',
+                  attempt: 1,
+                  error: 'stream_failed',
+                },
+              })
+              .catch(() => undefined);
             controller.error(error);
           } finally {
             await store.finishRun(runId).catch(() => undefined);

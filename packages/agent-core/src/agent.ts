@@ -6,6 +6,7 @@ import type {
 } from '@agent-chat/contract';
 import { createAgentUIStream, createUIMessageStream, ToolLoopAgent } from 'ai';
 import type { Llm } from './llm';
+import { baselineDecision, legacyDecision } from './router/index';
 import type { AgentRuntime, Router, RunStore } from './seams';
 import type { ThreadStore } from './store/types';
 
@@ -19,12 +20,16 @@ export interface RuntimeOptions {
   decide?: Router['decide'];
 }
 
-import { baselineDecision } from './router/index';
-
-/** Backwards-compatible deterministic decision used by direct callers. */
+/**
+ * Backwards-compatible deterministic decision used by direct callers. Keeps
+ * the pre-router dispatch exactly: general/fast, deep only for >800 chars.
+ */
 export function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
-  return baselineDecision(messages);
+  return legacyDecision(messages);
 }
+
+/** The keyword baseline, used only for shadow comparison and golden scoring. */
+export { baselineDecision };
 
 function isErrorChunk(chunk: AgentUIMessageChunk): boolean {
   return (chunk as { type?: string }).type === 'error';

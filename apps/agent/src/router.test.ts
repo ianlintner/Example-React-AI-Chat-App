@@ -11,6 +11,7 @@ const env = {
   LLM_PROVIDER: 'mock',
   ROUTER_MODE: 'shadow',
   JEV_API_KEY: 'test-only-key',
+  ROUTER_SHADOW_SAMPLE: '1',
 };
 
 function decision(): JevDecision {

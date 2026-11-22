@@ -16,6 +16,11 @@ const serverEnvSchema = z.object({
   SESSION_SECRET: z
     .string()
     .min(32, 'SESSION_SECRET must be at least 32 chars'),
+  /**
+   * Required when AGENT_HOST is not loopback: `/metrics` exposes routing
+   * telemetry and must not be world-readable on a non-local listener.
+   */
+  METRICS_TOKEN: z.string().min(16).optional(),
   /** Postgres and Redis are optional locally; when absent, tests/offline use memory. */
   DATABASE_URL: z.string().min(1).optional(),
   REDIS_URL: z.string().min(1).optional(),
@@ -33,6 +38,8 @@ export type ServerConfig = {
   webOrigin: string;
   inngest: { enabled: boolean; dev: boolean };
   sessionSecret: string;
+  /** Set only for non-loopback listeners; undefined means open on loopback. */
+  metricsToken: string | undefined;
   databaseUrl: string | undefined;
   redisUrl: string | undefined;
   trustUserHeader: string | undefined;
@@ -49,6 +56,15 @@ export function loadServerConfig(
     throw new Error(`Invalid agent server configuration: ${fields}`);
   }
   const e = parsed.data;
+  const loopback =
+    e.AGENT_HOST === '127.0.0.1' ||
+    e.AGENT_HOST === 'localhost' ||
+    e.AGENT_HOST === '::1';
+  if (!loopback && !e.METRICS_TOKEN) {
+    throw new Error(
+      'Invalid agent server configuration: METRICS_TOKEN: required when AGENT_HOST is not loopback',
+    );
+  }
   const dev = e.INNGEST_DEV !== undefined && e.INNGEST_DEV !== '0';
   return {
     port: e.AGENT_PORT,
@@ -56,6 +72,7 @@ export function loadServerConfig(
     webOrigin: e.WEB_ORIGIN,
     inngest: { enabled: dev || e.INNGEST_SIGNING_KEY !== undefined, dev },
     sessionSecret: e.SESSION_SECRET,
+    metricsToken: loopback ? undefined : e.METRICS_TOKEN,
     databaseUrl: e.DATABASE_URL,
     redisUrl: e.REDIS_URL,
     trustUserHeader: e.TRUST_USER_HEADER,

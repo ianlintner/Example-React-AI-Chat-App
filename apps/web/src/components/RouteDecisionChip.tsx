@@ -2,9 +2,10 @@ import type { RouteDecision } from '@agent-chat/contract';
 import type { DataMessagePartProps } from '@assistant-ui/react';
 
 /**
- * "Why this agent" signal. Read-only, never interactive: in shadow mode the
- * chip shows the proposed route while dispatch stays on the baseline, and the
- * label says so. Instrument Panel palette: amber signal on graphite.
+ * "Why this agent" signal. Read-only, never interactive: the stream carries
+ * the decision that was actually dispatched (the baseline in shadow mode), so
+ * the chip reports the real route and labels the router's mode. Instrument
+ * Panel palette: amber signal on graphite.
  */
 export function RouteDecisionChip({
   data,

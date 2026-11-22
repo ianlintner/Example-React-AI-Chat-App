@@ -59,7 +59,11 @@ function recording(overrides: Partial<RouterDeps> = {}) {
     errors: reason => events.push(`error:${reason}`),
   };
   const router = createRouter({
-    config: loadRouterConfig({ ROUTER_MODE: 'shadow', JEV_API_KEY: 'k' }),
+    config: loadRouterConfig({
+      ROUTER_MODE: 'shadow',
+      JEV_API_KEY: 'k',
+      ROUTER_SHADOW_SAMPLE: '1',
+    }),
     jev: fakeJev(),
     sink,
     metrics,
@@ -263,7 +267,11 @@ describe('shadow sink resilience', () => {
     };
     const events: string[] = [];
     const router = createRouter({
-      config: loadRouterConfig({ ROUTER_MODE: 'shadow', JEV_API_KEY: 'k' }),
+      config: loadRouterConfig({
+        ROUTER_MODE: 'shadow',
+        JEV_API_KEY: 'k',
+        ROUTER_SHADOW_SAMPLE: '1',
+      }),
       jev: fakeJev(),
       sink,
       metrics: {

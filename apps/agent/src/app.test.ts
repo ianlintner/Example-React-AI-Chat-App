@@ -83,4 +83,42 @@ describe('loadServerConfig', () => {
       /SESSION_SECRET/,
     );
   });
+
+  it('requires METRICS_TOKEN on a non-loopback listener', () => {
+    expect(() =>
+      loadServerConfig({ ...testEnv, AGENT_HOST: '0.0.0.0' }),
+    ).toThrow(/METRICS_TOKEN/);
+    const config = loadServerConfig({
+      ...testEnv,
+      AGENT_HOST: '0.0.0.0',
+      METRICS_TOKEN: 'a-long-enough-scrape-token',
+    });
+    expect(config.metricsToken).toBe('a-long-enough-scrape-token');
+    expect(loadServerConfig(testEnv).metricsToken).toBeUndefined();
+  });
+});
+
+describe('/metrics access', () => {
+  it('rejects a missing or wrong token when one is configured', async () => {
+    const config = loadServerConfig({
+      ...testEnv,
+      AGENT_HOST: '0.0.0.0',
+      METRICS_TOKEN: 'a-long-enough-scrape-token',
+    });
+    const services = await createServices(config, testEnv);
+    const app = createApp(config, services);
+    expect((await app.request('/metrics')).status).toBe(401);
+    expect(
+      (
+        await app.request('/metrics', {
+          headers: { 'x-metrics-token': 'wrong-token-value' },
+        })
+      ).status,
+    ).toBe(401);
+    const ok = await app.request('/metrics', {
+      headers: { 'x-metrics-token': 'a-long-enough-scrape-token' },
+    });
+    expect(ok.status).toBe(200);
+    await services.close();
+  });
 });

@@ -11,6 +11,7 @@ import type { JevClient, JevDecision } from './jev';
 import { ROUTER_QUESTIONS, ROUTER_SKILLS } from './jev';
 import type { RouteLogRow, RouteMetrics, RouteSink } from './observability';
 import { noopMetrics, noopSink } from './observability';
+import { redactText, sampleBucket } from './privacy';
 import type { Principal, Router } from '../seams';
 
 /** RouteDecision.mode is deliberately narrower than the feature flag. */
@@ -35,7 +36,7 @@ function id(prefix: string): string {
   return `${prefix}_${crypto.randomUUID()}`;
 }
 
-/** Deterministic baseline, also exported for the existing agent runtime. */
+/** Deterministic comparison baseline (keyword rules). Never used for `off`. */
 export function baselineDecision(
   messages: AgentUIMessage[],
   mode: DecisionMode = 'shadow',
@@ -49,6 +50,29 @@ export function baselineDecision(
     source: 'default',
     mode,
     rationale: 'deterministic baseline',
+  };
+}
+
+/**
+ * Exact pre-router dispatch: `general`/`fast`, with `deep` only above 800
+ * characters. `ROUTER_MODE=off` must preserve today's cost profile.
+ */
+export function legacyDecision(
+  messages: AgentUIMessage[],
+  mode: DecisionMode = 'shadow',
+): RouteDecision {
+  const text = lastUserText(messages);
+  return {
+    decisionId: id('route'),
+    skill: 'general',
+    tier: text.length > 800 ? 'deep' : 'fast',
+    needsResearch: false,
+    needsPlan: false,
+    confidence: 1,
+    margin: 1,
+    source: 'default',
+    mode,
+    rationale: 'baseline dispatch until the typed router is enabled',
   };
 }
 
@@ -130,6 +154,37 @@ export interface RouterDeps {
   now?: () => number;
 }
 
+/**
+ * A deadline that aborts in-flight network calls and rejects the proposed
+ * decision. No third-party call can hold a chat turn past `timeoutMs`.
+ */
+interface Budget {
+  signal: AbortSignal;
+  timeout: Promise<never>;
+  dispose(): void;
+}
+
+function budget(ms: number): Budget {
+  const controller = new AbortController();
+  let handle: ReturnType<typeof setTimeout> | undefined;
+  let reject!: (reason: Error) => void;
+  const timeout = new Promise<never>((_, rej) => {
+    reject = rej;
+  });
+  handle = setTimeout(() => {
+    controller.abort();
+    reject(new Error('router_timeout'));
+  }, ms);
+  handle.unref?.();
+  return {
+    signal: controller.signal,
+    timeout,
+    dispose() {
+      if (handle) clearTimeout(handle);
+    },
+  };
+}
+
 export function createRouter(deps: RouterDeps): Router {
   const {
     config,
@@ -145,49 +200,88 @@ export function createRouter(deps: RouterDeps): Router {
     async decide({ principal, messages, context }) {
       const started = now();
       const text = lastUserText(messages);
-      const baseline = baselineDecision(
-        messages,
-        mode === 'live' ? 'live' : 'shadow',
-      );
+      const dispatchMode: DecisionMode = mode === 'live' ? 'live' : 'shadow';
 
       if (mode === 'off') {
-        return { ...baseline, mode: 'shadow' };
+        // Preserve pre-router dispatch exactly: no keyword upgrades, no sink.
+        return legacyDecision(messages, dispatchMode);
       }
 
+      const baseline = baselineDecision(messages, dispatchMode);
+      const sampled =
+        mode === 'live' ||
+        sampleBucket(baseline.decisionId) < config.shadowSample;
+      const shared = budget(config.timeoutMs);
       let proposed: RouteDecision | undefined;
       let fallbackReason: string | undefined;
       try {
-        if (!jev) throw new Error('jev_unavailable');
-        const result = fromJev(await jev.classify({ text }), mode, config);
-        if (result.lowMargin) {
-          fallbackReason = 'low_margin';
+        if (!sampled) {
+          fallbackReason = 'sampled_out';
           metrics.fallback(fallbackReason);
         } else {
-          proposed = result.decision;
-        }
-      } catch {
-        fallbackReason = 'jev_unavailable';
-        metrics.errors(fallbackReason);
-        metrics.fallback(fallbackReason);
-      }
-
-      if (!proposed) {
-        if (deps.llmRouter) {
+          const outgoing = config.redact
+            ? redactText(text)
+            : text.slice(0, 4000);
           try {
-            proposed = fromFallback(
-              await deps.llmRouter.decide({ text }),
+            if (!jev) throw new Error('jev_unavailable');
+            const result = fromJev(
+              await Promise.race([
+                jev.classify({ text: outgoing, signal: shared.signal }),
+                shared.timeout,
+              ]),
               mode,
+              config,
             );
-          } catch {
-            metrics.errors('llm_fallback_failed');
+            if (result.lowMargin) {
+              fallbackReason = 'low_margin';
+              metrics.fallback(fallbackReason);
+            } else {
+              proposed = result.decision;
+            }
+          } catch (error) {
+            fallbackReason =
+              (error instanceof Error && error.message === 'router_timeout') ||
+              shared.signal.aborted
+                ? 'router_timeout'
+                : 'jev_unavailable';
+            metrics.errors(fallbackReason);
+            metrics.fallback(fallbackReason);
+          }
+
+          if (!proposed && deps.llmRouter) {
+            try {
+              // The shared deadline may already be spent; race again so a
+              // stuck fallback cannot extend the request budget.
+              proposed = fromFallback(
+                await Promise.race([
+                  deps.llmRouter.decide({
+                    text: outgoing,
+                    signal: shared.signal,
+                  }),
+                  shared.timeout,
+                ]),
+                mode,
+              );
+            } catch (error) {
+              const reason =
+                (error instanceof Error &&
+                  error.message === 'router_timeout') ||
+                shared.signal.aborted
+                  ? 'router_timeout'
+                  : 'llm_fallback_failed';
+              metrics.errors(reason);
+            }
           }
         }
-        proposed ??= {
-          ...baseline,
-          source: 'default',
-          rationale: fallbackReason ?? 'fallback_unavailable',
-        };
+      } finally {
+        shared.dispose();
       }
+
+      proposed ??= {
+        ...baseline,
+        source: 'default',
+        rationale: fallbackReason ?? 'fallback_unavailable',
+      };
 
       const latencyMs = Math.max(0, now() - started);
       const agreed = agrees(proposed, baseline);

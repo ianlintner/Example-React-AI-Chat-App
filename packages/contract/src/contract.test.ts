@@ -5,12 +5,16 @@ import {
   chatRequestSchema,
   dataPartNames,
   dataPartSchemas,
+  mediaAttachmentSchema,
   validateAgentMessages,
   type AgentUIMessage,
 } from './index';
 import {
   fixtureStream,
   invalidPartFixtures,
+  mediaAttachmentsFixture,
+  mediaArtifactFixture,
+  mcpAppArtifactFixture,
   planRunStream,
   textReplyStream,
   validPartFixtures,
@@ -92,6 +96,40 @@ describe('UI message stream fixtures', () => {
     const msg = await lastMessage(fixtureStream(planRunStream));
     const res = await validateAgentMessages([msg]);
     expect(res.success).toBe(true);
+  });
+});
+
+describe('media attachments (additive contract change)', () => {
+  it('accepts every ported attachment variant', () => {
+    expect(mediaAttachmentsFixture).toHaveLength(8);
+    for (const attachment of mediaAttachmentsFixture) {
+      const res = mediaAttachmentSchema.safeParse(attachment);
+      expect(res.success, JSON.stringify(res.error?.issues)).toBe(true);
+    }
+  });
+
+  it('rejects unsafe URLs and malformed dice notation', () => {
+    const base = mediaAttachmentsFixture[0]!;
+    expect(
+      mediaAttachmentSchema.safeParse({
+        ...base,
+        thumbnail: 'javascript:alert(1)',
+      }).success,
+    ).toBe(false);
+    const dice = mediaAttachmentsFixture.find(a => a.type === 'dice')!;
+    expect(
+      mediaAttachmentSchema.safeParse({ ...dice, notation: 'drop table' })
+        .success,
+    ).toBe(false);
+  });
+
+  it('validates media and mcp-app artifacts', () => {
+    expect(
+      dataPartSchemas.artifact.safeParse(mediaArtifactFixture).success,
+    ).toBe(true);
+    expect(
+      dataPartSchemas.artifact.safeParse(mcpAppArtifactFixture).success,
+    ).toBe(true);
   });
 });
 

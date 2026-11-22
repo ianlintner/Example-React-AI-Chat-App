@@ -6,7 +6,14 @@ import type {
 } from '@agent-chat/contract';
 import { createAgentUIStream, createUIMessageStream, ToolLoopAgent } from 'ai';
 import type { Llm } from './llm';
-import type { AgentRuntime, Principal, RunStore } from './seams';
+import type {
+  AgentRuntime,
+  Principal,
+  RunStore,
+  SkillRegistry,
+  ToolRegistry,
+} from './seams';
+import { selectSkill } from './skills/select';
 import type { ThreadStore } from './store/types';
 
 const SYSTEM = `You are the assistant in the local development agent chat app.
@@ -20,6 +27,9 @@ export interface RuntimeOptions {
     principal: Principal;
     messages: AgentUIMessage[];
   }): Promise<RouteDecision>;
+  /** Card 6: progressive-disclosure skills and the authorised tool boundary. */
+  skills?: SkillRegistry;
+  tools?: ToolRegistry;
 }
 
 export function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
@@ -73,9 +83,22 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
             id: resolved.decisionId,
             data: resolved,
           });
+          // Skills are progressive: only the selected skill's body is read.
+          // Tool output can never select or widen a skill.
+          const skill = options.skills
+            ? selectSkill(options.skills, messages)
+            : undefined;
+          const instructions = skill
+            ? `${SYSTEM}\n\n--- Selected skill: ${skill.name} ---\n${await skill.instructions()}`
+            : SYSTEM;
+          const tools =
+            skill && options.tools
+              ? options.tools.toolsFor(skill, principal)
+              : undefined;
           const agent = new ToolLoopAgent({
             model: llm.model(resolved.tier),
-            instructions: SYSTEM,
+            instructions,
+            ...(tools && Object.keys(tools).length > 0 ? { tools } : {}),
             maxOutputTokens: 1024,
             temperature: 0,
             id: 'agent-core',

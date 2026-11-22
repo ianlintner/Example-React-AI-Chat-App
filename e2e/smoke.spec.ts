@@ -21,7 +21,7 @@ test.describe('smoke', () => {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.goto('/');
+    await page.goto('/tokens');
     await expect(
       page.getByRole('heading', { level: 1, name: /Instrument Panel/ }),
     ).toBeVisible();
@@ -40,7 +40,7 @@ test.describe('smoke', () => {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: 'dark' });
-    await page.goto('/');
+    await page.goto('/tokens');
     await page.getByRole('button', { name: /light theme/i }).click();
     await expect(page.locator('html')).not.toHaveClass(/dark/);
     expect(await cssVar(page, '--bg')).toBe('#fafaf9');
@@ -50,7 +50,7 @@ test.describe('smoke', () => {
   });
 
   test('uses self-hosted Inter and JetBrains Mono', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/tokens');
     const fonts = await page.evaluate(() => ({
       sans: getComputedStyle(document.body).fontFamily,
       mono: getComputedStyle(
@@ -63,7 +63,7 @@ test.describe('smoke', () => {
 
   test('reduced motion collapses transitions', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/');
+    await page.goto('/tokens');
     // The app currently declares no transitions of its own, so probe the
     // global reduced-motion override with an element that has one.
     const duration = await page.evaluate(() => {

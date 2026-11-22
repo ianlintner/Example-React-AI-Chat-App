@@ -2,6 +2,7 @@ import {
   createAgentRuntime,
   createLlm,
   createMockModel,
+  emptySkillRegistry,
   MemoryStore,
   TierRateLimiter,
   emptyStoreData,
@@ -36,6 +37,7 @@ export function testServices(
   const store = new MemoryStore(data);
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
+  const skills = emptySkillRegistry();
   const runs = createGoalRunService({
     config: testConfig(),
     llm,
@@ -65,12 +67,13 @@ export function testServices(
   });
   return {
     store,
-    runtime: createAgentRuntime({ llm, store }),
+    runtime: createAgentRuntime({ llm, store, skills }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
     runs,
     runEvents: noOpRunEvents,
     inngestFunctions: [],
+    skills,
     async close() {
       await store.close();
     },

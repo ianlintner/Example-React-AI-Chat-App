@@ -31,4 +31,27 @@ test.describe('agent chat', () => {
       timeout: 10_000,
     });
   });
+
+  test('Enter submits the message in the live composer', async ({ page }) => {
+    await page.goto('/');
+    const input = page.getByRole('textbox', { name: 'Message' });
+    const send = page.getByRole('button', { name: 'Send message' });
+    await expect(send).toBeDisabled();
+    await input.fill('Sent with Enter');
+    for (
+      let attempt = 0;
+      attempt < 10 && (await send.isDisabled());
+      attempt++
+    ) {
+      await input.fill('');
+      await input.fill('Sent with Enter');
+      await page.waitForTimeout(50);
+    }
+    await expect(send).toBeEnabled();
+    await input.press('Enter');
+    await expect(page.getByText('Sent with Enter')).toBeVisible();
+    await expect(page.getByText('Mock reply from the agent.')).toBeVisible({
+      timeout: 10_000,
+    });
+  });
 });

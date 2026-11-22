@@ -1,14 +1,21 @@
 /** Wires the HTTP shell to agent-core services. */
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   createAgentRuntime,
   createJevClient,
   createLlm,
   createLlmRouter,
+  createMcpClient,
   createRedisBuffer,
   createRouter,
+  createToolRegistry,
+  defaultDeps,
   loadLlmConfig,
   loadRouterConfig,
+  loadSkills,
+  loadToolsConfig,
   MemoryStore,
   PostgresStore,
   TierRateLimiter,
@@ -22,11 +29,17 @@ import type {
   RouteMetrics,
   RouteSink,
   Router,
+  SkillRegistry,
   ThreadStore,
 } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
 import { createRouterTelemetry } from './router-obs';
 import { PostgresRouteSink } from './route-sink';
+
+const SKILLS_DIR = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../../packages/agent-core/skills',
+);
 
 export interface Services {
   store: ThreadStore;
@@ -34,6 +47,7 @@ export interface Services {
   router: Router;
   limiter: RateLimiter;
   llmConfig: LlmConfig;
+  skills: SkillRegistry;
   close(): Promise<void>;
 }
 
@@ -53,6 +67,21 @@ export async function createServices(
   const llmConfig = loadLlmConfig(env);
   const routerConfig = loadRouterConfig(env);
   const llm = createLlm(llmConfig);
+
+  const toolsConfig = loadToolsConfig(env);
+  const skills = await loadSkills(SKILLS_DIR);
+  const registry = createToolRegistry({
+    deps: defaultDeps(toolsConfig),
+    skills,
+    mcpClients: toolsConfig.MCP_SERVER_URLS.map(url =>
+      createMcpClient({
+        fetch: globalThis.fetch,
+        url,
+        apiKey: toolsConfig.MCP_API_KEY,
+      }),
+    ),
+  });
+  await registry.warm();
 
   let store = overrides.store;
   let routeSink = overrides.sink;
@@ -100,9 +129,16 @@ export async function createServices(
   return {
     store,
     router,
-    runtime: createAgentRuntime({ llm, store, decide: router.decide }),
+    runtime: createAgentRuntime({
+      llm,
+      store,
+      skills,
+      tools: registry,
+      decide: router.decide,
+    }),
     limiter: new TierRateLimiter(),
     llmConfig,
+    skills,
     async close() {
       await store.close();
       await routeSink?.close?.();

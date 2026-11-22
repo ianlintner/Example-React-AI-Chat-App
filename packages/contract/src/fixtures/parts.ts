@@ -3,7 +3,11 @@
  * Storybook stories, MSW handlers and Playwright screenshot states.
  * Deterministic: fixed ids and timestamps, no randomness.
  */
-import type { AgentDataParts, DataPartName } from '../data-parts';
+import type {
+  AgentDataParts,
+  DataPartName,
+  MediaAttachment,
+} from '../data-parts';
 
 export const FIXED_TIME = '2026-11-21T12:00:00.000Z';
 
@@ -89,6 +93,86 @@ export const artifactFixture: AgentDataParts['artifact'] = {
   title: 'Local vector database recommendation',
   version: 1,
   content: '# Recommendation\n\nUse **pgvector** [cite_001].\n',
+};
+
+export const mediaAttachmentsFixture: MediaAttachment[] = [
+  {
+    id: 'media_youtube',
+    type: 'youtube',
+    videoId: 'dQw4w9WgXcQ',
+    title: 'Clean comedy sketch',
+    channel: 'Example Channel',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    duration: '4:32',
+  },
+  {
+    id: 'media_gif',
+    type: 'gif',
+    url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif',
+    title: 'Celebration',
+    width: 480,
+    height: 270,
+  },
+  {
+    id: 'media_audio',
+    type: 'audio',
+    url: 'https://example.com/preview.mp3',
+    title: 'Example Track',
+    artist: 'Example Artist',
+    durationSec: 30,
+  },
+  {
+    id: 'media_image',
+    type: 'image',
+    url: 'https://example.com/poster.png',
+    alt: 'A poster',
+    width: 640,
+    height: 480,
+  },
+  {
+    id: 'media_gallery',
+    type: 'image_gallery',
+    images: [{ url: 'https://example.com/1.png', alt: 'First' }],
+  },
+  {
+    id: 'media_video',
+    type: 'video',
+    url: 'https://example.com/clip.mp4',
+    title: 'A clip',
+    poster: 'https://example.com/clip.png',
+  },
+  {
+    id: 'media_dice',
+    type: 'dice',
+    notation: '2d6+3',
+    rolls: [4, 2],
+    total: 9,
+    purpose: 'Attack roll',
+  },
+  {
+    id: 'media_card',
+    type: 'card',
+    kind: 'character',
+    title: 'Bram the Bold',
+    fields: [{ label: 'Level', value: '3' }],
+    accentColor: '#7c3aed',
+  },
+];
+
+export const mediaArtifactFixture: AgentDataParts['artifact'] = {
+  artifactId: 'art_media_001',
+  kind: 'media',
+  title: 'YouTube result',
+  version: 1,
+  attachments: mediaAttachmentsFixture.slice(0, 1),
+};
+
+export const mcpAppArtifactFixture: AgentDataParts['artifact'] = {
+  artifactId: 'art_mcp_001',
+  kind: 'mcp-app',
+  title: 'Interactive result',
+  version: 1,
+  uri: 'ui://tools/dice-roller',
 };
 
 export const handoffFixture: AgentDataParts['handoff'] = {

@@ -115,11 +115,116 @@ export const citationSchema = z.object({
 });
 export type Citation = z.infer<typeof citationSchema>;
 
+/**
+ * Media attachments are the typed output of entertainment tools (card 6).
+ * Ported from the legacy `MediaAttachment` union (`backend/src/types.ts:3-55`)
+ * so renderers on every surface agree on the shape. URLs are always https
+ * except for local dev loopback media, to keep sandboxed rendering safe.
+ */
+const httpsUrl = z.url({ protocol: /^https$/ });
+const mediaId = z.string().min(1).max(128);
+
+export const youtubeAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('youtube'),
+  videoId: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{6,20}$/, 'invalid YouTube video id'),
+  title: z.string().min(1).max(300),
+  channel: z.string().max(200).optional(),
+  thumbnail: httpsUrl,
+  duration: z.string().max(20).optional(),
+});
+
+export const videoAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('video'),
+  url: httpsUrl,
+  title: z.string().min(1).max(300),
+  poster: httpsUrl.optional(),
+});
+
+export const audioAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('audio'),
+  url: httpsUrl,
+  title: z.string().min(1).max(300),
+  artist: z.string().max(200).optional(),
+  durationSec: z.number().int().min(0).optional(),
+});
+
+export const imageAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('image'),
+  url: httpsUrl,
+  alt: z.string().min(1).max(300),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
+export const imageGalleryAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('image_gallery'),
+  images: z
+    .array(z.object({ url: httpsUrl, alt: z.string().min(1).max(300) }))
+    .min(1)
+    .max(20),
+});
+
+export const gifAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('gif'),
+  url: httpsUrl,
+  title: z.string().max(300).optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+
+export const diceAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('dice'),
+  notation: z.string().regex(/^\d*d\d+([+-]\d+)?$/i, 'invalid dice notation'),
+  rolls: z.array(z.number().int().min(1)).min(1).max(100),
+  total: z.number().int(),
+  purpose: z.string().max(300).optional(),
+});
+
+export const cardAttachmentSchema = z.object({
+  id: mediaId,
+  type: z.literal('card'),
+  kind: z.string().min(1).max(64),
+  title: z.string().min(1).max(300),
+  fields: z
+    .array(
+      z.object({
+        label: z.string().min(1).max(100),
+        value: z.string().max(1000),
+      }),
+    )
+    .max(30),
+  accentColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'accentColor must be a hex colour')
+    .optional(),
+});
+
+export const mediaAttachmentSchema = z.discriminatedUnion('type', [
+  youtubeAttachmentSchema,
+  videoAttachmentSchema,
+  audioAttachmentSchema,
+  imageAttachmentSchema,
+  imageGalleryAttachmentSchema,
+  gifAttachmentSchema,
+  diceAttachmentSchema,
+  cardAttachmentSchema,
+]);
+export type MediaAttachment = z.infer<typeof mediaAttachmentSchema>;
+
 /** Versioned artifact rendered in the canvas side panel. */
 export const artifactSchema = z
   .object({
     artifactId: id,
-    kind: z.enum(['report', 'markdown', 'code', 'table', 'mcp-app']),
+    kind: z.enum(['report', 'markdown', 'code', 'table', 'mcp-app', 'media']),
     title: z.string().min(1).max(200),
     version: z.number().int().min(1),
     /** Inline content (markdown/code/table JSON). */
@@ -127,10 +232,21 @@ export const artifactSchema = z
     /** `ui://` resource for MCP Apps, rendered in a sandboxed iframe. */
     uri: z.string().max(2000).optional(),
     language: z.string().max(40).optional(),
+    /**
+     * Typed media payloads for `kind: 'media'` tool results. Additive field
+     * (CONTRACT_VERSION stays 1.0.0; see docs/adr/0002-stream-contract.md).
+     */
+    attachments: z.array(mediaAttachmentSchema).min(1).max(20).optional(),
   })
-  .refine(a => a.content !== undefined || a.uri !== undefined, {
-    message: 'artifact needs content or uri',
-  })
+  .refine(
+    a =>
+      a.content !== undefined ||
+      a.uri !== undefined ||
+      a.attachments !== undefined,
+    {
+      message: 'artifact needs content, uri or attachments',
+    },
+  )
   .refine(a => a.kind !== 'mcp-app' || a.uri?.startsWith('ui://'), {
     message: 'mcp-app artifacts must reference a ui:// resource',
   });

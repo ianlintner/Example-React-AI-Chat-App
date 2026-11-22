@@ -3,6 +3,7 @@ import {
   createLlm,
   createMockModel,
   createRouter,
+  emptySkillRegistry,
   loadRouterConfig,
   MemoryStore,
   TierRateLimiter,
@@ -37,12 +38,19 @@ export function testServices(
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
   const router = createRouter({ config: loadRouterConfig(TEST_ENV) });
+  const skills = emptySkillRegistry();
   return {
     store,
     router,
-    runtime: createAgentRuntime({ llm, store, decide: router.decide }),
+    runtime: createAgentRuntime({
+      llm,
+      store,
+      skills,
+      decide: router.decide,
+    }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
+    skills,
     async close() {
       await store.close();
     },

@@ -56,6 +56,8 @@ export interface RunStore {
   ): Promise<void>;
   /** Append a chunk to the run's replay buffer (Redis) for resume. */
   appendChunk(runId: string, chunk: AgentUIMessageChunk): Promise<void>;
+  /** Mark the buffer complete so replay readers can finish. */
+  finishRun(runId: string): Promise<void>;
   /** Replay from a cursor; used by `GET /chat/:id/stream` after disconnect. */
   replay(runId: string, fromIndex: number): AsyncIterable<AgentUIMessageChunk>;
 }

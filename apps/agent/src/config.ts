@@ -12,6 +12,13 @@ const serverEnvSchema = z.object({
    */
   INNGEST_DEV: z.string().min(1).optional(),
   INNGEST_SIGNING_KEY: z.string().min(1).optional(),
+  /** HMAC key for signed anonymous sessions. No default: fail closed. */
+  SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 chars'),
+  /** Postgres and Redis are optional locally; when absent, tests/offline use memory. */
+  DATABASE_URL: z.string().min(1).optional(),
+  REDIS_URL: z.string().min(1).optional(),
+  /** Opt-in trusted header for authenticated local users (e.g. `x-user-id`). */
+  TRUST_USER_HEADER: z.string().min(1).optional(),
 });
 
 export type ServerConfig = {
@@ -19,6 +26,10 @@ export type ServerConfig = {
   host: string;
   webOrigin: string;
   inngest: { enabled: boolean; dev: boolean };
+  sessionSecret: string;
+  databaseUrl: string | undefined;
+  redisUrl: string | undefined;
+  trustUserHeader: string | undefined;
 };
 
 export function loadServerConfig(
@@ -38,5 +49,9 @@ export function loadServerConfig(
     host: e.AGENT_HOST,
     webOrigin: e.WEB_ORIGIN,
     inngest: { enabled: dev || e.INNGEST_SIGNING_KEY !== undefined, dev },
+    sessionSecret: e.SESSION_SECRET,
+    databaseUrl: e.DATABASE_URL,
+    redisUrl: e.REDIS_URL,
+    trustUserHeader: e.TRUST_USER_HEADER,
   };
 }

@@ -64,9 +64,16 @@ test.describe('smoke', () => {
   test('reduced motion collapses transitions', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    const duration = await page
-      .getByRole('button', { name: /theme/i })
-      .evaluate(el => getComputedStyle(el).transitionDuration);
+    // The app currently declares no transitions of its own, so probe the
+    // global reduced-motion override with an element that has one.
+    const duration = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.style.transition = 'opacity 200ms';
+      document.body.appendChild(probe);
+      const value = getComputedStyle(probe).transitionDuration;
+      probe.remove();
+      return value;
+    });
     expect(parseFloat(duration)).toBeLessThan(0.001);
   });
 });

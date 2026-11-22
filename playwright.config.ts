@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  * preview`) so it exercises SSR + hydration; `npm run -w apps/web build`
  * must run first (CI does this; locally `npm run e2e` does both).
  */
-const PORT = 4173;
+const PORT = Number(process.env.E2E_WEB_PORT ?? 4181);
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,10 +19,25 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: 'npm run -w apps/web preview',
-    url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: 'npm run -w apps/agent start',
+      url: 'http://127.0.0.1:8787/healthz',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      env: {
+        LLM_PROVIDER: 'mock',
+        SESSION_SECRET: 'playwright-local-session-secret-32-chars',
+        WEB_ORIGIN: `http://127.0.0.1:${PORT}`,
+        // INNGEST_DEV intentionally unset: the Inngest endpoint stays
+        // unmounted in e2e. Passing '' fails the min(1) env schema.
+      },
+    },
+    {
+      command: 'npm run -w apps/web preview',
+      url: `http://127.0.0.1:${PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 });

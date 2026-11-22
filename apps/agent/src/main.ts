@@ -1,15 +1,14 @@
-import { loadLlmConfig } from '@agent-chat/agent-core';
 import { serve } from '@hono/node-server';
 import { createApp } from './app';
 import { loadServerConfig } from './config';
+import { createServices } from './services';
 
 const config = loadServerConfig();
-// Validate LLM env at boot so misconfiguration fails fast (fail closed).
-// Log only a fixed label derived from it, never config values (which may
-// include LLM_API_KEY).
-const llmLabel = loadLlmConfig().provider === 'mock' ? 'mock' : 'gateway';
+const services = await createServices(config);
 
-const app = createApp(config);
+const llmLabel = services.llmConfig.provider === 'mock' ? 'mock' : 'gateway';
+
+const app = createApp(config, services);
 const server = serve(
   { fetch: app.fetch, port: config.port, hostname: config.host },
   info => {

@@ -16,7 +16,9 @@ const GZIP_LIMIT = 24 * 1024; // 24 KiB compressed
 try {
   statSync(bundle);
 } catch {
-  console.error(`Bundle not found: ${bundle}. Run npm run -w apps/embed build first.`);
+  console.error(
+    `Bundle not found: ${bundle}. Run npm run -w apps/embed build first.`,
+  );
   process.exit(1);
 }
 
@@ -36,4 +38,6 @@ if (gzip > GZIP_LIMIT) {
   failed = true;
 }
 if (failed) process.exit(1);
-console.log(`Size budget OK (raw <= ${kib(RAW_LIMIT)}, gzip <= ${kib(GZIP_LIMIT)}).`);
+console.log(
+  `Size budget OK (raw <= ${kib(RAW_LIMIT)}, gzip <= ${kib(GZIP_LIMIT)}).`,
+);

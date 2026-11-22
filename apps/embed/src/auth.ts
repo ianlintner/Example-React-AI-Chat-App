@@ -20,7 +20,8 @@ type Listener = (session: AuthSession | null) => void;
 export class AuthManager {
   private readonly opts: Required<
     Pick<AuthOptions, 'scopes' | 'tokenStorage'>
-  > & AuthOptions;
+  > &
+    AuthOptions;
   private session: AuthSession | null;
   private listeners = new Set<Listener>();
   private popup: Window | null = null;
@@ -56,7 +57,9 @@ export class AuthManager {
     this.setSession(null);
   }
 
-  async signIn(openPopup: (url: string) => Window | null): Promise<AuthSession> {
+  async signIn(
+    openPopup: (url: string) => Window | null,
+  ): Promise<AuthSession> {
     const discovery = await this.getDiscovery();
     const state = randomUrlSafe(16);
     const verifier = randomUrlSafe(64);
@@ -105,7 +108,10 @@ export class AuthManager {
       this.cleanup = cleanupAndClose;
 
       this.messageHandler = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin && event.origin !== this.apiUrl)
+        if (
+          event.origin !== window.location.origin &&
+          event.origin !== this.apiUrl
+        )
           return;
         const data = event.data as
           | { source?: string; code?: string; state?: string; error?: string }
@@ -210,8 +216,7 @@ export class AuthManager {
     codeVerifier: string,
     redirectUri: string,
   ): Promise<AuthSession> {
-    const url =
-      this.opts.exchangeUrl || `${this.apiUrl}/api/auth/embed/token`;
+    const url = this.opts.exchangeUrl || `${this.apiUrl}/api/auth/embed/token`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {

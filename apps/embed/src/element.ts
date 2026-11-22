@@ -62,8 +62,8 @@ export class AgentChatElement extends HTMLElement {
     const shadow = this.shadowRoot ?? this.attachShadow({ mode: 'open' });
     shadow.innerHTML = '';
     const style = document.createElement('style');
-    style.textContent = themeCss(resolveTheme(this.getAttribute('theme'))) +
-      '\n' + styles;
+    style.textContent =
+      themeCss(resolveTheme(this.getAttribute('theme'))) + '\n' + styles;
     shadow.appendChild(style);
 
     this.root = document.createElement('div');
@@ -176,8 +176,16 @@ export class AgentChatElement extends HTMLElement {
   }
 
   private escape(value: string): string {
-    return value.replace(/[&<>"']/g, c =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+    return value.replace(
+      /[&<>"']/g,
+      c =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[c]!,
     );
   }
 
@@ -236,7 +244,10 @@ export class AgentChatElement extends HTMLElement {
       });
       this.setStatus('Ready', 'ready');
     } catch (error) {
-      this.setStatus(error instanceof Error ? error.message : 'Request failed', 'error');
+      this.setStatus(
+        error instanceof Error ? error.message : 'Request failed',
+        'error',
+      );
     } finally {
       this.abort = null;
       this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
@@ -274,7 +285,8 @@ export class AgentChatElement extends HTMLElement {
           window.open(url, 'agent-chat-oauth', 'width=520,height=680'),
         );
       } catch (error) {
-        hint.textContent = error instanceof Error ? error.message : 'Sign-in failed';
+        hint.textContent =
+          error instanceof Error ? error.message : 'Sign-in failed';
         button.disabled = false;
       }
     });

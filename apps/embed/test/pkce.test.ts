@@ -57,7 +57,10 @@ describe('validateCallback', () => {
 
   it('rejects wrong source, provider errors and state mismatch', () => {
     expect(
-      validateCallback({ source: 'other', code: 'c', state: 'state-abc' }, stored()).ok,
+      validateCallback(
+        { source: 'other', code: 'c', state: 'state-abc' },
+        stored(),
+      ).ok,
     ).toBe(false);
     expect(
       validateCallback(

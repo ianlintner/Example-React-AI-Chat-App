@@ -63,7 +63,9 @@ export async function sha256(input: string): Promise<Uint8Array> {
   return new Uint8Array(digest);
 }
 
-export function decodeJwtClaims(jwt: string): Record<string, unknown> | undefined {
+export function decodeJwtClaims(
+  jwt: string,
+): Record<string, unknown> | undefined {
   const parts = jwt.split('.');
   if (parts.length < 2) return undefined;
   try {
@@ -77,7 +79,9 @@ export function decodeJwtClaims(jwt: string): Record<string, unknown> | undefine
 
 /** Validate a callback payload: reject state mismatch and expired flows. */
 export function validateCallback(
-  data: { source?: string; code?: string; state?: string; error?: string } | undefined,
+  data:
+    | { source?: string; code?: string; state?: string; error?: string }
+    | undefined,
   stored: StoredState | undefined,
   now = Date.now(),
 ): { ok: true } | { ok: false; reason: string } {

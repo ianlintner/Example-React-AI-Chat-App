@@ -1,54 +1,16 @@
-import { planFixture } from '@agent-chat/contract/fixtures';
-import { getTheme, type Theme } from '@agent-chat/ui';
+import { LiveChat } from '@/components/live-chat';
+import { StatePreview } from '@/components/state-preview';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { AgentChat } from '@/components/agent-chat';
-import { PlanPreview } from '@/components/plan-preview';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { TokenSwatches } from '@/components/token-swatches';
 
-export const Route = createFileRoute('/')({ component: Home });
+export const Route = createFileRoute('/')({
+  component: Home,
+  validateSearch: (search: Record<string, unknown>) => ({
+    state: typeof search.state === 'string' ? search.state : undefined,
+  }),
+});
 
-/**
- * Phase 1 placeholder: proves the stack (TanStack Start, Tailwind v4 tokens,
- * shadcn/Base UI, AI Elements, contract fixtures). Card 9 replaces it with
- * the agent shell.
- */
+/** `/` is the Instrument Panel shell; `?state=…` selects a fixture state. */
 function Home() {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  useEffect(() => {
-    setThemeState(getTheme());
-    const observer = new MutationObserver(() => setThemeState(getTheme()));
-    observer.observe(document.documentElement, { attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <main className='mx-auto flex max-w-5xl flex-col gap-6 p-6'>
-      <header className='flex items-center justify-between gap-4'>
-        <div>
-          <h1 className='text-xl font-semibold'>
-            Agent Chat <span className='text-signal'>·</span> Instrument Panel
-          </h1>
-          <p className='text-sm text-fg-muted'>
-            Phase 1: local agent chat backed by the AI SDK stream contract.
-          </p>
-        </div>
-        <ThemeToggle />
-      </header>
-      <section aria-labelledby='tokens-heading' className='space-y-2'>
-        <h2 id='tokens-heading' className='text-sm font-medium'>
-          Design tokens ({theme})
-        </h2>
-        <TokenSwatches theme={theme} />
-      </section>
-      <AgentChat />
-      <section aria-labelledby='plan-heading' className='space-y-2'>
-        <h2 id='plan-heading' className='text-sm font-medium'>
-          Contract fixture: plan
-        </h2>
-        <PlanPreview plan={planFixture} />
-      </section>
-    </main>
-  );
+  const { state } = Route.useSearch();
+  return state ? <StatePreview initialState={state} /> : <LiveChat />;
 }

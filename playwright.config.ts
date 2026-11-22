@@ -34,8 +34,12 @@ export default defineConfig({
       },
     },
     {
+      // Keep the preview port in sync with PORT above. Playwright's webServer
+      // env applies here, so the shell default in apps/web/package.json is
+      // never relied on for the port we actually probe.
       command: 'npm run -w apps/web preview',
       url: `http://127.0.0.1:${PORT}`,
+      env: { E2E_WEB_PORT: String(PORT) },
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

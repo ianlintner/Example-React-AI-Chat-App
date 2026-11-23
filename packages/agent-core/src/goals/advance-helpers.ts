@@ -150,9 +150,19 @@ export async function commit(
       // Gate fields are only authoritative when the store actually holds a
       // gate: copying undefined over a locally proposed approval/pendingEffect
       // would silently drop the human interrupt after a harmless stale write.
+      // A fresh locally proposed gate must also keep its status: adopting a
+      // stale `running` status here would persist an approval with a run that
+      // no longer looks paused, letting a later advance bypass the gate.
+      const localGate =
+        record.status === 'awaiting-approval' &&
+        record.approval?.status === 'pending' &&
+        record.pendingEffect !== undefined &&
+        latest.approval === undefined &&
+        latest.pendingEffect === undefined;
       record.canceled = false;
-      record.status =
-        latest.status === 'awaiting-approval' || latest.status === 'running'
+      record.status = localGate
+        ? 'awaiting-approval'
+        : latest.status === 'awaiting-approval' || latest.status === 'running'
           ? latest.status
           : record.status === 'awaiting-approval' ||
               record.status === 'running' ||

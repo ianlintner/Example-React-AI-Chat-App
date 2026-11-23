@@ -226,20 +226,27 @@ describe('goal run control races', () => {
   it('a stale gate write keeps its approval across a non-control conflict', async () => {
     const base = new MemoryGoalRunStore(emptyStoreData());
     let conflictOnNextSave = false;
-    let conflicted = false;
+    let conflicts = 0;
     const wrapped: GoalRunStore = {
       createRun: r => base.createRun(r),
       getRun: (id, owner) => base.getRun(id, owner),
       claimEffect: (key, id) => base.claimEffect(key, id),
       listRuns: owner => base.listRuns(owner),
       async saveRun(record, expected) {
-        if (conflictOnNextSave && !conflicted) {
-          conflicted = true;
+        if (conflictOnNextSave) {
+          conflicts++;
           conflictOnNextSave = false;
           // A benign progress write from another actor: no gate, no control
-          // decision. It must not erase the locally proposed approval gate.
+          // decision. Move updatedAt via a monotonic now() call so the CAS
+          // token actually changes and the merge path below runs.
           const other = (await base.getRun(record.runId))!;
-          await base.saveRun({ ...other, costUnits: other.costUnits + 1 });
+          await base.saveRun({
+            ...other,
+            updatedAt: new Date(
+              Date.UTC(2026, 0, 1, 0, 0, ++ids),
+            ).toISOString(),
+            costUnits: other.costUnits + 1,
+          });
         }
         return base.saveRun(record, expected);
       },
@@ -272,11 +279,12 @@ describe('goal run control races', () => {
       goal: 'g',
     });
     const result = await engineRef.advance('run_stale_gate', OWNER);
-    expect(conflicted).toBe(true);
+    expect(conflicts).toBeGreaterThan(0);
     expect(result.outcome).toBe('approval-required');
     const persisted = (await wrapped.getRun('run_stale_gate'))!;
     expect(persisted.status).toBe('awaiting-approval');
     expect(persisted.approval?.status).toBe('pending');
     expect(persisted.pendingEffect?.key).toBe('notify-team-2');
+    expect(persisted.costUnits).toBe(0);
   });
 });

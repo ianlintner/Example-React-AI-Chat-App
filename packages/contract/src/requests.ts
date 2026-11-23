@@ -17,6 +17,16 @@ export const chatRequestSchema = z.object({
 });
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
+/** Body of `POST /runs`: starts a durable goal run on Inngest. */
+export const startRunRequestSchema = z.object({
+  /** Thread the run belongs to. */
+  threadId: id,
+  goal: z.string().min(1).max(2000),
+  /** Optional caller-supplied idempotency key; reused on retries. */
+  idempotencyKey: id.optional(),
+});
+export type StartRunRequest = z.infer<typeof startRunRequestSchema>;
+
 /** Body of `POST /runs/:runId/approvals/:approvalId`. */
 export const approvalDecisionSchema = z.object({
   decision: z.enum(['approve', 'deny']),

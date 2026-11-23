@@ -5,6 +5,7 @@ import type {
   Tier,
 } from '@agent-chat/contract';
 import type { Principal, RunStore } from '../seams';
+import type { GoalRunRecord } from '../goals/types';
 
 export interface ThreadInfo {
   threadId: string;
@@ -71,4 +72,8 @@ export interface StoreData {
   runs: Map<string, RunInfo>;
   chunks: Map<string, AgentUIMessageChunk[]>;
   finished: Set<string>;
+  /** Goal-run checkpoints (card 7), persisted alongside chat state. */
+  goalRuns?: Map<string, GoalRunRecord>;
+  /** Atomic at-most-once effect ledger (card 7). */
+  goalRunEffects?: Set<string>;
 }

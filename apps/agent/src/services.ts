@@ -33,6 +33,13 @@ import type {
   ThreadStore,
 } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
+import type { GoalRunService } from './runs/service';
+import type { RunEventEmitter } from './runs/events';
+import type { Inngest, InngestFunction } from 'inngest';
+import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
+import { createInngest } from './inngest';
+import { createGoalRunFunctions } from './runs/inngest';
+import { inngestRunEvents, noOpRunEvents } from './runs/events';
 import { createRouterTelemetry } from './router-obs';
 import { PostgresRouteSink } from './route-sink';
 
@@ -47,6 +54,11 @@ export interface Services {
   router: Router;
   limiter: RateLimiter;
   llmConfig: LlmConfig;
+  runs: GoalRunService;
+  runEvents: RunEventEmitter;
+  inngestFunctions: InngestFunction.Any[];
+  /** Single client shared by the serve endpoint and event emitter. */
+  inngestClient?: Inngest;
   skills: SkillRegistry;
   close(): Promise<void>;
 }
@@ -111,6 +123,19 @@ export async function createServices(
     }
   }
 
+  const runs = createGoalRunService({
+    config,
+    llm,
+    memoryStoreData: store instanceof MemoryStore ? store.data : undefined,
+  });
+  await bootstrapGoalRuns(runs.store);
+
+  const { client, functions } = createInngest({ dev: config.inngest.dev });
+  functions.push(...createGoalRunFunctions(client, runs));
+  const runEvents = config.inngest.enabled
+    ? inngestRunEvents(client)
+    : noOpRunEvents;
+
   const telemetry = createRouterTelemetry();
   const router = createRouter({
     config: routerConfig,
@@ -138,8 +163,13 @@ export async function createServices(
     }),
     limiter: new TierRateLimiter(),
     llmConfig,
+    runs,
+    runEvents,
+    inngestFunctions: functions,
+    inngestClient: client,
     skills,
     async close() {
+      await runs.store.close?.();
       await store.close();
       await routeSink?.close?.();
     },

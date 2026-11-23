@@ -9,11 +9,12 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { ServerConfig } from './config';
 import type { Services } from './services';
-import { createInngest } from './inngest';
+import { serve } from 'inngest/hono';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
 import { mountThreadRoutes } from './routes/threads';
 import { routerRegistry } from './router-obs';
+import { mountRunRoutes } from './runs/routes';
 
 export function createApp(config: ServerConfig, services: Services) {
   const app = new Hono<AppEnv>();
@@ -26,8 +27,10 @@ export function createApp(config: ServerConfig, services: Services) {
       allowMethods: ['GET', 'POST', 'OPTIONS'],
       allowHeaders: [
         'content-type',
+        'x-vercel-ai-ui-message-stream',
         ...(config.trustUserHeader ? [config.trustUserHeader] : []),
       ],
+      exposeHeaders: ['x-run-id'],
       credentials: true,
     }),
   );
@@ -57,13 +60,17 @@ export function createApp(config: ServerConfig, services: Services) {
     return c.body(body, 200, { 'content-type': routerRegistry.contentType });
   });
 
-  if (config.inngest.enabled) {
-    const { handler } = createInngest({ dev: config.inngest.dev });
+  if (config.inngest.enabled && services.inngestClient) {
+    const handler = serve({
+      client: services.inngestClient,
+      functions: services.inngestFunctions,
+    });
     app.on(['GET', 'POST', 'PUT'], '/api/inngest', handler);
   }
 
   mountThreadRoutes(app, config, services);
   mountChatRoutes(app, config, services);
+  mountRunRoutes(app, config, services.runs, services.runEvents, services);
 
   app.notFound(c => c.json({ error: 'not_found' }, 404));
   app.onError((err, c) => {

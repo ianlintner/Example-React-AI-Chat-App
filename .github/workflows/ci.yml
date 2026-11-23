@@ -443,12 +443,18 @@ jobs:
         run: npm run test --workspaces --if-present
       - name: Build web
         run: npm run -w apps/web build
+      - name: Build web component + size budget
+        run: |
+          npm run -w apps/embed build
+          npm run -w apps/embed check:size
       - name: Build Storybook
         run: npm run -w apps/web build-storybook
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: E2E smoke (Playwright + axe)
         run: npx playwright test
+      - name: E2E <agent-chat> demo
+        run: npx playwright test -c playwright.embed.config.ts
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4

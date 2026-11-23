@@ -24,8 +24,10 @@ export function createApp(config: ServerConfig, services: Services) {
       allowMethods: ['GET', 'POST', 'OPTIONS'],
       allowHeaders: [
         'content-type',
+        'x-vercel-ai-ui-message-stream',
         ...(config.trustUserHeader ? [config.trustUserHeader] : []),
       ],
+      exposeHeaders: ['x-run-id'],
       credentials: true,
     }),
   );

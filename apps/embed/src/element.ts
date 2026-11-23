@@ -106,6 +106,13 @@ export class AgentChatElement extends HTMLElement {
     });
 
     if (this.welcome) this.appendMessage('assistant', this.welcome);
+    // Re-init (attribute change) rebuilds the DOM: re-render the committed
+    // transcript so hidden history is never sent without being shown.
+    for (const msg of this.history) {
+      const text = msg.parts.map(part => part.text).join('');
+      const bubble = this.appendMessage(msg.role, text);
+      bubble.dataset.replayed = 'true';
+    }
     this.setupAuth();
     if (this.hasAttribute('open') || this.getAttribute('open') !== null) {
       this.open();
@@ -117,6 +124,13 @@ export class AgentChatElement extends HTMLElement {
   }
 
   private teardown(): void {
+    if (this.abort) {
+      // An aborted in-flight turn's user message was pushed speculatively.
+      // Drop it here so it is never replayed, and so its late rollback cannot
+      // pop a newer turn's history entry.
+      const last = this.history[this.history.length - 1];
+      if (last?.role === 'user') this.history.pop();
+    }
     this.abort?.abort();
     this.abort = null;
     this.auth?.dispose();
@@ -220,24 +234,35 @@ export class AgentChatElement extends HTMLElement {
   private async send(): Promise<void> {
     const text = this.inputEl.value.trim();
     if (!text || this.abort) return;
-    this.abort = new AbortController();
-    const signal = this.abort.signal;
+    const turn = new AbortController();
+    this.abort = turn;
+    const signal = turn.signal;
     try {
-      await this.runTurn(text, signal);
+      await this.runTurn(text, signal, turn);
     } catch (error) {
-      this.setStatus(
-        error instanceof Error ? error.message : 'Request failed',
-        'error',
-      );
+      // Any unexpected throw still gets the same rollback path.
+      if (this.abort === turn) {
+        const reason =
+          error instanceof Error ? error.message : 'Request failed';
+        this.setStatus(reason, 'error');
+      }
     } finally {
-      this.abort = null;
-      this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
+      // A stale turn finishing after re-init must not clear the new turn's
+      // controller or DOM state.
+      if (this.abort === turn) {
+        this.abort = null;
+        this.sendBtn.disabled = this.inputEl.value.trim().length === 0;
+      }
     }
   }
 
   /** One user turn: only commits history/status when the stream succeeds. */
-  private async runTurn(text: string, signal: AbortSignal): Promise<void> {
-    this.appendMessage('user', text);
+  private async runTurn(
+    text: string,
+    signal: AbortSignal,
+    turn: AbortController,
+  ): Promise<void> {
+    const userBubble = this.appendMessage('user', text);
     const reply = this.appendMessage('assistant', '');
     this.inputEl.value = '';
     this.sendBtn.disabled = true;
@@ -248,35 +273,49 @@ export class AgentChatElement extends HTMLElement {
       parts: [{ type: 'text', text }],
     });
     let assistantId = `msg_${crypto.randomUUID()}`;
-    const result = await streamChat(
-      this.apiUrl,
-      this.threadId,
-      this.history,
-      signal,
-      {
-        onStart: id => (assistantId = id),
-        onDelta: delta => {
-          reply.textContent = (reply.textContent ?? '') + delta;
-          this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+    // streamChat never throws: network/CORS/abort failures return {ok:false}.
+    // The try/finally still covers unexpected throws from callbacks/DOM.
+    let ok = false;
+    try {
+      const result = await streamChat(
+        this.apiUrl,
+        this.threadId,
+        this.history,
+        signal,
+        {
+          onStart: id => (assistantId = id),
+          onDelta: delta => {
+            reply.textContent = (reply.textContent ?? '') + delta;
+            this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+          },
+          onDecision: label => this.setStatus('Streaming…', 'ready', label),
         },
-        onDecision: label => this.setStatus('Streaming…', 'ready', label),
-      },
-    );
-    if (!result.ok) {
-      // Roll back both local history and the empty assistant bubble so a
-      // failed turn is never replayed on the next request.
-      this.history.pop();
-      reply.remove();
-      this.inputEl.value = text;
-      this.setStatus(result.reason, 'error');
-      return;
+      );
+      if (!result.ok) {
+        // Rollback below, using the failure reason as the visible status.
+        this.setStatus(result.reason, 'error');
+        return;
+      }
+      ok = true;
+      this.history.push({
+        id: assistantId,
+        role: 'assistant',
+        parts: [{ type: 'text', text: reply.textContent ?? '' }],
+      });
+      this.setStatus('Ready', 'ready');
+    } finally {
+      if (!ok) {
+        // Guard history rollback by both controller identity and signal so a
+        // late failure from a torn-down turn cannot pop a newer turn's entry.
+        if (this.abort === turn && !signal.aborted) this.history.pop();
+        userBubble.remove();
+        reply.remove();
+        if (this.abort === turn) {
+          this.inputEl.value = text;
+          if (signal.aborted) this.setStatus('Ready', 'ready');
+        }
+      }
     }
-    this.history.push({
-      id: assistantId,
-      role: 'assistant',
-      parts: [{ type: 'text', text: reply.textContent ?? '' }],
-    });
-    this.setStatus('Ready', 'ready');
   }
 
   private setupAuth(): void {

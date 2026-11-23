@@ -95,6 +95,58 @@ describe('<agent-chat> error handling', () => {
     node.remove();
   });
 
+  it('rolls back the turn when fetch rejects (agent down / CORS / offline)', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockRejectedValue(new TypeError('Failed to fetch'));
+    await submitValue(el, 'hello');
+    const label = el.shadowRoot!.querySelector('.status .label')!;
+    expect(label.textContent).toMatch(/Failed to fetch/);
+    expect(
+      el.shadowRoot!.querySelector('.status')!.getAttribute('data-state'),
+    ).toBe('error');
+    const userBubbles = el.shadowRoot!.querySelectorAll(
+      '[data-testid="msg-user"]',
+    );
+    const assistantBubbles = el.shadowRoot!.querySelectorAll(
+      '[data-testid="msg-assistant"]',
+    );
+    expect(userBubbles).toHaveLength(0); // no orphan user turn
+    expect(assistantBubbles).toHaveLength(1); // welcome only
+    expect(el.shadowRoot!.querySelector('input')!.value).toBe('hello');
+    fetchSpy.mockRestore();
+  });
+
+  it('re-renders committed history on attribute re-init', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(
+          sse([
+            { type: 'start', messageId: 'm1' },
+            { type: 'text-delta', id: 't1', delta: 'reply text' },
+            { type: 'finish' },
+          ]),
+        ),
+      );
+    await submitValue(el, 'first question');
+    expect(
+      el.shadowRoot!.querySelectorAll('[data-testid="msg-user"]'),
+    ).toHaveLength(1);
+    el.setAttribute('title', 'Renamed');
+    const userBubbles = el.shadowRoot!.querySelectorAll(
+      '[data-testid="msg-user"]',
+    );
+    expect(userBubbles).toHaveLength(1);
+    expect(userBubbles[0]!.textContent).toBe('first question');
+    const assistantBubbles = el.shadowRoot!.querySelectorAll(
+      '[data-testid="msg-assistant"]',
+    );
+    expect(assistantBubbles).toHaveLength(2); // welcome + committed reply
+    expect(assistantBubbles[1]!.textContent).toBe('reply text');
+    fetchSpy.mockRestore();
+  });
+
   it('does not leak auth listeners across attribute changes', () => {
     const auth = JSON.stringify({
       type: 'oauth2',

@@ -85,25 +85,25 @@ export async function streamChat(
     callbacks.onError?.(reason);
     return { ok: false, reason };
   };
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-      'x-vercel-ai-ui-message-stream': 'v1',
-    },
-    credentials: 'include',
-    signal,
-    body: JSON.stringify({
-      id: threadId,
-      messages: history,
-      trigger: 'submit-message',
-    }),
-  });
-  if (!response.ok || !response.body) {
-    return fail(`Agent request failed (HTTP ${response.status}).`);
-  }
   try {
+    const response = await fetch(`${apiUrl.replace(/\/$/, '')}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        'x-vercel-ai-ui-message-stream': 'v1',
+      },
+      credentials: 'include',
+      signal,
+      body: JSON.stringify({
+        id: threadId,
+        messages: history,
+        trigger: 'submit-message',
+      }),
+    });
+    if (!response.ok || !response.body) {
+      return fail(`Agent request failed (HTTP ${response.status}).`);
+    }
     let done = false;
     for await (const chunk of sseChunks(response.body)) {
       if (chunk.type === 'start' && typeof chunk.messageId === 'string') {

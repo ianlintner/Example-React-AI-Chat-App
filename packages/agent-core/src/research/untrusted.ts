@@ -52,20 +52,31 @@ export function sanitizeExcerpt(text: string, maxTokens: number): string {
     /(?:\[redacted directive\] ?){2,}/g,
     '[redacted directive] ',
   );
-  clean = clean.replace(/\n{3,}/g, '\n\n').trim();
-  return capTokens(clean, Math.max(1, maxTokens));
+  clean = clean.replace(/\n{3,}/g, '\n\n');
+  // A page must never be able to close the data fence it is wrapped in.
+  clean = clean.replace(/<\s*\/\s*untrusted_page\s*>/gi, '[redacted fence] ');
+  return capTokens(clean.trim(), Math.max(1, maxTokens));
+}
+
+/** Escape a value used inside the untrusted data fence. */
+function escapeFenceValue(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /** Fenced, labelled wrapper: page content is explicitly data, never a turn. */
 export function asUntrustedData(sourceId: string, text: string): string {
-  return `<untrusted_page source="${sourceId}">\n${text}\n</untrusted_page>`;
+  return `<untrusted_page source="${escapeFenceValue(sourceId)}">\n${escapeFenceValue(text)}\n</untrusted_page>`;
 }
 
 /**
  * Detect whether a model's proposed tool call was influenced by page text.
  * The workflow never grants tool authority from fetched content: this helper
- * is used by tests and by the report validator to reject output that echoes
- * an injected directive as an instruction.
+ * is used by the research workflow's report validator to reject output that
+ * echoes an injected directive as an instruction.
  */
 export function containsDirective(text: string): boolean {
   return DIRECTIVES.some(pattern => {

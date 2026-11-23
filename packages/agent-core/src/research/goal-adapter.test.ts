@@ -71,8 +71,50 @@ describe('research on the goal-run engine', () => {
     expect(report).toBeDefined();
     expect(report!.claims).toHaveLength(1);
     expect(report!.claims[0]!.citation.sourceId).toBe('src_1');
+    expect(report!.goal).toBe('deep research');
     expect((await store.getRun('run_research', 'owner_1'))?.status).toBe(
       'completed',
+    );
+  });
+
+  it("does not reuse another run's report and uses that run's goal", async () => {
+    const reports: ResearchReport[] = [];
+    const store = new MemoryGoalRunStore(emptyStoreData());
+    const engine = new GoalRunEngine(store, {
+      planner: createResearchPlanner({ workflow: options }),
+      executor: createResearchExecutor({
+        workflow: options,
+        onReport: report => reports.push(report),
+      }),
+    });
+    await engine.start({
+      runId: 'run_one',
+      threadId: 'thread_1',
+      ownerId: 'owner_1',
+      goal: 'first research goal',
+    });
+    await engine.advance('run_one', 'owner_1');
+    await engine.start({
+      runId: 'run_two',
+      threadId: 'thread_2',
+      ownerId: 'owner_2',
+      goal: 'second research goal',
+    });
+    await engine.advance('run_two', 'owner_2');
+
+    const runOne = reports.filter(r => r.goal === 'first research goal');
+    const runTwo = reports.filter(r => r.goal === 'second research goal');
+    expect(runOne.length).toBeGreaterThan(0);
+    expect(runTwo.length).toBeGreaterThan(0);
+    // Each run reuses its own cached report throughout all four steps.
+    expect(
+      new Set(runOne.map(r => r.claims[0]!.citation.citationId)).size,
+    ).toBe(1);
+    expect(
+      new Set(runTwo.map(r => r.claims[0]!.citation.citationId)).size,
+    ).toBe(1);
+    expect(runOne[0]!.claims[0]!.citation.citationId).not.toBe(
+      runTwo[0]!.claims[0]!.citation.citationId,
     );
   });
 });

@@ -25,12 +25,12 @@ export interface ResearchRunOptions {
 /**
  * Planner: a fixed four-step research plan, matching plan → parallel search →
  * read/fetch → reflect/report. Each step has an executable success predicate
- * checked by the executor.
+ * checked by the executor. The plan carries the run's real goal so a client
+ * sees what is being researched.
  */
 export function createResearchPlanner(
   options: ResearchRunOptions,
 ): PlanGenerator {
-  const newId = options.newId ?? (() => crypto.randomUUID());
   const steps = [
     { title: 'Plan search queries', successPredicate: 'queries are non-empty' },
     {
@@ -47,10 +47,10 @@ export function createResearchPlanner(
     },
   ];
   return {
-    async plan({ revision }) {
+    async plan({ goal, revision }) {
       const plan: Plan = {
         planId: `plan_research_${revision}`,
-        goal: 'deep research',
+        goal,
         revision,
         steps: steps.map((s, i) => ({
           stepId: `research_step_${i}_${revision}`,
@@ -68,26 +68,40 @@ export function createResearchPlanner(
  * Executor. `runResearch` is deterministic given its seams; a re-run produces
  * the same report, so replay after a crash cannot duplicate a side effect.
  * The only action is an in-memory report handoff, never a tool call.
+ *
+ * The report cache is keyed by run id (not held in the shared executor
+ * closure): GoalRunEngine reuses one executor for every run, so a closure
+ * cache would hand later runs — including other owners' runs — an earlier
+ * run's report.
  */
 export function createResearchExecutor(
   options: ResearchRunOptions,
 ): StepExecutor {
   const newId = options.newId ?? (() => crypto.randomUUID());
   const now = options.now ?? (() => new Date().toISOString());
-  let cached: ResearchReport | undefined;
+  const reports = new Map<string, ResearchReport>();
   return {
-    async execute({ step, steerInstructions, phase }): Promise<StepResult> {
+    async execute({
+      run,
+      step,
+      steerInstructions,
+      phase,
+    }): Promise<StepResult> {
       if (phase === 'commit') {
         // Read-only workflow: nothing to commit. Report was produced in
         // propose, so an approved side effect never exists here.
         return { predicatePassed: true, summary: 'noop commit' };
       }
-      const goal = [...steerInstructions].join(' | ') || 'research goal';
-      cached ??= await runResearch(goal, {
-        ...options.workflow,
-        newId,
-        now,
-      });
+      const goal = [...steerInstructions, run.goal].join(' | ');
+      let cached = reports.get(run.runId);
+      if (!cached) {
+        cached = await runResearch(goal, {
+          ...options.workflow,
+          newId,
+          now,
+        });
+        reports.set(run.runId, cached);
+      }
       options.onReport?.(cached);
       const ok = cached.claims.every(c =>
         cached!.sources.some(s => s.sourceId === c.citation.sourceId),

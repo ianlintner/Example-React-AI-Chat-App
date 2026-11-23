@@ -6,7 +6,11 @@
  * through `SearchFetcher`. Tests inject both.
  */
 import type { Citation } from '@agent-chat/contract';
-import { estimateTokens, sanitizeExcerpt } from './untrusted';
+import {
+  containsDirective,
+  estimateTokens,
+  sanitizeExcerpt,
+} from './untrusted';
 import {
   DEFAULT_RESEARCH_BUDGET,
   type ResearchBudget,
@@ -73,12 +77,19 @@ export async function runResearch(
 
       // Do NOT pre-slice hits to the budget: every hit beyond the global
       // limit must hit the guard so exhaustion is observable, not silent.
+      // Reserve the slot BEFORE awaiting: parallel sub-agents would otherwise
+      // all pass a check-then-act guard and overshoot maxFetches together.
       const pages: ResearchSource[] = [];
       for (const hit of hits) {
         if (used.fetches >= budget.maxFetches)
           throw new ResearchBudgetError('fetches');
-        const page = await options.fetcher.fetch(hit.url);
         used.fetches += 1;
+        // Search-hit URLs are untrusted input: the injected SearchFetcher is
+        // the SSRF boundary and MUST reject unsupported schemes/hosts (only
+        // https to a public host should be fetched in production).
+        const page = await options.fetcher.fetch(hit.url);
+        if (sources.has(page.sourceId))
+          throw new Error(`duplicate_source:${page.sourceId}`);
         const source: ResearchSource = {
           sourceId: page.sourceId,
           url: page.url,
@@ -95,7 +106,13 @@ export async function runResearch(
       if (pages.length === 0) return undefined;
 
       const summary = await options.model.summarize({ query, goal, pages });
-      const trimmed = capSummary(summary, budget.summaryTokenCap);
+      // A model may echo untrusted page text. Re-sanitise before that text
+      // enters another model context (reflect/report) so a fence escape or
+      // directive cannot survive via the summary channel.
+      const trimmed = capSummary(
+        sanitizeExcerpt(summary, budget.summaryTokenCap),
+        budget.summaryTokenCap,
+      );
       const result: SubAgentSummary = {
         query,
         summary: trimmed,
@@ -110,7 +127,15 @@ export async function runResearch(
       return result;
     });
 
-    const results = await Promise.all(workers);
+    // allSettled rather than all: if one worker hits a budget guard, the
+    // other workers' rejections must still be observed (no unhandled
+    // rejection) before the first failure is rethrown.
+    const settled = await Promise.allSettled(workers);
+    const failure = settled.find(r => r.status === 'rejected');
+    if (failure?.status === 'rejected') throw failure.reason;
+    const results = settled.map(
+      r => (r as PromiseFulfilledResult<SubAgentSummary | undefined>).value,
+    );
     summaries.push(
       ...results.filter((s): s is SubAgentSummary => s !== undefined),
     );
@@ -133,6 +158,10 @@ export async function runResearch(
     sources: [...sources.values()],
   });
   const claims = draft.map(({ text, sourceId }) => {
+    // Reject model output that still carries an injected directive rather
+    // than publishing it as a claim. This is the report validator the
+    // containsDirective helper documents.
+    if (containsDirective(text)) throw new Error('directive_in_claim');
     const source = sources.get(sourceId);
     if (!source) throw new Error(`unresolved_citation:${sourceId}`);
     const citation: Citation = {

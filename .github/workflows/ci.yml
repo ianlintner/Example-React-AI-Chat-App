@@ -441,6 +441,17 @@ jobs:
         run: npm run typecheck --workspaces --if-present
       - name: Unit tests (Vitest)
         run: npm run test --workspaces --if-present
+      - name: Golden trajectory + injection eval gate (mock model)
+        run: npm run eval
+        env:
+          LLM_PROVIDER: mock
+      - name: Upload eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: eval-report.json
+          retention-days: 7
       - name: Build web
         run: npm run -w apps/web build
       - name: Build web component + size budget

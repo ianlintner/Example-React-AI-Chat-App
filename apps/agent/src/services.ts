@@ -16,6 +16,8 @@ import {
   loadRouterConfig,
   loadSkills,
   loadToolsConfig,
+  createGenAiExporter,
+  loadOtelConfig,
   MemoryStore,
   PostgresStore,
   TierRateLimiter,
@@ -79,6 +81,7 @@ export async function createServices(
   const llmConfig = loadLlmConfig(env);
   const routerConfig = loadRouterConfig(env);
   const llm = createLlm(llmConfig);
+  const exporter = createGenAiExporter(loadOtelConfig(env, 'agent-chat-agent'));
 
   const toolsConfig = loadToolsConfig(env);
   const skills = await loadSkills(SKILLS_DIR);
@@ -160,6 +163,16 @@ export async function createServices(
       skills,
       tools: registry,
       decide: router.decide,
+      telemetry: span => {
+        // span.route is a tier; map it to the env-mapped gateway route name.
+        const route =
+          span.tier === 'fast' ||
+          span.tier === 'deep' ||
+          span.tier === 'research'
+            ? (llmConfig.routes[span.tier] ?? span.tier)
+            : span.route;
+        return exporter.exportSpan({ ...span, route });
+      },
     }),
     limiter: new TierRateLimiter(),
     llmConfig,

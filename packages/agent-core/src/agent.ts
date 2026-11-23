@@ -6,6 +6,7 @@ import type {
 } from '@agent-chat/contract';
 import { createAgentUIStream, createUIMessageStream, ToolLoopAgent } from 'ai';
 import type { Llm } from './llm';
+import type { GenAiSpan } from './obs/genai';
 import { baselineDecision, legacyDecision } from './router/index';
 import type {
   AgentRuntime,
@@ -28,6 +29,8 @@ export interface RuntimeOptions {
   /** Card 6: progressive-disclosure skills and the authorised tool boundary. */
   skills?: SkillRegistry;
   tools?: ToolRegistry;
+  /** Card 10: optional GenAI span sink injected by the app layer. */
+  telemetry?: (span: GenAiSpan) => void | Promise<void>;
 }
 
 /**
@@ -94,11 +97,26 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
             temperature: 0,
             id: 'agent-core',
           });
+          const beganAt = Date.now();
           const agentStream = await createAgentUIStream({
             agent,
             uiMessages: messages,
             abortSignal,
           });
+          if (options.telemetry) {
+            // Best effort: telemetry never breaks the user's stream.
+            void Promise.resolve(
+              options.telemetry({
+                route: resolved.tier,
+                operation: 'chat',
+                tier: resolved.tier,
+                startedAt: beganAt,
+                endedAt: Date.now(),
+                toolCalls: tools ? Object.keys(tools).length : 0,
+                status: 'ok',
+              }),
+            ).catch(() => undefined);
+          }
           writer.merge(
             agentStream as unknown as ReadableStream<AgentUIMessageChunk>,
           );

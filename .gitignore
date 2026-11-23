@@ -44,5 +44,6 @@ apps/*/storybook-static/
 /test-results/
 /playwright-report/
 /blob-report/
+/eval-report.json
 .env
 .env.local

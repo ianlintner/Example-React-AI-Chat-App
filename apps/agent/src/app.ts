@@ -14,10 +14,46 @@ import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
 import { mountThreadRoutes } from './routes/threads';
 import { routerRegistry } from './router-obs';
+import { createAgentMetrics } from '@agent-chat/agent-core';
 import { mountRunRoutes } from './runs/routes';
+
+/** Card 10: legacy-named metrics on the same registry as route telemetry. */
+export const agentMetrics = createAgentMetrics(routerRegistry);
 
 export function createApp(config: ServerConfig, services: Services) {
   const app = new Hono<AppEnv>();
+
+  app.use('*', async (c, next) => {
+    // Bounded cardinality: strip ids/slugs so user content never becomes a label.
+    const route = c.req.path
+      .replace(/\/[0-9a-f]{8,}/gi, '/:id')
+      .replace(/\/[0-9]+/g, '/:n')
+      .slice(0, 80);
+    const method = c.req.method;
+    const labels = {
+      service: 'agent',
+      http_method: method,
+      http_route: route,
+    };
+    agentMetrics.activeRequests.inc({ service: 'agent', http_method: method });
+    const began = Date.now();
+    try {
+      await next();
+    } finally {
+      const status = c.res.status;
+      const final = {
+        ...labels,
+        http_status_code: String(status),
+        status_class: `${Math.floor(status / 100)}xx`,
+      };
+      agentMetrics.httpRequests.inc(final);
+      agentMetrics.httpDuration.observe(final, (Date.now() - began) / 1000);
+      agentMetrics.activeRequests.dec({
+        service: 'agent',
+        http_method: method,
+      });
+    }
+  });
 
   app.use('*', secureHeaders());
   app.use(

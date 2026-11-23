@@ -24,6 +24,13 @@ import type {
   ThreadStore,
 } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
+import type { GoalRunService } from './runs/service';
+import type { RunEventEmitter } from './runs/events';
+import type { Inngest, InngestFunction } from 'inngest';
+import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
+import { createInngest } from './inngest';
+import { createGoalRunFunctions } from './runs/inngest';
+import { inngestRunEvents, noOpRunEvents } from './runs/events';
 
 const SKILLS_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -35,6 +42,11 @@ export interface Services {
   runtime: AgentRuntime;
   limiter: RateLimiter;
   llmConfig: LlmConfig;
+  runs: GoalRunService;
+  runEvents: RunEventEmitter;
+  inngestFunctions: InngestFunction.Any[];
+  /** Single client shared by the serve endpoint and event emitter. */
+  inngestClient?: Inngest;
   skills: SkillRegistry;
   close(): Promise<void>;
 }
@@ -88,13 +100,31 @@ export async function createServices(
     }
   }
 
+  const runs = createGoalRunService({
+    config,
+    llm,
+    memoryStoreData: store instanceof MemoryStore ? store.data : undefined,
+  });
+  await bootstrapGoalRuns(runs.store);
+
+  const { client, functions } = createInngest({ dev: config.inngest.dev });
+  functions.push(...createGoalRunFunctions(client, runs));
+  const runEvents = config.inngest.enabled
+    ? inngestRunEvents(client)
+    : noOpRunEvents;
+
   return {
     store,
     runtime: createAgentRuntime({ llm, store, skills, tools: registry }),
     limiter: new TierRateLimiter(),
     llmConfig,
+    runs,
+    runEvents,
+    inngestFunctions: functions,
+    inngestClient: client,
     skills,
     async close() {
+      await runs.store.close?.();
       await store.close();
     },
   };

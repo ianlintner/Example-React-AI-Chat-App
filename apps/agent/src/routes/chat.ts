@@ -2,11 +2,7 @@
 import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 import { chatRequestSchema, validateAgentMessages } from '@agent-chat/contract';
 import type { AgentUIMessage, AgentUIMessageChunk } from '@agent-chat/contract';
-import {
-  defaultDecision,
-  ForbiddenError,
-  NotFoundError,
-} from '@agent-chat/agent-core';
+import { ForbiddenError, NotFoundError } from '@agent-chat/agent-core';
 import type { Hono } from 'hono';
 import { checkRateLimit, resolvePrincipal } from '../http';
 import type { AppEnv } from '../http';
@@ -95,8 +91,12 @@ export function mountChatRoutes(
     const appended = appendNewMessages(stored, messages.data);
     if (!appended) return c.json({ error: 'invalid_history' }, 400);
     const history = [...stored, ...appended];
-    const decision = defaultDecision(history);
     const runId = `run_${crypto.randomUUID()}`;
+    const decision = await services.router.decide({
+      principal,
+      messages: history,
+      context: { threadId, runId },
+    });
     await services.store.createRun({
       runId,
       threadId,

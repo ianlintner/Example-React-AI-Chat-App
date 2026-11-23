@@ -14,6 +14,7 @@ import { useChatRuntime } from '@assistant-ui/react-ai-sdk';
 import { DefaultChatTransport } from 'ai';
 import { PencilIcon, SplitIcon, SquareIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { RouteDecisionChip } from './RouteDecisionChip';
 
 const AGENT_URL = import.meta.env.VITE_AGENT_URL ?? 'http://127.0.0.1:8787';
 
@@ -139,7 +140,11 @@ function LiveUser() {
 function LiveAssistant() {
   return (
     <MessagePrimitive.Root className='m-3 rounded-lg border border-border bg-surface p-3 text-sm'>
-      <MessagePrimitive.Content />
+      <MessagePrimitive.Parts
+        components={{
+          data: { by_name: { 'route-decision': RouteDecisionChip } },
+        }}
+      />
     </MessagePrimitive.Root>
   );
 }

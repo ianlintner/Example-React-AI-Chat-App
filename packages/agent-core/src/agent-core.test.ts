@@ -21,6 +21,7 @@ describe('loadLlmConfig', () => {
       research: 'smart-frontier',
     });
     expect(c.provider).toBe('gateway');
+    expect(c.routerRoute).toBe('local-fast');
   });
 
   it('maps tiers to env route names', () => {

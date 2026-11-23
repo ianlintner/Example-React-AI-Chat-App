@@ -20,6 +20,8 @@ export const llmEnvSchema = z.object({
   ROUTE_FAST: routeName.default('local-fast'),
   ROUTE_DEEP: routeName.default('smart'),
   ROUTE_RESEARCH: routeName.default('smart-frontier'),
+  /** Dedicated route for structured LLM routing fallback. */
+  ROUTE_ROUTER: routeName.default('local-fast'),
   /** `mock` swaps in the deterministic mock model (tests, CI, offline dev). */
   LLM_PROVIDER: z.enum(['gateway', 'mock']).default('gateway'),
 });
@@ -28,6 +30,8 @@ export interface LlmConfig {
   baseURL: string;
   apiKey: string | undefined;
   routes: Record<Tier, string>;
+  /** Env-mapped route for the LLM router fallback (not a model id). */
+  routerRoute: string;
   provider: 'gateway' | 'mock';
 }
 
@@ -51,6 +55,7 @@ export function loadLlmConfig(
       deep: e.ROUTE_DEEP,
       research: e.ROUTE_RESEARCH,
     },
+    routerRoute: e.ROUTE_ROUTER,
     provider: e.LLM_PROVIDER,
   };
 }

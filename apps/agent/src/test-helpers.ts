@@ -2,7 +2,9 @@ import {
   createAgentRuntime,
   createLlm,
   createMockModel,
+  createRouter,
   emptySkillRegistry,
+  loadRouterConfig,
   MemoryStore,
   TierRateLimiter,
   emptyStoreData,
@@ -21,6 +23,7 @@ export const TEST_ENV = {
 export const LLM_CONFIG: LlmConfig = {
   baseURL: 'http://localhost:4000/v1',
   routes: { fast: 'local-fast', deep: 'smart', research: 'smart-frontier' },
+  routerRoute: 'local-fast',
   provider: 'mock',
   apiKey: 'not-used-in-mock-tests',
 };
@@ -37,6 +40,7 @@ export function testServices(
   const store = new MemoryStore(data);
   const llm = createLlm(LLM_CONFIG);
   llm.model = () => createMockModel({ text: mockText, chunkDelayMs });
+  const router = createRouter({ config: loadRouterConfig(TEST_ENV) });
   const skills = emptySkillRegistry();
   const runs = createGoalRunService({
     config: testConfig(),
@@ -67,7 +71,13 @@ export function testServices(
   });
   return {
     store,
-    runtime: createAgentRuntime({ llm, store, skills }),
+    router,
+    runtime: createAgentRuntime({
+      llm,
+      store,
+      skills,
+      decide: router.decide,
+    }),
     limiter: new TierRateLimiter(),
     llmConfig: LLM_CONFIG,
     runs,

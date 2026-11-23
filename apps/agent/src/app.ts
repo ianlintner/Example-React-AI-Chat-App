@@ -2,6 +2,7 @@
  * HTTP shell. Routes stay thin: parse with contract schemas, call an
  * agent-core seam, stream the contract's UI message stream back.
  */
+import { timingSafeEqual } from 'node:crypto';
 import { CONTRACT_VERSION, type HealthResponse } from '@agent-chat/contract';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -12,6 +13,7 @@ import { serve } from 'inngest/hono';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
 import { mountThreadRoutes } from './routes/threads';
+import { routerRegistry } from './router-obs';
 import { mountRunRoutes } from './runs/routes';
 
 export function createApp(config: ServerConfig, services: Services) {
@@ -40,6 +42,23 @@ export function createApp(config: ServerConfig, services: Services) {
       contractVersion: CONTRACT_VERSION,
     } satisfies HealthResponse),
   );
+
+  /**
+   * Prometheus scrape endpoint. Open on loopback only; a non-loopback
+   * listener is rejected at boot unless METRICS_TOKEN is configured.
+   */
+  app.get('/metrics', async c => {
+    if (config.metricsToken) {
+      const supplied = c.req.header('x-metrics-token') ?? '';
+      const a = Buffer.from(supplied);
+      const b = Buffer.from(config.metricsToken);
+      if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        return c.json({ error: 'unauthorized' }, 401);
+      }
+    }
+    const body = await routerRegistry.metrics();
+    return c.body(body, 200, { 'content-type': routerRegistry.contentType });
+  });
 
   if (config.inngest.enabled && services.inngestClient) {
     const handler = serve({

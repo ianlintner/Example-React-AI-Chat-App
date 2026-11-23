@@ -6,9 +6,10 @@ import type {
 } from '@agent-chat/contract';
 import { createAgentUIStream, createUIMessageStream, ToolLoopAgent } from 'ai';
 import type { Llm } from './llm';
+import { baselineDecision, legacyDecision } from './router/index';
 import type {
   AgentRuntime,
-  Principal,
+  Router,
   RunStore,
   SkillRegistry,
   ToolRegistry,
@@ -22,38 +23,23 @@ Answer accurately and concisely. When you do not know, say so.`;
 export interface RuntimeOptions {
   llm: Llm;
   store: RunStore & Partial<Pick<ThreadStore, 'setRunStatus'>>;
-  /** Card 5 replaces this with a typed router; default is deterministic. */
-  decide?(input: {
-    principal: Principal;
-    messages: AgentUIMessage[];
-  }): Promise<RouteDecision>;
+  /** Typed router; when absent the deterministic legacy route is used. */
+  decide?: Router['decide'];
   /** Card 6: progressive-disclosure skills and the authorised tool boundary. */
   skills?: SkillRegistry;
   tools?: ToolRegistry;
 }
 
+/**
+ * Backwards-compatible deterministic decision used by direct callers. Keeps
+ * the pre-router dispatch exactly: general/fast, deep only for >800 chars.
+ */
 export function defaultDecision(messages: AgentUIMessage[]): RouteDecision {
-  const last = [...messages].reverse().find(m => m.role === 'user');
-  const text = last?.parts
-    .filter(
-      (part): part is { type: 'text'; text: string } => part.type === 'text',
-    )
-    .map(part => part.text)
-    .join('');
-  const tier = text && text.length > 800 ? 'deep' : 'fast';
-  return {
-    decisionId: `route_${crypto.randomUUID()}`,
-    skill: 'general',
-    tier,
-    needsResearch: false,
-    needsPlan: false,
-    confidence: 1,
-    margin: 1,
-    source: 'default',
-    mode: 'shadow',
-    rationale: 'baseline dispatch until the typed router is enabled',
-  };
+  return legacyDecision(messages);
 }
+
+/** The keyword baseline, used only for shadow comparison and golden scoring. */
+export { baselineDecision };
 
 function isErrorChunk(chunk: AgentUIMessageChunk): boolean {
   return (chunk as { type?: string }).type === 'error';
@@ -77,7 +63,12 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
         onError: () => 'agent_error',
         async execute({ writer }) {
           const resolved =
-            decision ?? (await options.decide!({ principal, messages }));
+            decision ??
+            (await options.decide!({
+              principal,
+              messages,
+              context: { threadId, runId },
+            }));
           writer.write({
             type: 'data-route-decision',
             id: resolved.decisionId,

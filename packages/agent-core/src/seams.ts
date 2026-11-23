@@ -23,6 +23,8 @@ export interface Router {
   decide(input: {
     principal: Principal;
     messages: AgentUIMessage[];
+    /** Correlation ids for shadow logging; optional for direct callers. */
+    context?: { threadId?: string; runId?: string };
   }): Promise<RouteDecision>;
 }
 

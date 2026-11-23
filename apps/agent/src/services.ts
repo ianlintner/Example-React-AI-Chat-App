@@ -4,12 +4,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   createAgentRuntime,
+  createJevClient,
   createLlm,
+  createLlmRouter,
   createMcpClient,
   createRedisBuffer,
+  createRouter,
   createToolRegistry,
   defaultDeps,
   loadLlmConfig,
+  loadRouterConfig,
   loadSkills,
   loadToolsConfig,
   MemoryStore,
@@ -18,8 +22,13 @@ import {
 } from '@agent-chat/agent-core';
 import type {
   AgentRuntime,
+  JevClient,
   LlmConfig,
+  LlmRouter,
   RateLimiter,
+  RouteMetrics,
+  RouteSink,
+  Router,
   SkillRegistry,
   ThreadStore,
 } from '@agent-chat/agent-core';
@@ -31,6 +40,8 @@ import { createGoalRunService, bootstrapGoalRuns } from './runs/service';
 import { createInngest } from './inngest';
 import { createGoalRunFunctions } from './runs/inngest';
 import { inngestRunEvents, noOpRunEvents } from './runs/events';
+import { createRouterTelemetry } from './router-obs';
+import { PostgresRouteSink } from './route-sink';
 
 const SKILLS_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -40,6 +51,7 @@ const SKILLS_DIR = path.resolve(
 export interface Services {
   store: ThreadStore;
   runtime: AgentRuntime;
+  router: Router;
   limiter: RateLimiter;
   llmConfig: LlmConfig;
   runs: GoalRunService;
@@ -51,16 +63,23 @@ export interface Services {
   close(): Promise<void>;
 }
 
+export interface ServiceOverrides {
+  store?: ThreadStore;
+  jev?: JevClient;
+  llmRouter?: LlmRouter;
+  sink?: RouteSink;
+  metrics?: RouteMetrics;
+}
+
 export async function createServices(
   config: ServerConfig,
   env: Record<string, string | undefined> = process.env,
-  injectedStore?: ThreadStore,
+  overrides: ServiceOverrides = {},
 ): Promise<Services> {
   const llmConfig = loadLlmConfig(env);
+  const routerConfig = loadRouterConfig(env);
   const llm = createLlm(llmConfig);
 
-  // Card 6: skills from SKILL.md and the authorised tool boundary. MCP
-  // servers are configured by env; an unreachable server exposes no tools.
   const toolsConfig = loadToolsConfig(env);
   const skills = await loadSkills(SKILLS_DIR);
   const registry = createToolRegistry({
@@ -76,7 +95,8 @@ export async function createServices(
   });
   await registry.warm();
 
-  let store = injectedStore;
+  let store = overrides.store;
+  let routeSink = overrides.sink;
   if (!store) {
     if (config.databaseUrl) {
       if (!config.redisUrl) {
@@ -85,14 +105,17 @@ export async function createServices(
         );
       }
       const buffer = createRedisBuffer(config.redisUrl);
-      const sql = readFileSync(
-        new URL('../migrations/001_init.sql', import.meta.url),
-        'utf8',
-      );
+      const sql = [
+        '../migrations/001_init.sql',
+        '../migrations/002_route_decisions.sql',
+      ]
+        .map(path => readFileSync(new URL(path, import.meta.url), 'utf8'))
+        .join('\n');
       const postgres = new PostgresStore(config.databaseUrl, buffer);
       // Boot applies idempotent DDL; no migration CLI for local development.
       await postgres.bootstrap(sql);
       store = postgres;
+      routeSink ??= new PostgresRouteSink(config.databaseUrl);
     } else {
       // No Postgres: use the in-process store (Redis alone cannot back
       // threads/messages, so no Redis client is created here).
@@ -113,9 +136,31 @@ export async function createServices(
     ? inngestRunEvents(client)
     : noOpRunEvents;
 
+  const telemetry = createRouterTelemetry();
+  const router = createRouter({
+    config: routerConfig,
+    jev:
+      overrides.jev ??
+      (routerConfig.jevApiKey ? createJevClient(routerConfig) : undefined),
+    llmRouter:
+      overrides.llmRouter ??
+      (llmConfig.provider === 'gateway'
+        ? createLlmRouter(llm.modelForRoute(llmConfig.routerRoute))
+        : undefined),
+    sink: routeSink,
+    metrics: overrides.metrics ?? telemetry.metrics,
+  });
+
   return {
     store,
-    runtime: createAgentRuntime({ llm, store, skills, tools: registry }),
+    router,
+    runtime: createAgentRuntime({
+      llm,
+      store,
+      skills,
+      tools: registry,
+      decide: router.decide,
+    }),
     limiter: new TierRateLimiter(),
     llmConfig,
     runs,
@@ -126,6 +171,7 @@ export async function createServices(
     async close() {
       await runs.store.close?.();
       await store.close();
+      await routeSink?.close?.();
     },
   };
 }

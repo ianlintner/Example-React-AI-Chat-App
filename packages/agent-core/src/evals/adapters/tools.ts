@@ -6,7 +6,7 @@
  */
 import type { Principal, Skill } from '../../seams';
 import { createToolRegistry } from '../../tools/registry';
-import { rollDice } from '../../tools/dice';
+import { diceInputSchema, rollDice } from '../../tools/dice';
 import { loadToolsConfig } from '../../tools/config';
 import type { ToolInput } from '../cases';
 import type { Execution } from './execution';
@@ -97,14 +97,14 @@ export async function executeToolCase(input: ToolInput): Promise<Execution> {
   }
   trajectory.push('authz:granted');
   if (input.toolName === 'dice') {
-    const notation = String(input.args.notation);
-    // The real zod inputSchema caps 100 dice / 1000 sides; mirror that guard
-    // before executing so invalid args fail closed with no side effect.
-    if (!/^(\d{0,2})d(\d{1,3})([+-]\d{1,3})?$/i.test(notation)) {
+    // Validate through the real tool's zod schema, then execute the real guard.
+    const parsed = diceInputSchema.safeParse(input.args);
+    if (!parsed.success) {
       trajectory.push('rejected:invalid-args');
       return { outcome: 'rejected:invalid-args', trajectory };
     }
-    const { total } = rollDice(notation, () => 0.5);
+    const { total } = rollDice(parsed.data.notation, () => 0.5);
+    const notation = parsed.data.notation;
     trajectory.push('tool:dice', 'attachment:dice');
     return { outcome: `dice:${notation}:${total}`, trajectory };
   }

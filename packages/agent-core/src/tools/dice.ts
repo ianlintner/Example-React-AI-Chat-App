@@ -5,6 +5,11 @@ import type { ToolDeps } from './types';
 
 const NOTATION = /^(\d{0,2})d(\d{1,3})([+-]\d{1,3})?$/i;
 
+export const diceInputSchema = z.object({
+  notation: z.string().min(2).max(20).regex(NOTATION, 'invalid dice notation'),
+  purpose: z.string().max(200).optional(),
+});
+
 export function rollDice(
   notation: string,
   random: () => number = Math.random,
@@ -30,14 +35,7 @@ export function rollDice(
 export function createDiceTool(deps: ToolDeps) {
   return tool({
     description: 'Roll dice using notation like d20, 2d6+3 or d100.',
-    inputSchema: z.object({
-      notation: z
-        .string()
-        .min(2)
-        .max(20)
-        .regex(NOTATION, 'invalid dice notation'),
-      purpose: z.string().max(200).optional(),
-    }),
+    inputSchema: diceInputSchema,
     execute: async ({ notation, purpose }) => {
       const { rolls, total } = rollDice(notation, deps.random);
       return {

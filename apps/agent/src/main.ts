@@ -4,7 +4,8 @@ import { loadServerConfig } from './config';
 import { createServices } from './services';
 
 const config = loadServerConfig();
-const services = await createServices(config);
+import { agentMetrics } from './app';
+const services = await createServices(config, process.env, { agentMetrics });
 
 const llmLabel = services.llmConfig.provider === 'mock' ? 'mock' : 'gateway';
 

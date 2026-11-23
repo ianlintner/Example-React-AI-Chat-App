@@ -194,7 +194,7 @@ const GOAL_CASES: readonly EvalCase<GoalInput, string>[] = [
     description: 'steering changes the next plan',
     input: { goal: 'triage', scenario: 'steer' },
     expectedOutcome: 'steered',
-    expectedTrajectory: ['plan', 'steer', 'replan'],
+    expectedTrajectory: ['plan', 'steer', 'step:failed', 'replan'],
   },
   {
     id: 'goal-predicate-fail',
@@ -226,7 +226,13 @@ const GOAL_CASES: readonly EvalCase<GoalInput, string>[] = [
     description: 'approved effect executes at most once on retry',
     input: { goal: 'pay invoice', scenario: 'idempotent' },
     expectedOutcome: 'completed-once',
-    expectedTrajectory: ['plan', 'approval-request', 'effect:1', 'completed'],
+    expectedTrajectory: [
+      'plan',
+      'approval-request',
+      'step:succeeded',
+      'effect:1',
+      'completed',
+    ],
   },
 ];
 

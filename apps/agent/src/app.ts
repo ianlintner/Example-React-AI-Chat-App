@@ -9,6 +9,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { ServerConfig } from './config';
 import type { Services } from './services';
+import { routePath as matchedRoutePath } from 'hono/route';
 import { serve } from 'inngest/hono';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
@@ -24,16 +25,13 @@ export function createApp(config: ServerConfig, services: Services) {
   const app = new Hono<AppEnv>();
 
   app.use('*', async (c, next) => {
-    // Bounded cardinality: strip ids/slugs so user content never becomes a label.
-    const route = c.req.path
-      .replace(/\/[0-9a-f]{8,}/gi, '/:id')
-      .replace(/\/[0-9]+/g, '/:n')
-      .slice(0, 80);
     const method = c.req.method;
     const labels = {
       service: 'agent',
       http_method: method,
-      http_route: route,
+      // Filled after next(): only registered route patterns get their own
+      // label. Anything else (404s, early rejections) shares one value.
+      http_route: 'unmatched',
     };
     agentMetrics.activeRequests.inc({ service: 'agent', http_method: method });
     const began = Date.now();
@@ -41,8 +39,14 @@ export function createApp(config: ServerConfig, services: Services) {
       await next();
     } finally {
       const status = c.res.status;
+      // The matched handler pattern is only known after next() ran. -1 picks
+      // the last matched route, i.e. the endpoint rather than this middleware.
+      const pattern = matchedRoutePath(c, -1);
       const final = {
         ...labels,
+        ...(pattern && pattern !== '*' && !pattern.includes('*')
+          ? { http_route: pattern.slice(0, 80) }
+          : {}),
         http_status_code: String(status),
         status_class: `${Math.floor(status / 100)}xx`,
       };

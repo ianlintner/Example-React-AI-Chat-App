@@ -23,15 +23,15 @@ export function capTokens(text: string, maxTokens: number): string {
  * an injected instruction is not.
  */
 const DIRECTIVES = [
-  /ignore\s+(all\s+)?(previous|prior|above|earlier)\s+(instructions|prompts?)/gi,
-  /disregard\s+(all\s+)?(previous|prior|above|earlier)/gi,
-  /(system|developer|assistant)\s*:\s*/gi,
-  /<\s*\/?\s*(system|instructions?|tool[_-]?call|function)\b[^>]*>/gi,
-  /\b(tool[_-]?call|function[_-]?call|execute[_-]?tool)\s*[:=]/gi,
-  /\b(call|invoke|run)\s+(the\s+)?(tool|function)\b/gi,
+  /ignore\s{1,8}(all\s{1,8})?(previous|prior|above|earlier)\s{1,8}(instructions|prompts?)/gi,
+  /disregard\s{1,8}(all\s{1,8})?(previous|prior|above|earlier)/gi,
+  /(system|developer|assistant)\s{0,8}:\s{0,8}/gi,
+  /<\s{0,8}\/?\s{0,8}(system|instructions?|tool[_-]?call|function)\b[^>]{0,200}>/gi,
+  /\b(tool[_-]?call|function[_-]?call|execute[_-]?tool)\s{0,8}[:=]/gi,
+  /\b(call|invoke|run)\s{1,8}(the\s{1,8})?(tool|function)\b/gi,
   /\b(send|post|exfiltrate)\b.{0,40}\b(secret|token|password|api[_-]?key|credential)/gi,
-  /\byou\s+(must|should|are\s+now|will)\s+(now\s+)?/gi,
-  /\bnew\s+instructions?\s*:/gi,
+  /\byou\s{1,8}(must|should|are\s{1,8}now|will)\s{1,8}(now\s{1,8})?/gi,
+  /\bnew\s{1,8}instructions?\s{0,8}:/gi,
 ];
 
 /**
@@ -41,13 +41,15 @@ const DIRECTIVES = [
  *  - context flooding: the excerpt is capped by token estimate.
  */
 export function sanitizeExcerpt(text: string, maxTokens: number): string {
-  let clean = text.replace(/\u0000/g, '');
+  // Collapse whitespace runs first so bounded patterns below cannot be
+  // evaded with padding and cannot backtrack polynomially on long runs.
+  let clean = text.replace(/\u0000/g, '').replace(/[ \t\f\v\r]{2,}/g, ' ');
   for (const pattern of DIRECTIVES) {
     clean = clean.replace(pattern, '[redacted directive] ');
   }
   // Collapse the marker noise without reintroducing directive shapes.
   clean = clean.replace(
-    /(\[redacted directive\]\s*)+/g,
+    /(?:\[redacted directive\] ?){2,}/g,
     '[redacted directive] ',
   );
   clean = clean.replace(/\n{3,}/g, '\n\n').trim();

@@ -10,6 +10,7 @@ export * from './store/memory';
 export * from './store/redis';
 export * from './store/postgres';
 export * from './goals';
+export * from './research';
 export * from './skills/loader';
 export * from './skills/select';
 export * from './tools/config';

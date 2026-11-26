@@ -1,6 +1,6 @@
 # Architecture
 
-This is the map of the new agentic stack (`apps/`, `packages/`). Read it before you change anything there. The legacy apps (`backend/`, `frontend/`, `web/`, `embed/`, `k8s/`) keep running until the legacy-removal card (PLAN.md §5, card 12). Do not extend them.
+This is the map of the agentic stack (`apps/`, `packages/`). Read it before you change anything there. The legacy `backend/`, `frontend/`, `web/`, `embed/` and `k8s/` trees have been removed; this repository is local-development only.
 
 Scope is **local development only**: no hosting, deploy or cloud resources. Decisions and their alternatives are recorded in [`docs/adr/`](docs/adr/README.md).
 
@@ -101,15 +101,15 @@ Write entity parts with the chunk `id` equal to the stable id so the client upda
 
 ## 6. Local runtime
 
-| Command                                            | What it does                                                                                         |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `npm ci`                                           | Installs every workspace (legacy `backend/`, `frontend/`, `web/`, `embed/` keep separate installs)   |
-| `npm run dev`                                      | `compose.dev.yml` up (Postgres+pgvector, Redis, Inngest dev), then agent (`:8787`) and web (`:3000`) |
-| `npm run dev:services[:down]`                      | Only the containers                                                                                  |
-| `npm run test --workspaces --if-present`           | Vitest in every workspace                                                                            |
-| `npm run -w apps/web build && npx playwright test` | Production build + e2e smoke (tokens render, axe clean)                                              |
-| `npm run storybook`                                | Storybook on `:6006`                                                                                 |
-| `npm run check:loc`                                | 400-line ceiling                                                                                     |
+| Command                                | What it does                                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `npm ci`                               | Installs all workspaces from the root lockfile                                                       |
+| `npm run dev`                          | `compose.dev.yml` up (Postgres+pgvector, Redis, Inngest dev), then agent (`:8787`) and web (`:3000`) |
+| `npm run dev:services[:down]`          | Only the containers                                                                                  |
+| `npm test`                             | Vitest in every workspace                                                                            |
+| `npm run build && npx playwright test` | Production builds + full web & embed e2e (axe, AI states, streaming)                                 |
+| `npm run storybook`                    | Storybook on `:6006`                                                                                 |
+| `npm run check:loc`                    | 400-line ceiling                                                                                     |
 
 Every port binds to `127.0.0.1`. Postgres uses `trust` auth on loopback (no password to leak).
 
@@ -133,4 +133,4 @@ Tailwind utilities follow shadcn semantics so registry components work unmodifie
 
 ## 8. CI
 
-The `new-stack` job in `.github/workflows/ci.yml` runs `npm ci`, `check:loc`, workspace typecheck and tests, the web build, Storybook build and the Playwright smoke. It uses the mock model and needs no services. The legacy jobs are unchanged until card 12.
+The single `app` job in `.github/workflows/ci.yml` runs `npm ci`, `lint` (format + `check:loc`), workspace typecheck and tests, the eval gate (48 golden trajectories + 18 injection cases), all production builds, Storybook and the full Playwright suite (web + embed). It uses the mock model and needs no services or cloud credentials.

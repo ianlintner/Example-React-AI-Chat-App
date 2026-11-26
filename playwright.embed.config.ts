@@ -3,13 +3,16 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * E2E for the <agent-chat> embed demo. Serves apps/embed with Vite dev and
  * runs apps/agent against the deterministic mock model (no network LLM).
- * Run: npx playwright test -c playwright.embed.config.ts
+ * Run: npm run e2e:embed
  */
 const PORT = Number(process.env.E2E_EMBED_PORT ?? 4182);
 
 export default defineConfig({
-  testDir: './e2e-embed',
+  testDir: './e2e',
+  testMatch: /embed\.spec\.ts/,
   fullyParallel: false,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,

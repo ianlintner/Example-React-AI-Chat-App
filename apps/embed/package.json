@@ -20,10 +20,10 @@
     "@agent-chat/ui": "0.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.19.0",
-    "typescript": "^5.9.3",
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.1",
-    "jsdom": "^27.0.0"
+    "jsdom": "^31.0.1"
   }
 }

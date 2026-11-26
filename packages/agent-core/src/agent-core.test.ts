@@ -121,4 +121,57 @@ describe('createAgentRuntime', () => {
     }
     expect((await store.getRun('run_fail', principal))?.status).toBe('failed');
   });
+
+  it('emits one GenAI span at stream end with a real duration', async () => {
+    const store = new MemoryStore();
+    const principal = {
+      userId: 'user_span',
+      kind: 'user' as const,
+      tier: 'free' as const,
+    };
+    await store.createThread('thr_span', principal);
+    await store.createRun({
+      runId: 'run_span',
+      threadId: 'thr_span',
+      ownerId: principal.userId,
+      status: 'running',
+      tier: 'fast',
+    });
+    const spans: Array<{
+      endedAt: number;
+      startedAt: number;
+      status: string;
+      route: string;
+    }> = [];
+    const llm = createLlm(loadLlmConfig({ LLM_PROVIDER: 'mock' }));
+    const runtime = createAgentRuntime({
+      llm,
+      store,
+      telemetry: span => {
+        spans.push({ ...span });
+      },
+    });
+    const message = {
+      id: 'u1',
+      role: 'user' as const,
+      parts: [{ type: 'text' as const, text: 'hello' }],
+    };
+    const stream = runtime.stream({
+      threadId: 'thr_span',
+      runId: 'run_span',
+      principal,
+      messages: [message],
+      decision: defaultDecision([message]),
+    });
+    for await (const _chunk of stream) {
+      // drain
+    }
+    expect(spans).toHaveLength(1);
+    const span = spans[0];
+    expect(span).toBeDefined();
+    if (!span) return;
+    expect(span.status).toBe('ok');
+    expect(span.route).toBeTruthy();
+    expect(span.endedAt).toBeGreaterThanOrEqual(span.startedAt);
+  });
 });

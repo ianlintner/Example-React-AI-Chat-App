@@ -1,0 +1,43 @@
+# Local-only OTel collector for the new stack. Receives GenAI spans from the
+# agent over OTLP and writes them to the debug log. No cloud exporter, no
+# connection string, no secrets — the legacy collector in
+# otel-collector-config.yaml keeps the old stack's azuremonitor/zipkin path.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:4317
+      http:
+        endpoint: 127.0.0.1:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 512
+
+  memory_limiter:
+    limit_mib: 128
+    spike_limit_mib: 32
+    check_interval: 5s
+
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: local-dev
+        action: upsert
+
+exporters:
+  debug:
+    verbosity: normal
+
+extensions:
+  health_check:
+    endpoint: 127.0.0.1:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [debug]

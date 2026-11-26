@@ -30,3 +30,9 @@ export * from './tools/gif';
 export * from './tools/music';
 export * from './tools/dice';
 export { createMockModel } from './testing/mock-model';
+// Card 10: golden trajectory eval harness (mock by default, live via EVAL_MODE).
+export * from './evals';
+// Card 10: prompt-injection / excessive-agency security suite.
+export * from './security';
+// Card 10: OTel GenAI spans and legacy-named Prometheus metrics.
+export * from './obs';

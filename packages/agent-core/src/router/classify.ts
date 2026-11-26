@@ -13,7 +13,7 @@ export interface RouteOutcome {
 }
 
 const RESEARCH =
-  /\b(research|source[sd]?|citation[sd]?|compare|latest|current|news|accurate|verify|evidence|benchmark|weather|price[sd]?|who is|what happened|official docs?)\b/i;
+  /\b(research|source[sd]?|citation[sd]?|cited?|compare|latest|current|news|accurate|verify|evidence|benchmark|weather|price[sd]?|who is|what happened|official docs?)\b/i;
 const PLAN =
   /\b(plan|steps?|roadmap|project|implement|build|migrate|organi[sz]e|schedule|checklist|multi[- ]step|goal|workflow|strategy)\b/i;
 const CODE =
@@ -32,9 +32,12 @@ export function classify(text: string): RouteOutcome {
   const needsResearch = RESEARCH.test(lower);
   const needsPlan = PLAN.test(lower);
   let skill: RouteOutcome['skill'] = 'general';
-  if (CODE.test(lower)) skill = 'code';
+  // A user asking for research/citations outranks an incidental code keyword
+  // ("rust web hosts", "cited answer on AI rules"). Code intent wins only
+  // when no explicit research intent is present.
+  if (needsResearch || RESEARCH_TIER.test(lower)) skill = 'deep-research';
+  else if (CODE.test(lower)) skill = 'code';
   else if (CREATIVE.test(lower)) skill = 'creative';
-  else if (needsResearch) skill = 'deep-research';
   else if (needsPlan) skill = 'planning';
 
   let tier: Tier = 'fast';

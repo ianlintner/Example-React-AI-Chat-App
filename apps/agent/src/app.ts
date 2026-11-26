@@ -9,15 +9,55 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { ServerConfig } from './config';
 import type { Services } from './services';
+import { routePath as matchedRoutePath } from 'hono/route';
 import { serve } from 'inngest/hono';
 import type { AppEnv } from './http';
 import { mountChatRoutes } from './routes/chat';
 import { mountThreadRoutes } from './routes/threads';
 import { routerRegistry } from './router-obs';
+import { createAgentMetrics } from '@agent-chat/agent-core';
 import { mountRunRoutes } from './runs/routes';
+
+/** Card 10: legacy-named metrics on the same registry as route telemetry. */
+export const agentMetrics = createAgentMetrics(routerRegistry);
 
 export function createApp(config: ServerConfig, services: Services) {
   const app = new Hono<AppEnv>();
+
+  app.use('*', async (c, next) => {
+    const method = c.req.method;
+    const labels = {
+      service: 'agent',
+      http_method: method,
+      // Filled after next(): only registered route patterns get their own
+      // label. Anything else (404s, early rejections) shares one value.
+      http_route: 'unmatched',
+    };
+    agentMetrics.activeRequests.inc({ service: 'agent', http_method: method });
+    const began = Date.now();
+    try {
+      await next();
+    } finally {
+      const status = c.res.status;
+      // The matched handler pattern is only known after next() ran. -1 picks
+      // the last matched route, i.e. the endpoint rather than this middleware.
+      const pattern = matchedRoutePath(c, -1);
+      const final = {
+        ...labels,
+        ...(pattern && pattern !== '*' && !pattern.includes('*')
+          ? { http_route: pattern.slice(0, 80) }
+          : {}),
+        http_status_code: String(status),
+        status_class: `${Math.floor(status / 100)}xx`,
+      };
+      agentMetrics.httpRequests.inc(final);
+      agentMetrics.httpDuration.observe(final, (Date.now() - began) / 1000);
+      agentMetrics.activeRequests.dec({
+        service: 'agent',
+        http_method: method,
+      });
+    }
+  });
 
   app.use('*', secureHeaders());
   app.use(

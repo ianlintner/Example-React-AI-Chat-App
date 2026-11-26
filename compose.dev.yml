@@ -57,5 +57,52 @@ services:
       timeout: 3s
       retries: 30
 
+  # ── Local observability stack (card 10) ────────────────────────────────────
+  # All bind to loopback only; nothing is exposed beyond this machine.
+  prometheus:
+    image: docker.io/prom/prometheus:v3.5.0
+    network_mode: host
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.listen-address=127.0.0.1:9090
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.agent.yml:/etc/prometheus/prometheus.yml:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:9090/-/ready']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  otel-collector:
+    image: docker.io/opentelemetry/opentelemetry-collector-contrib:0.130.0
+    network_mode: host
+    command: ['--config=/etc/otel/config.yaml']
+    volumes:
+      - ./otel-collector.agent.yaml:/etc/otel/config.yaml:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:13133/']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  grafana:
+    image: docker.io/grafana/grafana:12.2.0
+    network_mode: host
+    environment:
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: '3001'
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ALLOW_EMBEDDING: 'true'
+    volumes:
+      - ./grafana/provisioning.agent:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/api/health']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
 volumes:
   pgdata:

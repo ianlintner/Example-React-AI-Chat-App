@@ -6,6 +6,7 @@ import type {
 } from '@agent-chat/contract';
 import { createAgentUIStream, createUIMessageStream, ToolLoopAgent } from 'ai';
 import type { Llm } from './llm';
+import type { GenAiSpan } from './obs/genai';
 import { baselineDecision, legacyDecision } from './router/index';
 import type {
   AgentRuntime,
@@ -28,6 +29,8 @@ export interface RuntimeOptions {
   /** Card 6: progressive-disclosure skills and the authorised tool boundary. */
   skills?: SkillRegistry;
   tools?: ToolRegistry;
+  /** Card 10: optional GenAI span sink injected by the app layer. */
+  telemetry?: (span: GenAiSpan) => void | Promise<void>;
 }
 
 /**
@@ -58,6 +61,12 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
       const { llm, store } = options;
       const decision =
         supplied ?? (options.decide ? undefined : defaultDecision(messages));
+      const beganAt = Date.now();
+      let spanRoute: string | undefined;
+      let spanTier: 'fast' | 'deep' | 'research' | undefined;
+      let spanToolCalls = 0;
+      let spanInputTokens: number | undefined;
+      let spanOutputTokens: number | undefined;
       const stream = createUIMessageStream<AgentUIMessage>({
         originalMessages: messages,
         onError: () => 'agent_error',
@@ -94,6 +103,9 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
             temperature: 0,
             id: 'agent-core',
           });
+          spanRoute = resolved.tier;
+          spanTier = resolved.tier;
+          spanToolCalls = tools ? Object.keys(tools).length : 0;
           const agentStream = await createAgentUIStream({
             agent,
             uiMessages: messages,
@@ -108,12 +120,49 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
         },
       });
 
+      // Emit once the stream actually ends: duration and status are real,
+      // not a zero-length "ok" span taken right after stream creation.
+      async function emitSpan(failed: boolean, errorType?: string) {
+        if (!options.telemetry || !spanRoute) return;
+        await Promise.resolve(
+          options.telemetry({
+            route: spanRoute,
+            operation: 'chat',
+            tier: spanTier,
+            startedAt: beganAt,
+            endedAt: Date.now(),
+            toolCalls: spanToolCalls,
+            inputTokens: spanInputTokens,
+            outputTokens: spanOutputTokens,
+            status: failed ? 'error' : 'ok',
+            errorType,
+          }),
+        ).catch(() => undefined);
+      }
+
       return new ReadableStream<AgentUIMessageChunk>({
         async start(controller) {
           try {
             let failed = false;
             for await (const chunk of stream) {
               await store.appendChunk(runId, chunk);
+              const meta = (chunk as { type?: string; metadata?: unknown })
+                .metadata;
+              if (
+                (chunk as { type?: string }).type === 'message-metadata' &&
+                meta &&
+                typeof meta === 'object'
+              ) {
+                const usage = (
+                  meta as {
+                    usage?: { inputTokens?: number; outputTokens?: number };
+                  }
+                ).usage;
+                if (usage?.inputTokens !== undefined)
+                  spanInputTokens = usage.inputTokens;
+                if (usage?.outputTokens !== undefined)
+                  spanOutputTokens = usage.outputTokens;
+              }
               if (isErrorChunk(chunk)) {
                 failed = true;
                 await store
@@ -127,6 +176,7 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
                 store.setRunStatus?.(runId, 'completed'),
               ).catch(() => undefined);
             }
+            await emitSpan(failed, failed ? 'stream_error' : undefined);
             controller.close();
           } catch (error) {
             await store.setRunStatus?.(runId, 'failed').catch(() => undefined);
@@ -142,6 +192,7 @@ export function createAgentRuntime(options: RuntimeOptions): AgentRuntime {
                 },
               })
               .catch(() => undefined);
+            await emitSpan(true, 'stream_failed');
             controller.error(error);
           } finally {
             await store.finishRun(runId).catch(() => undefined);

@@ -16,6 +16,8 @@ import {
   loadRouterConfig,
   loadSkills,
   loadToolsConfig,
+  createGenAiExporter,
+  loadOtelConfig,
   MemoryStore,
   PostgresStore,
   TierRateLimiter,
@@ -32,6 +34,7 @@ import type {
   SkillRegistry,
   ThreadStore,
 } from '@agent-chat/agent-core';
+import type { AgentMetrics } from '@agent-chat/agent-core';
 import type { ServerConfig } from './config';
 import type { GoalRunService } from './runs/service';
 import type { RunEventEmitter } from './runs/events';
@@ -69,6 +72,7 @@ export interface ServiceOverrides {
   llmRouter?: LlmRouter;
   sink?: RouteSink;
   metrics?: RouteMetrics;
+  agentMetrics?: AgentMetrics;
 }
 
 export async function createServices(
@@ -79,6 +83,7 @@ export async function createServices(
   const llmConfig = loadLlmConfig(env);
   const routerConfig = loadRouterConfig(env);
   const llm = createLlm(llmConfig);
+  const exporter = createGenAiExporter(loadOtelConfig(env, 'agent-chat-agent'));
 
   const toolsConfig = loadToolsConfig(env);
   const skills = await loadSkills(SKILLS_DIR);
@@ -160,6 +165,35 @@ export async function createServices(
       skills,
       tools: registry,
       decide: router.decide,
+      telemetry: span => {
+        // span.route is a tier; map it to the env-mapped gateway route name.
+        const route =
+          span.tier === 'fast' ||
+          span.tier === 'deep' ||
+          span.tier === 'research'
+            ? (llmConfig.routes[span.tier] ?? span.tier)
+            : span.route;
+        const labels = { service: 'agent', route, operation: span.operation };
+        const m = overrides.agentMetrics;
+        m?.llmRequests.inc({ ...labels, status: span.status });
+        m?.llmDuration.observe(labels, (span.endedAt - span.startedAt) / 1000);
+        if (span.inputTokens !== undefined)
+          m?.llmTokens.inc(
+            { service: 'agent', route, direction: 'input' },
+            span.inputTokens,
+          );
+        if (span.outputTokens !== undefined)
+          m?.llmTokens.inc(
+            { service: 'agent', route, direction: 'output' },
+            span.outputTokens,
+          );
+        if (span.status === 'error')
+          m?.backendErrors.inc({
+            service: 'agent',
+            error_type: span.errorType ?? 'unknown',
+          });
+        return exporter.exportSpan({ ...span, route });
+      },
     }),
     limiter: new TierRateLimiter(),
     llmConfig,

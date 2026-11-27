@@ -1,7 +1,7 @@
 {
-  "name": "react-ai-chat-app",
+  "name": "agent-chat-app",
   "version": "1.0.0",
-  "description": "Agentic chat showcase (new stack in apps/ + packages/; legacy backend/frontend/web/embed until removal)",
+  "description": "Local-only agentic chat showcase: Hono agent + TanStack web + <agent-chat> embed.",
   "engines": {
     "node": ">=22"
   },
@@ -13,98 +13,42 @@
     "dev": "npm run dev:services && concurrently -k -n agent,web -c yellow,cyan \"npm run -w apps/agent dev\" \"npm run -w apps/web dev\"",
     "dev:services": "docker compose -f compose.dev.yml up -d --wait",
     "dev:services:down": "docker compose -f compose.dev.yml down",
-    "dev:legacy": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "test:workspaces": "npm run test --workspaces --if-present",
-    "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
-    "e2e": "npm run -w apps/web build && playwright test",
-    "e2e:embed": "npm run -w apps/embed build && playwright test -c playwright.embed.config.ts",
-    "check:size:embed": "npm run -w apps/embed check:size",
-    "check:loc": "node scripts/check-loc.mjs",
-    "eval": "tsx scripts/eval.mjs",
-    "eval:live": "EVAL_MODE=live tsx scripts/eval.mjs",
-    "storybook": "npm run -w apps/web storybook",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm start",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build",
-    "test": "npm run test:backend && npm run test:frontend",
-    "test:backend": "npm test --prefix backend",
-    "test:frontend": "npm test --prefix frontend -- --runInBand",
-    "test:unit": "npm run test:unit:backend",
-    "test:unit:backend": "cd backend && npm run test:unit",
-    "test:integration": "cd backend && npm run test:integration",
-    "test:e2e": "cd tests && npm run e2e",
-    "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:backend": "cd backend && npm run lint",
-    "lint:frontend": "cd frontend && npm run lint",
-    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
-    "lint:fix:backend": "cd backend && npm run lint:fix",
-    "lint:fix:frontend": "cd frontend && npm run lint -- --fix",
+    "dev:embed": "npm run -w apps/embed dev",
+    "lint": "npm run format:check && npm run check:loc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "format:backend": "cd backend && npm run format",
-    "format:frontend": "cd frontend && npm run format",
-    "coverage": "npm run coverage:backend",
-    "coverage:backend": "cd backend && npm run test:coverage",
-    "coverage:merge": "nyc merge coverage coverage/merged-coverage.json",
-    "coverage:report": "nyc report --reporter=html --reporter=text --reporter=lcov",
-    "type-check": "npm run type-check:backend && npm run type-check:frontend",
-    "type-check:backend": "cd backend && npm run typecheck",
-    "type-check:frontend": "cd frontend && npm run type-check",
-    "pre-commit": "lint-staged",
-    "prepare": "husky",
-    "docker:build": "docker-compose build",
-    "docker:up": "docker-compose up",
-    "docker:down": "docker-compose down",
-    "docker:test": "docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit",
-    "clean": "npm run clean:backend && npm run clean:frontend",
-    "clean:backend": "cd backend && rm -rf dist node_modules",
-    "clean:frontend": "cd frontend && rm -rf dist .expo node_modules",
-    "clean:web": "cd web && rm -rf dist node_modules",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../web && npm install",
-    "web:dev": "cd web && npm run dev",
-    "web:build": "cd web && npm run build",
-    "web:typecheck": "cd web && npm run typecheck",
-    "web:lint": "cd web && npm run lint",
-    "web:test": "cd web && npm run test",
-    "docs:lint": "markdownlint 'docs/**/*.md' README.md frontend/README.md",
-    "docs:links": "sh -c 'set -e; find docs -name \"*.md\" -not -path \"*/_sources/*\" -not -path \"*/_internal/*\" -print0 | xargs -0 -n1 -I{} npx markdown-link-check -q -c .markdown-link-check.json {}; npx markdown-link-check -q -c .markdown-link-check.json README.md; [ -f frontend/README.md ] && npx markdown-link-check -q -c .markdown-link-check.json frontend/README.md || true'",
-    "docs:mermaid": "node scripts/validate-mermaid.js docs",
-    "docs:mermaid:ci": "node scripts/validate-mermaid.js docs",
-    "docs:validate": "npm run docs:lint && npm run docs:mermaid && npm run docs:links"
+    "check:loc": "node scripts/check-loc.mjs",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck:workspaces": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:workspaces": "npm run test --workspaces --if-present",
+    "eval": "tsx scripts/eval.mjs",
+    "eval:live": "EVAL_MODE=live tsx scripts/eval.mjs",
+    "build": "npm run -w apps/web build && npm run -w apps/embed build",
+    "e2e": "npm run build && playwright test && playwright test -c playwright.embed.config.ts",
+    "e2e:embed": "playwright test -c playwright.embed.config.ts",
+    "check:size:embed": "npm run -w apps/embed check:size",
+    "storybook": "npm run -w apps/web storybook",
+    "docs:lint": "prettier --check README.md ARCHITECTURE.md PLAN.md docs/**/*.md"
   },
   "keywords": [
     "ai",
+    "agent",
     "chat",
-    "react-native",
-    "nodejs",
-    "opentelemetry"
+    "typescript",
+    "local-development"
   ],
   "author": "Ian Lintner",
   "license": "MIT",
   "dependencies": {
-    "@expo/metro-runtime": "~6.1.2",
-    "@react-native-async-storage/async-storage": "2.2.0",
-    "expo": "^54.0.25",
-    "prom-client": "^15.1.3",
-    "react-native-markdown-display": "^7.0.2",
-    "react-native-paper": "^5.14.5",
-    "react-native-vector-icons": "^10.3.0",
-    "socket.io-client": "^4.8.1"
+    "prom-client": "^15.1.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.65.1",
-    "@types/react": "^19.2.14",
     "concurrently": "^9.2.1",
-    "husky": "^9.0.11",
-    "lint-staged": "^16.2.7",
-    "markdown-link-check": "^3.14.2",
-    "markdownlint-cli": "^0.48.0",
-    "metro": "^0.84.3",
-    "nyc": "^17.1.0",
     "prettier": "~3.8.3",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "overrides": {
@@ -142,25 +86,5 @@
     "uuid": "^11.1.1",
     "ws": "^8.21.0",
     "yaml": "^2.8.3"
-  },
-  "lint-staged": {
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ],
-    "docs/**/*.md": [
-      "node scripts/validate-mermaid.js docs"
-    ],
-    "backend/**/*.{ts,js}": [
-      "cd backend && npm run lint:fix",
-      "cd backend && npm run format"
-    ],
-    "frontend/**/*.{ts,tsx,js,jsx}": [
-      "cd frontend && npm run lint -- --fix",
-      "cd frontend && npm run format"
-    ],
-    "web/**/*.{ts,tsx}": [
-      "cd web && npm run lint:fix",
-      "cd web && npm run format"
-    ]
   }
 }

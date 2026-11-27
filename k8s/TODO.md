@@ -1,7 +1,0 @@
-- [ ] Analyze requirements: add Istio sidecar injection annotations to chat-frontend and chat-backend deployments
-- [ ] Inspect `deployment-frontend.yaml` and `deployment-backend.yaml` for metadata annotations
-- [ ] Add `sidecar.istio.io/inject: "true"` annotation to both deployments
-- [ ] Verify `istio-virtualservice.yaml` routes via the shared cluster IngressGateway to frontend and backend services
-- [ ] Check `service.yaml` definitions for correct ports and selectors
-- [ ] Apply changes to cluster and test connectivity
-- [ ] Validate that `chat.hugecat.net` no longer returns 503

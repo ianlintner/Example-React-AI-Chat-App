@@ -1,15 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * E2E for the new stack (apps/web). Legacy e2e lives in tests/ and keeps its
- * own config until card 12. Runs against the production build (`vite
- * preview`) so it exercises SSR + hydration; `npm run -w apps/web build`
- * must run first (CI does this; locally `npm run e2e` does both).
+ * E2E for the web app: production build (`vite preview`), SSR + hydration,
+ * axe, all eight AI states and streaming. `npm run -w apps/web build` must
+ * run first (CI runs `npm run build`; locally `npm run e2e` does both).
+ * The embed web component has its own config: playwright.embed.config.ts.
  */
 const PORT = Number(process.env.E2E_WEB_PORT ?? 4181);
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /embed\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

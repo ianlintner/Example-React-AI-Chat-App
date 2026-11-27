@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,418 +12,14 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write
-  id-token: write # for optional Azure/OIDC flows
 
+# Local-development-only stack. No hosting, deploy, cloud credentials or
+# network LLM calls: every test uses the mock model (LLM_PROVIDER=mock).
 jobs:
-  checks:
+  app:
+    name: lint, typecheck, unit, eval, e2e
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-      - name: Install root deps
-        run: npm ci
-      - name: Format check
-        run: npm run format:check
-      - name: Docs lint (markdownlint)
-        run: npm run docs:lint || echo "Docs lint non-blocking"
-      - name: Validate Mermaid diagrams
-        run: npm run docs:mermaid:ci || echo "Mermaid validation non-blocking"
-
-  backend:
-    runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-      - name: Install
-        working-directory: backend
-        run: npm ci
-      - name: Lint
-        working-directory: backend
-        run: npm run lint
-      - name: Type check
-        working-directory: backend
-        run: npm run typecheck
-      - name: Test (coverage)
-        working-directory: backend
-        run: npm run test:ci
-        env:
-          NODE_ENV: test
-          REDIS_URL: redis://localhost:6379
-      - name: Build
-        working-directory: backend
-        run: npm run build
-      - name: OpenAPI smoke test
-        working-directory: backend
-        env:
-          REDIS_URL: redis://localhost:6379
-          NODE_ENV: test
-        run: |
-          nohup node dist/backend/src/index.js > server.log 2>&1 &
-          SERVER_PID=$!
-          for i in {1..30}; do
-            if curl -sf http://localhost:5001/docs/json >/dev/null; then break; fi
-            echo "Waiting for server... (attempt $i/30)"
-            sleep 2
-          done
-          # Show server log for debugging if curl fails
-          if ! curl -sf http://localhost:5001/docs/json | grep -q '"openapi"'; then
-            echo "=== Server log ===" && cat server.log
-            exit 1
-          fi
-          pkill -f dist/backend/src/index.js || true
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          directory: backend/coverage
-          flags: backend
-          fail_ci_if_error: false
-      - name: Upload backend build
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-dist
-          path: backend/dist/
-          retention-days: 7
-
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install
-        working-directory: frontend
-        run: npm ci
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint
-      - name: Type check
-        working-directory: frontend
-        run: npm run type-check
-      - name: Test (coverage)
-        working-directory: frontend
-        run: npm run test:ci
-      - name: Build
-        working-directory: frontend
-        run: npm run build
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          files: frontend/coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: false
-      - name: Upload frontend build
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 7
-  web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
-      - name: Install
-        working-directory: web
-        run: npm ci
-      - name: Lint
-        working-directory: web
-        run: npm run lint
-      - name: Type check
-        working-directory: web
-        run: npm run typecheck
-      - name: Test
-        working-directory: web
-        run: npm run test
-      - name: Build
-        working-directory: web
-        run: npm run build
-      - name: Upload web build
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist
-          path: web/dist/
-          retention-days: 7
-
-  embed:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: embed/package-lock.json
-      - name: Install
-        working-directory: embed
-        run: npm ci
-      - name: Typecheck
-        working-directory: embed
-        run: npm run typecheck
-      - name: Build
-        working-directory: embed
-        run: npm run build
-      - name: Upload embed build
-        uses: actions/upload-artifact@v4
-        with:
-          name: embed-dist
-          path: embed/dist/
-          retention-days: 7
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-docs.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
-      - name: Install MkDocs
-        run: python -m pip install --upgrade pip && pip install -r requirements-docs.txt linkchecker
-      - name: Build TechDocs site (strict)
-        run: python -m mkdocs build --strict
-      - name: Link check (local serve)
-        run: |
-          python -m mkdocs serve --dev-addr=127.0.0.1:8000 &
-          PID=$!
-          sleep 8
-          linkchecker http://127.0.0.1:8000 --no-warnings --output=text || echo "Link check non-blocking"
-          kill $PID || true
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: techdocs-site
-          path: site/
-          retention-days: 7
-
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-results.sarif
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-results.sarif
-      - name: Dependency audit backend
-        working-directory: backend
-        run: npm audit --audit-level=moderate || true
-      - name: Dependency audit frontend
-        working-directory: frontend
-        run: npm audit --audit-level=moderate || true
-
-  manifests:
-    name: K8s + Flux manifests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # yamllint catches tab indent, duplicate keys, trailing whitespace,
-      # and other issues that kustomize itself silently ignores but that
-      # confuse downstream tooling. Non-blocking for the first cut so we
-      # don't force a repo-wide whitespace cleanup in this PR; flip to
-      # failing once the existing warnings are burnt down.
-      - name: Install yamllint
-        run: pip install --quiet yamllint
-      - name: yamllint (k8s + flux, non-blocking)
-        run: |
-          yamllint \
-            -d '{extends: default, rules: {line-length: disable, document-start: disable, trailing-spaces: disable, empty-lines: disable, comments: disable, comments-indentation: disable, truthy: {check-keys: false}, indentation: {indent-sequences: consistent}}}' \
-            k8s/ .github/workflows/ \
-            || echo "yamllint findings above — non-blocking for now"
-
-      # kustomize build renders every overlay so typos in patch paths or
-      # missing resources fail fast rather than at Flux reconcile time.
-      - name: Install kustomize
-        run: |
-          # Direct release asset: install_kustomize.sh calls the GitHub API
-          # unauthenticated and flakes on rate limits.
-          curl -fsSL --retry 3 \
-            https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz \
-            | tar -xz kustomize
-          sudo mv kustomize /usr/local/bin/
-      - name: kustomize build
-        run: |
-          set -e
-          for dir in k8s/apps/*/ k8s/flux/apps/*/; do
-            if [ -f "$dir/kustomization.yaml" ]; then
-              echo "=== $dir ==="
-              kustomize build "$dir" > /dev/null
-            fi
-          done
-
-      # kubeconform validates against upstream + Flux CRD schemas.
-      # Non-blocking for now so we don't churn existing manifests on the
-      # first integration; flip to failing once the baseline is clean.
-      - name: Install kubeconform
-        run: |
-          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
-            | tar -xz -C /tmp
-          sudo mv /tmp/kubeconform /usr/local/bin/
-      - name: kubeconform (non-blocking)
-        run: |
-          kubeconform \
-            -strict \
-            -ignore-missing-schemas \
-            -schema-location default \
-            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-            -summary \
-            k8s/ || echo "kubeconform findings above — non-blocking for now"
-
-  docker-build-push:
-    name: Build & Push Docker Image
-    # Disabled: local-development-only scope, no hosting (ACR/AKS). Re-enable only with a hosting decision.
-    if: false
-    runs-on: ubuntu-latest
-    needs: [backend, frontend, embed] # Wait for artifacts
-    permissions:
-      contents: read
-      id-token: write
-    env:
-      ACR_NAME: gabby
-      REGISTRY: gabby.azurecr.io
-      IMAGE_NAME: chat-backend
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Download pre-built artifacts from previous jobs
-      - name: Download backend build
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-dist
-          path: backend/dist/
-
-      - name: Download frontend build
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-
-      - name: Download embed build
-        uses: actions/download-artifact@v4
-        with:
-          name: embed-dist
-          path: embed/dist/
-
-      # Verify artifacts exist
-      - name: Verify build artifacts
-        run: |
-          echo "Backend artifacts:"
-          ls -la backend/dist/ || exit 1
-          echo "Frontend artifacts:"
-          ls -la frontend/dist/ || exit 1
-          echo "Embed artifacts:"
-          ls -la embed/dist/embed/ || exit 1
-
-      # Use optimized dockerignore for faster CI builds
-      - name: Use CI-optimized dockerignore
-        run: cp .dockerignore.ci .dockerignore
-
-      - name: Azure Login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Login to Azure Container Registry
-        run: az acr login --name $ACR_NAME
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Timestamped tag so Flux ImagePolicy can order tags
-            # chronologically (alphabetical asc on a fixed-width
-            # YYYYMMDDHHmmss prefix selects the newest build).
-            type=raw,value={{date 'YYYYMMDDHHmmss'}}-{{sha}},enable={{is_default_branch}}
-
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile.ci
-          push: true
-          platforms: linux/arm64, linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
-
-      # Roll the running Deployment so the new `:latest` image is
-      # pulled. Runs on default-branch pushes only — PRs do not touch
-      # the live cluster. Flux reconciles the manifests but the
-      # image-update-automation loop is disabled pending a git-write
-      # PAT (see k8s/flux/apps/chat/kustomization.yaml), so the manual
-      # rollout is how new builds reach prod for now.
-      - name: Roll chat-backend on bigboy
-        if: github.ref == 'refs/heads/main'
-        env:
-          AKS_RESOURCE_GROUP: nekoc
-          AKS_CLUSTER: bigboy
-        run: |
-          az aks get-credentials \
-            --resource-group "$AKS_RESOURCE_GROUP" \
-            --name "$AKS_CLUSTER" \
-            --overwrite-existing
-          kubectl -n default rollout restart deployment/chat-backend
-          kubectl -n default rollout status deployment/chat-backend \
-            --timeout=5m
-
-  # New agentic stack (apps/*, packages/*; ARCHITECTURE.md §8). Mock model
-  # only: no network LLM calls, no services required.
-  new-stack:
-    runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       LLM_PROVIDER: mock
     steps:
@@ -435,16 +31,14 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install workspaces
         run: npm ci
-      - name: File size ceiling (400 LOC)
-        run: npm run check:loc
-      - name: Typecheck workspaces
-        run: npm run typecheck --workspaces --if-present
+      - name: Lint (format + 400-line ceiling)
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
       - name: Unit tests (Vitest)
-        run: npm run test --workspaces --if-present
-      - name: Golden trajectory + injection eval gate (mock model)
+        run: npm test
+      - name: Golden trajectory + injection eval gate
         run: npm run eval
-        env:
-          LLM_PROVIDER: mock
       - name: Upload eval report
         if: always()
         uses: actions/upload-artifact@v4
@@ -452,20 +46,18 @@ jobs:
           name: eval-report
           path: eval-report.json
           retention-days: 7
-      - name: Build web
-        run: npm run -w apps/web build
-      - name: Build web component + size budget
-        run: |
-          npm run -w apps/embed build
-          npm run -w apps/embed check:size
+      - name: Build web and embed
+        run: npm run build
+      - name: Embed size budget
+        run: npm run check:size:embed
       - name: Build Storybook
         run: npm run -w apps/web build-storybook
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: E2E smoke (Playwright + axe)
-        run: npx playwright test
-      - name: E2E <agent-chat> demo
-        run: npx playwright test -c playwright.embed.config.ts
+      - name: Full E2E suite (mock model)
+        run: |
+          npx playwright test
+          npx playwright test -c playwright.embed.config.ts
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
@@ -475,43 +67,3 @@ jobs:
             test-results/
             playwright-report/
           retention-days: 7
-
-  ci-success:
-    needs:
-      [
-        new-stack,
-        checks,
-        backend,
-        frontend,
-        web,
-        embed,
-        docs,
-        security,
-        manifests,
-        docker-build-push,
-      ]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Aggregate results
-        run: |
-          echo "New stack: ${{ needs.new-stack.result }}"
-          echo "Checks: ${{ needs.checks.result }}"
-          echo "Backend: ${{ needs.backend.result }}"
-          echo "Frontend: ${{ needs.frontend.result }}"
-          echo "Web: ${{ needs.web.result }}"
-          echo "Embed: ${{ needs.embed.result }}"
-          echo "Docs: ${{ needs.docs.result }}"
-          echo "Security: ${{ needs.security.result }}"
-          echo "Manifests: ${{ needs.manifests.result }}"
-          echo "Docker: ${{ needs.docker-build-push.result }}"
-          [ "${{ needs.new-stack.result }}" = "success" ] || { echo "❌ new-stack did not succeed"; exit 1; }
-          [ "${{ needs.backend.result }}" != "failure" ] || { echo "❌ backend failed"; exit 1; }
-          [ "${{ needs.frontend.result }}" != "failure" ] || { echo "❌ frontend failed"; exit 1; }
-          [ "${{ needs.web.result }}" != "failure" ] || { echo "❌ web failed"; exit 1; }
-          [ "${{ needs.embed.result }}" != "failure" ] || { echo "❌ embed failed"; exit 1; }
-          [ "${{ needs.checks.result }}" != "failure" ] || { echo "❌ checks failed"; exit 1; }
-          [ "${{ needs.security.result }}" != "failure" ] || { echo "❌ security failed"; exit 1; }
-          [ "${{ needs.manifests.result }}" != "failure" ] || { echo "❌ manifests failed"; exit 1; }
-          [ "${{ needs.docker-build-push.result }}" != "failure" ] || { echo "❌ docker build failed"; exit 1; }
-          echo "✅ Consolidated pipeline passed"
